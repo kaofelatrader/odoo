@@ -50,7 +50,8 @@ var ListView = BasicView.extend({
             }
         });
 
-        this.controllerParams.editable = this.arch.attrs.editable;
+        this.controllerParams.editable = this.arch.attrs.editable &&
+            (!this.arch.attrs.edit || !!JSON.parse(this.arch.attrs.edit));
         this.controllerParams.hasSidebar = params.hasSidebar;
         this.controllerParams.toolbarActions = viewInfo.toolbar;
         this.controllerParams.mode = mode;
@@ -60,7 +61,8 @@ var ListView = BasicView.extend({
         this.rendererParams.groupbys = this.groupbys;
         this.rendererParams.hasSelectors =
                 'hasSelectors' in params ? params.hasSelectors : true;
-        this.rendererParams.editable = params.readonly ? false : this.arch.attrs.editable;
+        this.rendererParams.editable = params.readonly ? false : this.arch.attrs.editable &&
+            (!this.arch.attrs.edit || !!JSON.parse(this.arch.attrs.edit));;
         this.rendererParams.selectedRecords = selectedRecords;
         this.rendererParams.addCreateLine = false;
         this.rendererParams.addCreateLineInGroups = this.rendererParams.editable && this.controllerParams.activeActions.create;
