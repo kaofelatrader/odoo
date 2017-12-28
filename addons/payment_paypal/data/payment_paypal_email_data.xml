@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<odoo>
+    <template id="mail_template_paypal_invite_user_to_configure">
+        <div>
+            <p>Hello <b> <t t-esc="partner"/></b>,</p>
+            <br/>
+            <p>You have received a payment through PayPal.</p>
+            <p>Kindly follow the instructions given by PayPal to create your account.</p>
+            <p>Then, help us to complete your Paypal credentials in Odoo.</p>
+            <br/>
+            <a t-attf-href="/web#id=#{self.id}&amp;model=payment.acquirer&amp;view_type=form" style="background-color: #875A7B; padding: 10px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 12px;">Set Paypal credentials</a>
+            <br/><br/>
+            <p>Thanks,</p>
+            <p><b><t t-esc="self.env.user.company_id.name"/></b></p>
+        </div>
+    </template>
+</odoo>

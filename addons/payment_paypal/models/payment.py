@@ -195,6 +195,20 @@ class TxPaypal(models.Model):
             'acquirer_reference': data.get('txn_id'),
             'paypal_txn_type': data.get('payment_type'),
         }
+        if not self.acquirer_id.paypal_pdt_token and not self.acquirer_id.paypal_seller_account and status in ['Completed', 'Processed', 'Pending']:
+            template = self.env.ref('payment_paypal.mail_template_paypal_invite_user_to_configure', raise_if_not_found=False)
+            if template:
+                render_template = template.render({
+                    'self': self.acquirer_id,
+                    'partner': self.env['res.partner'].search([('email', '=', self.acquirer_id.paypal_email_account)]).name or self.acquirer_id.paypal_email_account
+                }, engine='ir.qweb')
+                mail_values = {
+                    'body_html': self.env['mail.thread']._replace_local_links(render_template),
+                    'subject': _('Paypal: invite user to configure'),
+                    'email_to': self.acquirer_id.paypal_email_account,
+                    'auto_delete': False
+                }
+                self.env['mail.mail'].create(mail_values).send()
         if status in ['Completed', 'Processed']:
             _logger.info('Validated Paypal payment for tx %s: set as done' % (self.reference))
             try:
