@@ -48,6 +48,10 @@ var MailManager =  AbstractService.extend({
     dependencies: ['ajax', 'bus_service', 'local_storage'],
     _ODOOBOT_ID: "ODOOBOT", // default authorID for transient messages
 
+    custom_events: _.extend({}, AbstractService.prototype.custom_events, {
+        move_messages_to_history: '_onMoveMessagesToHistory',
+    }),
+
     /**
      * @override
      */
@@ -328,8 +332,12 @@ var MailManager =  AbstractService.extend({
      */
     markMessagesAsRead: function (messageIDs) {
         var self = this;
+        var history = this.getMailbox('history');
         var ids = _.filter(messageIDs, function (id) {
             var message = self.getMessage(id);
+            if (message) {
+                history.addMessage(message, {});
+            }
             // If too many messages, not all are fetched,
             // and some might not be found
             return !message || message.isNeedaction();
@@ -1260,7 +1268,7 @@ var MailManager =  AbstractService.extend({
     },
     /**
      * Update the mailboxes with mail data fetched from server, namely 'Inbox',
-     * 'Starred', and 'Moderation Queue' if the user is a moderator of a channel
+     * 'Starred', 'History', and 'Moderation Queue' if the user is a moderator of a channel
      *
      * @private
      * @param {Object} data
@@ -1283,6 +1291,10 @@ var MailManager =  AbstractService.extend({
             id: 'starred',
             name: _t("Starred"),
             mailboxCounter: data.starred_counter || 0,
+        });
+        this._addMailbox({
+            id: 'history',
+            name: _t("History"),
         });
 
         if (data.is_moderator) {
@@ -1330,6 +1342,18 @@ var MailManager =  AbstractService.extend({
      */
     _onDiscussOpen: function (open) {
         this._discussOpen = open;
+    },
+    /**
+     * marking messages as read in the inbox, when clicking on mark as read
+     * @private
+     * @param {OdooEvent} ev
+     * @param {mail.model.Message[]} ev.data.messages
+     */
+    _onMoveMessagesToHistory: function (ev) {
+        var history = this.getMailbox('history');
+        _.each(ev.data.messages, function (message) {
+            history.addMessage(message, {});
+        });
     },
     /**
      * Reset out of focus unread message counter + tab title

@@ -123,14 +123,17 @@ var Mailbox = SearchableThread.extend({
      *   on the server
      */
     markAllMessagesAsRead: function (domain) {
+        var self = this;
         if (this._id === 'mailbox_inbox' && this.getMailboxCounter() > 0) {
+            var messages = self.getMessages();
             return this._rpc({
                 model: 'mail.message',
                 method: 'mark_all_as_read',
                 kwargs: {
-                    channel_ids: [],
                     domain: domain,
                 },
+            }).then(function (result) {
+                self.trigger_up('move_messages_to_history', { messages: messages });
             });
         }
         return Promise.resolve();
@@ -183,6 +186,8 @@ var Mailbox = SearchableThread.extend({
             return [['needaction', '=', true]];
         } else if (this._id === 'mailbox_starred') {
             return [['starred', '=', true]];
+        } else if (this._id === 'mailbox_history') {
+            return [['needaction', '=', false]];
         } else if (this._id === 'mailbox_moderation') {
             return [['need_moderation', '=', true]];
         } else {
