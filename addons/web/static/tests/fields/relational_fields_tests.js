@@ -911,7 +911,6 @@ QUnit.module('relational_fields', {
 
     QUnit.test('fieldmany2many tags with color: rendering and edition', function (assert) {
         assert.expect(28);
-
         this.data.partner.records[0].timmy = [12, 14];
         this.data.partner_type.records.push({id: 13, display_name: "red", color: 8});
         var form = createView({
@@ -982,7 +981,7 @@ QUnit.module('relational_fields', {
         // checkbox 'Hide in Kanban'
         $input = form.$('.o_field_many2manytags .badge[data-id=13] .dropdown-toggle'); // selects 'red' tag
         testUtils.dom.click($input);
-        var $checkBox = form.$('.o_field_many2manytags .badge[data-id=13] .custom-checkbox input');
+        var $checkBox = form.$('.o_field_many2manytags .badge[data-id=13] .o_checkbox input');
         assert.strictEqual($checkBox.length, 1, "should have a checkbox in the colorpicker dropdown menu");
         assert.notOk($checkBox.is(':checked'), "should have unticked checkbox in colorpicker dropdown menu");
 
@@ -990,7 +989,7 @@ QUnit.module('relational_fields', {
 
         $input = form.$('.o_field_many2manytags .badge[data-id=13] .dropdown-toggle'); // refresh
         testUtils.dom.click($input);
-        $checkBox = form.$('.o_field_many2manytags .badge[data-id=13] .custom-checkbox input'); // refresh
+        $checkBox = form.$('.o_field_many2manytags .badge[data-id=13] .o_checkbox input'); // refresh
         assert.equal($input.parent().data('color'), "0", "should become transparent when toggling on checkbox");
         assert.ok($checkBox.is(':checked'), "should have a ticked checkbox in colorpicker dropdown menu after mousedown");
 
@@ -998,7 +997,7 @@ QUnit.module('relational_fields', {
 
         $input = form.$('.o_field_many2manytags .badge[data-id=13] .dropdown-toggle'); // refresh
         testUtils.dom.click($input);
-        $checkBox = form.$('.o_field_many2manytags .badge[data-id=13] .custom-checkbox input'); // refresh
+        $checkBox = form.$('.o_field_many2manytags .badge[data-id=13] .o_checkbox input'); // refresh
         assert.equal($input.parent().data('color'), "8", "should revert to old color when toggling off checkbox");
         assert.notOk($checkBox.is(':checked'), "should have an unticked checkbox in colorpicker dropdown menu after 2nd click");
 
@@ -1414,6 +1413,76 @@ QUnit.module('relational_fields', {
         assert.strictEqual($('.o_colorpicker:visible').length, 0,
             "colorpicker should be closed");
 
+        form.destroy();
+    });
+
+    QUnit.test('fieldmany2many tags with edit record', function (assert) {
+        assert.expect(5);
+        this.data.partner.fields.partner_ids = {string: "Partner", type: "many2many", relation: 'partner'};
+        var form = createView({
+            View: FormView,
+            model: 'partner',
+            data: this.data,
+            arch:'<form string="Partners">' +
+                    '<field name="partner_ids" widget="many2many_tags"/>' +
+                    '<field name="timmy" widget="many2many_tags" options="{\'color_field\': \'color\', \'no_edit\': True}"/>' +
+                '</form>',
+            archs: {
+                'partner,false,form': '<form string="Partners"><field name="display_name"/></form>',
+            },
+            mockRPC: function (route, args) {
+                if (args.method === 'get_formview_id' && args.model === 'partner') {
+                    return $.when(false);
+                }
+                return this._super.apply(this, arguments);
+            }
+        });
+         // add a tag on field timmy
+        var $input = form.$('.o_field_many2manytags[name="timmy"] input');
+        testUtils.dom.click($input); // opens the dropdown
+        testUtils.dom.click($input.autocomplete('widget').find('li:first()')); // adds a tag
+         // with no_edit options
+        testUtils.dom.click(form.$('.o_field_many2manytags[name="timmy"] .o_badge_text'));
+        assert.strictEqual(form.$('.o_field_many2manytags[name="timmy"] .o_tag_dropdown_options').length, 0,
+            "m2m option menu should not visible");
+         //add a tag on field partner_ids
+        $input = form.$('.o_field_many2manytags[name="partner_ids"] input');
+        testUtils.dom.click($input); // opens the dropdown
+        testUtils.dom.click($input.autocomplete('widget').find('li:first()')); // adds a tag
+         // without no_edit options
+        var $tag = form.$('.o_field_many2manytags[name="partner_ids"] .o_badge_text');
+        testUtils.dom.click($tag);
+        assert.strictEqual(form.$('.o_field_many2manytags[name="partner_ids"] .o_tag_dropdown_options').length, 1, "m2m option menu should visible");
+        assert.strictEqual(form.$('.o_field_many2manytags[name="partner_ids"] .o_tag_dropdown_options .o_edit_record').length, 1, "m2m option menu should have Edit option");
+         // Edit Record
+        form.$('.o_field_many2manytags[name="partner_ids"] .o_tag_dropdown_menu .o_edit_record').trigger('mousedown');
+        assert.strictEqual($('.modal-dialog').length, 1, "should open partner form view dialog");
+        $('.modal-body input[name="display_name"]').val('hello').trigger('change');
+        testUtils.dom.click($('.modal-footer .btn-primary'));
+        assert.strictEqual(form.$('.o_field_many2manytags[name="partner_ids"] .o_badge_text span').text(), 'hello',
+                "value should change after edit");
+        form.destroy();
+    });
+
+     QUnit.test('fieldmany2many tags with no color field and no_edit options', function (assert) {
+        assert.expect(1);
+        this.data.partner.fields.partner_ids = {string: "Partner", type: "many2many", relation: 'partner'};
+        var form = createView({
+            View: FormView,
+            model: 'partner',
+            data: this.data,
+            arch:'<form string="Partners">' +
+                    '<field name="partner_ids" widget="many2many_tags" options="{\'no_edit\': True}"/>' +
+                '</form>',
+        });
+         //add a tag on field partner_ids
+        var $input = form.$('.o_field_many2manytags[name="partner_ids"] input');
+        testUtils.dom.click($input); // opens the dropdown
+        testUtils.dom.click($input.autocomplete('widget').find('li:first()')); // adds a tag
+        var $tag = form.$('.o_field_many2manytags[name="partner_ids"] .o_badge_text');
+        testUtils.dom.click($tag);
+        assert.strictEqual(form.$('.o_field_many2manytags[name="partner_ids"] .o_tag_dropdown_menu').length, 0,
+            "should not open dropdown at all as we do not have color field and no_edit options given");
         form.destroy();
     });
 
@@ -2788,6 +2857,7 @@ QUnit.module('relational_fields', {
 
         form.destroy();
     });
+
 });
 });
 });

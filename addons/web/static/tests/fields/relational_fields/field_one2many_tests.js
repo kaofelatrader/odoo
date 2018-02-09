@@ -5013,14 +5013,14 @@ QUnit.module('fields', {}, function () {
                 'should display the line in editable mode');
             assert.strictEqual(form.$('.o_field_many2one input').val(), "xpad",
                 'should display the product xpad');
-            assert.strictEqual(form.$('.o_field_many2manytags.o_input .o_badge_text').text(), "first record",
+            assert.strictEqual(form.$('.o_field_many2manytags.o_input .o_badge_text span').text(), "first record",
                 'should display the tag from the onchange');
 
             testUtils.dom.click(form.$('input.o_field_integer[name="int_field"]'));
 
             assert.strictEqual(form.$('.o_data_cell.o_required_modifier').text(), "xpad",
                 'should display the product xpad');
-            assert.strictEqual(form.$('.o_field_many2manytags:not(.o_input) .o_badge_text').text(), "first record",
+            assert.strictEqual(form.$('.o_field_many2manytags:not(.o_input) .o_badge_text span').text(), "first record",
                 'should display the tag in readonly');
 
             // enable the many2many onchange and generate it
@@ -5052,7 +5052,7 @@ QUnit.module('fields', {}, function () {
                 'should display the line in editable mode');
             assert.strictEqual(form.$('.o_field_many2one input').val(), "xenomorphe",
                 'should display the product xenomorphe');
-            assert.strictEqual(form.$('.o_field_many2manytags.o_input .o_badge_text').text(), "second record",
+            assert.strictEqual(form.$('.o_field_many2manytags.o_input .o_badge_text span').text(), "second record",
                 'should display the tag from the onchange');
 
             // put list in readonly mode
@@ -5060,7 +5060,7 @@ QUnit.module('fields', {}, function () {
 
             assert.strictEqual(form.$('.o_data_cell.o_required_modifier').text(), "xenomorphexphone",
                 'should display the product xphone and xenomorphe');
-            assert.strictEqual(form.$('.o_field_many2manytags:not(.o_input) .o_badge_text').text(), "second recordfirst record",
+            assert.strictEqual(form.$('.o_field_many2manytags:not(.o_input) .o_badge_text span').text(), "second recordfirst record",
                 'should display the tag in readonly (first record and second record)');
 
             testUtils.fields.editInput(form.$('input.o_field_integer[name="int_field"]'), '10');
@@ -5298,7 +5298,7 @@ QUnit.module('fields', {}, function () {
                 "one2many list should contain 2 rows");
             assert.containsN(form, '.o_list_view .o_field_many2manytags[name="partner_ids"] .badge', 2,
                 "m2mtags should contain two tags");
-            assert.strictEqual(form.$('.o_list_view .o_field_many2manytags[name="partner_ids"] .o_badge_text').text(),
+            assert.strictEqual(form.$('.o_list_view .o_field_many2manytags[name="partner_ids"] .o_badge_text span').text(),
                 'aaafirst record', "tag names should have been correctly loaded");
 
             form.destroy();
@@ -6132,7 +6132,7 @@ QUnit.module('fields', {}, function () {
                 "timmy should be displayed in the form view");
             assert.strictEqual($('.modal .o_field_many2manytags[name="timmy"] .badge').length, 1,
                 "m2mtags should contain one tag");
-            assert.strictEqual($('.modal .o_field_many2manytags[name="timmy"] .o_badge_text').text(),
+            assert.strictEqual($('.modal .o_field_many2manytags[name="timmy"] .o_badge_text span').text(),
                 'gold', "tag name should have been correctly loaded");
 
             form.destroy();
