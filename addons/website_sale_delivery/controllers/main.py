@@ -34,7 +34,7 @@ class WebsiteSaleDelivery(WebsiteSale):
         Monetary = request.env['ir.qweb.field.monetary']
         order = request.website.sale_get_order(force_create=True)
         res = {'carrier_id': carrier_id}
-        carrier = request.env['delivery.carrier'].browse(int(carrier_id))
+        carrier = request.env['delivery.carrier'].sudo().browse(int(carrier_id))
         rate = carrier.rate_shipment(order)
         if rate.get('success'):
             res['status'] = True
