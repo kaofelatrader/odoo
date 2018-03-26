@@ -13,6 +13,9 @@
         'data/payment_acquirer_data.xml',
         'data/payment_paypal_email_data.xml',
     ],
+    'demo': [
+        'data/payment_acquirer_demo.xml'
+    ],
     'installable': True,
     'auto_install': True,
 }
