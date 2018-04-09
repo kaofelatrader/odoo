@@ -16,6 +16,11 @@
                     <field name="stripe_image_url"/>
                 </group>
             </xpath>
+            <xpath expr='//form/sheet' position='before'>
+                <header>
+                    <button name="create_account" type="object" class="oe_highlight" string="Create a stripe account" attrs="{'invisible': [('provider', '!=', 'stripe')]}"/>
+                </header>
+            </xpath>
         </field>
     </record>
 </odoo>

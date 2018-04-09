@@ -99,6 +99,13 @@ class PaymentAcquirerStripe(models.Model):
         res['tokenize'].append('stripe')
         return res
 
+    def create_account(self):
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/payment/stripe/create_account/%s' % self.id,
+            'target': 'self',
+            'res_id': self.id,
+        }
 
 class PaymentTransactionStripe(models.Model):
     _inherit = 'payment.transaction'

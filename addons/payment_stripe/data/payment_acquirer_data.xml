@@ -14,5 +14,25 @@
             <field name="stripe_secret_key">dummy</field>
             <field name="stripe_publishable_key">dummy</field>
         </record>
+
+        <record id="config_payment_stripe_test_client_id" model="ir.config_parameter">
+            <field name="key">payment_stripe_test_client_id</field>
+            <field name="value">ca_CeEwKV3bTKP9Y6Rsh96yUmITA7MCGHl1</field>
+        </record>
+
+        <record id="config_payment_stripe_test_client_secret" model="ir.config_parameter">
+            <field name="key">payment_stripe_test_client_secret</field>
+            <field name="value">sk_test_WCfEqBr7yP1LFFjEQbWwr0tM</field>
+        </record>
+
+        <record id="config_payment_stripe_prod_client_id" model="ir.config_parameter">
+            <field name="key">payment_stripe_prod_client_id</field>
+            <field name="value">ca_CeEwcBK1QUsZnZuMHTs14zbwHcHe1SBV</field>
+        </record>
+
+        <record id="config_payment_stripe_prod_client_secret" model="ir.config_parameter">
+            <field name="key">payment_stripe_prod_client_secret</field>
+            <field name="value">sk_live_tNsRIzITWUuQUMFHVdsn6uIX</field>
+        </record>
     </data>
 </odoo>
