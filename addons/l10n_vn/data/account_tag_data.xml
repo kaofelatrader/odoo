@@ -10,11 +10,6 @@
         <field name="code">112</field>
         <field name="applicability">accounts</field>
     </record>
-    <record id="account_tag_113" model="account.account.tag">
-        <field name="name">Cash in transit</field>
-        <field name="code">113</field>
-        <field name="applicability">accounts</field>
-    </record>
     <record id="account_tag_121" model="account.account.tag">
         <field name="name">Trading Securities</field>
         <field name="code">121</field>
@@ -365,9 +360,9 @@
         <field name="code">632</field>
         <field name="applicability">accounts</field>
     </record>
-    <record id="account_tag_635" model="account.account.tag">
-        <field name="name">Financial expenses</field>
-        <field name="code">635</field>
+    <record id="account_tag_6351" model="account.account.tag">
+        <field name="name">Loan interest</field>
+        <field name="code">6351</field>
         <field name="applicability">accounts</field>
     </record>
     <record id="account_tag_641" model="account.account.tag">
@@ -380,14 +375,24 @@
         <field name="code">642</field>
         <field name="applicability">accounts</field>
     </record>
-    <record id="account_tag_711" model="account.account.tag">
-        <field name="name">Other income</field>
-        <field name="code">711</field>
+    <record id="account_tag_7111" model="account.account.tag">
+        <field name="name">Income for asset liquidations</field>
+        <field name="code">7111</field>
         <field name="applicability">accounts</field>
     </record>
-    <record id="account_tag_811" model="account.account.tag">
-        <field name="name">Other expenses</field>
-        <field name="code">811</field>
+    <record id="account_tag_7112" model="account.account.tag">
+        <field name="name">Other income - others</field>
+        <field name="code">7112</field>
+        <field name="applicability">accounts</field>
+    </record>
+    <record id="account_tag_8111" model="account.account.tag">
+        <field name="name">Expense for asset liquidations</field>
+        <field name="code">8111</field>
+        <field name="applicability">accounts</field>
+    </record>
+    <record id="account_tag_8112" model="account.account.tag">
+        <field name="name">Other expenses - others</field>
+        <field name="code">8112</field>
         <field name="applicability">accounts</field>
     </record>
     <record id="account_tag_821" model="account.account.tag">
@@ -398,6 +403,16 @@
     <record id="account_tag_911" model="account.account.tag">
         <field name="name">Income Summary</field>
         <field name="code">911</field>
+        <field name="applicability">accounts</field>
+    </record>
+    <record id="account_tag_1131" model="account.account.tag">
+        <field name="name">Vietnam Dong</field>
+        <field name="code">1131</field>
+        <field name="applicability">accounts</field>
+    </record>
+    <record id="account_tag_1132" model="account.account.tag">
+        <field name="name">Foreign Currencies</field>
+        <field name="code">1132</field>
         <field name="applicability">accounts</field>
     </record>
 </odoo>

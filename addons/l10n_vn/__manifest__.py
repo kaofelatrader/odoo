@@ -42,10 +42,10 @@ Credits
     ],
     "data": [
          'data/res.country.state.csv',
-         'data/account_tag_data.xml',
          'data/l10n_vn_chart_data.xml',
          'data/account.account.template.csv',
          'data/l10n_vn_chart_post_data.xml',
+         'data/account_tag_data.xml',
          'data/account_data.xml',
          'data/account_tax_data.xml',
          'data/account_chart_template_data.xml',
