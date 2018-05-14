@@ -119,7 +119,8 @@
     <act_window name="Payslip Computation Details"
         context="{'default_slip_id': active_id,'search_default_slip_id': active_id}"
         res_model="hr.payslip.line"
-        src_model="hr.payslip"
+        binding_model="hr.payslip"
+        binding_views="form"
         id="act_payslip_lines"/>
 
     <record id="view_hr_payslip_form" model="ir.ui.view">
@@ -406,7 +407,8 @@
         domain="[('register_id', '=', active_id)]"
         context="{'default_register_id': active_id, 'search_default_register_id': 1}"
         res_model="hr.payslip.line"
-        src_model="hr.contribution.register"
+        binding_model="hr.contribution.register"
+        binding_views="form"
         id="act_contribution_reg_payslip_lines"/>
 
 </odoo>

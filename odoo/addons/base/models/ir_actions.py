@@ -121,13 +121,13 @@ class IrActionsActWindow(models.Model):
     _sequence = 'ir_actions_id_seq'
     _order = 'name'
 
-    @api.constrains('res_model', 'src_model')
+    @api.constrains('res_model', 'binding_model_id')
     def _check_model(self):
         for action in self:
             if action.res_model not in self.env:
                 raise ValidationError(_('Invalid model name %r in action definition.') % action.res_model)
-            if action.src_model and action.src_model not in self.env:
-                raise ValidationError(_('Invalid model name %r in action definition.') % action.src_model)
+            if action.binding_model_id and action.binding_model_id.model not in self.env:
+                raise ValidationError(_('Invalid model name %r in action definition.') % action.binding_model_id.model)
 
     @api.depends('view_ids.view_mode', 'view_mode', 'view_id.type')
     def _compute_views(self):
@@ -167,8 +167,6 @@ class IrActionsActWindow(models.Model):
     res_id = fields.Integer(string='Record ID', help="Database ID of record to open in form view, when ``view_mode`` is set to 'form' only")
     res_model = fields.Char(string='Destination Model', required=True,
                             help="Model name of the object to open in the view window")
-    src_model = fields.Char(string='Source Model',
-                            help="Optional model name of the objects on which this action should be visible")
     target = fields.Selection([('current', 'Current Window'), ('new', 'New Window'), ('inline', 'Inline Edit'), ('fullscreen', 'Full Screen'), ('main', 'Main action of Current Window')], default="current", string='Target Window')
     view_mode = fields.Char(required=True, default='tree,form',
                             help="Comma-separated list of allowed view modes, such as 'form', 'tree', 'calendar', etc. (Default: tree,form)")
@@ -186,9 +184,8 @@ class IrActionsActWindow(models.Model):
                                  'act_id', 'gid', string='Groups')
     search_view_id = fields.Many2one('ir.ui.view', string='Search View Ref.')
     filter = fields.Boolean()
-    auto_search = fields.Boolean(default=True)
     search_view = fields.Text(compute='_compute_search_view')
-    multi = fields.Boolean(string='Restrict to lists', help="If checked and the action is bound to a model, it will only appear in the More menu on list views")
+    binding_view_types = fields.Char(default='list,form')
 
     @api.multi
     def read(self, fields=None, load='_classic_read'):

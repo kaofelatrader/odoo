@@ -160,7 +160,6 @@
                             <field name="name"/>
                             <field name="xml_id" string="External ID"/>
                             <field name="res_model" string="Object"/>
-                            <field name="src_model" string="Source Object"/>
                         </group>
                         <group>
                             <field name="usage"/>
@@ -180,9 +179,7 @@
                                     <field name="domain"/>
                                     <field name="context"/>
                                     <field name="limit"/>
-                                    <field name="auto_search"/>
                                     <field name="filter"/>
-                                    <field name="multi"/>
                                 </group>
                             </group>
                             <group string="Help">

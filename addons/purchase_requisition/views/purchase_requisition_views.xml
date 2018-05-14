@@ -361,7 +361,8 @@
             id="act_res_partner_2_purchase_order"
             name="Purchase orders"
             res_model="purchase.order"
-            src_model="purchase.requisition"/>
+            binding_model="purchase.requisition"
+            binding_views="form"/>
 
     </data>
 </odoo>

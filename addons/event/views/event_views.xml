@@ -422,7 +422,8 @@
             id="act_register_event_partner"
             name="Subscribe"
             res_model="event.registration"
-            src_model="res.partner"
+            binding_model="res.partner"
+            binding_views="form"
             view_mode="tree,form,calendar,graph"
             context="{'search_default_partner_id': [active_id], 'default_partner_id': active_id}"
             view_type="form"/>

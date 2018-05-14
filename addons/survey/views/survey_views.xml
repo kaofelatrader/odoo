@@ -318,8 +318,8 @@
               </p>
             </field>
         </record>
-        <act_window context="{'search_default_survey_id': [active_id], 'default_survey_id': active_id}" id="act_survey_pages" name="Pages" res_model="survey.page" src_model="survey.survey"/>
-        <act_window context="{'search_default_survey_id': [active_id], 'default_survey_id': active_id}" id="act_survey_question" name="Questions" res_model="survey.question" src_model="survey.survey"/>
+        <act_window context="{'search_default_survey_id': [active_id], 'default_survey_id': active_id}" id="act_survey_pages" name="Pages" res_model="survey.page" binding_model="survey.survey" binding_views="form"/>
+        <act_window context="{'search_default_survey_id': [active_id], 'default_survey_id': active_id}" id="act_survey_question" name="Questions" res_model="survey.question" binding_model="survey.survey" binding_views="form"/>
 
         <!-- PAGES -->
         <record model="ir.ui.view" id="survey_page_form">
@@ -383,7 +383,7 @@
               </p>
             </field>
         </record>
-        <act_window context="{'search_default_page_id': active_id, 'default_page_id': active_id}" id="act_survey_page_question" name="Questions" res_model="survey.question" src_model="survey.page"/>
+        <act_window context="{'search_default_page_id': active_id, 'default_page_id': active_id}" id="act_survey_page_question" name="Questions" res_model="survey.question" binding_model="survey.page" binding_views="form"/>
 
         <template id="assets_backend" name="survey assets" inherit_id="web.assets_backend">
             <xpath expr="." position="inside">

@@ -172,21 +172,24 @@
             name="All Invoices"
             res_model="account.invoice"
             domain="[('partner_id', 'child_of', active_id)]"
-            src_model="res.partner"/>
+            binding_model="res.partner"
+            binding_views="form"/>
 
         <act_window
             id="act_account_acount_move_line_open_unreconciled"
             name="Unreconciled Entries"
             res_model="account.move.line"
             context="{'search_default_account_id':[active_id], 'search_default_unreconciled':1, 'default_account_id': active_id}"
-            src_model="account.account"/>
+            binding_model="account.account"
+            binding_views="form"/>
 
         <act_window
             id="action_move_line_select"
             name="Journal Items"
             context="{'search_default_account_id': [active_id]}"
             res_model="account.move.line"
-            src_model="account.account"/>
+            binding_model="account.account"
+            binding_views="form"/>
 
         <act_window
             id="action_move_select"
@@ -199,14 +202,16 @@
             name="Journal Items"
             context="{'search_default_user_type_id': [active_id]}"
             res_model="account.move.line"
-            src_model="account.account.type"/>
+            binding_model="account.account.type"
+            binding_views="form"/>
 
         <act_window
             id="action_move_line_select_by_partner"
             name="Journal Items"
             context="{'search_default_partner_id': [active_id]}"
             res_model="account.move.line"
-            src_model="res.partner"/>
+            binding_model="res.partner"
+            binding_views="form"/>
 
         <!-- Account Journal -->
         <record id="view_account_journal_tree" model="ir.ui.view">
@@ -471,14 +476,16 @@
            name="Bank statements"
            context="{'search_default_journal_id': active_id, 'default_journal_id': active_id}"
            res_model="account.bank.statement"
-           src_model="account.journal"/>
+           binding_model="account.journal"
+           binding_views="form"/>
 
         <act_window
            id="act_account_journal_2_account_move_line"
            name="Journal Items"
            context="{'search_default_journal_id': active_id, 'default_journal_id': active_id}"
            res_model="account.move.line"
-           src_model="account.journal"
+           binding_model="account.journal"
+           binding_views="form"
            view_mode="tree"/>
 
         <!-- Tags -->
@@ -1321,7 +1328,8 @@
             name="Journal Items"
             context="{'search_default_account_id': [active_id]}"
             res_model="account.move.line"
-            src_model="account.account"
+            binding_model="account.account"
+            binding_views="form"
             view_id="account.view_move_line_tax_audit_tree"/>
 
         <record id="account_move_line_graph_date" model="ir.ui.view">
@@ -1625,7 +1633,8 @@
             name="Journal Items"
             context="{'search_default_move_id': active_id, 'default_move_id': active_id}"
             res_model="account.move.line"
-            src_model="account.move"
+            binding_model="account.move"
+            binding_views="form"
             view_mode="tree"/>
 
         <!-- Full Reconcile -->
