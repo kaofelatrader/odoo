@@ -3,7 +3,7 @@
 
 from odoo.osv import expression
 from odoo import api, fields, models, _
-from odoo.addons import decimal_precision as dp
+from odoo.addons.base.models import decimal_precision as dp
 from odoo.exceptions import UserError, ValidationError
 from odoo.osv import expression
 

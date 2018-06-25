@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 from pytz import timezone
 
 from odoo import api, fields, models, tools, _
-from odoo.addons import decimal_precision as dp
+from odoo.addons.base.models import decimal_precision as dp
 from odoo.addons.hr_payroll.models.browsable_object import BrowsableObject, InputLine, WorkedDays, Payslips
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import float_round

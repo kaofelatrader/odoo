@@ -5,7 +5,7 @@ import itertools
 import operator
 import psycopg2
 
-from odoo.addons import decimal_precision as dp
+from odoo.addons.base.models import decimal_precision as dp
 
 from odoo import api, fields, models, tools, _
 from odoo.exceptions import ValidationError, RedirectWarning, except_orm
