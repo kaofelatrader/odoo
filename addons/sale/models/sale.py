@@ -601,7 +601,10 @@ class SaleOrder(models.Model):
         self.ensure_one()
         ir_model_data = self.env['ir.model.data']
         try:
-            template_id = ir_model_data.get_object_reference('sale', 'email_template_edi_sale')[1]
+            if self.state == 'sale' and not self.env.context.get('proforma', False):
+                template_id = int(self.env['ir.config_parameter'].sudo().get_param('sale.default_confirmation_template'))
+            else:
+                template_id = ir_model_data.get_object_reference('sale', 'email_template_edi_sale')[1]
         except ValueError:
             template_id = False
         try:
@@ -637,6 +640,13 @@ class SaleOrder(models.Model):
             self.filtered(lambda o: o.state == 'draft').with_context(tracking_disable=True).write({'state': 'sent'})
             self.env.user.company_id.set_onboarding_step_done('sale_onboarding_sample_quotation_state')
         return super(SaleOrder, self.with_context(mail_post_autofollow=True)).message_post(**kwargs)
+
+    @api.multi
+    def send_order_confirmation_mail(self):
+        confirmation_template = self.env['ir.config_parameter'].sudo().get_param('sale.default_confirmation_template', False)
+        if confirmation_template:
+            for order in self:
+                order.with_context(is_online=True, force_send=True).message_post_with_template(int(confirmation_template), composition_mode='comment', notif_layout="mail.mail_notification_paynow")
 
     @api.multi
     def force_quotation_send(self):
