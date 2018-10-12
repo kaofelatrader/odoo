@@ -52,6 +52,7 @@ class MailThread(models.AbstractModel):
         bounced_email = message_dict['bounced_email']
         bounced_msg_id = message_dict['bounced_msg_id']
 
+        # if self.message_bounce >= 5:
         if bounced_msg_id:
             self.env['mail.mail.statistics'].set_bounced(mail_message_ids=[bounced_msg_id])
         if bounced_email:

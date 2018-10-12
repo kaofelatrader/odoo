@@ -1152,6 +1152,9 @@ class MailThread(models.AbstractModel):
             self._routing_handle_bounce(message, message_dict)
             return []
 
+        # If this is not a bounce, it's a real new mail, so can reset bounce counter
+        self._routing_reset_bounce(message, message_dict)
+
         # 1.1 Handle forward to an alias with a different model: do not consider it as a reply
         if reply_model and reply_thread_id:
             other_alias = Alias.search([
@@ -1279,6 +1282,33 @@ class MailThread(models.AbstractModel):
         else:
             _logger.info('Routing mail from %s to %s with Message-Id %s: not routing bounce email.',
                          message_dict['email_from'], message_dict['to'], message_dict['message_id'])
+
+    def _routing_reset_bounce(self, email_message, message_dict):
+        """Called by ``message_process`` when a new mail is received from an email address.
+        If the email is related to a partner, we consider that the number of message_bounce
+        is not relevant anymore as the email is valid - as we received an email from this
+        address. The model is here hardcoded because we cannot know with which model the
+        incomming mail match. We consider that if a mail arrives, we have to clear bounce for
+        each model having bounce count.
+
+        :param email_from: email address that sent the incoming email."""
+        valid_email = message_dict['email_from']
+        if valid_email:
+            bl_models = self.env['ir.model'].sudo().search(['&', ('is_mail_blacklist', '=', True), ('model', '!=', 'mail.blacklist.mixin')])
+            for model in bl_models:
+                self.env[model.model].sudo().search([('email_normalized', '=', valid_email)])._message_reset_bounce(valid_email)
+
+    def _get_records_from_email(self, email):
+        self._assert_primary_email()
+        normalized_email = tools.email_normalize(email)
+        if normalized_email:
+            query = """SELECT model.id
+                        FROM %s as model
+                        WHERE model.email_normalized = %%s""" % self._table
+            self._cr.execute(query, [normalized_email])
+            results = self._cr.fetchall()
+            return self.browse([result[0] for result in results])
+        return []
 
     @api.model
     def message_route_process(self, message, message_dict, routes):
@@ -1461,6 +1491,21 @@ class MailThread(models.AbstractModel):
         :param RecordSet partner: partner matching the bounced email address, if any
         :param string email: email that caused the bounce """
         pass
+
+    @api.multi
+    def _message_reset_bounce(self, email):
+        """Called by ``message_process`` when a bounce email (such as Undelivered
+        Mail Returned to Sender) is received for an existing thread. The default
+        behavior is to check is an integer  ``message_bounce`` column exists.
+        If it is the case, its content is incremented.
+
+        :param mail_id: ID of the sent email that bounced. It may not exist anymore
+                        but it could be usefull if the information was kept. This is
+                        used notably in mass mailing.
+        :param RecordSet partner: partner matching the bounced email address, if any
+        :param string email: email that caused the bounce """
+        if 'message_bounce' in self._fields:
+            self.message_bounce = 0
 
     def _message_extract_payload_postprocess(self, message, payload_dict):
         """ Perform some cleaning / postprocess in the body and attachments
