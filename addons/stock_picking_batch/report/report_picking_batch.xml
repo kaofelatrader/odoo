@@ -22,7 +22,6 @@
                                         <th>Picking Reference</th>
                                         <th>Barcode</th>
                                         <th>Status</th>
-                                        <th>Commitment Date</th>
                                         <th>Scheduled Date</th>
                                     </tr>
                                 </thead>
@@ -36,9 +35,6 @@
                                         </td>
                                         <td>
                                             <span t-field="pick.state"/>
-                                        </td>
-                                        <td>
-                                            <span t-field="pick.date"/>
                                         </td>
                                         <td >
                                             <span t-field="pick.scheduled_date"/>
@@ -61,7 +57,7 @@
                                         <tr>
                                             <th>Product</th>
                                             <th>Quantity</th>
-                                            <th width="27%">Destination</th>
+                                            <th width="27%">To</th>
                                             <th width="23%">Picking</th>
                                             <th t-if="has_serial_number" width="15%">
                                                 <strong>Lot/Serial Number</strong>
