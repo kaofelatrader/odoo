@@ -16,6 +16,7 @@ class ResConfigSettings(models.TransientModel):
     module_quality_control = fields.Boolean("Quality")
     group_mrp_routings = fields.Boolean("MRP Work Orders",
         implied_group='mrp.group_mrp_routings')
+    group_mrp_wo_tablet_timer = fields.Boolean("Show Timer on Work Orders", implied_group="mrp.group_mrp_wo_tablet_timer")
 
     @api.onchange('use_manufacturing_lead')
     def _onchange_use_manufacturing_lead(self):
