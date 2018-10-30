@@ -25,18 +25,16 @@ class PurchaseReport(models.Model):
     ], 'Order Status', readonly=True)
     product_id = fields.Many2one('product.product', 'Product', readonly=True)
     partner_id = fields.Many2one('res.partner', 'Vendor', readonly=True)
-    date_approve = fields.Date('Date Approved', readonly=True)
+    date_approve = fields.Date('Confirmation Date', readonly=True)
     product_uom = fields.Many2one('uom.uom', 'Reference Unit of Measure', required=True)
     company_id = fields.Many2one('res.company', 'Company', readonly=True)
     currency_id = fields.Many2one('res.currency', 'Currency', readonly=True)
     user_id = fields.Many2one('res.users', 'Purchase Representative', readonly=True)
-    delay = fields.Float('Days to Validate', digits=(16, 2), readonly=True)
-    delay_pass = fields.Float('Days to Deliver', digits=(16, 2), readonly=True)
-    unit_quantity = fields.Float('Product Quantity', readonly=True, oldname='quantity')
-    price_total = fields.Float('Total Price', readonly=True)
-    price_average = fields.Float('Average Price', readonly=True, group_operator="avg")
-    negociation = fields.Float('Purchase-Standard Price', readonly=True, group_operator="avg")
-    price_standard = fields.Float('Products Value', readonly=True, group_operator="sum")
+    delay = fields.Float('Days to Confirm', digits=(16, 2), readonly=True)
+    delay_pass = fields.Float('Days to Receive', digits=(16, 2), readonly=True)
+    price_total = fields.Float('Total', readonly=True)
+    price_average = fields.Float('Average Cost', readonly=True, group_operator="avg")
+    price_standard = fields.Float('Total Value', readonly=True, group_operator="sum")
     nbr_lines = fields.Integer('# of Lines', readonly=True, oldname='nbr')
     category_id = fields.Many2one('product.category', 'Product Category', readonly=True)
     product_tmpl_id = fields.Many2one('product.template', 'Product Template', readonly=True)
@@ -46,6 +44,12 @@ class PurchaseReport(models.Model):
     commercial_partner_id = fields.Many2one('res.partner', 'Commercial Entity', readonly=True)
     weight = fields.Float('Gross Weight', readonly=True)
     volume = fields.Float('Volume', readonly=True)
+    order_id = fields.Many2one('purchase.order', 'Order', readonly=True)
+    untaxed_total = fields.Float('Total Untaxed', readonly=True)
+    qty_ordered = fields.Float('Qty Ordered', readonly=True)
+    qty_received = fields.Float('Qty Received', readonly=True)
+    qty_billed = fields.Float('Qty Billed', readonly=True)
+    qty_to_be_billed = fields.Float('Qty to be Billed', readonly=True)
 
     @api.model_cr
     def init(self):
@@ -75,19 +79,28 @@ class PurchaseReport(models.Model):
                     t.categ_id as category_id,
                     s.currency_id,
                     t.uom_id as product_uom,
-                    sum(l.product_qty/u.factor*u2.factor) as unit_quantity,
                     extract(epoch from age(s.date_approve,s.date_order))/(24*60*60)::decimal(16,2) as delay,
                     extract(epoch from age(l.date_planned,s.date_order))/(24*60*60)::decimal(16,2) as delay_pass,
                     count(*) as nbr_lines,
+<<<<<<< HEAD
                     sum(l.price_unit / COALESCE(NULLIF(cr.rate, 0), 1.0) * l.product_qty)::decimal(16,2) as price_total,
                     avg(100.0 * (l.price_unit / COALESCE(NULLIF(cr.rate, 0),1.0) * l.product_qty) / NULLIF(ip.value_float*l.product_qty/u.factor*u2.factor, 0.0))::decimal(16,2) as negociation,
+=======
+                    sum(s.amount_total / COALESCE(cr.rate, 1.0))::decimal(16,2) as price_total,
+>>>>>>> b08c780b6fa... [IMP] purchase: Changes for purchase report
                     sum(ip.value_float*l.product_qty/u.factor*u2.factor)::decimal(16,2) as price_standard,
                     (sum(l.product_qty * l.price_unit / COALESCE(NULLIF(cr.rate, 0), 1.0))/NULLIF(sum(l.product_qty/u.factor*u2.factor),0.0))::decimal(16,2) as price_average,
                     partner.country_id as country_id,
                     partner.commercial_partner_id as commercial_partner_id,
                     analytic_account.id as account_analytic_id,
                     sum(p.weight * l.product_qty/u.factor*u2.factor) as weight,
-                    sum(p.volume * l.product_qty/u.factor*u2.factor) as volume
+                    sum(p.volume * l.product_qty/u.factor*u2.factor) as volume,
+                    s.id as order_id,
+                    sum(s.amount_untaxed / COALESCE(cr.rate, 1.0))::decimal(16,2) as untaxed_total,
+                    sum(l.product_qty / u.factor * u2.factor) as qty_ordered,
+                    sum(l.qty_received / u.factor * u2.factor) as qty_received,
+                    sum(l.qty_invoiced / u.factor * u2.factor) as qty_billed,
+                    sum(l.product_qty / u.factor * u2.factor) - sum(l.qty_received / u.factor * u2.factor) as qty_to_be_billed
         """ % self.env['res.currency']._select_companies_rates()
         return select_str
 
@@ -135,6 +148,7 @@ class PurchaseReport(models.Model):
                 u2.factor,
                 partner.country_id,
                 partner.commercial_partner_id,
-                analytic_account.id
+                analytic_account.id,
+                s.id
         """
         return group_by_str
