@@ -780,6 +780,8 @@ class MrpProduction(models.Model):
         if any(workorder.state == 'progress' for workorder in self.mapped('workorder_ids')):
             raise UserError(_('You can not cancel production order, a work order is still in progress.'))
         documents = {}
+        to_log = {}
+        Picking = self.env['stock.picking']
         for production in self:
             for move_raw_id in production.move_raw_ids.filtered(lambda m: m.state not in ('done', 'cancel')):
                 iterate_key = self._get_document_iterate_key(move_raw_id)
@@ -790,6 +792,17 @@ class MrpProduction(models.Model):
                             documents[key] += [value]
                         else:
                             documents[key] = [value]
+            if production.move_dest_ids.mapped('picking_id'):
+                production._log_downside_manufactured_quantity({production: (production.product_qty, 0)})
+                document = {}
+            else:
+                to_log[production.move_dest_ids.mapped('raw_material_production_id')] = (production.product_qty, 0)
+                document = Picking._log_activity_get_documents(to_log, 'move_dest_ids', 'UP')
+            for key, value in document.items():
+                if documents.get(key):
+                    documents[key] += [value]
+                else:
+                    documents[key] = [value]
             production.workorder_ids.filtered(lambda x: x.state != 'cancel').action_cancel()
             finish_moves = production.move_finished_ids.filtered(lambda x: x.state not in ('done', 'cancel'))
             raw_moves = production.move_raw_ids.filtered(lambda x: x.state not in ('done', 'cancel'))
@@ -929,7 +942,6 @@ class MrpProduction(models.Model):
         self.env['stock.picking']._log_activity(_render_note_exception_quantity_mo, documents)
 
     def _log_manufacture_exception(self, documents, cancel=False):
-
         def _render_note_exception_quantity_mo(rendering_context):
             visited_objects = []
             order_exceptions = {}
@@ -938,16 +950,16 @@ class MrpProduction(models.Model):
                 order_exceptions.update(order_exception)
                 visited_objects += visited
             visited_objects = self.env[visited_objects[0]._name].concat(*visited_objects)
-            impacted_object = []
-            if visited_objects and visited_objects._name == 'stock.move':
-                visited_objects |= visited_objects.mapped('move_orig_ids')
-                impacted_object = visited_objects.filtered(lambda m: m.state not in ('done', 'cancel')).mapped('picking_id')
+            visited_objects |= visited_objects.mapped('move_orig_ids')
+            impacted_pickings = []
+            if not visited_objects:
+                visited_objects = list(order_exception.keys())[0]
+            impacted_pickings = visited_objects.filtered(lambda m: m.state not in ('done', 'cancel')).mapped('picking_id')
             values = {
                 'production_order': self,
                 'order_exceptions': order_exceptions,
-                'impacted_object': impacted_object,
+                'impacted_pickings': impacted_pickings,
                 'cancel': cancel
             }
             return self.env.ref('mrp.exception_on_mo').render(values=values)
-
         self.env['stock.picking']._log_activity(_render_note_exception_quantity_mo, documents)
