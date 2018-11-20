@@ -1530,7 +1530,7 @@ QUnit.module('fields', {}, function () {
                 "there should be two records in the one2many in the dialog");
 
             // click on 'Discard'
-            testUtils.dom.clickFirst($('.modal-footer .btn-secondary'));
+            testUtils.dom.click($('.modal-footer .btn-secondary'));
 
             assert.strictEqual($('.modal').length, 0, "dialog should be closed");
 
@@ -2135,9 +2135,9 @@ QUnit.module('fields', {}, function () {
             form.destroy();
         });
 
-        QUnit.test('one2many list: unlink two records', function (assert) {
-            assert.expect(9);
-            this.data.partner.records[0].p = [1, 2, 4];
+        QUnit.test('one2many list: unlink one record', function (assert) {
+            assert.expect(7);
+            this.data.partner.records[0].p = [2, 4];
             var form = createView({
                 View: FormView,
                 model: 'partner',
@@ -2153,13 +2153,11 @@ QUnit.module('fields', {}, function () {
                 mockRPC: function (route, args) {
                     if (route === '/web/dataset/call_kw/partner/write') {
                         var commands = args.args[1].p;
-                        assert.strictEqual(commands.length, 3,
-                            'should have generated three commands');
+                        assert.strictEqual(commands.length, 2,
+                            'should have generated two commands');
                         assert.ok(commands[0][0] === 4 && commands[0][1] === 4,
                             'should have generated the command 4 (LINK_TO) with id 4');
-                        assert.ok(commands[1][0] === 3 && commands[1][1] === 1,
-                            'should have generated the command 3 (UNLINK) with id 1');
-                        assert.ok(commands[2][0] === 3 && commands[2][1] === 2,
+                        assert.ok(commands[1][0] === 3 && commands[1][1] === 2,
                             'should have generated the command 3 (UNLINK) with id 2');
                     }
                     return this._super.apply(this, arguments);
@@ -2171,33 +2169,30 @@ QUnit.module('fields', {}, function () {
             });
             testUtils.form.clickEdit(form);
 
-            assert.containsN(form, 'td.o_list_record_remove button', 3,
-                "should have 3 remove buttons");
+            assert.containsN(form, 'td.o_list_record_remove button', 2,
+                "should have 2 'Remove' buttons");
 
             assert.hasClass(form.$('td.o_list_record_remove button').first(),'fa fa-times',
                 "should have X icons to remove (unlink) records");
 
             testUtils.dom.click(form.$('td.o_list_record_remove button').first());
 
-            assert.containsN(form, 'td.o_list_record_remove button', 2,
-                "should have 2 remove buttons (a record is supposed to have been unlinked)");
+            assert.containsOnce(form, 'td.o_list_record_remove button',
+                "should have 1 'Remove' button (a record is supposed to have been unlinked)");
 
             testUtils.dom.click(form.$('tr.o_data_row').first());
-            assert.strictEqual($('.modal .modal-footer .o_btn_remove').length, 1,
-                'there should be a modal having Remove Button');
-            testUtils.dom.click($('.modal .modal-footer .o_btn_remove'));
-
-            assert.containsOnce(form, 'td.o_list_record_remove button',
-                "should have 1 delete button (another record is supposed to have been unlinked)");
+            assert.strictEqual($('.modal .modal-footer .o_btn_remove').length, 0,
+                 "there should not be a 'Remove' button in the modal footer");
+            testUtils.dom.click($('.modal-footer .btn-secondary'));
 
             // save and check that the correct command has been generated
             testUtils.form.clickSave(form);;
             form.destroy();
         });
 
-        QUnit.test('one2many list: deleting two records', function (assert) {
-            assert.expect(9);
-            this.data.partner.records[0].p = [1, 2, 4];
+        QUnit.test('one2many list: deleting one record', function (assert) {
+            assert.expect(6);
+            this.data.partner.records[0].p = [2, 4];
             var form = createView({
                 View: FormView,
                 model: 'partner',
@@ -2213,42 +2208,28 @@ QUnit.module('fields', {}, function () {
                 mockRPC: function (route, args) {
                     if (route === '/web/dataset/call_kw/partner/write') {
                         var commands = args.args[1].p;
-                        assert.strictEqual(commands.length, 3,
-                            'should have generated three commands');
+                        assert.strictEqual(commands.length, 2,
+                            'should have generated two commands');
                         assert.ok(commands[0][0] === 4 && commands[0][1] === 4,
                             'should have generated the command 4 (LINK_TO) with id 4');
-                        assert.ok(commands[1][0] === 2 && commands[1][1] === 1,
-                            'should have generated the command 2 (DELETE) with id 1');
-                        assert.ok(commands[2][0] === 2 && commands[2][1] === 2,
+                        assert.ok(commands[1][0] === 2 && commands[1][1] === 2,
                             'should have generated the command 2 (DELETE) with id 2');
                     }
                     return this._super.apply(this, arguments);
                 },
-                archs: {
-                    'partner,false,form':
-                        '<form string="Partner"><field name="display_name"/></form>',
-                },
             });
             testUtils.form.clickEdit(form);
 
-            assert.containsN(form, 'td.o_list_record_remove button', 3,
-                "should have 3 remove buttons");
+            assert.containsN(form, 'td.o_list_record_remove button', 2,
+                "should have 2 'Remove' buttons");
 
             assert.hasClass(form.$('td.o_list_record_remove button').first(),'fa fa-trash-o',
                 "should have trash bin icons to remove (delete) records");
 
             testUtils.dom.click(form.$('td.o_list_record_remove button').first());
 
-            assert.containsN(form, 'td.o_list_record_remove button', 2,
-                "should have 2 remove buttons (a record is supposed to have been deleted)");
-
-            testUtils.dom.click(form.$('tr.o_data_row').first());
-            assert.strictEqual($('.modal .modal-footer .o_btn_remove').length, 1,
-                'there should be a modal having Remove Button');
-            testUtils.dom.click($('.modal .modal-footer .o_btn_remove'));
-
             assert.containsOnce(form, 'td.o_list_record_remove button',
-                "should have 1 remove button (another record is supposed to have been deleted)");
+                "should have 1 'Remove' button (a record is supposed to have been deleted)");
 
             // save and check that the correct command has been generated
             testUtils.form.clickSave(form);;
@@ -5537,6 +5518,42 @@ QUnit.module('fields', {}, function () {
                 "second row should be selected");
 
             testUtils.form.clickSave(form);;
+            form.destroy();
+        });
+
+        QUnit.test('one2many list edition, no "Remove" button in modal', function (assert) {
+            assert.expect(2);
+
+            this.data.partner.fields.foo.default = false;
+
+            var form = createView({
+                View: FormView,
+                model: 'partner',
+                data: this.data,
+                arch: '<form string="Partners">' +
+                    '<field name="p">' +
+                    '<tree>' +
+                    '<field name="foo"/>' +
+                    '</tree>' +
+                    '<form string="Partners">' +
+                    '<field name="display_name"/>' +
+                    '</form>' +
+                    '</field>' +
+                    '</form>',
+                res_id: 1,
+            });
+            testUtils.form.clickEdit(form);
+
+            testUtils.dom.click(form.$('tbody td.o_field_x2many_list_row_add a'));
+            assert.strictEqual($('.modal').length, 1,
+            'there should be a modal opened');
+            assert.strictEqual($('.modal .modal-footer .o_btn_remove').length, 0,
+            'modal should not contain a "Remove" button');
+
+            // Discard a modal
+            testUtils.dom.click($('.modal-footer .btn-secondary'));
+
+            testUtils.form.clickDiscard(form);
             form.destroy();
         });
 
