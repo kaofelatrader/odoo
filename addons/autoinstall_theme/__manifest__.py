@@ -32,5 +32,6 @@
     'demo': [
         'demo/demo.xml',
     ],
+    'post_init_hook': '_load_my_theme',
 
 }
