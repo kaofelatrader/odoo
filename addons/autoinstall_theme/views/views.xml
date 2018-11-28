@@ -1,0 +1,60 @@
+<odoo>
+  <data>
+    <!-- explicit list view definition -->
+    <!--
+    <record model="ir.ui.view" id="autoinstall_theme.list">
+      <field name="name">autoinstall_theme list</field>
+      <field name="model">autoinstall_theme.autoinstall_theme</field>
+      <field name="arch" type="xml">
+        <tree>
+          <field name="name"/>
+          <field name="value"/>
+          <field name="value2"/>
+        </tree>
+      </field>
+    </record>
+    -->
+
+    <!-- actions opening views on models -->
+    <!--
+    <record model="ir.actions.act_window" id="autoinstall_theme.action_window">
+      <field name="name">autoinstall_theme window</field>
+      <field name="res_model">autoinstall_theme.autoinstall_theme</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+    -->
+
+    <!-- server action to the one above -->
+    <!--
+    <record model="ir.actions.server" id="autoinstall_theme.action_server">
+      <field name="name">autoinstall_theme server</field>
+      <field name="model_id" ref="model_autoinstall_theme_autoinstall_theme"/>
+      <field name="state">code</field>
+      <field name="code">
+        action = {
+          "type": "ir.actions.act_window",
+          "view_mode": "tree,form",
+          "res_model": self._name,
+        }
+      </field>
+    </record>
+    -->
+
+    <!-- Top menu item -->
+    <!--
+    <menuitem name="autoinstall_theme" id="autoinstall_theme.menu_root"/>
+    -->
+    <!-- menu categories -->
+    <!--
+    <menuitem name="Menu 1" id="autoinstall_theme.menu_1" parent="autoinstall_theme.menu_root"/>
+    <menuitem name="Menu 2" id="autoinstall_theme.menu_2" parent="autoinstall_theme.menu_root"/>
+    -->
+    <!-- actions -->
+    <!--
+    <menuitem name="List" id="autoinstall_theme.menu_1_list" parent="autoinstall_theme.menu_1"
+              action="autoinstall_theme.action_window"/>
+    <menuitem name="Server to list" id="autoinstall_theme" parent="autoinstall_theme.menu_2"
+              action="autoinstall_theme.action_server"/>
+    -->
+  </data>
+</odoo>
