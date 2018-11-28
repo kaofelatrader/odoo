@@ -1,4 +1,12 @@
 <odoo>
     <data>
+        <record id="new_website" model='website'>
+            <field name='name'>My new website</field>
+            <field name='theme_id' ref="base.module_theme_default" />
+        </record>
+        <function model='ir.module.module' name='_theme_load'>
+            <value eval="ref('base.module_theme_default')"/>
+            <value model="website" eval="obj().env.ref('autoinstall_theme.new_website')" />
+        </function>
     </data>
 </odoo>
