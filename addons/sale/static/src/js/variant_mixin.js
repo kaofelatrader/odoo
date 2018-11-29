@@ -504,7 +504,7 @@ var VariantMixin = {
         var $price = $parent.find(".oe_price:first .oe_currency_value");
         var $default_price = $parent.find(".oe_default_price:first .oe_currency_value");
         var $optional_price = $parent.find(".oe_optional:first .oe_currency_value");
-        $price.text(self._priceToStr(combination.price));
+        $price.text(self._formattedValue(combination.price, $price));
         $default_price.text(self._priceToStr(combination.list_price));
 
         // compatibility_check to remove in master
@@ -568,6 +568,33 @@ var VariantMixin = {
             .trigger('change');
 
         this.handleCustomValues($(ev.target));
+    },
+
+    /**
+     * return currency value
+     *
+     * @private
+     * @param {$.Element} $el
+     */
+    _getCurrencyValue: function($el) {
+        return {
+            'symbol': $el.data('symbol'),
+            'sign_position': $el.data('sign_position'),
+            'position': $el.data('position'),
+            'is_space': $el.data('is_space') === 'True' ? true : false
+        }
+    },
+
+    /**
+     * return formatted value
+     *
+     * @private
+     * @param {float} value
+     * @param {$.Element} $el
+     */
+    _formattedValue: function(value, $el) {
+        var value = this._priceToStr(value);
+        return utils.formatMonetaryValue(value, {'currency': this._getCurrencyValue($el)});
     },
 
     /**

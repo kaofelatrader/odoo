@@ -3,6 +3,7 @@ odoo.define('website_sale_delivery.checkout', function (require) {
 
 var core = require('web.core');
 var publicWidget = require('web.public.widget');
+var utils = require('web.utils');
 
 var _t = core._t;
 var concurrency = require('web.concurrency');
@@ -46,6 +47,20 @@ publicWidget.registry.websiteSaleDelivery = publicWidget.Widget.extend({
     // Private
     //--------------------------------------------------------------------------
 
+    _getCurrencyValue: function($el) {
+        return {
+            'symbol': $el.data('symbol'),
+            'sign_position': $el.data('sign_position'),
+            'position': $el.data('position'),
+            'is_space': $el.data('is_space') === 'True' ? true : false
+        }
+    },
+
+    formattedValue: function(value, $el) {
+        var value = _.str.sprintf("%s", value);
+        return utils.formatMonetaryValue(value, {'currency': this._getCurrencyValue($el)});
+    },
+
     /**
      * @private
      * @param {jQuery} $carrierInput
@@ -66,17 +81,17 @@ publicWidget.registry.websiteSaleDelivery = publicWidget.Widget.extend({
         var $amountTotal = $('#order_total .monetary_field');
 
         if (result.status === true) {
-            $amountDelivery.html(result.new_amount_delivery);
-            $amountUntaxed.html(result.new_amount_untaxed);
-            $amountTax.html(result.new_amount_tax);
-            $amountTotal.html(result.new_amount_total);
+            $amountDelivery.html(this.formattedValue(result.new_amount_delivery, $amountDelivery));
+            $amountUntaxed.html(this.formattedValue(result.new_amount_untaxed, $amountUntaxed));
+            $amountTax.html(this.formattedValue(result.new_amount_tax, $amountTax));
+            $amountTotal.html(this.formattedValue(result.new_amount_total, $amountTotal));
             $payButton.data('disabled_reasons').carrier_selection = false;
             $payButton.prop('disabled', _.contains($payButton.data('disabled_reasons'), true));
         } else {
-            $amountDelivery.html(result.new_amount_delivery);
-            $amountUntaxed.html(result.new_amount_untaxed);
-            $amountTax.html(result.new_amount_tax);
-            $amountTotal.html(result.new_amount_total);
+            $amountDelivery.html(this.formattedValue(result.new_amount_delivery, $amountDelivery));
+            $amountUntaxed.html(this.formattedValue(result.new_amount_untaxed, $amountUntaxed));
+            $amountTax.html(this.formattedValue(result.new_amount_tax, $amountTax));
+            $amountTotal.html(this.formattedValue(result.new_amount_total, $amountTotal));
         }
     },
     /**
@@ -91,7 +106,7 @@ publicWidget.registry.websiteSaleDelivery = publicWidget.Widget.extend({
              if (result.is_free_delivery) {
                  $carrierBadge.text(_t('Free'));
              } else {
-                 $carrierBadge.html(result.new_amount_delivery);
+                 $carrierBadge.html(this.formattedValue(result.new_amount_delivery, $amountDelivery));
              }
              $carrierBadge.removeClass('o_wsale_delivery_carrier_error');
         } else {
