@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import base64
 import datetime
 import logging
 import os
@@ -1175,9 +1176,11 @@ class IrActionsActClient(models.Model):
     def _compute_params(self):
         self_bin = self.with_context(bin_size=False, bin_size_params_store=False)
         for record, record_bin in zip(self, self_bin):
-            record.params = record_bin.params_store and safe_eval(record_bin.params_store, {'uid': self._uid})
+            params = record_bin.params_store and base64.b64decode(record_bin.params_store)
+            record.params = params and safe_eval(params, {'uid': self._uid})
 
     def _inverse_params(self):
         for record in self:
             params = record.params
-            record.params_store = repr(params) if isinstance(params, dict) else params
+            value = repr(params) if isinstance(params, dict) else params
+            record.params_store = base64.b64encode(value.encode("utf-8"))
