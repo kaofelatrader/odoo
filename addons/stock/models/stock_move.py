@@ -1147,6 +1147,11 @@ class StockMove(models.Model):
 
         if picking and not cancel_backorder:
             picking._create_backorder()
+
+        # split moves
+        for move in moves_todo:
+            move._split_mts()
+
         return moves_todo
 
     def unlink(self):
@@ -1155,6 +1160,31 @@ class StockMove(models.Model):
         # With the non plannified picking, draft moves could have some move lines.
         self.mapped('move_line_ids').unlink()
         return super(StockMove, self).unlink()
+
+    def _split_mts(self):
+        self.ensure_one()
+        total_org = sum(self.move_dest_ids.mapped('move_orig_ids.product_uom_qty'))
+        total_dest = sum(self.move_dest_ids.mapped('product_uom_qty'))
+        if total_org < total_dest:
+            for dest_move in self.move_dest_ids:
+                if dest_move.procure_method == 'make_to_order':
+                    qty_split = dest_move.product_uom_qty - dest_move.reserved_availability
+                    decimal_precision = self.env['decimal.precision'].precision_get('Product Unit of Measure')
+                    if float_compare(qty_split, dest_move.product_uom_qty, precision_digits=decimal_precision) == 0:
+                        dest_move.write({
+                            'move_orig_ids': [(5, 0, 0)],
+                            'procure_method': 'make_to_stock',
+                        })
+                        dest_move._action_assign()
+                    elif float_round(qty_split, precision_digits=decimal_precision) > 0:
+                        new_move = dest_move._split(qty_split)
+                        rec = self.env['stock.move'].browse(new_move)
+                        rec.write({
+                            'move_orig_ids': [(5, 0, 0)],
+                        })
+                        rec._action_assign()
+                    dest_move._recompute_state()
+        return True
 
     def _prepare_move_split_vals(self, qty):
         vals = {
