@@ -177,10 +177,12 @@ def _eval_xml(self, node, env):
     elif node.tag == "function":
         args = []
         a_eval = node.get('eval','')
+        model_str = node.get('model', '')
         # FIXME: should probably be exclusive
         if a_eval:
             self.idref['ref'] = self.id_get
-            args = safe_eval(a_eval, self.idref)
+            idref2 = _get_idref(self, env, model_str, self.idref)
+            args = safe_eval(a_eval, idref2)
         for n in node:
             return_val = _eval_xml(self, n, env)
             if return_val is not None:
