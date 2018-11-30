@@ -51,6 +51,7 @@ class StockRule(models.Model):
             partner = supplier.name
             # we put `supplier_info` in values for extensibility purposes
             procurement.values['supplier'] = supplier
+            procurement.values['propagate'] = rule.propagate
 
             domain = rule._make_po_get_domain(procurement.company_id, procurement.values, partner)
             procurements_by_po_domain[domain].append((procurement, rule))
@@ -94,6 +95,7 @@ class StockRule(models.Model):
             for procurement in procurements:
                 po_lines = po_lines_by_product.get(procurement.product_id.id, self.env['purchase.order.line'])
                 po_line = po_lines._find_candidate(*procurement)
+                partner = procurement.values['supplier'].name
 
                 if po_line:
                     # If the procurement can be merge in an existing line. Directly
@@ -101,12 +103,10 @@ class StockRule(models.Model):
                     vals = self._update_purchase_order_line(procurement.product_id,
                         procurement.product_qty, procurement.product_uom, company_id,
                         procurement.values, po_line)
-                    po_line.write(vals)
                 else:
                     # If it does not exist a PO line for current procurement.
                     # Generate the create values for it and add it to a list in
                     # order to create it in batch.
-                    partner = procurement.values['supplier'].name
                     po_line_values.append(self._prepare_purchase_order_line(
                         procurement.product_id, procurement.product_qty,
                         procurement.product_uom, procurement.company_id,
@@ -115,11 +115,11 @@ class StockRule(models.Model):
 
     @api.model
     def _get_procurements_to_merge_groupby(self, procurement):
-        return procurement.product_id, procurement.product_uom
+        return procurement.product_id, procurement.product_uom, procurement.values.get('propagate')
 
     @api.model
     def _get_procurements_to_merge_sorted(self, procurement):
-        return procurement.product_id.id, procurement.product_uom.id
+        return procurement.product_id.id, procurement.product_uom.id, procurement.values.get('propagate')
 
     @api.model
     def _get_procurements_to_merge(self, procurements):
@@ -223,13 +223,13 @@ class StockRule(models.Model):
             name += '\n' + product_lang.description_purchase
 
         date_planned = self.env['purchase.order.line']._get_date_planned(seller, po=po)
-
         return {
             'name': name,
             'product_qty': procurement_uom_po_qty,
             'product_id': product_id.id,
             'product_uom': product_id.uom_po_id.id,
             'price_unit': price_unit,
+            'propagate': values.get('propagate', True),
             'date_planned': date_planned,
             'orderpoint_id': values.get('orderpoint_id', False) and values.get('orderpoint_id').id,
             'taxes_id': [(6, 0, taxes_id.ids)],

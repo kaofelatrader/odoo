@@ -90,8 +90,8 @@ class PurchaseOrder(models.Model):
     @api.multi
     def button_cancel(self):
         for order in self:
-            for pick in order.picking_ids:
-                if pick.state == 'done':
+            for move in order.order_line.mapped('move_ids'):
+                if move.state == 'done':
                     raise UserError(_('Unable to cancel purchase order %s as some receptions have already been done.') % (order.name))
             # If the product is MTO, change the procure_method of the the closest move to purchase to MTS.
             # The purpose is to link the po that the user will manually generate to the existing moves's chain.
@@ -103,6 +103,14 @@ class PurchaseOrder(models.Model):
                         if all(state in ('done', 'cancel') for state in siblings_states):
                             move_dest_ids.write({'procure_method': 'make_to_stock'})
                             move_dest_ids._recompute_state()
+                        if order_line.propagate:
+                            move_dest_ids._action_cancel()
+            if order.state in ('purchase'):
+                for order_line in order.order_line:
+                    if order_line.move_ids:
+                        move_ids = order_line.move_ids.filtered(lambda m: m.state not in ('done', 'cancel'))
+                        move_ids._action_cancel()
+
 
             for pick in order.picking_ids.filtered(lambda r: r.state != 'cancel'):
                 pick.action_cancel()
@@ -226,6 +234,7 @@ class PurchaseOrderLine(models.Model):
     move_ids = fields.One2many('stock.move', 'purchase_line_id', string='Reservation', readonly=True, ondelete='set null', copy=False)
     orderpoint_id = fields.Many2one('stock.warehouse.orderpoint', 'Orderpoint')
     move_dest_ids = fields.One2many('stock.move', 'created_purchase_line_id', 'Downstream Moves')
+    propagate = fields.Boolean('Propagate', default=True)
 
     @api.multi
     def _compute_qty_received_method(self):
@@ -355,6 +364,7 @@ class PurchaseOrderLine(models.Model):
             'group_id': self.order_id.group_id.id,
             'origin': self.order_id.name,
             'description_picking': self.product_id._get_description(self.order_id.picking_type_id),
+            'propagate': self.propagate,
             'route_ids': self.order_id.picking_type_id.warehouse_id and [(6, 0, [x.id for x in self.order_id.picking_type_id.warehouse_id.route_ids])] or [],
             'warehouse_id': self.order_id.picking_type_id.warehouse_id.id,
         }
@@ -382,4 +392,5 @@ class PurchaseOrderLine(models.Model):
         args can be merged. If it returns an empty record then a new line will
         be created.
         """
-        return self and self[0] or self.env['purchase.order.line']
+        lines = self.filtered(lambda l: l.propagate == values['propagate'])
+        return lines and lines[0] or self.env['purchase.order.line']
