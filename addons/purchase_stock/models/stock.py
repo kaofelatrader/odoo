@@ -113,11 +113,13 @@ class StockWarehouse(models.Model):
                     'picking_type_id': self.in_type_id.id,
                     'group_propagation_option': 'none',
                     'company_id': self.company_id.id,
+                    'propagate': self.reception_steps != 'one_step',
                     'route_id': self._find_global_route('purchase_stock.route_warehouse0_buy', _('Buy')).id
                 },
                 'update_values': {
                     'active': self.buy_to_resupply,
                     'name': self._format_rulename(location_id, False, 'Buy'),
+                    'propagate': self.reception_steps != 'one_step',
                     'location_id': location_id.id,
                 }
             }

@@ -46,13 +46,13 @@ class StockWarehouse(models.Model):
             result[warehouse.id].update({
                 'mrp_one_step': [],
                 'pbm': [
-                    self.Routing(warehouse.lot_stock_id, warehouse.pbm_loc_id, warehouse.pbm_type_id, 'pull'),
-                    self.Routing(warehouse.pbm_loc_id, production_location_id, warehouse.manu_type_id, 'pull'),
+                    self.Routing(warehouse.lot_stock_id, warehouse.pbm_loc_id, warehouse.pbm_type_id, 'pull', True),
+                    self.Routing(warehouse.pbm_loc_id, production_location_id, warehouse.manu_type_id, 'pull', True),
                 ],
                 'pbm_sam': [
-                    self.Routing(warehouse.lot_stock_id, warehouse.pbm_loc_id, warehouse.pbm_type_id, 'pull'),
-                    self.Routing(warehouse.pbm_loc_id, production_location_id, warehouse.manu_type_id, 'pull'),
-                    self.Routing(warehouse.sam_loc_id, warehouse.lot_stock_id, warehouse.sam_type_id, 'push'),
+                    self.Routing(warehouse.lot_stock_id, warehouse.pbm_loc_id, warehouse.pbm_type_id, 'pull', True),
+                    self.Routing(warehouse.pbm_loc_id, production_location_id, warehouse.manu_type_id, 'pull', True),
+                    self.Routing(warehouse.sam_loc_id, warehouse.lot_stock_id, warehouse.sam_type_id, 'push', True),
                 ],
             })
         return result
@@ -109,6 +109,7 @@ class StockWarehouse(models.Model):
                     'action': 'manufacture',
                     'procure_method': 'make_to_order',
                     'company_id': self.company_id.id,
+                    'propagate': self.manufacture_steps != 'mrp_one_step',
                     'picking_type_id': self.manu_type_id.id,
                     'route_id': self._find_global_route('mrp.route_warehouse0_manufacture', _('Manufacture')).id
                 },
@@ -149,7 +150,7 @@ class StockWarehouse(models.Model):
                     'company_id': self.company_id.id,
                     'action': 'pull',
                     'auto': 'manual',
-                    'propagate': True,
+                    'propagate': False,
                     'route_id': self._find_global_route('mrp.route_warehouse0_manufacture', _('Manufacture')).id,
                     'name': self._format_rulename(self.sam_loc_id, self.lot_stock_id, False),
                     'location_id': self.lot_stock_id.id,
