@@ -251,3 +251,7 @@ class MailController(http.Controller):
             'moderation_channel_ids': request.env.user.moderation_channel_ids.ids,
         }
         return values
+
+    @http.route('/mail/get_partner_info', type='json', auth='user')
+    def message_partner_info_from_emails(self, model, res_id, emails, link_mail=False):
+        return request.env[model].browse(res_id)._message_partner_info_from_emails(emails, link_mail=link_mail)
