@@ -639,6 +639,7 @@ class Warehouse(models.Model):
                 'warehouse_id': self.id,
                 'company_id': self.company_id.id,
                 'propagate': routing.picking_type != self.pick_type_id,
+                'propagate_date': routing.picking_type != self.pick_type_id,
             }
             route_rule_values.update(values or {})
             rules_list.append(route_rule_values)

@@ -68,6 +68,10 @@ class StockRule(models.Model):
         help="The 'Manual Operation' value will create a stock move after the current one. "
              "With 'Automatic No Step Added', the location is replaced in the original move.")
     rule_message = fields.Html(compute='_compute_action_message')
+    propagate_date = fields.Boolean(string="Propagate Rescheduling", default=True,
+        help='The rescheduling is propagated to the next move.')
+    propagate_date_minimum_delta = fields.Integer(string='Reschedule if Higher Than',
+        help='The change must be higher than this value to be propagated', default=1)
 
     @api.onchange('picking_type_id')
     def _onchange_picking_type(self):

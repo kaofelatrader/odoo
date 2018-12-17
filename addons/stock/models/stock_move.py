@@ -422,14 +422,14 @@ class StockMove(models.Model):
         if not self._context.get('do_not_propagate', False) and (propagated_date_field or propagated_changes_dict):
             #any propagation is (maybe) needed
             for move in self:
-                if move.move_dest_ids and move.propagate:
+                if move.move_dest_ids and move.rule_id.propagate_date:
                     if 'date_expected' in propagated_changes_dict:
                         propagated_changes_dict.pop('date_expected')
                     if propagated_date_field:
                         current_date = move.date_expected
                         new_date = fields.Datetime.from_string(vals.get(propagated_date_field))
                         delta_days = (new_date - current_date).total_seconds() / 86400
-                        if abs(delta_days) >= move.company_id.propagation_minimum_delta:
+                        if abs(delta_days) >= move.rule_id.propagate_date_minimum_delta:
                             old_move_date = move.move_dest_ids[0].date_expected
                             new_move_date = (old_move_date + relativedelta.relativedelta(days=delta_days or 0)).strftime(DEFAULT_SERVER_DATETIME_FORMAT)
                             propagated_changes_dict['date_expected'] = new_move_date
