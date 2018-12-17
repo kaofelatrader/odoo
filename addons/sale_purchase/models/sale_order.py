@@ -17,9 +17,9 @@ class SaleOrder(models.Model):
     def _compute_purchase_order_count(self):
         purchase_line_data = self.env['purchase.order.line'].read_group(
             [('sale_order_id', 'in', self.ids)],
-            ['sale_order_id', 'purchase_order_count:count_distinct(order_id)'], ['sale_order_id']
+            ['sale_order_id', 'order_id:count_distinct'], ['sale_order_id']
         )
-        purchase_count_map = {item['sale_order_id'][0]: item['purchase_order_count'] for item in purchase_line_data}
+        purchase_count_map = {item['sale_order_id'][0]: item['order_id:count_distinct'] for item in purchase_line_data}
         for order in self:
             order.purchase_order_count = purchase_count_map.get(order.id, 0)
 

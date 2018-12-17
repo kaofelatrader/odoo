@@ -228,7 +228,7 @@ class TestAggregate(common.TransactionCase):
         groups = self.Model.read_group([], fields, ['key'])
         self.assertEqual(groups, [{
             'key': 1,
-            'value': 4,
+            'value:max': 4,
             'key_count': 4,
             '__domain': [('key', '=', 1)],
         }])
@@ -237,7 +237,7 @@ class TestAggregate(common.TransactionCase):
         self.assertEqual(groups, [{
             'key': 1,
             'value': 10,
-            'partner_id': [None, self.foo.id, self.foo.id, self.bar.id],
+            'partner_id:array_agg': [None, self.foo.id, self.foo.id, self.bar.id],
             'key_count': 4,
             '__domain': [('key', '=', 1)],
         }])
@@ -246,7 +246,7 @@ class TestAggregate(common.TransactionCase):
         self.assertEqual(groups, [{
             'key': 1,
             'value': 10,
-            'partner_id': 3,
+            'partner_id:count': 3,
             'key_count': 4,
             '__domain': [('key', '=', 1)],
         }])
@@ -255,28 +255,28 @@ class TestAggregate(common.TransactionCase):
         self.assertEqual(groups, [{
             'key': 1,
             'value': 10,
-            'partner_id': 2,
+            'partner_id:count_distinct': 2,
             'key_count': 4,
             '__domain': [('key', '=', 1)],
         }])
 
     def test_agg_multi(self):
         """ test multiple aggregation on fields """
-        fields = ['key', 'value_min:min(value)', 'value_max:max(value)', 'partner_id']
+        fields = ['key', 'value:min', 'value:max', 'partner_id']
         groups = self.Model.read_group([], fields, ['key'])
         self.assertEqual(groups, [{
             'key': 1,
-            'value_min': 1,
-            'value_max': 4,
+            'value:min': 1,
+            'value:max': 4,
             'key_count': 4,
             '__domain': [('key', '=', 1)],
         }])
 
-        fields = ['key', 'ids:array_agg(id)']
+        fields = ['key', 'id:array_agg']
         groups = self.Model.read_group([], fields, ['key'])
         self.assertEqual(groups, [{
             'key': 1,
-            'ids': self.Model.search([]).ids,
+            'id:array_agg': self.Model.search([]).ids,
             'key_count': 4,
             '__domain': [('key', '=', 1)],
         }])

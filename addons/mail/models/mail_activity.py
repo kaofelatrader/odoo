@@ -453,7 +453,7 @@ class MailActivity(models.Model):
             activity_domain.append(('res_id', 'in', res.ids))
         grouped_activities = self.env['mail.activity'].read_group(
             activity_domain,
-            ['res_id', 'activity_type_id', 'res_name:max(res_name)', 'ids:array_agg(id)', 'date_deadline:min(date_deadline)'],
+            ['res_id', 'activity_type_id', 'res_name:max', 'id:array_agg', 'date_deadline:min'],
             ['res_id', 'activity_type_id'],
             lazy=False)
         activity_type_ids = self.env['mail.activity.type']
@@ -462,17 +462,17 @@ class MailActivity(models.Model):
         activity_data = defaultdict(dict)
         for group in grouped_activities:
             res_id = group['res_id']
-            res_name = group['res_name']
+            res_name = group['res_name:max']
             activity_type_id = group['activity_type_id'][0]
             activity_type_ids |= self.env['mail.activity.type'].browse(activity_type_id)  # we will get the name when reading mail_template_ids
             res_id_to_name[res_id] = res_name
-            res_id_to_deadline[res_id] = group['date_deadline'] if (res_id not in res_id_to_deadline or group['date_deadline'] < res_id_to_deadline[res_id]) else res_id_to_deadline[res_id]
-            state = self._compute_state_from_date(group['date_deadline'], self.user_id.sudo().tz)
+            res_id_to_deadline[res_id] = group['date_deadline:min'] if (res_id not in res_id_to_deadline or group['date_deadline:min'] < res_id_to_deadline[res_id]) else res_id_to_deadline[res_id]
+            state = self._compute_state_from_date(group['date_deadline:min'], self.user_id.sudo().tz)
             activity_data[res_id][activity_type_id] = {
                 'count': group['__count'],
-                'ids': group['ids'],
+                'ids': group['id:array_agg'],
                 'state': state,
-                'o_closest_deadline': group['date_deadline'],
+                'o_closest_deadline': group['date_deadline:min'],
             }
         res_ids_sorted = sorted(res_id_to_deadline, key=lambda item: res_id_to_deadline[item])
         activity_type_infos = []
