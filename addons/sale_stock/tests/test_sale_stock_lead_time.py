@@ -98,3 +98,53 @@ class TestSaleStockLeadTime(TestStockCommon):
         pick_min_date = fields.Datetime.from_string(pick.scheduled_date)
         pick_date = pack_date - timedelta(days=pick.move_lines[0].rule_id.delay)
         self.assertTrue(abs(pick_min_date - pick_date) <= timedelta(seconds=1), 'Schedule date of pick type picking should be equal to: Schedule date of pack type picking - pull rule delay.')
+
+    def test_02_forward_cancel(self):
+        """
+        This will test forward canceling feature
+            1) Set delivery steps ( 3 ) on the warehouse.
+            2) Create sale order for the warehouse.
+            3) Cancel outgoing shipment of the warehouse.
+            # Result
+            # ---------------------------
+            # It should cancel pick, pack
+            # ---------------------------
+        """
+        # Set delivery steps on the warehouse.
+        self.warehouse_1.write({'delivery_steps': 'pick_pack_ship'})
+
+        # Set cancellation of previous move on pull rule.
+        self.warehouse_1.delivery_route_id.rule_ids.write({'previous_move_propagate': True})
+
+        # Create sale order of warehouse.
+        order = self.env['sale.order'].create({
+            'partner_id': self.partner_1.id,
+            'partner_invoice_id': self.partner_1.id,
+            'partner_shipping_id': self.partner_1.id,
+            'pricelist_id': self.env.ref('product.list0').id,
+            'picking_policy': 'direct',
+            'warehouse_id': self.warehouse_1.id,
+            'order_line': [(0, 0, {'name': self.product_1.name,
+                                   'product_id': self.product_1.id,
+                                   'product_uom_qty': 5,
+                                   'product_uom': self.uom_unit.id,
+                                   'customer_lead': self.product_1.sale_delay})]})
+
+        # Confirm sale order.
+        order.action_confirm()
+
+        # Check the pickings are created or not.
+        self.assertTrue(order.picking_ids, "Pickings should be created.")
+        self.assertEquals(len(order.picking_ids), 3)
+
+        pack = order.picking_ids.filtered(lambda r: r.picking_type_id == self.warehouse_1.pack_type_id)
+        pick = order.picking_ids.filtered(lambda r: r.picking_type_id == self.warehouse_1.pick_type_id)
+        out = order.picking_ids.filtered(lambda r: r.picking_type_id == self.warehouse_1.out_type_id)
+
+        # Cancel outgoing shipment.
+        out.action_cancel()
+
+        # Check the picking state.
+        self.assertEquals(pick.state, 'cancel')
+        self.assertEquals(pack.state, 'cancel')
+        self.assertEquals(out.state, 'cancel')
