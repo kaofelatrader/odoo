@@ -137,6 +137,7 @@
                                         attrs="{'readonly':[('active','=',False)]}"/>
                                     <field name="privacy_visibility" widget="radio"/>
                                     <field name="partner_id" string="Customer"/>
+                                    <field name="analytic_account_id" groups="analytic.group_analytic_accounting" context="{'default_partner_id': partner_id}"/>
                                     <label for="rating_status" groups="project.group_project_rating"/>
                                     <div groups="project.group_project_rating">
                                         <field name="rating_status" widget="radio"/>
