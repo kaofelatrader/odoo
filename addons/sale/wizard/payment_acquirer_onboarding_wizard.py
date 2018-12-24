@@ -38,6 +38,6 @@ class PaymentWizard(models.TransientModel):
         if self.payment_method == 'digital_signature':
             self.env.user.company_id.portal_confirmation_sign = True
         if self.payment_method in ('paypal', 'stripe', 'manual'):
-            self.env.user.company_id.portal_confirmation_pay = True
+            self.env.user.company_id.group_confirmation_pay = True
 
         return super(PaymentWizard, self).add_payment_methods(*args, **kwargs)

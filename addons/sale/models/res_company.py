@@ -9,7 +9,7 @@ class ResCompany(models.Model):
 
     sale_note = fields.Text(string='Default Terms and Conditions', translate=True)
     portal_confirmation_sign = fields.Boolean(string='Online Signature')
-    portal_confirmation_pay = fields.Boolean(string='Online Payment')
+    group_confirmation_pay = fields.Boolean(string='Online Payment')
     quotation_validity_days = fields.Integer(default=30, string="Default Quotation Validity (Days)")
 
     # sale quotation onboarding
@@ -22,7 +22,7 @@ class ResCompany(models.Model):
         ('paypal', 'PayPal'),
         ('stripe', 'Stripe'),
         ('other', 'Pay with another payment acquirer'),
-        ('manual', 'Wire Transfer'),
+        ('manual', 'Manual Payment'),
     ], string="Sale onboarding selected payment method")
 
     @api.model

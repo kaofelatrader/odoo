@@ -34,7 +34,7 @@ class SaleOrder(models.Model):
         return self.env.user.company_id.portal_confirmation_sign
 
     def _get_default_require_payment(self):
-        return self.env.user.company_id.portal_confirmation_pay
+        return self.env.user.company_id.group_confirmation_pay
 
     @api.depends('order_line.price_total')
     def _amount_all(self):
