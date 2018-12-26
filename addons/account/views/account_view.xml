@@ -624,6 +624,7 @@
                             <field name="date" options="{'datepicker': {'warn_future': true}}" />
                             <field name="accounting_date" groups="base.group_no_one"/>
                             <field name='company_id' options="{'no_create': True}" groups="base.group_multi_company" />
+                            <field name="unit_id" domain="[('company_unit_id', '=', company_id)]" options="{'no_create': True, 'no_open': True}" groups="account.group_multi_operating_unit"/>
                             <field name="currency_id" invisible="1"/>
                         </group><group>
                             <label for="balance_start"/>
@@ -1604,6 +1605,7 @@
                         <group>
                             <field name="journal_id" options="{'no_open': True, 'no_create': True}"/>
                             <field name="company_id" required="1" groups="base.group_multi_company"/>
+                            <field name="unit_id" domain="[('company_unit_id', '=', company_id)]" options="{'no_create': True}" groups="account.group_multi_operating_unit"/>
                             <field name="amount" invisible="1"/>
                             <field name="currency_id" invisible="1"/>
                         </group>

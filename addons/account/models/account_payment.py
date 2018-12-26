@@ -56,6 +56,8 @@ class account_abstract_payment(models.AbstractModel):
     payment_date = fields.Date(string='Payment Date', default=fields.Date.context_today, required=True, copy=False, tracking=True)
     communication = fields.Char(string='Memo')
     journal_id = fields.Many2one('account.journal', string='Payment Journal', required=True, tracking=True, domain=[('type', 'in', ('bank', 'cash'))])
+    unit_id = fields.Many2one('res.partner', string="Operating Unit", ondelete="restrict",
+        default=lambda self: self.env.user._get_default_unit())
 
     hide_payment_method = fields.Boolean(compute='_compute_hide_payment_method',
         help="Technical field used to hide the payment method if the selected journal has only one available which is 'manual'")
@@ -68,6 +70,7 @@ class account_abstract_payment(models.AbstractModel):
         default='Write-Off')
     partner_bank_account_id = fields.Many2one('res.partner.bank', string="Recipient Bank Account")
     show_partner_bank_account = fields.Boolean(compute='_compute_show_partner_bank', help='Technical field used to know whether the field `partner_bank_account_id` needs to be displayed or not in the payments form views')
+    show_unit_id_field = fields.Boolean(compute='_compute_show_unit_id_field')
 
     @api.model
     def default_get(self, fields):
@@ -87,6 +90,8 @@ class account_abstract_payment(models.AbstractModel):
         # Check all invoices have the same currency
         if any(inv.currency_id != invoices[0].currency_id for inv in invoices):
             raise UserError(_("In order to pay multiple invoices at once, they must use the same currency."))
+        if not self.env.user.has_group('account.group_multi_operating_unit') and len(invoices.mapped('unit_id')) > 1:
+            raise UserError(_("You can not pay multiple invoices of different operating units at once since you do not belong to group `Manage Multiple Operating Units`."))
 
         # Look if we are mixin multiple commercial_partner or customer invoices with vendor bills
         multi = any(inv.commercial_partner_id != invoices[0].commercial_partner_id
@@ -128,6 +133,12 @@ class account_abstract_payment(models.AbstractModel):
         for payment in self:
             payment.show_partner_bank_account = payment.payment_method_code in self._get_method_codes_using_bank_account() and not self.multi
 
+    @api.depends('invoice_ids')
+    def _compute_show_unit_id_field(self):
+        for record in self:
+            if len(record.invoice_ids.mapped('unit_id')) > 1:
+                record.show_unit_id_field = True
+
     @api.multi
     @api.depends('payment_type', 'journal_id')
     def _compute_hide_payment_method(self):
@@ -148,6 +159,7 @@ class account_abstract_payment(models.AbstractModel):
 
     @api.onchange('journal_id')
     def _onchange_journal(self):
+        self.unit_id = self.journal_id.company_id.partner_id
         if self.journal_id:
             # Set default payment method (we consider the first to be the default one)
             payment_methods = self.payment_type == 'inbound' and self.journal_id.inbound_payment_method_ids or self.journal_id.outbound_payment_method_ids
@@ -254,6 +266,7 @@ class account_register_payments(models.TransientModel):
                                                                     type and recipient bank account in the generated payments. If disabled,
                                                                     a distinct payment will be generated for each invoice.""")
     show_communication_field = fields.Boolean(compute='_compute_show_communication_field')
+    company_id = fields.Many2one('res.company', related='journal_id.company_id', string='Company', readonly=True)
 
     @api.depends('invoice_ids.partner_id', 'group_invoices')
     def _compute_show_communication_field(self):
@@ -330,6 +343,7 @@ class account_register_payments(models.TransientModel):
             'payment_date': self.payment_date,
             'communication': pmt_communication,
             'invoice_ids': [(6, 0, invoices.ids)],
+            'unit_id': self.unit_id.id,
             'payment_type': payment_type,
             'amount': abs(amount),
             'currency_id': self.currency_id.id,
@@ -751,6 +765,7 @@ class account_payment(models.Model):
             'date': self.payment_date,
             'ref': self.communication or '',
             'company_id': self.company_id.id,
+            'unit_id': self.unit_id.id,
             'journal_id': journal.id,
         }
         if self.move_name:

@@ -123,6 +123,11 @@ class AccountMove(models.Model):
     amount = fields.Monetary(compute='_amount_compute', store=True)
     narration = fields.Text(string='Internal Note')
     company_id = fields.Many2one('res.company', related='journal_id.company_id', string='Company', store=True, readonly=True)
+    unit_id = fields.Many2one(
+        'res.partner',
+        string="Operating Unit",
+        ondelete="restrict",
+        default=lambda self: self.env.user._get_default_unit())
     matched_percentage = fields.Float('Percentage Matched', compute='_compute_matched_percentage', digits=0, store=True, readonly=True, help="Technical field used in cash basis method")
     reconcile_model_id = fields.Many2many('account.reconcile.model', compute='_compute_reconcile_model', search='_search_reconcile_model', string="Reconciliation Model", readonly=True)
     # Dummy Account field to search on account.move by account_id
@@ -142,6 +147,10 @@ class AccountMove(models.Model):
     def _validate_move_modification(self):
         if 'posted' in self.mapped('line_ids.payment_id.state'):
             raise ValidationError(_("You cannot modify a journal entry linked to a posted payment."))
+
+    @api.onchange('company_id')
+    def _onchange_company_id(self):
+        self.unit_id = self.company_id.partner_id
 
     @api.onchange('journal_id')
     def _onchange_journal_id(self):
@@ -1357,6 +1366,9 @@ class AccountMoveLine(models.Model):
 
         if context.get('company_id'):
             domain += [('company_id', '=', context['company_id'])]
+
+        if context.get('company_unit_ids'):
+            domain += [('move_id.unit_id', 'in', context['company_unit_ids'])]
 
         if 'company_ids' in context:
             domain += [('company_id', 'in', context['company_ids'])]
