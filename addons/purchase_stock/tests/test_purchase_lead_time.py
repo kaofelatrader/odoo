@@ -136,3 +136,81 @@ class TestPurchaseLeadTime(TestPurchase):
         incoming_shipment2 = self.env['stock.picking'].search([('picking_type_id', '=', self.warehouse_1.int_type_id.id), ('location_id', '=', self.warehouse_1.wh_qc_stock_loc_id.id), ('location_dest_id', '=', self.warehouse_1.lot_stock_id.id)])
         incoming_shipment2_date = schedule_date - timedelta(days=incoming_shipment2.move_lines[0].rule_id.delay)
         self.assertEqual(incoming_shipment2.scheduled_date, incoming_shipment2_date, 'Schedule date of Internal Type shipment for quality control stock location should be equal to: schedule date of Internal type shipment for input stock location + push rule delay..')
+
+    def _create_outgoing_shipment(self):
+        # This is a private method used to create purchase order from picking out i.e. delivery.
+        self.supplier = self.env['res.partner'].create({'name': "George"})
+        self.customer = self.env['res.partner'].create({'name': "jacky"})
+
+        stock_location = self.env.ref('stock.stock_location_stock')
+        cust_location = self.env.ref('stock.stock_location_customers')
+        seller = self.env['product.supplierinfo'].create({
+            'name': self.supplier.id,
+            'price': 100.0,
+        })
+
+        # Create a product - Product A with route - Buy and MTO and set the vendor.
+        product = self.env['product.product'].create({
+            'name': 'Product A',
+            'type': 'product',
+            'route_ids': [(4, self.route_mto), (4, self.route_buy)],
+            'seller_ids': [(6, 0, [seller.id])],
+            'categ_id': self.env.ref('product.product_category_all').id,
+        })
+
+        picking_out = self.env['stock.picking'].create({
+            'location_id': stock_location.id,
+            'location_dest_id': cust_location.id,
+            'partner_id': self.customer.id,
+            'picking_type_id': self.ref('stock.picking_type_out'),
+        })
+
+        out_move = self.env['stock.move'].create({
+            'name': product.name,
+            'product_id': product.id,
+            'product_uom_qty': 10,
+            'product_uom': product.uom_id.id,
+            'picking_id': picking_out.id,
+            'location_id': stock_location.id,
+            'location_dest_id': cust_location.id,
+            'procure_method': 'make_to_order',
+            'previous_move_propagate': True
+        })
+        picking_out.action_confirm()  # by confirming move1 one purchase order will be created
+        return picking_out, out_move
+
+    def test_03_forward_cancel_draft_po(self):
+        """ Test canceling purchase order based on forward canceling option on the rule.
+            - Create a outgoing picking.
+            - Confirm it, a purchase order is generated from it
+            - Then cancel outgoing shipment.
+            - Purchase order state should be cancelled.
+        """
+        # Create outgoing shipment.
+        picking_out, out = self._create_outgoing_shipment()
+        # Find the purchase order generated.
+        purchase_order = self.env['purchase.order'].search([('partner_id', '=', self.supplier.id), ('state', '=', 'draft')])
+        self.assertTrue(purchase_order, 'Purchase order should be created.')
+        # Cancel outgoing shipment should cancel purchase order.
+        picking_out.action_cancel()
+        # Check status of the purchase order.
+        self.assertEquals(purchase_order.state, 'cancel')
+
+    def test_04_forward_cancel_confirm_po(self):
+        """ Test canceling purchase order based on forward canceling option on the rule.
+            - Create a outgoing picking.
+            - Confirm it, a purchase order is generated from it.
+            - Confirm the purchase order.
+            - Then cancel outgoing shipment
+            - Purchase order state should be cancelled.
+        """
+        # Create outgoing shipment.
+        picking_out, out = self._create_outgoing_shipment()
+        # Find the purchase order generated.
+        purchase_order = self.env['purchase.order'].search([('partner_id', '=', self.supplier.id), ('state', '=', 'draft')])
+        self.assertTrue(purchase_order, 'Purchase order should be created.')
+        purchase_order.button_confirm()
+        # Cancel outgoing shipment should cancel purchase order.
+        picking_out.action_cancel()
+        # Check status of the purchase order.
+        self.assertEquals(purchase_order.state, 'purchase')
