@@ -89,7 +89,7 @@ class SaleOrder(models.Model):
     @api.depends('picking_ids')
     def _compute_picking_ids(self):
         for order in self:
-            order.delivery_count = len(order.picking_ids)
+            order.delivery_count = len(order.picking_ids.filtered(lambda p: not p.is_sale_cancel))
 
     @api.onchange('warehouse_id')
     def _onchange_warehouse_id(self):
@@ -105,7 +105,7 @@ class SaleOrder(models.Model):
         '''
         action = self.env.ref('stock.action_picking_tree_all').read()[0]
 
-        pickings = self.mapped('picking_ids')
+        pickings = self.picking_ids.filtered(lambda p: not p.is_sale_cancel)
         if len(pickings) > 1:
             action['domain'] = [('id', 'in', pickings.ids)]
         elif pickings:
@@ -117,10 +117,23 @@ class SaleOrder(models.Model):
     def action_cancel(self):
         documents = None
         for sale_order in self:
+            if any(picking.state == 'done' for picking in sale_order.picking_ids) and all(i == 0 for i in sale_order.order_line.mapped('qty_delivered')):
+                action = {
+                    'name': _('Cancel Sales Order'),
+                    'view_type': 'form',
+                    'view_mode': 'form',
+                    'res_model': 'sale.order.cancel',
+                    'view_id': self.env.ref('sale_stock.view_so_cancel').id,
+                    'type': 'ir.actions.act_window',
+                    'context': {'default_sale_id': self.id},
+                    'target': 'new'
+                }
+                return action
             if sale_order.state == 'sale' and sale_order.order_line:
                 sale_order_lines_quantities = {order_line: (order_line.product_uom_qty, 0) for order_line in sale_order.order_line}
                 documents = self.env['stock.picking']._log_activity_get_documents(sale_order_lines_quantities, 'move_ids', 'UP')
         self.mapped('picking_ids').action_cancel()
+        self.mapped('picking_ids.move_lines').write({'is_sale_cancel': True})
         if documents:
             filtered_documents = {}
             for (parent, responsible), rendering_context in documents.items():
@@ -191,7 +204,7 @@ class SaleOrderLine(models.Model):
         for line in self:  # TODO: maybe one day, this should be done in SQL for performance sake
             if line.qty_delivered_method == 'stock_move':
                 qty = 0.0
-                for move in line.move_ids.filtered(lambda r: r.state == 'done' and not r.scrapped and line.product_id == r.product_id):
+                for move in line.move_ids.filtered(lambda r: r.state == 'done' and not r.scrapped and line.product_id == r.product_id and not r.is_sale_cancel):
                     if move.location_dest_id.usage == "customer":
                         if not move.origin_returned_move_id or (move.origin_returned_move_id and move.to_refund):
                             qty += move.product_uom._compute_quantity(move.product_uom_qty, line.product_uom)
