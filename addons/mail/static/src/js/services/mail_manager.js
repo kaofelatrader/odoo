@@ -432,11 +432,13 @@ var MailManager =  AbstractService.extend({
      * @param {string} [data.state] e.g. 'open', 'folded'
      * @param {Object|integer} [options=undefined]
      * @param {boolean} [options.silent=false]
-     * @returns {integer} the ID of the newly or already existing channel
+     * @returns {Promise<integer>} resolves with the ID of the newly or already
+     *   existing channel
      */
     _addChannel: function (data, options) {
         options = typeof options === 'object' ? options : {};
         var channel = this.getChannel(data.id);
+        var proms = [];
         if (!channel) {
             channel = this._makeChannel(data, options);
             if (channel.getType() === 'dm_chat') {
@@ -454,10 +456,12 @@ var MailManager =  AbstractService.extend({
             }
             this._sortThreads();
             if (!options.silent) {
-                this._mailBus.trigger('new_channel', channel);
+                this._mailBus.trigger('new_channel', channel, proms);
             }
         }
-        return channel.getID();
+        return Promise.all(proms).then(function () {
+            return channel.getID();
+        });
     },
     /**
      * Add a new mailbox

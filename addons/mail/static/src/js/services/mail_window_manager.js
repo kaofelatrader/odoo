@@ -94,6 +94,7 @@ MailManager.include({
      *   is not open yet, and do nothing otherwise.
      * @param {boolean} [options.keepFoldState=false] if set to true, keep the
      *   fold state of the thread
+     * @returns {Promise}
      */
     openThreadWindow: function (threadID, options) {
         var self = this;
@@ -126,7 +127,7 @@ MailManager.include({
                 this._makeThreadWindowVisible(threadWindow);
             }
         }
-        prom.then(function () {
+        return prom.then(function () {
             threadWindow.updateVisualFoldState();
         });
     },
@@ -641,9 +642,13 @@ MailManager.include({
      * @private
      * @param {mail.model.Channel} channel
      */
-    _onNewChannel: function (channel) {
+    _onNewChannel: function (channel, proms) {
         if (channel.isDetached()) {
-            this.openThreadWindow(channel.getID(), { keepFoldState: true, passively: true });
+            var prom = this.openThreadWindow(channel.getID(), {
+                keepFoldState: true,
+                passively: true,
+            });
+            proms.push(prom);
         } else {
             this._closeThreadWindow(channel.getID());
         }
