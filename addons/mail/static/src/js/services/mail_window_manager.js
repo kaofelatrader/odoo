@@ -143,14 +143,16 @@ MailManager.include({
      */
     updateThreadWindow: function (threadID, options) {
         var thread = this.getThread(threadID);
+        var prom = Promise.resolve();
         if (thread) {
             if (thread.isDetached()) {
                 _.extend(options, { keepFoldState: true });
-                this.openThreadWindow(threadID, options);
+                prom = this.openThreadWindow(threadID, options);
             } else {
                 this._closeThreadWindow(threadID);
             }
         }
+        return prom;
     },
 
     //--------------------------------------------------------------------------
@@ -641,6 +643,8 @@ MailManager.include({
      *
      * @private
      * @param {mail.model.Channel} channel
+     * @param {Promise[]} proms used to synchronize async operations on the
+     *   channel (like the rendering of its window)
      */
     _onNewChannel: function (channel, proms) {
         if (channel.isDetached()) {

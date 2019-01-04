@@ -131,13 +131,15 @@ var Channel = SearchableThread.extend(ChannelSeenMixin, ThreadTypingMixin, {
      * @pverride
      */
     detach: function () {
-        this._super.apply(this, arguments);
-        this._rpc({
-            model: 'mail.channel',
-            method: 'channel_minimize',
-            args: [this.getUUID(), true],
-        }, {
-            shadow: true,
+        var self = this;
+        return this._super.apply(this, arguments).then(function () {
+            self._rpc({
+                model: 'mail.channel',
+                method: 'channel_minimize',
+                args: [self.getUUID(), true],
+            }, {
+                shadow: true,
+            });
         });
     },
     /**

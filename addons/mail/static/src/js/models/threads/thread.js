@@ -58,12 +58,13 @@ var Thread = AbstractThread.extend(ServicesMixin, {
      *   of this thread. Otherwise unfold it while detaching it.
      * @param {boolean} [options.passively=false] if set, if the thread window
      *   will be created passively.
+     * @returns {Promise}
      */
     detach: function (options) {
         options = options || {};
         this._detached = true;
         this._folded = options.keepFoldState ? this._folded : false;
-        this._warnUpdatedWindowState({
+        return this._warnUpdatedWindowState({
             passively: options.passively,
         });
     },
@@ -371,10 +372,11 @@ var Thread = AbstractThread.extend(ServicesMixin, {
      * @private
      * @param {Object} [options={}]
      * @param {boolean} [options.passively=false]
+     * @returns {Promise}
      */
     _warnUpdatedWindowState: function (options) {
         options = options || {};
-        this.call('mail_service', 'updateThreadWindow', this.getID(), options);
+        return this.call('mail_service', 'updateThreadWindow', this.getID(), options);
     },
 });
 

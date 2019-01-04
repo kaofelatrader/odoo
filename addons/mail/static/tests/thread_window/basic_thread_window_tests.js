@@ -446,7 +446,7 @@ QUnit.test('show document link of message linked to a document', async function 
     parent.destroy();
 });
 
-QUnit.only('do not autofocus chat window on receiving new direct message', async function (assert) {
+QUnit.test('do not autofocus chat window on receiving new direct message', async function (assert) {
     // Receiving a message doesn't make other input loose focus
     assert.expect(3);
 

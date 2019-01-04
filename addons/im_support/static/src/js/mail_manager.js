@@ -130,15 +130,15 @@ MailManager.include({
                 self.supportChannelUUID = channel.uuid;
 
                 // add the channel to the MailManager
-                self._addChannel(_.extend(channel, {
+                return self._addChannel(_.extend(channel, {
                     id: channel.uuid,
                     is_minimized: _.contains(['open', 'folded'], channelState),
                     state: channelState,
-                }));
-
-                // display an automatic message in the channel
-                var supportChannel = self.getChannel(channel.uuid);
-                supportChannel.addDefaultMessage();
+                })).then(function () {
+                    // display an automatic message in the channel
+                    var supportChannel = self.getChannel(channel.uuid);
+                    supportChannel.addDefaultMessage();
+                });
             } else {
                 // the channel has already been added to the MailManager, so
                 // simply re-open it
