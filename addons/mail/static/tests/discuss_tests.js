@@ -281,6 +281,9 @@ QUnit.test('@ mention in channel', function (assert) {
                     {id: 3, name: 'DemoUser'}
                 ]);
             }
+            if (args.method === 'read' && args.model === 'res.partner') {
+                return $.when([{id: 1, im_status: 'online'}]);
+            }
             if (args.method === 'message_post') {
                 var data = {
                     author_id: ["42", "Me"],
@@ -460,6 +463,10 @@ QUnit.test('@ mention with special chars', function (assert) {
                 receiveMessageDef.resolve();
                 return $.when(42);
             }
+            if (args.method === 'read' && args.model === 'res.partner') {
+                return $.when([{id: 1, im_status: 'online'}]);
+            }
+
             return this._super.apply(this, arguments);
         },
     })
@@ -546,6 +553,9 @@ QUnit.test('@ mention in mailing channel', function (assert) {
                 return $.when([
                     {id: 1, name: 'Admin'},
                 ]);
+            }
+            if (args.method === 'read' && args.model === 'res.partner') {
+                return $.when([{id: 1, im_status: 'online'}]);
             }
             return this._super.apply(this, arguments);
         },

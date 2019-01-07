@@ -688,7 +688,10 @@ QUnit.test('chatter: post, receive and star messages', function (assert) {
             }
             if (args.method === 'get_mention_suggestions') {
                 getSuggestionsDef.resolve();
-                return $.when([{email: "test@odoo.com", id: 1, name: "Test User"}]);
+                return $.when([[{email: "test@odoo.com", id: 1, name: "Test User"}], []]);
+            }
+            if (args.method === 'read' && args.model === 'res.partner') {
+                return $.when([{id: 1, im_status: 'online'}]);
             }
             if (args.method === 'message_post') {
                 var lastMessageData = _.max(this.data['mail.message'].records, function (messageData) {
@@ -1224,7 +1227,10 @@ QUnit.test('chatter: discard changes on message post with post_refresh "recipien
             }
             if (args.method === 'get_mention_suggestions') {
                 getSuggestionsDef.resolve();
-                return $.when([{email: "me@odoo.com", id: 42, name: "Me"}]);
+                return $.when([[{email: "me@odoo.com", id: 42, name: "Me"}], []]);
+            }
+            if (args.method === 'read' && args.model === 'res.partner') {
+                return $.when([{id: 1, im_status: 'online'}]);
             }
             if (args.method === 'message_format') {
                 var requested_msgs = _.filter(messages, function (msg) {
@@ -2605,6 +2611,9 @@ QUnit.test('chatter: mention prefetched partners (followers & employees)', funct
             }
             if (args.method === 'get_mention_suggestions') {
                 throw new Error('should not fetch partners for mentions');
+            }
+            if (args.method === 'read' && args.model === 'res.partner') {
+                return $.when([{id: 1, im_status: 'online'}]);
             }
             return this._super(route, args);
         },

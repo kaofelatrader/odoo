@@ -370,7 +370,21 @@ var BasicComposer = Widget.extend({
                     { limit: limit, search: search }
                 );
             }
-            return suggestions;
+            return $.when(suggestions).then(function (suggestions) {
+                //add im_status on suggestions
+                var missing = [];
+                _.each(suggestions, function (suggestionsset) {
+                    _.each(suggestionsset, function (suggestion) {
+                        suggestion.im_status = self.call('mail_service', 'getImStatus', suggestion.id);
+                        if (suggestion.im_status === undefined) {
+                            missing.push(suggestion.id);
+                        }
+                    });
+                });
+                //force asynchronous update of missing im_status before bus update
+                self.call('mail_service', 'fetchImStatus', missing); // TODO xdo keep this or rely on get ?
+                return suggestions;
+            });
         });
     },
     /**

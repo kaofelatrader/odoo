@@ -60,7 +60,6 @@ var Message =  AbstractMessage.extend(Mixins.EventDispatcherMixin, ServicesMixin
         this._subtypeDescription = data.subtype_description;
         this._threadIDs = data.channel_ids || [];
         this._trackingValueIDs = data.tracking_value_ids;
-
         this._moderationStatus = data.moderation_status || 'accepted';
 
         this._processBody(emojis);
@@ -79,6 +78,16 @@ var Message =  AbstractMessage.extend(Mixins.EventDispatcherMixin, ServicesMixin
      */
     addCustomerEmailData: function (data) {
         this._customerEmailData.push(data);
+    },
+    /**
+     * @override
+     * @return {string|undefined}
+     */
+    getAuthorImStatus: function () {
+        if (!this.hasAuthor()) {
+            return undefined;
+        }
+        return this.call('mail_service', 'getImStatus', this._serverAuthorID[0]);
     },
     /**
      * Get the name of the author of this message
