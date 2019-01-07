@@ -483,6 +483,7 @@ QWeb2.Engine = (function() {
             }
         },
         extend : function(template, extend_node) {
+            var self = this;
             var jQuery = this.jQuery;
             if (!jQuery) {
                 return this.tools.exception("Can't extend template " + template + " without jQuery");
@@ -494,26 +495,54 @@ QWeb2.Engine = (function() {
                     var jquery = child.getAttribute(this.prefix + '-jquery'),
                         operation = child.getAttribute(this.prefix + '-operation'),
                         target,
-                        error_msg = "Error while extending template '" + template;
+                        error_msg = "Error while extending template '" + template + "' ";
                     if (jquery) {
                         target = jQuery(jquery, template_dest);
                         if (!target.length && window.console) {
                             console.debug('Can\'t find "'+jquery+'" when extending template '+template);
                         }
                     } else {
-                        this.tools.exception(error_msg + "No expression given");
+                        this.tools.exception(error_msg + "No jquery expression given");
                     }
                     error_msg += "' (expression='" + jquery + "') : ";
                     if (operation) {
                         var allowed_operations = "append,prepend,before,after,replace,inner,attributes".split(',');
-                        if (this.tools.arrayIndexOf(allowed_operations, operation) == -1) {
+                        if (this.tools.arrayIndexOf(allowed_operations, operation) === -1) {
                             this.tools.exception(error_msg + "Invalid operation : '" + operation + "'");
                         }
                         operation = {'replace' : 'replaceWith', 'inner' : 'html'}[operation] || operation;
                         if (operation === 'attributes') {
                             jQuery('attribute', child).each(function () {
                                 var attrib = jQuery(this);
-                                target.attr(attrib.attr('name'), attrib.text());
+                                var name = attrib.attr('name');
+                                var value = attrib.text();
+                                var add = attrib.attr('add');
+                                var remove = attrib.attr('remove');
+                                if (add !== undefined || remove !== undefined) {
+                                    if (value !== '') {
+                                        self.tools.exception(error_msg + "Text with add or remove attribute");
+                                    }
+                                    var separator = attrib.attr('separator');
+                                    var splitseparator = separator;
+                                    if (separator === ' ') {
+                                        splitseparator = /\s+/; // squash spaces
+                                    }
+                                    var toAdd = _.map((add || '').split(splitseparator), function (elem) { return elem.trim(); });
+                                    toAdd = _.reject(toAdd, function (elem) {
+                                        return elem.lenght === 0;
+                                    });
+                                    var toRemove = _.map((remove || '').split(splitseparator), function (elem) { return elem.trim(); });
+                                    var values = _.map((target.attr(name) || '').split(splitseparator), function (elem) { return elem.trim(); });
+
+                                    values = _.difference(values, toRemove);
+                                    values = _.union(values, toAdd);
+                                    value = values.join(separator);
+                                }
+                                if (value && value.length > 0) {
+                                    target.attr(name, value);
+                                } else {
+                                    target.removeAttr(name);
+                                }
                             });
                         } else {
                             target[operation](child.cloneNode(true).childNodes);
