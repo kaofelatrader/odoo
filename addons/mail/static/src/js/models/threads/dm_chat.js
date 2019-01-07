@@ -1,7 +1,9 @@
 odoo.define('mail.model.DMChat', function (require) {
 "use strict";
 
+var core = require('web.core');
 var TwoUserChannel = require('mail.model.TwoUserChannel');
+var _t = core._t;
 
 /**
  * Any piece of code in JS that make use of DMs must ideally interact with
@@ -18,6 +20,7 @@ var DMChat = TwoUserChannel.extend({
      * @param {integer} params.data.direct_partner[0].id
      * @param {string} params.data.direct_partner[0].im_status
      * @param {string} params.data.direct_partner[0].name
+     * @param {string} [params.data.direct_partner[0].out_of_office_message='']
      */
     init: function (params) {
         this._super.apply(this, arguments);
@@ -30,6 +33,7 @@ var DMChat = TwoUserChannel.extend({
             id: this._directPartnerID,
             im_status: data.direct_partner[0].im_status
         }]);
+        this._outOfOfficeMessage = data.direct_partner[0].out_of_office_message || '';
         this._type = 'dm_chat';
     },
 
@@ -46,6 +50,17 @@ var DMChat = TwoUserChannel.extend({
      */
     getDirectPartnerID: function () {
         return this._directPartnerID;
+    },
+    /**
+    * Get the out of office message of the thread
+    *
+    * @returns {string}
+    */
+   getOutOfOfficeMessage: function () {
+        if (this._outOfOfficeMessage === '') {
+            return undefined;
+        }
+        return this._outOfOfficeMessage;
     },
     /**
      * @override
