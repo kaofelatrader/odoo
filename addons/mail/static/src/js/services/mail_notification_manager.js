@@ -104,7 +104,7 @@ MailManager.include({
         def.then(function () {
             // don't increment unread if channel wasn't in cache yet as
             // its unread counter has just been fetched
-            self.addMessage(messageData, {
+            return self.addMessage(messageData, {
                 showNotification: true,
                 incrementUnread: channelAlreadyInCache
             });
@@ -175,18 +175,19 @@ MailManager.include({
     _handleNeedactionNotification: function (messageData) {
         var self = this;
         var inbox = this.getMailbox('inbox');
-        var message = this.addMessage(messageData, {
+        this.addMessage(messageData, {
             incrementUnread: true,
             showNotification: true,
+        }).then(function (message) {
+            inbox.incrementMailboxCounter();
+            _.each(message.getThreadIDs(), function (threadID) {
+                var channel = self.getChannel(threadID);
+                if (channel) {
+                    channel.incrementNeedactionCounter();
+                }
+            });
+            self._mailBus.trigger('update_needaction', inbox.getMailboxCounter());
         });
-        inbox.incrementMailboxCounter();
-        _.each(message.getThreadIDs(), function (threadID) {
-            var channel = self.getChannel(threadID);
-            if (channel) {
-                channel.incrementNeedactionCounter();
-            }
-        });
-        this._mailBus.trigger('update_needaction', inbox.getMailboxCounter());
     },
     /**
      * Called when an activity record has been updated on the server
@@ -356,8 +357,10 @@ MailManager.include({
      * @param {Object} data.message data of message
      */
     _handlePartnerMessageModeratorNotification: function (data) {
-        this.addMessage(data.message);
-        this._mailBus.trigger('update_moderation_counter');
+        var self = this;
+        this.addMessage(data.message).then(function () {
+            self._mailBus.trigger('update_moderation_counter');
+        });
     },
     /**
      * On receiving a notification that is specific to a user

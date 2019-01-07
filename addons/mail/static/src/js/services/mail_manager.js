@@ -73,13 +73,14 @@ var MailManager =  AbstractService.extend({
      *   the unread_counter of channel.
      * @param {boolean} [options.silent] whether it should inform in the mailBus
      *   of the newly created message.
-     * @returns {mail.model.Message} message object
+     * @returns {Promise<mail.model.Message>}
      */
     addMessage: function (data, options) {
         options = options || {};
         var message = this.getMessage(data.id);
+        var prom = Promise.resolve();
         if (!message) {
-            message = this._addNewMessage(data, options);
+            prom = this._addNewMessage(data, options);
         } else {
             if (data.moderation_status === 'accepted') {
                 message.setModerationStatus('accepted', {
@@ -90,7 +91,7 @@ var MailManager =  AbstractService.extend({
                 this._addMessageToThreads(message, options);
             }
         }
-        return message;
+        return prom;
     },
     /**
      * Creates a channel, can be either a true channel or a DM chat based on
@@ -452,7 +453,7 @@ var MailManager =  AbstractService.extend({
             if (data.last_message) {
                 // channel_info in mobile, necessary for showing channel
                 // preview in mobile
-                this.addMessage(data.last_message);
+                proms.push(this.addMessage(data.last_message));
             }
             this._sortThreads();
             if (!options.silent) {
@@ -508,7 +509,7 @@ var MailManager =  AbstractService.extend({
      * @private
      * @param {Object} data
      * @param {Object} options
-     * @returns {mail.model.Message}
+     * @return {Promise<mail.model.Message>}
      */
     _addNewMessage: function (data, options) {
         var self = this;
@@ -518,7 +519,7 @@ var MailManager =  AbstractService.extend({
             return msg.getID();
         });
         this._messages.splice(index, 0, message);
-        this._addNewMessagePostprocessThread(message, options).then(function () {
+        return this._addNewMessagePostprocessThread(message, options).then(function () {
             self._addMessageToThreads(message, options);
             if (!options.silent) {
                 self._mailBus.trigger('new_message', message);
@@ -672,15 +673,18 @@ var MailManager =  AbstractService.extend({
         }
         return fetchDef.then(function (fetchedPreviews) {
             // add fetched messages
+            var proms = [];
             _.each(fetchedPreviews, function (fetchedPreview) {
                 if (fetchedPreview.last_message) {
-                    self.addMessage(fetchedPreview.last_message);
+                    proms.push(self.addMessage(fetchedPreview.last_message));
                 }
                 // mark the channel as previewed, so that we do not need to
                 // fetch preview again
                 var channel = self.getChannel(fetchedPreview.id);
                 channel.markAsPreviewed();
             });
+            return Promise.all(proms);
+        }).then(function () {
             return _.map(channels, function (channel) {
                 return channel.getPreview();
             });

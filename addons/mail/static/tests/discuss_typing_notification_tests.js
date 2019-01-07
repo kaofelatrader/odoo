@@ -359,6 +359,7 @@ QUnit.test('receive message of someone that was typing something', async functio
     };
     var notification = [[false, 'mail.channel', 1], messageData];
     await discuss.call('bus_service', 'trigger', 'notification', [notification]);
+    await testUtils.nextTick();
 
     $general = discuss.$('.o_mail_discuss_sidebar')
                     .find('.o_mail_discuss_item[data-thread-id=1]');
@@ -615,6 +616,7 @@ QUnit.test('long typing partner A and in-between short typing partner B', async 
     };
     var notification = [[false, 'mail.channel', 1], messageData];
     await discuss.call('bus_service', 'trigger', 'notification', [notification]);
+    await testUtils.nextTick();
 
     $general = discuss.$('.o_mail_discuss_sidebar')
                     .find('.o_mail_discuss_item[data-thread-id=1]');
