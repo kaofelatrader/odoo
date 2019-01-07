@@ -148,6 +148,22 @@ var AbstractThreadWindow = Widget.extend({
         return this._thread;
     },
     /**
+    *Get out of office info
+    *
+    * @returns {string|undefined}
+    */
+    getOutOfOfficeInfo: function () {
+        if (
+            !(
+                this.hasThread() &&
+                this._thread.getType() === 'dm_chat'
+            )
+        ) {
+            return undefined;
+        }
+        return this._thread.getOutOfOfficeInfo();
+    },
+    /**
     * Get out of office user text
     *
     * @returns {string|undefined}

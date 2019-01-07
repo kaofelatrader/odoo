@@ -181,18 +181,10 @@
     <t t-name="mail.UserStatus">
         <span t-att-class="partnerID ? 'o_updatable_im_status' : ''" t-att-data-partner-id="partnerID">
             <i t-if="status == 'online'" class="o_mail_user_status o_user_online fa fa-circle" title="Online" role="img" aria-label="User is online"/>
-            <i t-if="status == 'leave_online'" class="o_mail_user_status o_user_online fa-stack fa" title="Out of office" role="img" aria-label="User is out of office">
-                <i class="fa fa-circle fa-stack-1x"/>
-                <i class="fa fa-sun-o fa-stack-1x"/>
-            </i>
-            <i t-if="status == 'leave_offline'" class="o_mail_user_status o_user_idle fa-stack fa" title="Out of office" role="img" aria-label="User is out of office">
-                <i class="fa fa-circle fa-stack-1x"/>
-                <i class="fa fa-sun-o fa-stack-1x"/>
-            </i>
             <i t-if="status == 'away'" class="o_mail_user_status o_user_idle fa fa-circle" title="Idle" role="img" aria-label="User is idle"/>
             <i t-if="status == 'offline'" class="o_mail_user_status fa fa-circle" title="Offline" role="img" aria-label="User is offline"/>
         </span>
-        </t>
+    </t>
 
     <!--
         @param {string} documentName

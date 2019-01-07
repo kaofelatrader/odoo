@@ -21,6 +21,7 @@ var DMChat = TwoUserChannel.extend({
      * @param {string} params.data.direct_partner[0].im_status
      * @param {string} params.data.direct_partner[0].name
      * @param {string} [params.data.direct_partner[0].out_of_office_message='']
+     * @param {string} [params.data.direct_partner[0].out_of_office_date_end='']
      */
     init: function (params) {
         this._super.apply(this, arguments);
@@ -34,6 +35,7 @@ var DMChat = TwoUserChannel.extend({
             im_status: data.direct_partner[0].im_status
         }]);
         this._outOfOfficeMessage = data.direct_partner[0].out_of_office_message || '';
+        this._outOfOfficeDateEnd = data.direct_partner[0].out_of_office_date_end || '';
         this._type = 'dm_chat';
     },
 
@@ -50,6 +52,28 @@ var DMChat = TwoUserChannel.extend({
      */
     getDirectPartnerID: function () {
         return this._directPartnerID;
+    },
+    /**
+    * Get the out of office info
+    *
+    * @returns {string}
+    */
+    getOutOfOfficeInfo: function () {
+        if (this.getStatus().indexOf('leave') === -1) {
+            return undefined;
+        }
+        var date = moment(this._outOfOfficeDateEnd);
+        var formated_date = date.format('ll');
+        if (moment().format('ll') === formated_date) {
+            formated_date = date.format("HH:mm");
+        } else {
+            var current_year = (new Date()).getFullYear();
+            if (formated_date.endsWith(current_year)) { // Dummy logic to remove year (only if current year), we will maybe need to improve it
+                formated_date = formated_date.slice(0, -4);
+                formated_date = formated_date.replace(/( |,)*$/g, "");
+            }
+        }
+        return _.str.sprintf(_t("Out of office until %s"), formated_date);
     },
     /**
     * Get the out of office message of the thread
