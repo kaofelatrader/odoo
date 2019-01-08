@@ -29,6 +29,36 @@ options.Class.include({
     },
 });
 
+options.registry.background_video = options.Class.extend({
+    chooseVideo: function (previewMode, value, $opt) {
+        var $iframe = this.$target.find("iframe.playerBox");
+        $iframe.data({'oe-expression': this.$target.attr('src'), "opacity": this.$target.attr('opacity'), "background": this.$target.attr('background'), "container": this.$target.attr('iframefit')});
+        var _editor = new weWidgets.MediaDialog(this, {
+            noImages: true,
+            noDocuments: true,
+            noIcons: true,
+            firstFilters: ['background_video'],
+        }, $iframe[0]).open();
+        _editor.on('save', this, function (data) {
+            var src = $(data).attr('data-oe-expression');
+            if(src.indexOf('loop=1') >= 0){
+                var video_id = $(data).attr('data-oe-expression').split('/')[4].split('?')[0];
+                src += "&playlist="+video_id;
+            }
+            var opacity = $(data).attr('data-opacity');
+            var background = $(data).attr('data-background');
+            var container = $(data).attr('data-container');
+            this.$target.attr({'src': src, 'opacity': opacity, 'background': background, 'iframefit': container});
+            this.$target.addClass('oe_video_background oe_video');
+            $(this.$target.children()[0]).addClass("oe_video_bg");
+            var param = $.deparam(src);
+            this.$target.attr({'muted': param.mute, 'loop': param.loop, 'controls': false, 'autoplay': param.autoplay});
+            this._refreshAnimations();
+        });
+        _editor.on('closed', this, function () {
+        });
+    },
+});
 options.registry.menu_data = options.Class.extend({
     xmlDependencies: ['/website/static/src/xml/website.editor.xml'],
 

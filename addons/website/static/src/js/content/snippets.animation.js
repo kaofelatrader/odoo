@@ -498,6 +498,230 @@ registry.slider = publicWidget.Widget.extend({
         this._computeHeights();
     },
 });
+registry.backgroundVideo = Animation.extend({
+    selector : ".oe_video_background",
+
+    start: function () {
+        this.start_video();
+        return this._super.apply(this, arguments);
+    },
+    update_video_type: function () {
+        var regex_url = '((?:https?:)?//([^\\s\'"<>\\\\/]+)/([^\\s\'"<>\\\\]+))';
+        var match = this.src.match(new RegExp('\\ssrc=[\'"]?' + regex_url));
+        match = match || this.src.match(new RegExp('^\\s*' + regex_url));
+        if (!match) {
+            this.video_type = "image";
+            this.src = "";
+            return;
+        }
+
+        var url = match[1];
+        var domain = match[2];
+        var path = match[3];
+
+        match = undefined;
+
+        var services_prefix = {
+            youtube: 'https://youtu.be/',
+            vimeo: 'https://vimeo.com/',
+            dailymotion: 'http://dai.ly/',
+        };
+
+        if (/\.youtube(-nocookie)?\./.test(domain)) {
+            this.video_type = 'youtube';
+            match = path.match(/^(?:embed\/|watch\?v=)?([^\/?&#]+)/i);
+        } else if (domain === "youtu.be") {
+            this.video_type = 'youtube';
+            match = path.match(/^([^\/?&#]+)/);
+        } else if (_.str.include(domain, "vimeo.")) {
+            this.video_type = 'vimeo';
+            match = path.match(/^(?:video\/)?([^?&#]+)/i);
+        } else if (_.str.include(domain, ".dailymotion.")) {
+            this.video_type = "dailymotion";
+            match = path.match(/(?:embed\/)?(?:video\/)?([^\/?&#_]+)/i);
+        } else if (domain === "dai.ly") {
+            this.video_type = "dailymotion";
+            match = path.match(/^([^\/?&#]+)/);
+        }
+
+        if (match) {
+            this.src = services_prefix[this.video_type] + match[1];
+        } else if (!/\ssrc=/.test(this.src)) {
+            this.src = url;
+            this.video_type = 'html5';
+        } else {
+            this.video_type = 'other';
+        }
+
+        this.$target.data('video-type', this.video_type);
+    },
+    start_video: function () {
+        var self = this;
+        var video_url;
+
+        // mobile phones are not supported, just show the background image.
+        if (jQuery.browser.mobile) { return; }
+
+        if (!self.video_type || self.src !== self.$target.attr('src')) {
+            self.src = self.$target.attr('src');
+            if (!self.src) {
+                return;
+            }
+            self.update_video_type();
+        }
+        var params = _.chain(['muted', 'loop', 'autoplay', 'controls']).map(function (attribute) {
+            var value = self.$target.attr(attribute);
+            return [attribute, value ? 1 : value];
+        }).object().value();
+        video_url = self.$target.attr('src');
+
+        var whenPlayerReady = (self['create_' + self.video_type + '_video'] || self['create_video']).call(self, self.$target, video_url, params);
+
+        whenPlayerReady.then(function ($player) {
+            $player.fadeTo(0, 0);
+            $player.addClass('o_player').parent().addClass('o_player_wrapper');
+            self.ratio = ($player.width() / $player.height());
+            if (self.$target.attr('iframefit') === 'fitCont') {
+                $player.parentsUntil(self.$target).css({width: '100%', height: 'auto'});
+                if ($player.is('iframe')) {
+                    $player.css('width', '100%');
+                    $player.height($player.width() / self.ratio);
+                } else {
+                    $player.css({width: '100%', height: 'auto'});
+                }
+            } else if (self.$target.attr('iframefit') === 'fitIframe') {
+            }
+            $player.parentsUntil(self.$target).andSelf().css({width: '100%', height: '100%'});
+
+            $player.fadeTo("slow", 1);
+            $player.removeClass('o_media_loading');
+            $(window).trigger('resize');
+        });
+    },
+    destroy: function () {
+        this._super.apply(this, arguments);
+        this.stop_video();
+    },
+    stop_video: function () {
+        this.$target.find('.yt_video_container').remove();
+    },
+    create_youtube_video: function () {
+        return this.YTPlayer_video.apply(this, arguments);
+    },
+    create_video: function ($container, video_url, params) {
+        var def = $.Deferred();
+        var $iframe;
+
+        if (video_url) {
+            $iframe = $('<iframe/>', {
+                frameborder: "0",
+                allowfullscreen: "allowfullscreen",
+                src: video_url,
+            });
+        } else {
+            $iframe = $('<div/>').html(this.src).find('iframe:first').css({
+                height: "100%", width: "100%", top: 0, position: "absolute",
+            });
+            if ($iframe.length) {
+                $container.css('max-height', '');
+            } else {
+                return def.reject();
+            }
+        }
+
+        $iframe.addClass('o_media_loading');
+        $iframe.on('load', function () {
+            def.resolve($iframe);
+        });
+        $container.append($iframe);
+
+        return def;
+    },
+    YTPlayer_video: function ($container, video_url, _params) {
+        var video_id = this.$target.attr('src').split('/')[4].split('?')[0];
+        var params = _.mapObject(_params, function (v) { return !!v; });
+        params.autoplay = true;
+        var opacity      = this.$target.attr('opacity');
+        var background   = this.$target.attr('background') || '';
+
+        var timeStamp = Date.now();
+
+        var $video_container = $('<div/>', {
+            'class': 'yt_video_container '+ background,
+            id: "s_media_block_" + timeStamp,
+        });
+        var playerParams = {
+            videoURL: video_id, containment: '#s_media_block_' + timeStamp, mute: params['muted'], loop: params['loop'],
+            stopMovieOnBlur: false, autoPlay: true, showYTLogo: false, opacity: opacity, showControls: false,
+        };
+        var $el = $('<div/>', {'class': 'player', 'data-property': JSON.stringify(playerParams)});
+        var $loader = $("<span class='yt-loader'><span/></span>");
+        $video_container.append($el).append($loader);
+
+        var interval = null;
+        if ($("#oe_main_menu_navbar").length > 0) { $loader.css("top", $("#oe_main_menu_navbar").outerHeight()+1); }
+        $loader.animate({width: "45%"}, 800, function () {
+            var el = $loader;
+            interval = setInterval(function () { timer(); }, 300);
+            function timer() { var w =  el.width(); el.width(w + 5); }
+        });
+
+        if (!params['autoplay']) {
+            $el.one('YTPStart', function () {
+                $el.YTPPause();
+            });
+        }
+
+        var def = $.Deferred();
+        $el.on('YTPReady', function () {
+            clearInterval(interval);
+            $loader.css("width", "100%").fadeOut(500);
+
+            def.resolve($video_container.find('iframe'));
+
+            if (!params['controls'] && params['autoplay']) {
+                return;
+            }
+
+            var $controls = $("<span/>", {'class': 'controls'}).appendTo($video_container);
+
+            var $btnplay = $("<span/>", {'class': 'fa fa-fw'}).appendTo($controls);
+            var playing = params['autoplay'];
+            $btnplay.toggleClass("fa-pause", playing).toggleClass("fa-play", !playing);
+            $btnplay.on("click", play_callback);
+            if (!params['controls']) {
+                $btnplay.one('click', function () {
+                    $controls.remove();
+                });
+            }
+
+            if (!params['muted'] && params['controls']) {
+                var $btnMute = $("<span/>", {'class': 'fa fa-fw fa-volume-up'}).appendTo($controls);
+                $btnMute.on("click", mute_callback);
+            }
+
+            function play_callback() {
+                if (playing) {
+                    $el.YTPPause();
+                } else {
+                    $el.YTPPlay();
+                }
+                playing = !playing;
+
+                $btnplay.toggleClass("fa-pause", playing).toggleClass("fa-play", !playing);
+            }
+            function mute_callback() {
+                $el.YTPToggleVolume();
+                $btnMute.toggleClass("fa-volume-up").toggleClass("fa-volume-off");
+            }
+        });
+
+        $container.append($video_container);
+        $el.YTPlayer();
+
+        return def;
+    },
+}),
 
 registry.parallax = Animation.extend({
     selector: '.parallax',

@@ -1249,6 +1249,11 @@
         data-exclude=".s_hr, .s_image_gallery">
         <a tabindex="-1" href="#" class="dropdown-item" data-choose-image="true" data-no-preview="true"><i class="fa fa-picture-o"/>Background Image</a>
     </div>
+    <div data-js="background_video"
+        data-selector="section, .parallax, :not(.o_gallery > .container) > .carousel"
+        data-exclude=".carousel .s_hr, .s_image_gallery">
+        <a tabindex="-1" href="#" class="dropdown-item" data-choose-video="true" data-no-preview="true"><i class="fa fa-video-camera"/>Background Video</a>
+    </div>
 
     <!-- Background Image -->
     <div data-js="background_position"

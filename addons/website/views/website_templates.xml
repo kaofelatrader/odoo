@@ -77,6 +77,7 @@
 
         <!-- Custom empty file for user javascript -->
         <script type="text/javascript" src="/website/static/src/js/user_custom_javascript.js"/>
+        <script type="text/javascript" src="/website/static/lib/YTPlayer/jquery.mb.YTPlayer.js"/>
     </xpath>
 </template>
 

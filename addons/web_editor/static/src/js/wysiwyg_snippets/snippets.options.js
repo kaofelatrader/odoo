@@ -798,6 +798,7 @@ registry.colorpicker = SnippetOption.extend({
 /**
  * Handles the edition of snippet's background image.
  */
+
 registry.background = SnippetOption.extend({
     /**
      * @override
