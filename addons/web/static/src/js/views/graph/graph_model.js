@@ -206,7 +206,9 @@ return AbstractModel.extend({
                 return self._sanitizeValue(data_pt[field], field);
             });
             var count = data_pt.__count || data_pt[this.chart.groupedBy[0]+'_count'] || 0;
-            var value = is_count ? count : data_pt[this.chart.measure];
+            var value = is_count ? count : (
+                data_pt[this.chart.measure] || data_pt[this.chart.measure + ':count_distinct'] || 0
+            );
             if (value instanceof Array) {
                 // when a many2one field is used as a measure AND as a grouped
                 // field, bad things happen.  The server will only return the
