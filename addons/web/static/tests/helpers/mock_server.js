@@ -739,7 +739,7 @@ var MockServer = Class.extend({
                 }
                 if (type === 'many2one') {
                     var ids = _.pluck(records, aggregatedFields[i]); 
-                    group[aggregatedFields[i]] = _.uniq(ids).length || null;
+                    group[aggregatedFields[i] + ':count_distinct'] = _.uniq(ids).length || null;
                 }
             }
         }
