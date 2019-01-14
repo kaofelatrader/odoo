@@ -21,6 +21,7 @@ var ThreadWindow = AbstractThreadWindow.extend({
         'click .o_mail_thread': '_onThreadWindowFocus',
         'click .o_thread_composer': '_onThreadWindowFocus',
         'click .o_thread_window_expand': '_onClickExpand',
+        'click .o_out_of_office_read_more_less_button': '_onClickOutOfOfficeReadMoreLess',
     }),
     /**
      * Version of thread window that supports {mail.model.Thread}
@@ -80,6 +81,7 @@ var ThreadWindow = AbstractThreadWindow.extend({
                 self.$input = self.$('.o_composer_text_field');
             });
         }
+        this._updateOutOfOfficeReadMoreButton();
 
         return $.when(superDef, composerDef);
     },
@@ -250,6 +252,20 @@ var ThreadWindow = AbstractThreadWindow.extend({
             })
             .focus();
     },
+    _updateOutOfOfficeReadMoreButton: function () {
+        var $readMoreElement = this.$('.o_out_of_office_text');
+        var isOverflowing = $readMoreElement.prop('scrollWidth') > $readMoreElement.width();
+        var isOverwlowShown = ! $readMoreElement.hasClass('o_text_wrap');
+        if (isOverflowing || isOverwlowShown) {
+            var $button = this.$('.o_out_of_office_read_more_less_button');
+            $button.show();
+            if (isOverflowing) {
+                $button.text(_t('Read more'));
+            } else {
+                $button.text(_t('Read less'));
+            }
+        }
+    },
 
     //--------------------------------------------------------------------------
     // Handlers
@@ -286,6 +302,16 @@ var ThreadWindow = AbstractThreadWindow.extend({
             });
         }
     }, 1000, true),
+    /**
+     * @private
+     * @param {MouseEvent} ev
+     */
+    _onClickOutOfOfficeReadMoreLess: function (ev) {
+        ev.preventDefault();
+        var $readMoreElement = this.$('.o_out_of_office_text');
+        $readMoreElement.toggleClass('o_text_wrap');
+        this._updateOutOfOfficeReadMoreButton();
+    },
     /**
      * @override
      * @private
