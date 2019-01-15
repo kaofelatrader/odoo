@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="wysiwyg.buttons.link">
+        <group class="btn-group wysiwyg-button-link">
+            <button name="link-add" title="Link (CTRL+K)" data-method="showLinkDialog">
+                <i class="fa fa-link"></i>
+            </button>
+        </group>
+    </t>
+
+    <t t-name="wysiwyg.popover.link">
+        <span>
+            <a target="_blank" href="#">#</a>&amp;nbsp;
+        </span>
+        <group class="btn-group wysiwyg-button-link">
+            <button name="link-add" title="Link (CTRL+K)" data-method="showLinkDialog">
+                <i class="fa fa-link"></i>
+            </button>
+            <button name="link-remove" title="Unlink" data-method="unlink">
+                <i class="fa fa-unlink"></i>
+            </button>
+        </group>
+    </t>
+</templates>

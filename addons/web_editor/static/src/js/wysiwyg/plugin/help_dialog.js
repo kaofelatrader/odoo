@@ -2,7 +2,7 @@ odoo.define('web_editor.wysiwyg.plugin.HelpDialog', function (require) {
 'use strict';
 
 var Plugins = require('web_editor.wysiwyg.plugins');
-var registry = require('web_editor.wysiwyg.plugin.registry');
+var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 /**
  * Allows to customize link content and style.
@@ -19,7 +19,7 @@ var HelpDialog = Plugins.helpDialog.extend({
     },
 });
 
-registry.add('helpDialog', HelpDialog);
+Manager.addPlugin('helpDialog', HelpDialog);
 
 return {
     HelpDialog: HelpDialog,

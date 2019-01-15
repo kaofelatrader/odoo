@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+    <group t-name="wysiwyg.buttons.list">
+        <button name="list-ul" title="Unordered list (CTRL+SHIFT+NUM7)"
+            data-method="insertList" data-value="ul">
+            <i class="note-icon-unorderedlist"></i>
+        </button>
+        <button name="list-ol" title="Ordered list (CTRL+SHIFT+NUM8)"
+            data-method="insertList" data-value="ol">
+            <i class="note-icon-orderedlist"></i>
+        </button>
+        <button name="list-checklist" title="Checklist"
+            data-method="insertList" data-value="checklist">
+            <i class="fa fa-check-square"></i>
+        </button>
+    </group>
+</templates>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+    <group t-name="wysiwyg.buttons.media">
+        <button name="image-dialog" data-method="showImageDialog" title="Picture">
+            <i class="fa fa-file-image-o"></i>
+        </button>
+        <button name="image-remove" data-method="removeMedia" title="Remove Media">
+            <i class="fa fa-trash"></i>
+        </button>
+    </group>
+
+    <group t-name="wysiwyg.buttons.size">
+        <button name="size-auto" data-method="update" data-value="auto">Auto</button>
+        <button name="size-100" data-method="update" data-value="100%" title="Resize Full">100%</button>
+        <button name="size-50" data-method="update" data-value="50%" title="Resize Half">50%</button>
+        <button name="size-25" data-method="update" data-value="25%" title="Resize Quarter">25%</button>
+    </group>
+
+    <group t-name="wysiwyg.buttons.padding">
+        <button class="dropdown-toggle" data-toggle="dropdown" title="Padding">
+            <i class="fa fa-plus-square-o"></i>
+        </button>
+        <div class="dropdown-menu">
+            <button name="padding-none" class="wysiwyg-dropdown-item" data-method="update" data-value="">None</button>
+            <button name="padding-small" class="wysiwyg-dropdown-item" data-method="update" data-value="padding-small">Small</button>
+            <button name="padding-medium" class="wysiwyg-dropdown-item" data-method="update" data-value="padding-medium">Medium</button>
+            <button name="padding-large" class="wysiwyg-dropdown-item" data-method="update" data-value="padding-large">Large</button>
+            <button name="padding-xl" class="wysiwyg-dropdown-item" data-method="update" data-value="padding-xl">Xl</button>
+        </div>
+    </group>
+
+    <group t-name="wysiwyg.buttons.align">
+        <button name="align-left" data-method="update" data-value="left" title="Float Left">
+            <i class="fa fa-align-left"></i>
+        </button>
+        <button name="align-center" data-method="update" data-value="center" title="Align Center">
+            <i class="fa fa-align-center"></i>
+        </button>
+        <button name="align-right" data-method="update" data-value="right" title="Float Right">
+            <i class="fa fa-align-right"></i>
+        </button>
+        <button name="align-none" data-method="update" data-value="none" title="Normal">
+            <i class="fa fa-align-justify"></i>
+        </button>
+    </group>
+</templates>

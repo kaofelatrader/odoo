@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="template" xml:space="preserve">
+    <group t-name="wysiwyg.buttons.tablepicker">
+        <button class="dropdown-toggle" data-toggle="dropdown" title="Table">
+            <i class="note-icon-table"></i>
+        </button>
+        <tablepicker class="dropdown-menu">
+            <div class="wysiwyg-dimension-picker">
+                <div class="wysiwyg-dimension-picker-mousecatcher">
+                    <row t-foreach="plugin._tableMatrix" t-as="row">
+                        <t t-foreach="row" t-as="cell">
+                            <button name="table-cellpicker" data-method="insertTable" t-attf-data-value="{{ cell }}"/>
+                        </t>
+                    </row>
+                </div>
+            </div>
+            <div class="wysiwyg-dimension-display"/>
+        </tablepicker>
+    </group>
+
+    <t t-name="wysiwyg.popover.table">
+        <group>
+            <button name="add-row-below" title="Add row below" data-method="addRow" data-value="below">
+                <i class="icon-row-below"></i>
+            </button>
+            <button name="add-row-above" title="Add row above" data-method="addRow" data-value="above">
+                <i class="icon-row-above"></i>
+            </button>
+            <button name="add-col-before" title="Add column left" data-method="addCol" data-value="left">
+                <i class="icon-col-before"></i>
+            </button>
+            <button name="add-col-after" title="Add column right" data-method="addCol" data-value="right">
+                <i class="icon-col-after"></i>
+            </button>
+        </group>
+        <group>
+            <button name="delete-row" title="Delete row" data-method="deleteRow">
+                <i class="icon-row-remove"></i>
+            </button>
+            <button name="delete-col" title="Delete column" data-method="deleteCol">
+                <i class="icon-col-remove"></i>
+            </button>
+            <button name="delete-table" title="Delete table" data-method="deleteTable">
+                <i class="fa fa-trash"></i>
+            </button>
+        </group>
+    </t>
+</templates>

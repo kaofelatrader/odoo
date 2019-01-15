@@ -37,6 +37,8 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
         wysiwyg_attachment: '_onAttachmentChange',
     },
 
+    DEBOUNCE: 100,
+
     /**
      * @override
      */
@@ -99,14 +101,15 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
         var _super = this._super.bind(this);
         return this.wysiwyg.save().then(function (result) {
             self._isDirty = result.isDirty;
-            _super();
+            self.value = result.value;
+            return _super();
         });
     },
     /**
      * @override
      */
     isSet: function () {
-        return this.value && this.value !== "<p><br/></p>" && this.value.match(/\S/);
+        return !!(this.value !== "<p><br/></p>" && (this.value || '').match(/\S/));
     },
     /**
      * @override
@@ -144,7 +147,7 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
      * @override
      */
     _getValue: function () {
-        var value = this.$target.val();
+        var value = this.wysiwyg.getValue();
         if (this.nodeOptions.wrapper) {
             return this._unWrap(value);
         }
@@ -197,12 +200,15 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
                     'SHIFT+TAB': null,
                 },
             },
+            plugins: {
+                ConvertInline: !!this.nodeOptions['style-inline'],
+            },
             generateOptions: function (options) {
-                var para = _.find(options.toolbar, function (item) {
-                    return item[0] === 'para';
-                });
-                para[1].splice(2, 0, 'checklist');
-                return options;
+                // var para = _.find(options.toolbar, function (item) {
+                //     return item[0] === 'para';
+                // });
+                // para[1].splice(2, 0, 'checklist');
+                // return options;
             },
         };
     },

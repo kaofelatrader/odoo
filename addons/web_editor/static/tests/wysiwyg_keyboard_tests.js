@@ -282,7 +282,7 @@ var keyboardTestsChar = [{
             key: 'a',
         }],
         test: {
-            content: '<div><a href="#">&#8203;a&#8203;</a></div>',
+            content: '<div><a href="#">&#65279;a&#65279;</a></div>',
             start: "a:contents()[0]->2",
         },
     },
@@ -1401,7 +1401,7 @@ var keyboardTestsEnter = [{
             key: 'ENTER',
         }],
         test: {
-            content: "<p><b>dom<br>&#8203;</b></p><p><b>&nbsp;to edit</b></p>",
+            content: "<p><b>dom<br>&#65279;</b></p><p><b>&nbsp;to edit</b></p>",
             start: "b:eq(1):contents()[0]->0",
         },
     },
@@ -1460,7 +1460,7 @@ var keyboardTestsEnter = [{
             key: 'a',
         }],
         test: {
-            content: "<p><b>dom<br>&#8203;</b></p><p><b>a to edit</b></p>",
+            content: "<p><b>dom<br>&#65279;</b></p><p><b>a to edit</b></p>",
             start: "b:eq(1):contents()[0]->1",
         },
     },
@@ -1472,7 +1472,7 @@ var keyboardTestsEnter = [{
             key: 'ENTER',
         }],
         test: {
-            content: "<span><b>dom</b></span><br><span><b>&#8203;&nbsp;to edit</b></span>",
+            content: "<span><b>dom</b></span><br><span><b>&#65279;&nbsp;to edit</b></span>",
             start: "b:eq(1):contents()[0]->1",
         },
     },
@@ -1487,7 +1487,7 @@ var keyboardTestsEnter = [{
             key: 'ENTER',
         }],
         test: {
-            content: "<span><b>dom<br></b></span><br><span><b>&#8203;&nbsp;to edit</b></span>",
+            content: "<span><b>dom<br></b></span><br><span><b>&#65279;&nbsp;to edit</b></span>",
             start: "b:eq(1):contents()[0]->1",
         },
     },
@@ -1608,7 +1608,7 @@ var keyboardTestsEnter = [{
             shiftKey: true,
         }],
         test: {
-            content: "<p>dom <br>&#8203;</p><p>to edit</p>",
+            content: "<p>dom <br>&#65279;</p><p>to edit</p>",
             start: "p:first:contents()[2]->0",
         },
     },
@@ -1657,7 +1657,7 @@ var keyboardTestsEnter = [{
 
     {
         name: "in div > a.btn: ENTER -> 'a' at start (before invisible space)",
-        content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">&#8203;dom to edit&#8203;</a></div>",
+        content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">&#65279;dom to edit&#65279;</a></div>",
         steps: [{
             start: "a:contents()[0]->0",
             key: 'ENTER',
@@ -1665,14 +1665,14 @@ var keyboardTestsEnter = [{
             key: 'a',
         }],
         test: {
-            content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">Label</a><a class=\"btn\" href=\"#\">&#8203;adom to edit&#8203;</a></div>",
+            content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">Label</a><a class=\"btn\" href=\"#\">&#65279;adom to edit&#65279;</a></div>",
             // split button has no text so the placeholder text is selected then replaced by 'a'
             start: "a:eq(1):contents()[0]->2",
         },
     },
     {
         name: "in div > a.btn: ENTER -> 'a' at start (after invisible space)",
-        content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">&#8203;dom to edit&#8203;</a></div>",
+        content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">&#65279;dom to edit&#65279;</a></div>",
         steps: [{
             start: "a:contents()[0]->1",
             key: 'ENTER',
@@ -1680,14 +1680,14 @@ var keyboardTestsEnter = [{
             key: 'a',
         }],
         test: {
-            content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">Label</a><a class=\"btn\" href=\"#\">&#8203;adom to edit&#8203;</a></div>",
+            content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">Label</a><a class=\"btn\" href=\"#\">&#65279;adom to edit&#65279;</a></div>",
             // split button has no text so the placeholder text is selected then replaced by 'a'
             start: "a:eq(1):contents()[0]->2",
         },
     },
     {
         name: "in div > a.btn: ENTER -> 'a' within contents",
-        content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">&#8203;dom to edit&#8203;</a></div>",
+        content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">&#65279;dom to edit&#65279;</a></div>",
         steps: [{
             start: "a:contents()[0]->6",
             key: 'ENTER',
@@ -1695,13 +1695,13 @@ var keyboardTestsEnter = [{
             key: 'a',
         }],
         test: {
-            content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">dom t</a><a class=\"btn\" href=\"#\">&#8203;ao edit&#8203;</a></div>",
+            content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">dom t</a><a class=\"btn\" href=\"#\">&#65279;ao edit&#65279;</a></div>",
             start: "a:eq(1):contents()[0]->2",
         },
     },
     {
         name: "in div > a.btn: ENTER -> 'a' at end (before invisible space)",
-        content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">&#8203;dom to edit&#8203;</a></div>",
+        content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">&#65279;dom to edit&#65279;</a></div>",
         steps: [{
             start: "a:contents()[0]->12",
             key: 'ENTER',
@@ -1709,13 +1709,13 @@ var keyboardTestsEnter = [{
             key: 'a',
         }],
         test: {
-            content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">dom to edit</a><a class=\"btn\" href=\"#\">&#8203;a&#8203;</a></div>",
+            content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">dom to edit</a><a class=\"btn\" href=\"#\">&#65279;a&#65279;</a></div>",
             start: "a:eq(1):contents()[0]->2",
         },
     },
     {
         name: "in div > a.btn: ENTER -> 'a' at end (after invisible space)",
-        content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">&#8203;dom to edit&#8203;</a></div>",
+        content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">&#65279;dom to edit&#65279;</a></div>",
         steps: [{
             start: "a:contents()[0]->13",
             key: 'ENTER',
@@ -1723,13 +1723,13 @@ var keyboardTestsEnter = [{
             key: 'a',
         }],
         test: {
-            content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">dom to edit</a><a class=\"btn\" href=\"#\">&#8203;a&#8203;</a></div>",
+            content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">dom to edit</a><a class=\"btn\" href=\"#\">&#65279;a&#65279;</a></div>",
             start: "a:eq(1):contents()[0]->2",
         },
     },
     {
         name: "in div > button.btn: ENTER -> 'a' at end (after invisible space)",
-        content: "<div class=\"unbreakable\"><button class=\"btn\" href=\"#\">&#8203;dom to edit&#8203;</button></div>",
+        content: "<div class=\"unbreakable\"><button class=\"btn\" href=\"#\">&#65279;dom to edit&#65279;</button></div>",
         steps: [{
             start: "button:contents()[0]->13",
             key: 'ENTER',
@@ -1737,13 +1737,13 @@ var keyboardTestsEnter = [{
             key: 'a',
         }],
         test: {
-            content: "<div class=\"unbreakable\"><button class=\"btn\" href=\"#\">dom to edit</button><button class=\"btn\" href=\"#\">&#8203;a&#8203;</button></div>",
+            content: "<div class=\"unbreakable\"><button class=\"btn\" href=\"#\">dom to edit</button><button class=\"btn\" href=\"#\">&#65279;a&#65279;</button></div>",
             start: "button:eq(1):contents()[0]->2",
         },
     },
     {
         name: "in div > a.btn: ENTER -> 'a' on partial selection",
-        content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">&#8203;dom to edit&#8203;</a></div>",
+        content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">&#65279;dom to edit&#65279;</a></div>",
         steps: [{
             start: "a:contents()[0]->4",
             end: "a:contents()[0]->8",
@@ -1752,7 +1752,7 @@ var keyboardTestsEnter = [{
             key: 'a',
         }],
         test: {
-            content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">dom</a><a class=\"btn\" href=\"#\">&#8203;aedit&#8203;</a></div>",
+            content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">dom</a><a class=\"btn\" href=\"#\">&#65279;aedit&#65279;</a></div>",
             start: "a:eq(1):contents()[0]->2",
         },
     },
@@ -1767,7 +1767,7 @@ var keyboardTestsEnter = [{
             key: 'a',
         }],
         test: {
-            content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">Label</a><a class=\"btn\" href=\"#\">&#8203;a&#8203;</a></div>",
+            content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">Label</a><a class=\"btn\" href=\"#\">&#65279;a&#65279;</a></div>",
             // Removing all text in a link replaces that text with "Label"
             start: "a:eq(1):contents()[0]->2",
         },
@@ -1781,7 +1781,7 @@ var keyboardTestsEnter = [{
             key: 'ENTER',
         }],
         test: {
-            content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">Label</a><a class=\"btn\" href=\"#\">&#8203;ot to edit&#8203;</a></div>",
+            content: "<div class=\"unbreakable\"><a class=\"btn\" href=\"#\">Label</a><a class=\"btn\" href=\"#\">&#65279;ot to edit&#65279;</a></div>",
             start: "a:eq(1):contents()[0]->1",
         },
     },
@@ -1972,7 +1972,7 @@ var keyboardTestsComplex = [{
             key: 'a',
         }],
         test: {
-            content: "<ul><li><p>dom<br>&#8203;</p></li><li><p>a to edit</p></li></ul>",
+            content: "<ul><li><p>dom<br>&#65279;</p></li><li><p>a to edit</p></li></ul>",
             start: "p:eq(1):contents()[0]->1",
         },
     },
@@ -2476,7 +2476,7 @@ var keyboardTestsBackspace = [{
             key: 'BACKSPACE',
         }],
         test: {
-            content: "<p>dom to edi<br>&#8203;</p>",
+            content: "<p>dom to edi<br>&#65279;</p>",
             start: "p:contents()[2]->1",
         },
     },

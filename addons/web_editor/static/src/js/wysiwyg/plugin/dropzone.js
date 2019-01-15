@@ -2,13 +2,14 @@ odoo.define('web_editor.wysiwyg.plugin.dropzone', function (require) {
 'use strict';
 
 var core = require('web.core');
+var Dialog = require('web.Dialog');
 var Plugins = require('web_editor.wysiwyg.plugins');
-var registry = require('web_editor.wysiwyg.plugin.registry');
+var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 var _t = core._t;
-var dom = $.summernote.dom;
 
 var DropzonePlugin = Plugins.dropzone.extend({
+    dependencies: ['Range'],
     //--------------------------------------------------------------------------
     // Public summernote module API
     //--------------------------------------------------------------------------
@@ -37,15 +38,20 @@ var DropzonePlugin = Plugins.dropzone.extend({
         this.context.invoke('editor.beforeCommand');
 
         // Clean up
-        var nodes = this.context.invoke('TextPlugin.prepareClipboardData', html);
+        var nodes = this.context.invoke('ClipboardPlugin.prepareClipboardData', html);
 
         // Delete selection
-        this.context.invoke('HelperPlugin.deleteSelection');
+        var point = this.dom.deleteSelection(this.dependencies.Range.getRange());
+        var range = this.dependencies.Range.setRange({
+            sc: point.node,
+            so: point.offset,
+        });
+        this.dependencies.Range.save(range);
 
         // Insert the nodes
-        this.context.invoke('TextPlugin.pasteNodes', nodes, textOnly);
-        this.context.invoke('HelperPlugin.normalize');
-        this.context.invoke('editor.saveRange');
+        this.context.invoke('ClipboardPlugin.pasteNodes', nodes, textOnly);
+        range = this.dependencies.Range.getRange().normalize();
+        this.dependencies.Range.save(range);
 
         this.context.invoke('editor.afterCommand');
     },
@@ -58,7 +64,7 @@ var DropzonePlugin = Plugins.dropzone.extend({
     _dropImages: function (files) {
         var self = this;
         this.context.invoke('editor.beforeCommand');
-        var range = this.context.invoke('editor.createRange');
+        var range = this.dependencies.Range.getRange();
 
         var spinners = [];
         var images = [];
@@ -68,7 +74,7 @@ var DropzonePlugin = Plugins.dropzone.extend({
             var spinner = $('<span class="fa fa-spinner fa-spin">').attr('data-filename', file.name)[0];
             self.context.invoke('editor.hidePopover');
             if (range.sc.tagName) {
-                if (range.so >= dom.nodeLength(range.sc)) {
+                if (range.so >= self.utils.nodeLength(range.sc)) {
                     $(range.sc).append(spinner);
                 } else {
                     $(range.sc).before(range.sc.childNodes[range.so]);
@@ -118,9 +124,11 @@ var DropzonePlugin = Plugins.dropzone.extend({
             });
             Promise.all(defs).then(function () {
                 if (images.length === 1) {
-                    range = self.context.invoke('editor.setRange', _.last(images), 0);
-                    range.select();
-                    self.context.invoke('editor.saveRange');
+                    var range = self.dependencies.Range.setRange({
+                        sc: _.last(images),
+                        so: 0,
+                    });
+                    self.dependencies.Range.save(range);
                     self.context.invoke('editor.afterCommand');
                     self.context.invoke('MediaPlugin.updatePopoverAfterEdit', images[0]);
                 } else {
@@ -128,6 +136,21 @@ var DropzonePlugin = Plugins.dropzone.extend({
                 }
             });
         });
+    },
+    /**
+     * Simulate a do_notify by notifying the user through a dialog.
+     *
+     * @private
+     * @param {String} title
+     * @param {String} content
+     */
+    _notify: function (title, content) {
+        var $notif = $('<p>' + content + '</p>');
+        new Dialog(this, {
+            title: title,
+            size: 'medium',
+            $content: $notif,
+        }).open();
     },
     /**
      * Upload an image from its Base64 representation.
@@ -170,7 +193,7 @@ var DropzonePlugin = Plugins.dropzone.extend({
         var dataTransfer = e.originalEvent.dataTransfer;
 
         if (!this._canDropHere()) {
-            this.context.invoke('HelperPlugin.notify', _t("Not a dropzone"), _t("Dropping is prohibited in this area."));
+            this._notify(_t("Not a dropzone"), _t("Dropping is prohibited in this area."));
             return;
         }
 
@@ -186,7 +209,7 @@ var DropzonePlugin = Plugins.dropzone.extend({
                 }
             });
             if (!images.length || images.length < dataTransfer.files.length) {
-                this.context.invoke('HelperPlugin.notify', _t("Unsupported file type"), _t("Images are the only file types that can be dropped."));
+                this._notify(_t("Unsupported file type"), _t("Images are the only file types that can be dropped."));
             }
             if (images.length) {
                 this._dropImages(images);
@@ -200,12 +223,12 @@ var DropzonePlugin = Plugins.dropzone.extend({
      * @returns {Boolean}
      */
     _canDropHere: function () {
-        var range = this.context.invoke('editor.createRange');
+        var range = this.dependencies.Range.getRange();
         return this.options.isEditableNode(range.sc);
     },
 });
 
-registry.add('dropzone', DropzonePlugin);
+Manager.addPlugin('dropzone', DropzonePlugin);
 
 return DropzonePlugin;
 

@@ -5,7 +5,6 @@ var config = require('web.config');
 var core = require('web.core');
 var FieldHtml = require('web_editor.field.html');
 var fieldRegistry = require('web.field_registry');
-var convertInline = require('web_editor.convertInline');
 
 var _t = core._t;
 
@@ -53,13 +52,10 @@ var MassMailingFieldHtml = FieldHtml.extend({
         }
 
         var $editable = this.wysiwyg.getEditable();
+        var valueBeforeConvertInline = $editable.html();
 
         return this.wysiwyg.save().then(function (result) {
             self._isDirty = result.isDirty;
-
-            convertInline.attachmentThumbnailToLinkImg($editable);
-            convertInline.fontToImg($editable);
-            convertInline.classToStyle($editable);
 
             self.trigger_up('field_changed', {
                 dataPointID: self.dataPointID,

@@ -2,8 +2,94 @@
 <templates id="template" xml:space="preserve">
 
     <!--=================-->
-    <!-- Edition Iframe -->
+    <!-- Edition Popover -->
     <!--=================-->
+
+    <div class="popover wysiwyg-popover" t-name="wysiwyg.popover">
+        <div class="popover-content">
+        </div>
+    </div>
+
+    <t t-name="wysiwyg.popover.media">
+        <div class="popover wysiwyg-popover-media">
+            <div class="popover-content">
+                <div class="btn-group wysiwyg-button-media">
+                    <button class="btn btn-light btn-sm" data-value="edit" title="Picture">
+                        <i class="fa fa-file-image-o"></i>
+                    </button>
+                    <button class="btn btn-light btn-sm" data-value="remove" title="Remove Image">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="wysiwyg.popover.icon" t-extend="wysiwyg.popover.media">
+        <t t-jquery=".popover" t-operation="attributes">
+            <attribute name="class">popover wysiwyg-popover-icon</attribute>
+        </t>
+        <t t-jquery=".wysiwyg-button-float" t-operation="after">
+            <div class="btn-group wysiwyg-button-faSpin">
+                <button class="btn btn-light btn-sm" title="Spin">
+                    <i class="fa fa-refresh"></i>
+                </button>
+            </div>
+        </t>
+    </t>
+
+    <t t-name="wysiwyg.popover.image" t-extend="wysiwyg.popover.media">
+        <t t-jquery=".popover" t-operation="attributes">
+            <attribute name="class">popover wysiwyg-popover-image</attribute>
+        </t>
+        <button class="btn btn-light btn-sm" data-value="rounded" title="Shape: Rounded">
+            <i class="fa fa-square"></i>
+        </button>
+        <button class="btn btn-light btn-sm" data-value="rounded-circle" title="Shape: Circle">
+            <i class="fa fa-circle-o"></i>
+        </button>
+        <button class="btn btn-light btn-sm" data-value="shadow" title="Shape: Shadow">
+            <i class="fa fa-sun-o"></i>
+        </button>
+        <button class="btn btn-light btn-sm" data-value="img-thumbnail" title="Shape: Thumbnail">
+            <i class="fa fa-picture-o"></i>
+        </button>
+        <div class="btn-group wysiwyg-button-crop">
+            <button class="btn btn-light btn-sm" title="Crop image">
+                <i class="fa fa-crop"></i>
+            </button>
+        </div>
+        <t t-jquery=".wysiwyg-button-media" t-operation="after">
+            <div class="btn-group wysiwyg-button-alt">
+                <button class="btn btn-light btn-sm">
+                    <b>Description:</b>
+                </button>
+            </div>
+        </t>
+    </t>
+
+    <t t-name="wysiwyg.popover.video" t-extend="wysiwyg.popover.media">
+        <t t-jquery=".popover" t-operation="attributes">
+            <attribute name="class">popover wysiwyg-popover-video</attribute>
+        </t>
+        <t t-jquery=".wysiwyg-button-size" t-operation="after">
+            <div class="btn-group wysiwyg-button-imagesize">
+                <button class="btn btn-light btn-sm" data-value="100%" title="Resize Full">100%</button>
+                <button class="btn btn-light btn-sm" data-value="50%" title="Resize Half">50%</button>
+                <button class="btn btn-light btn-sm" data-value="25%" title="Resize Quarter">25%</button>
+            </div>
+        </t>
+    </t>
+
+    <t t-name="wysiwyg.popover.document" t-extend="wysiwyg.popover.media">
+        <t t-jquery=".popover" t-operation="attributes">
+            <attribute name="class">popover wysiwyg-popover-document</attribute>
+        </t>
+    </t>
+
+    <!--===================-->
+    <!-- Edition Interface -->
+    <!--===================-->
 
     <t t-name="wysiwyg.iframeContent"><head>
             <meta charset="utf-8"/>
@@ -37,6 +123,23 @@
                 }
             </script>
         </body>
+    </t>
+
+    <group t-name="wysiwyg.buttons.history">
+        <button name="undo" data-method="undo" title="Undo (CTRL+Z)"><i class="note-icon-undo"></i></button>
+        <button name="redo" data-method="redo" title="Redo (CTRL+Y)"><i class="note-icon-redo"></i></button>
+    </group>
+
+    <t t-name="wysiwyg.buttons.fullscreen">
+        <button class="btn" title="Full Screen">
+            <i class="note-icon-arrows-alt"></i>
+        </button>
+    </t>
+
+    <t t-name="wysiwyg.buttons.help">
+        <button class="btn" title="Help">
+            <i class="note-icon-question"></i>
+        </button>
     </t>
 
     <!--=================-->
@@ -111,7 +214,7 @@
             <div class="form-text"/>
             <div class="existing-attachments"/>
             <div class="mt-4 text-center mx-auto">
-                <button class="btn btn-primary o_load_more" type="button">Load more...</button>
+                <button class="btn btn-primary o_load_more">Load more...</button>
                 <div class="mt-4 o_load_done_msg d-none">
                     <span><i>All attachments have been loaded</i></span>
                 </div>
@@ -126,16 +229,16 @@
             <input type="hidden" name="disable_optimization" value=""/>
 
             <div class="btn-group">
-                <button type="button" class="btn btn-primary o_upload_media_button">
+                <button class="btn btn-primary o_upload_media_button">
                     <t t-if="isDocument">Upload a document</t>
                     <t t-else="">Upload an image</t>
                 </button>
                 <t t-if="!isDocument">
-                    <button class="btn btn-primary dropdown-toggle dropdown-toggle-split o_media_optimization" data-toggle="dropdown" type="button">
+                    <button class="btn btn-primary dropdown-toggle dropdown-toggle-split o_media_optimization" data-toggle="dropdown">
                         <span class="sr-only">Alternate Upload</span>
                     </button>
                     <div class="dropdown-menu" role="menu">
-                        <button type="button" role="menuitem" class="dropdown-item o_upload_media_button_no_optimization">Upload image without optimization</button>
+                        <button role="menuitem" class="dropdown-item o_upload_media_button_no_optimization">Upload image without optimization</button>
                     </div>
                 </t>
             </div>
@@ -143,13 +246,13 @@
             <div class="input-group align-items-center ml-2">
                 <input type="text" class="form-control o_we_url_input" name="url" t-attf-placeholder="https://www.odoo.com/#{isDocument ? 'mydocument' : 'logo.png'}"/>
                 <div class="input-group-append align-items-center">
-                    <button type="button" class="btn btn-secondary o_upload_media_url_button" disabled="disabled">
+                    <button class="btn btn-secondary o_upload_media_url_button" disabled="disabled">
                         <t t-if="isDocument">Add document</t>
                         <t t-else="">Add image</t>
                     </button>
                     <div class="ml-2">
                         <span class="o_we_url_success text-success d-none fa fa-lg fa-check" title="The URL seems valid"/>
-                        <span class="o_we_url_warning text-warning d-none fa fa-lg fa-warning" title="The URL does not contain any image. The file will be added in the document section."/>
+                        <span class="o_we_url_warning text-warning d-none fa fa-lg fa-warning" title="The URL does not contain any image. The file will be added the document section."/>
                         <span class="o_we_url_error text-danger d-none fa fa-lg fa-times" title="The URL does not seem to work"/>
                     </div>
                 </div>
@@ -165,19 +268,19 @@
     </t>
 
     <t t-name="wysiwyg.widgets.image.existing">
-        <div role="dialog" class="modal" tabindex="-1">
+        <div role="dialog" class="modal">
             <div class="modal-dialog select-image">
                 <div class="modal-content">
                     <header class="modal-header">
                         <h3 class="modal-title">Select a Picture</h3>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">×</button>
+                        <button class="close" data-dismiss="modal" aria-label="Close">×</button>
                     </header>
                     <main class="modal-body o_has_error">
                         <div class="existing-attachments"/>
                         <div class="form-text"/>
                     </main>
                     <footer class="modal-footer">
-                        <button data-dismiss="modal" type="button" aria-label="Discard">Discard</button>
+                        <button data-dismiss="modal" aria-label="Discard">Discard</button>
                     </footer>
                 </div>
             </div>
@@ -199,7 +302,7 @@
     </t>
     <t t-name="wysiwyg.widgets.image.existing.error">
         <div class="form-text">
-            <p>The image could not be deleted because it is used in the
+            <p>The image could not be deleted because it is used the
                following pages or views:</p>
             <ul t-as="view" t-foreach="views">
                 <li>
@@ -352,7 +455,7 @@
                         <label class="o_switch">
                             <input type="checkbox" name="is_new_window" t-att-checked="widget.data.isNewWindow ? 'checked' : undefined"/>
                             <span/>
-                            Open in new window
+                            Open new window
                         </label>
                     </div>
                 </div>
@@ -375,7 +478,7 @@
             <h4>This image is an external image</h4>
             <p>
                 This type of image is not supported for cropping.<br/>
-                If you want to crop it, please first download it from the original source and upload it in Odoo.
+                If you want to crop it, please first download it from the original source and upload it Odoo.
             </p>
         </div>
         <t t-else="">
@@ -392,19 +495,19 @@
                    </t>
                </div>
                <div class="btn-group" role="group">
-                   <button type="button" class="btn btn-secondary" title="Zoom In" data-event="zoom" data-value="0.1"><i class="fa fa-search-plus"/></button>
-                   <button type="button" class="btn btn-secondary" title="Zoom Out" data-event="zoom" data-value="-0.1"><i class="fa fa-search-minus"/></button>
+                   <button class="btn btn-secondary" title="Zoom In" data-event="zoom" data-value="0.1"><i class="fa fa-search-plus"/></button>
+                   <button class="btn btn-secondary" title="Zoom Out" data-event="zoom" data-value="-0.1"><i class="fa fa-search-minus"/></button>
                </div>
                <div class="btn-group" role="group">
-                   <button type="button" class="btn btn-secondary" title="Rotate Left" data-event="rotate" data-value="-45"><i class="fa fa-rotate-left"/></button>
-                   <button type="button" class="btn btn-secondary" title="Rotate Right" data-event="rotate" data-value="45"><i class="fa fa-rotate-right"/></button>
+                   <button class="btn btn-secondary" title="Rotate Left" data-event="rotate" data-value="-45"><i class="fa fa-rotate-left"/></button>
+                   <button class="btn btn-secondary" title="Rotate Right" data-event="rotate" data-value="45"><i class="fa fa-rotate-right"/></button>
                </div>
                <div class="btn-group" role="group">
-                   <button type="button" class="btn btn-secondary" title="Flip Horizontal" data-event="flip" data-value="horizontal" data-x="1"><i class="fa fa-arrows-h"/></button>
-                   <button type="button" class="btn btn-secondary" title="Flip Vertical" data-event="flip" data-value="vertical" data-y="1"><i class="fa fa-arrows-v"/></button>
+                   <button class="btn btn-secondary" title="Flip Horizontal" data-event="flip" data-value="horizontal" data-x="1"><i class="fa fa-arrows-h"/></button>
+                   <button class="btn btn-secondary" title="Flip Vertical" data-event="flip" data-value="vertical" data-y="1"><i class="fa fa-arrows-v"/></button>
                </div>
                <div class="btn-group" role="group">
-                   <button type="button" class="btn btn-secondary" title="Reset Image" data-event="reset"><i class="fa fa-refresh"/> Reset Image</button>
+                   <button class="btn btn-secondary" title="Reset Image" data-event="reset"><i class="fa fa-refresh"/> Reset Image</button>
                </div>
            </div>
        </t>

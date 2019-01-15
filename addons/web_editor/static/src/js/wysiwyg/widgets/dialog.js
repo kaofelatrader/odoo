@@ -9,7 +9,7 @@ var _t = core._t;
 /**
  * Extend Dialog class to handle save/cancel of edition components.
  */
-var SummernoteDialog = Dialog.extend({
+var WysiwygDialog = Dialog.extend({
     /**
      * @constructor
      */
@@ -54,5 +54,5 @@ var SummernoteDialog = Dialog.extend({
     },
 });
 
-return SummernoteDialog;
+return WysiwygDialog;
 });

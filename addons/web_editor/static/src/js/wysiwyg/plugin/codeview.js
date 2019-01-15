@@ -3,12 +3,20 @@ odoo.define('web_editor.wysiwyg.plugin.codeview', function (require) {
 
 var core = require('web.core');
 var Plugins = require('web_editor.wysiwyg.plugins');
-var registry = require('web_editor.wysiwyg.plugin.registry');
+var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 var _t = core._t;
 
 
 var CodeviewPlugin = Plugins.codeview.extend({
+
+    setValue: function () {
+        // if (this.utils.hasJinja(value)) {
+        //     this._summernote.invoke('codeview.forceActivate');
+        // }
+        console.warn('todo');
+    },
+
     /**
      * @override
      */
@@ -18,14 +26,14 @@ var CodeviewPlugin = Plugins.codeview.extend({
             this.$codable.height(180);
         }
         this.context.invoke('editor.hidePopover');
-        this.context.invoke('editor.clearTarget');
+        this.context.invoke('editor.clearTarget'); // todo: replace by disable editable + event
     },
     /**
      * @override
      */
     deactivate: function () {
         if (
-            this.context.invoke('HelperPlugin.hasJinja', this.context.invoke('code')) &&
+            utils.hasJinja(this.context.invoke('code')) &&
             !this.isBeingDestroyed
         ) {
             var message = _t("Your code contains JINJA conditions.\nRemove them to return to WYSIWYG HTML edition.");
@@ -35,6 +43,8 @@ var CodeviewPlugin = Plugins.codeview.extend({
         }
         this._super();
         this.$editable.css('height', '');
+
+        // todo: enable editable + event
     },
     /**
      * @override
@@ -53,7 +63,7 @@ var CodeviewPlugin = Plugins.codeview.extend({
     },
 });
 
-registry.add('codeview', CodeviewPlugin);
+Manager.addPlugin('codeview', CodeviewPlugin);
 
 return CodeviewPlugin;
 

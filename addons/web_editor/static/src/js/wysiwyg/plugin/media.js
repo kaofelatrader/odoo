@@ -4,43 +4,120 @@ odoo.define('web_editor.wysiwyg.plugin.media', function (require) {
 var core = require('web.core');
 var weWidgets = require('wysiwyg.widgets');
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
-var registry = require('web_editor.wysiwyg.plugin.registry');
-var Plugins = require('web_editor.wysiwyg.plugins');
-var wysiwygTranslation = require('web_editor.wysiwyg.translation');
-var wysiwygOptions = require('web_editor.wysiwyg.options');
+var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 var _t = core._t;
 
-var dom = $.summernote.dom;
-var ui = $.summernote.ui;
+//--------------------------------------------------------------------------
+// Size button
+//--------------------------------------------------------------------------
+
+var Float = AbstractPlugin.extend({
+    buttons: {
+        template: 'wysiwyg.buttons.align',
+        active: '_active',
+    },
+    update: function (float, range) {
+        var target = range.sc;
+        $(target).css('float', '').removeClass('mx-auto pull-right pull-left');
+        if (float === 'center') {
+            $(target).addClass('mx-auto');
+        } else if (float !== 'none') {
+            $(target).addClass('pull-' + float);
+        }
+        $(target).trigger('change');
+    },
+    _active:  function (buttonName, focusNode) {
+        switch (buttonName) {
+            case 'align-left': return $(focusNode).hasClass('pull-left');
+            case 'align-center': return $(focusNode).hasClass('mx-auto');
+            case 'align-right': return $(focusNode).hasClass('pull-right');
+            case 'align-none':  return !($(focusNode).hasClass('pull-left') || $(focusNode).hasClass('mx-auto') || $(focusNode).hasClass('pull-right'));
+        }
+    },
+});
+
+Manager.addPlugin('Float', Float);
+
+//--------------------------------------------------------------------------
+// Size button
+//--------------------------------------------------------------------------
+
+var MediaSize = AbstractPlugin.extend({
+    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_media.xml'],
+    buttons: {
+        template: 'wysiwyg.buttons.size',
+        active: '_active',
+    },
+    update: function (size, range) {
+        var target = range.sc;
+        $(target).css('width', size === 'auto' ? '' : size).trigger('change');
+    },
+
+    _active: function (buttonName, focusNode) {
+        var size = buttonName.split('-')[1];
+        if (size === 'auto') {
+            size = '';
+        }
+        return focusNode.style.width.replace('%', '') ===  size;
+    },
+});
+
+Manager.addPlugin('MediaSize', MediaSize);
+
+//--------------------------------------------------------------------------
+// Padding button
+//--------------------------------------------------------------------------
+
+var Padding = AbstractPlugin.extend({
+    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_media.xml'],
+    buttons: {
+        template: 'wysiwyg.buttons.padding',
+        active: '_active',
+    },
+
+    update: function (value, range) {
+        var target = range.sc;
+        target.className = target.className.replace(/(\s+)?padding-\S+/, '');
+        $(target).addClass(value).trigger('change');
+    },
+
+    _active: function (buttonName, focusNode) {
+        return $(focusNode).hasClass(buttonName);
+    },
+    _getButtonValues: function (method) {
+        return this.buttons.$el.find('[data-method="' + method + '"][data-value]').map(function () {
+            return $(this).attr('[data-value]');
+        }).get();
+    }
+});
+
+Manager.addPlugin('Padding', Padding);
 
 //--------------------------------------------------------------------------
 // Media (for image, video, icon, document)
 //--------------------------------------------------------------------------
 
-/**
- * Return true if the node is a media (image, icon, document or video).
- *
- * @param {Node} node
- * @returns {Boolean}
- */
-dom.isMedia = function (node) {
-    return dom.isImg(node) ||
-        dom.isIcon(node) ||
-        dom.isDocument(node) ||
-        dom.isVideo(node);
-};
-
 var MediaPlugin = AbstractPlugin.extend({
-    events: {
-        'summernote.mousedown': '_onMouseDown',
-        'summernote.keydown': '_onKeydown',
-        'summernote.keyup': '_onKeyup',
-        'summernote.scroll': '_onScroll',
-        'summernote.disable': '_onDisable',
-        'summernote.change': '_onChange',
-        'summernote.codeview.toggled': '_onToggled',
-        'dblclick .note-editable': '_onDblclick',
+    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_media.xml'],
+    dependencies: ['Range'],
+
+    buttons: {
+        template: 'wysiwyg.buttons.media',
+    },
+
+    /**
+     * @constructor
+     */
+    init: function (parent, media, options) {
+        this._super.apply(this, arguments);
+
+        /* var isVoidBlock = this.utils.isVoidBlock;
+        Utils.include({
+            isVoidBlock: function (node) {
+                return isVoidBlock(node) || this.isMedia(node);
+            },
+        }); */
     },
 
     //--------------------------------------------------------------------------
@@ -50,99 +127,42 @@ var MediaPlugin = AbstractPlugin.extend({
     /**
      * Open the image dialog and listen to its saved/closed events.
      */
-    showImageDialog: function () {
-        this.context.invoke('editor.saveRange');
-        var media = this.context.invoke('editor.restoreTarget');
-
-        var mediaDialog = new weWidgets.MediaDialog(this.options.parent, {},
-            $(media).clone()[0]
-        );
-
-        mediaDialog.on('saved', this, function (data) {
-            this.insertMedia(media, data);
+    showImageDialog: function (value, range) {
+        var self = this;
+        var target = range.sc;
+        return new Promise(function (resolve) {
+            var $mediaParent = $(media).parent();
+            if ($mediaParent.hasClass('media_iframe_video')) {
+                media = $mediaParent[0];
+                $mediaParent = $mediaParent.parent();
+            }
+            var mediaDialog = new weWidgets.MediaDialog(self, {
+                onlyImages: $mediaParent.data('oeField') === 'image' || $mediaParent.data('oeType') === 'image',
+            },
+                $(media).clone()[0]
+            );
+            mediaDialog.on('saved', self, function (data) {
+                self.insertMedia(media, data);
+                resolve();
+            });
+            mediaDialog.on('closed', self, function () {
+                resolve({noChange: true});
+            });
+            mediaDialog.open();
         });
-        mediaDialog.on('closed', this, function () {
-            this.context.invoke('editor.restoreRange');
-        });
-        mediaDialog.open();
     },
     /**
      * Remove the current target media and hide its popover.
      */
-    removeMedia: function () {
-        this.context.invoke('editor.beforeCommand');
-        var target = this.context.invoke('editor.restoreTarget');
-        var point = this.context.invoke('HelperPlugin.removeBlockNode', target);
-        var rng = this.context.invoke('editor.setRange', point.node, point.offset);
-        rng.normalize().select();
-        this.context.invoke('editor.saveRange');
-        this.context.invoke('editor.clearTarget');
-        this.hidePopovers();
-        this.context.invoke('editor.afterCommand');
-    },
-    /**
-     * Update the target media and its popover.
-     *
-     * @param {Node} target
-     */
-    update: function (target) {
-        if (!target || !dom.isMedia(target)) {
-            return;
-        }
-        if (!this.options.displayPopover(target)) {
-            if (dom.isImg(target)) {
-                this.context.invoke('HandlePlugin.update', target);
-            }
-            return;
-        }
-
-        this.lastPos = this.context.invoke('HelperPlugin.makePoint', target, $(target).offset());
-
-        this.context.triggerEvent('focusnode', target);
-
-        if (!dom.isMedia(target)) {
-            return;
-        }
-
-        this.context.invoke('editor.saveTarget', target);
-
-        var $target = $(target);
-        if (!$target.data('show_tooltip')) {
-            $target.data('show_tooltip', true);
-            setTimeout(function () {
-                $target.tooltip({
-                    title: _t('Double-click to edit'),
-                    trigger: 'manuel',
-                    container: this.document.body,
-                }).tooltip('show');
-                setTimeout(function () {
-                    $target.tooltip('dispose');
-                }, 2000);
-            }, 400);
-        }
-
-        if (dom.isImg(target)) {
-            this.context.invoke('ImagePlugin.show', target, this.mousePosition);
-        } else if (dom.isIcon(target)) {
-            this.context.invoke('IconPlugin.show', target, this.mousePosition);
-        } else if (dom.isVideo(target)) {
-            this.context.invoke('VideoPlugin.show', target, this.mousePosition);
-        } else if (dom.isDocument(target)) {
-            this.context.invoke('DocumentPlugin.show', target, this.mousePosition);
-        }
-    },
-    /**
-     * Hide all open popovers.
-     * Warning: removes the saved target.
-     */
-    hidePopovers: function () {
-        var media = this.context.invoke('editor.restoreTarget');
-        this.context.invoke('HandlePlugin.hide');
-        this.context.invoke('ImagePlugin.hide');
-        this.context.invoke('IconPlugin.hide');
-        this.context.invoke('VideoPlugin.hide');
-        this.context.invoke('DocumentPlugin.hide');
-        this.context.invoke('editor.saveTarget', media);
+    removeMedia: function (value, range) {
+        var target = range.sc;
+        var point = this.dom.removeBlockNode(target);
+        var rangePoints = {
+            sc: point.node,
+            so: point.offset,
+        };
+        // TODO create range + .normalize()
+        this.dependencies.Range.save(rangePoints);
     },
     /**
      * Insert or replace a media.
@@ -151,110 +171,28 @@ var MediaPlugin = AbstractPlugin.extend({
      * @param {Object} data contains the media to insert
      */
     insertMedia: function (previous, data) {
-        if (!data.media) {
-            return;
-        }
         var newMedia = data.media;
-        this._wrapCommand(function () {
-            this.$editable.focus();
-            var rng = this.context.invoke('editor.createRange');
-            var point;
-
-            if (newMedia.tagName === "IMG") {
-                $(newMedia).one('load error abort', this.updatePopoverAfterEdit.bind(this, newMedia));
-            }
-
-            if (previous) {
-                this.context.invoke('editor.clearTarget');
-                var start = previous.parentNode;
-                rng = this.context.invoke('editor.setRange', start, _.indexOf(start.childNodes, previous));
-                if (previous.tagName === newMedia.tagName) {
-                    // Eg: replace an image with an image -> reapply classes removed by `clear`
-                    var reFaIcons = /fa-(?!spin(\s|$))\S+/g; // do not keep fontawesome icons but keep fa-spin
-                    $(newMedia).addClass(previous.className.replace(reFaIcons, ''));
-                }
-
-                if (dom.isVideo(previous) || dom.isVideo(newMedia)) {
-                    var doNotInsertP = previous.tagName === newMedia.tagName;
-                    point = this.context.invoke('HelperPlugin.removeBlockNode', previous, doNotInsertP);
-                    if (!rng.sc.parentNode || !rng.sc.childNodes[rng.so]) {
-                        rng = this.context.invoke('editor.setRange', point.node, point.offset);
-                    }
-                    previous = null;
-                }
-                rng.select();
-                this.hidePopovers();
-            }
-
-            if (dom.isVideo(newMedia)) {
-                this.context.invoke('HelperPlugin.insertBlockNode', newMedia);
-            } else {
-                rng = this.context.invoke('editor.createRange');
-                point = rng.getStartPoint();
-                if (!rng.isCollapsed()) {
-                    point = this.context.invoke('HelperPlugin.deleteBetween', point, rng.getEndPoint());
-                }
-
-                if (point.node.tagName) {
-                    if (previous) {
-                        $(previous).replaceWith(newMedia);
-                    } else if (dom.isVoid(point.node)) {
-                        point.node.parentNode.insertBefore(newMedia, point.node);
-                    } else {
-                        var node = point.node.childNodes[point.offset];
-                        if (point.node.tagName === 'BR') {
-                            $(point.node).replaceWith(newMedia);
-                        } else if (node && node.tagName === 'BR') {
-                            $(node).replaceWith(newMedia);
-                        } else {
-                            point.node.insertBefore(newMedia, node || null);
-                        }
-                    }
-                    if (!this._isFakeNotEditable(newMedia)) {
-                        if (!newMedia.previousSibling) {
-                            $(newMedia).before(this.document.createTextNode('\u200B'), newMedia);
-                        }
-                        if (!newMedia.nextSibling) {
-                            $(newMedia).after(this.document.createTextNode('\u200B'), newMedia);
-                        }
-                    }
-                } else {
-                    var next = this.document.createTextNode(point.node.textContent.slice(point.offset));
-                    point.node.textContent = point.node.textContent.slice(0, point.offset);
-
-                    $(point.node).after(next).after(newMedia);
-                    point.node.parentNode.normalize();
-                    if (!this._isFakeNotEditable(newMedia)) {
-                        if (!newMedia.previousSibling) {
-                            $(newMedia).before(this.document.createTextNode('\u200B'), newMedia);
-                        }
-                        if (!newMedia.nextSibling) {
-                            $(newMedia).after(this.document.createTextNode('\u200B'), newMedia);
-                        }
-                    }
-                    rng = this.context.invoke('editor.setRange', newMedia.nextSibling || newMedia, 0);
-                    rng.normalize().select();
-                }
-            }
-            this.context.invoke('editor.saveRange');
-            this.context.invoke('editor.saveTarget', newMedia);
-            this.context.triggerEvent('focusnode', newMedia);
-            this.context.invoke('UnbreakablePlugin.secureArea', newMedia);
-
-            this.updatePopoverAfterEdit(newMedia);
-        })();
+        var range = this.dependencies.Range.getRange();
+        this.editable.focus();
+        var isMediaBlock = this.utils.isVideo && this.utils.isVideo(newMedia);
+        if (isMediaBlock) {
+            range = this._insertBlockMedia(newMedia, range, previous);
+        } else {
+            range = this._insertInlineMedia(newMedia, range, previous);
+        }
+        this.dependencies.Range.save(range);
     },
     /**
-     * Update the media's popover and its position after editing the media.
-     *
-     * @param {Node} media
-     */
-    updatePopoverAfterEdit: function (media) {
-        this.mousePosition = {
-            pageX: $(media).offset().left + $(media).width() / 2,
-            pageY: $(media).offset().top + $(media).height() / 2,
-        };
-        $(media).trigger('mousedown').trigger('mouseup');
+    * Return true if the node is a media (image, icon, document or video).
+    *
+    * @param {Node} node
+    * @returns {Boolean}
+    */
+    isMedia: function (node) {
+        return this.isImg(node) ||
+            this.isIcon(node) ||
+            this.isDocument(node) ||
+            this.isVideo(node);
     },
 
     //--------------------------------------------------------------------------
@@ -262,58 +200,101 @@ var MediaPlugin = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     /**
-     * Add the media popovers' buttons:
-     * - Replacement
-     * - Removal
-     * - Alignment
-     * - Padding
+     * Insert or replace an inline media in the DOM.
      *
-     * @override
+     * @private
+     * @param {Node} newMedia
+     * @param {WrappedRange} range
+     * @param {Node} [oldMedia]
+     * @returns {WrappedRange}
      */
-    _addButtons: function () {
-        var self = this;
-        this._super();
+    _insertBlockMedia: function (newMedia, range, oldMedia) {
+        if (oldMedia) {
+            range = this._prepareReplaceMedia(oldMedia, newMedia);
+            var doNotInsertP = oldMedia.tagName === newMedia.tagName;
+            var point = this.dom.removeBlockNode(oldMedia, doNotInsertP);
+            if (!range.sc.parentNode || !range.sc.childNodes[range.so]) {
+                range.replace({
+                    sc: point.node,
+                    so: point.offset,
+                });
+            }
+        }
+        this.dom.insertBlockNode(newMedia, range.getPoints());
+        return this.dependencies.Range.getRange();
+    },
+    /**
+     * Insert or replace an inline media in the DOM.
+     *
+     * @private
+     * @param {Node} newMedia
+     * @param {WrappedRange} range
+     * @param {Node} [oldMedia]
+     * @returns {WrappedRange}
+     */
+    _insertInlineMedia: function (newMedia, range, oldMedia) {
+        if (oldMedia) {
+            range = this._prepareReplaceMedia(oldMedia, newMedia);
+        }
+        var point = range.getStartPoint();
+        if (!range.isCollapsed()) {
+            point = this.dom.deleteBetween(point, range.getEndPoint());
+        }
 
-        this.context.memo('button.mediaPlugin', function () {
-            return self.context.invoke('buttons.button', {
-                contents: self.ui.icon(self.options.icons.picture),
-                tooltip: self.lang.image.image,
-                click: self.context.createInvokeHandler('MediaPlugin.showImageDialog')
-            }).render();
-        });
+        if (point.node.tagName) {
+            this._insertMediaInElement(newMedia, point, oldMedia);
+        } else {
+            this._insertMediaInText(newMedia, point);
+        }
+        var isFakeNotEditable = this._isFakeNotEditable(newMedia);
+        if (isFakeNotEditable && !newMedia.previousSibling) {
+            $(newMedia).before(this.document.createTextNode(this.utils.char('zeroWidth')), newMedia);
+        }
+        if (isFakeNotEditable && !newMedia.nextSibling) {
+            $(newMedia).after(this.document.createTextNode(this.utils.char('zeroWidth')), newMedia);
+        }
+        return range.replace({
+            sc: newMedia.nextSibling || newMedia,
+            so: 0,
+        }).normalize();
+    },
+    /**
+     * Insert or replace a media inside an element node (point.node).
+     *
+     * @private
+     * @param {Node} newMedia
+     * @param {BoundaryPoint} point
+     * @param {Node} [oldMedia]
+     */
+    _insertMediaInElement: function (newMedia, point, oldMedia) {
+        if (oldMedia) {
+            return $(oldMedia).replaceWith(newMedia);
+        }
+        if (this.utils.isVoid(point.node)) {
+            return point.node.parentNode.insertBefore(newMedia, point.node);
+        }
+        if (point.node.tagName === 'BR') {
+            return $(point.node).replaceWith(newMedia);
+        }
+        var node = point.node.childNodes[point.offset];
+        if (node && node.tagName === 'BR') {
+            return $(node).replaceWith(newMedia);
+        }
+        point.node.insertBefore(newMedia, node || null);
+    },
+    /**
+     * Insert a media inside a text node (point.node).
+     *
+     * @private
+     * @param {Node} newMedia
+     * @param {BoundaryPoint} point
+     */
+    _insertMediaInText: function (newMedia, point) {
+        var next = this.document.createTextNode(point.node.textContent.slice(point.offset));
+        point.node.textContent = point.node.textContent.slice(0, point.offset);
 
-        this.context.memo('button.removePluginMedia', function () {
-            return self.context.invoke('buttons.button', {
-                contents: self.ui.icon(self.options.icons.trash),
-                tooltip: self.lang.image.remove,
-                click: self._wrapCommand(function () {
-                    this.context.invoke('MediaPlugin.removeMedia');
-                })
-            }).render();
-        });
-
-        _.each(['left', 'center', 'right', 'none'], function (align) {
-            var alignName = _.str.camelize('align_' + align);
-            self._createButton(alignName, self.options.icons[alignName], self.lang.image[alignName], function () {
-                var $target = $(self.context.invoke('editor.restoreTarget'));
-                $target.css('float', '').removeClass('mx-auto pull-right pull-left');
-                if (align === 'center') {
-                    $target.addClass('mx-auto');
-                } else if (align !== 'none') {
-                    $target.addClass('pull-' + align);
-                }
-            });
-        });
-
-        var padding = [null, 'padding-small', 'padding-medium', 'padding-large', 'padding-xl'];
-        var zipped = _.zip(padding, this.lang.image.paddingList);
-        var values = _.map(zipped, function (z) {
-            return {
-                value: z[0],
-                string: z[1],
-            };
-        });
-        this._createDropdownButton('padding', this.options.icons.padding, this.lang.image.padding, values);
+        $(point.node).after(next).after(newMedia);
+        point.node.parentNode.normalize();
     },
     /**
      * Return true if the node is a fake not-editable.
@@ -322,10 +303,32 @@ var MediaPlugin = AbstractPlugin.extend({
      * @returns {Boolean}
      */
     _isFakeNotEditable: function (node) {
-        var contentEditableAncestor = dom.ancestor(node, function (n) {
+        var contentEditableAncestor = this.utils.ancestor(node, function (n) {
             return !!n.contentEditable && n.contentEditable !== 'inherit';
         });
         return !!contentEditableAncestor && contentEditableAncestor.contentEditable === 'false';
+    },
+    /**
+     * Prepare for replacement of a media with another.
+     *
+     * @private
+     * @param {Node} oldMedia
+     * @param {Node} newMedia
+     * @returns {WrappedRange}
+     */
+    _prepareReplaceMedia: function (oldMedia, newMedia) {
+        var range = this.dependencies.Range.getRange();
+        var start = oldMedia.parentNode;
+        range.replace({
+            sc: start,
+            so: _.indexOf(start.childNodes, oldMedia),
+        });
+        if (oldMedia.tagName === newMedia.tagName) {
+            // Eg: replace an image with an image -> reapply classes removed by `clear`
+            var reFaIcons = /fa-(?!spin(\s|$))\S+/g; // do not keep fontawesome icons but keep fa-spin
+            $(newMedia).addClass(oldMedia.className.replace(reFaIcons, ''));
+        }
+        return range;
     },
     /**
      * Select the target media based on the
@@ -337,25 +340,21 @@ var MediaPlugin = AbstractPlugin.extend({
      */
     _selectTarget: function (target) {
         if (!target) {
-            target = this.context.invoke('editor.restoreTarget');
+            target = this.getTarget();
         }
 
         if (this.context.isDisabled()) {
-            this.hidePopovers();
-            this.context.invoke('editor.clearTarget');
-            return target;
+            return;
         }
-        var range = this.context.invoke('editor.createRange');
+        var range = this.dependencies.Range.getRange();
         if (!target && range.isCollapsed()) {
             target = range.sc.childNodes[range.so] || range.sc;
         }
-        if (!target || !dom.isMedia(target)) {
-            this.hidePopovers();
-            this.context.invoke('editor.clearTarget');
+        if (!target || !this.utils.isMedia(target)) {
             return target;
         }
 
-        while (target.parentNode && dom.isMedia(target.parentNode)) {
+        while (target.parentNode && this.utils.isMedia(target.parentNode)) {
             target = target.parentNode;
         }
 
@@ -363,309 +362,125 @@ var MediaPlugin = AbstractPlugin.extend({
             if (!target.parentNode) {
                 target = this.editable;
             }
-            this.hidePopovers();
-            this.context.invoke('editor.clearTarget');
             return target;
         }
 
-        this.context.invoke('editor.saveTarget', target);
         this.context.triggerEvent('focusnode', target);
 
         return target;
     },
-    /**
-     * Select the target media on the right (or left)
-     * of the currently selected target media.
-     *
-     * @private
-     * @param {Node} target
-     * @param {Boolean} left
-     */
-    _moveTargetSelection: function (target, left) {
-        if (!target || !dom.isMedia(target)) {
-            return;
-        }
-        var range = this.context.invoke('editor.createRange');
-        var $contentEditable;
-
-        if (
-            range.sc.tagName && $.contains(target, range.sc) &&
-            $(range.sc).hasClass('o_fake_editable') &&
-            left === !range.sc.previousElementSibling
-        ) {
-            $contentEditable = $(range.sc).closest('[contentEditable]');
-            if ($(target).closest('[contentEditable]')[0] !== $contentEditable[0]) {
-                $contentEditable.focus();
-            }
-            this.context.invoke('editor.saveRange');
-            return;
-        }
-
-        var next = this.context.invoke('HelperPlugin.makePoint', target, 0);
-        if (left) {
-            if (dom.isVideo(target)) {
-                next = this.context.invoke('HelperPlugin.makePoint', target.firstElementChild, 0);
-            } else {
-                next = dom.prevPointUntil(next, function (point) {
-                    return point.node !== target && !$.contains(target, point.node);
-                }) || next;
-            }
-        } else {
-            if (dom.isVideo(target)) {
-                next = this.context.invoke('HelperPlugin.makePoint', target.lastElementChild, 0);
-            } else {
-                next = dom.nextPointUntil(next, function (point) {
-                    return point.node !== target && !$.contains(target, point.node);
-                }) || next;
-            }
-        }
-
-        $contentEditable = $(next.node).closest('[contentEditable]');
-        if ($(target).closest('[contentEditable]')[0] !== $contentEditable[0]) {
-            // move the focus only if the new contentEditable is not the same (avoid scroll up)
-            // (like in the case of a video, which uses two contentEditable in the media, so as to write text)
-            $contentEditable.focus();
-        }
-
-        range = this.context.invoke('editor.setRange', next.node, next.offset);
-        range.select();
-
-        this.context.invoke('editor.saveRange');
-    },
-
-    //--------------------------------------------------------------------------
-    // handle
-    //--------------------------------------------------------------------------
-
-    /**
-     * @private
-     */
-    _onDisable: function () {
-        this.hidePopovers();
-        this.context.invoke('editor.clearTarget');
-    },
-    /**
-     * @private
-     * @param {jQueryEvent} e
-     */
-    _onDblclick: function (e) {
-        if (dom.isMedia(e.target)) {
-            var target = this._selectTarget(e.target);
-            this._moveTargetSelection(target);
-            this.showImageDialog();
-        }
-    },
-    /**
-     * @private
-     **/
-    _onKeydown: function () {
-        this.context.invoke('editor.clearTarget');
-    },
-    /**
-     * @private
-     * @param {SummernoteEvent} se
-     * @param {jQueryEvent} e
-     */
-    _onKeyup: function (se, e) {
-        var target = this._selectTarget();
-        var range = this.context.invoke('editor.createRange');
-        if (e.keyCode === 37) {
-            var point = dom.prevPoint(range.getStartPoint());
-            if (dom.isMedia(point.node)) {
-                target = point.node;
-            }
-        }
-        this._moveTargetSelection(target, e.keyCode === 37);
-        return this.update(target);
-    },
-    /**
-     * @private
-     */
-    _onScroll: function () {
-        var target = this._selectTarget();
-        if (this.lastPos && this.lastPos.target === target && $(target).offset()) {
-            var newTop = $(target).offset().top;
-            var movement = this.lastPos.offset.top - newTop;
-            if (movement && this.mousePosition) {
-                this.mousePosition.pageY -= movement;
-            }
-        }
-        return this.update(target);
-    },
-    /**
-     * @private
-     */
-    _onChange: function () {
-        var target = this._selectTarget();
-        this._moveTargetSelection(target);
-        if (!this.$editable.has(target).length) {
-            return;
-        }
-        return this.update(target);
-    },
-    /**
-     * @private
-     * @param {SummernoteEvent} se
-     * @param {jQueryEvent} e
-     */
-    _onMouseDown: function (se, e) {
-        var target = this._selectTarget(e.target);
-        if (target && dom.isMedia(target)) {
-            var pos = $(target).offset();
-
-            if (e.pageX) {
-                this.mousePosition = {
-                    pageX: e.pageX,
-                    pageY: e.pageY,
-                };
-            } else {
-                // for testing triggers
-                this.mousePosition = {
-                    pageX: pos.left,
-                    pageY: pos.top,
-                };
-            }
-
-            var width = $(target).width();
-            // we put the cursor to the left if we click in the first tier of the media
-            var left = this.mousePosition.pageX < (pos.left + width / 3);
-            this._moveTargetSelection(target, left);
-
-            this.update(target);
-            e.preventDefault();
-        } else {
-            this.mousePosition = {};
-        }
-    },
-    /**
-     * @private
-     */
-    _onToggled: function () {
-        this.update();
-    },
 });
 
-_.extend(wysiwygOptions.icons, {
-    alignCenter: 'note-icon-align-center',
-    alignNone: wysiwygOptions.icons.alignJustify,
-    picture: 'fa fa-file-image-o',
-});
-_.extend(wysiwygTranslation.image, {
-    alignRight: wysiwygTranslation.image.floatRight,
-    alignCenter: _t('Align center'),
-    alignLeft: wysiwygTranslation.image.floatLeft,
-    alignNone: wysiwygTranslation.image.floatNone,
-});
+Manager.addPlugin('Media', MediaPlugin);
 
 //--------------------------------------------------------------------------
 // Abstract
 //--------------------------------------------------------------------------
 
 var AbstractMediaPlugin = AbstractPlugin.extend({
-    targetType: null,
-    initialize: function () {
-        this._super.apply(this, arguments);
-        this.$popover = this.ui.popover({
-                className: 'note-' + this.targetType + '-popover',
-            })
-            .render().appendTo(this.options.container);
-        var $content = this.$popover.find('.popover-content, .note-popover-content');
-        this.context.invoke('buttons.build', $content, this.options.popover[this.targetType]);
-        this.options.POPOVER_MARGIN = 15;
+    dependencies: ['Media'],
+    editableDomEvents: {
+        // 'wysiwyg.Position.mouse': '_onMouseChange',
+        // 'wysiwyg.MediaPlugin.focus': '_onFocus',
+        // 'wysiwyg.MediaPlugin.blur': '_onBlur',
+        'dblclick': '_onDblclick',
     },
-    destroy: function () {
-        this.$popover.remove();
+    custom_events: {
+        edit: '_onEdit',
+        remove: '_onRemove',
     },
+
+    isMediaMethod: null,
+    popoverConstructor: null,
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
-    /**
-     * Hide this popover.
-     */
-    hide: function () {
-        this.$popover.hide();
+    get: function () {
+        return false;
     },
-    /**
-     * Show this popover.
-     *
-     * @param {Node} target
-     * @param {Object} mousePosition {pageX: Number, pageY: Number}
-     */
-    show: function (target, mousePosition) {
-        this._popoverPosition(target, mousePosition);
-        ui.toggleBtnActive(this.$popover.find('a, button'), false);
-        var $target = $(target);
-
-        var float = $target.css('float');
-        if (float === 'none' && $target.hasClass('mx-auto')) {
-            float = 'center';
+    getTargetRange: function (target) {
+        if (this.utils[isMediaMethod](target)) {
+            return {
+                sc: target,
+                so: 0,
+                ec: target,
+                eo: 0
+            };
         }
-        var floatIcon = this.options.icons[_.str.camelize('align_' + (float !== 'none' ? float : 'justify'))];
-        ui.toggleBtnActive(this.$popover.find('.note-float button:has(.' + floatIcon + ')'), true);
-
-        var padding = (($target.attr('class') || '').match(/(^| )(padding-[^\s]+)( |$)/) || ['fa-1x'])[2];
-        ui.toggleBtnActive(this.$popover.find('.note-padding a:has(li[data-value="' + padding + '"])'), true);
     },
 
     //--------------------------------------------------------------------------
-    // Private
+    // Handlers
     //--------------------------------------------------------------------------
 
     /**
-     * Takes the left and top position of the popover and an optional margin
-     * and returns updated positions to force the popover to fit the editor container.
-     *
      * @private
-     * @param {Number} left
-     * @param {Number} top
-     * @param {Number} [margin] optional
-     * @returns {Object} {left: Number, top: Number}
+     * @param {jQueryEvent} e
      */
-    _popoverFitEditor: function (left, top, margin) {
-        margin = margin || this.options.POPOVER_MARGIN;
-
-        var $container = $(this.options.container);
-        var containerWidth = $container.width();
-        var containerHeight = $container.height();
-
-        var popoverWidth = this.$popover.width();
-        var popoverHeight = this.$popover.height();
-
-        var isBeyondXBounds = left + popoverWidth >= containerWidth - margin;
-        var isBeyondYBounds = top + popoverHeight >= containerHeight - margin;
-        return {
-            left: isBeyondXBounds ? containerWidth - popoverWidth - margin : left,
-            top: isBeyondYBounds ? top = containerHeight - popoverHeight - margin : (top > 0 ? top : margin),
-        };
+    _onDblclick: function (e) {
+        if (isMediaMethod && this.utils[isMediaMethod](e.target)) {
+            this.dependencies.Media.showImageDialog(null, e.target);
+        }
     },
     /**
-     * Update the position of the popover in CSS.
-     *
      * @private
-     * @param {Node} target
-     * @param {Object} mousePosition {pageX: Number, pageY: Number}
+     * @param {OdooEvent} oe
      */
-    _popoverPosition: function (target, mousePosition) {
-        var pos = $(this.options.container).offset();
-        pos.left = mousePosition.pageX - pos.left + this.options.POPOVER_MARGIN;
-        pos.top = mousePosition.pageY - pos.top + this.options.POPOVER_MARGIN;
-
-        var popoverPos = this._popoverFitEditor(pos.left, pos.top);
-        this.$popover.css({
-            display: 'block',
-            left: popoverPos.left,
-            top: popoverPos.top,
-        });
+    _onEdit: function (oe) {
+        ev.stopPropagation();
+        this.dependencies.Media.showImageDialog(null, oe.data);
     },
     /**
-     * Override to return whether the target is a media (specific to its class) or not.
-     *
      * @private
-     * @param {Node} target
+     * @param {OdooEvent} oe
      */
-    _isMedia: function (target) {},
+    _onFocus: function (oe) {
+        var target = oe.data;
+        if (this.popover && !this.popover.is(target)) {
+            this.popover.destroy();
+            this.popover = null;
+        }
+        if (this.utils[isMediaMethod](target)) {
+            if (!this.popover && this.options.displayPopover(target)) {
+                this.popover = new (popovers[this.popoverConstructor])(this, target);
+                this.appendTo(this.editor);
+            }
+
+            var $target = $(target);
+            if (!$target.data('show_tooltip')) {
+                $target.data('show_tooltip', true);
+                setTimeout(function () {
+                    $target.tooltip({
+                        title: _t('Double-click to edit'),
+                        trigger: 'manuel',
+                        container: this.document.body,
+                    }).tooltip('show');
+                    setTimeout(function () {
+                        $target.tooltip('dispose');
+                    }, 2000);
+                }, 400);
+            }
+        }
+    },
+    /**
+     * @private
+     * @param {OdooEvent} oe
+     */
+    _onMouseChange: function (oe) {
+        if (this.popover) {
+            this.popover.updatePosition();
+        }
+    },
+    /**
+     * @private
+     * @param {OdooEvent} oe
+     */
+    _onRemove: function (oe) {
+        ev.stopPropagation();
+        this.dependencies.Media.removeMedia(null, oe.data);
+    },
 });
 
 //--------------------------------------------------------------------------
@@ -673,87 +488,35 @@ var AbstractMediaPlugin = AbstractPlugin.extend({
 //--------------------------------------------------------------------------
 
 var ImagePlugin = AbstractMediaPlugin.extend({
-    targetType: 'image',
+    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_media.xml'],
+    buttons: {
+        template: 'wysiwyg.buttons.media',
+    },
+
+    isMediaMethod: 'isImg',
+    popoverConstructor: 'ImagePopover',
+
+    init: function () {
+        this._super.apply(this, arguments);
+    },
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
-    /**
-     * Open the crop image dialog and listen to its saved/closed events.
-     */
-    cropImageDialog: function () {
-        this.context.invoke('editor.saveRange');
-
-        var media = this.context.invoke('editor.restoreTarget');
-        var cropImageDialog = new weWidgets.CropImageDialog(this.options.parent, {},
-            $(media).clone()
-        );
-        cropImageDialog.on('saved', this, function (data) {
-            this.context.invoke('MediaPlugin.insertMedia', media, data);
-        });
-        cropImageDialog.on('closed', this, function () {
-            this.context.invoke('editor.restoreRange');
-        });
-
-        cropImageDialog.open();
+    get: function (range) {
+        return this.isImg(range.sc) && range.collapse(true);
     },
     /**
-     * Open the alt dialog (change image title and alt) and listen to its saved/closed events.
-     */
-    altDialg: function () {
-        this.context.invoke('editor.saveRange');
-
-        var media = this.context.invoke('editor.restoreTarget');
-        var altDialog = new weWidgets.AltDialog(this.options.parent, {},
-            $(media).clone()
-        );
-        altDialog.on('saved', this, this._wrapCommand(function (data) {
-            $(media).attr('alt', $(data.media).attr('alt'))
-                .attr('title', $(data.media).attr('title'))
-                .trigger('content_changed');
-        }));
-        altDialog.on('closed', this, function () {
-            this.context.invoke('editor.restoreRange');
-        });
-
-        altDialog.open();
-    },
-    /**
-     * Show the image target's popover.
+     * Return true if the node is an image.
      *
-     * @override
-     * @param {Node} target
-     * @param {Object} mousePosition {pageX: Number, pageY: Number}
+     * @param {Node} node
+     * @returns {Boolean}
      */
-    show: function (target, mousePosition) {
-        var self = this;
-        this._super.apply(this, arguments);
-        var $target = $(target);
-
-        this.context.invoke('HandlePlugin.update', target);
-
-        _.each(this.options.icons.imageShape, function (icon, className) {
-            var thisIconSel = '.note-imageShape button:has(.' +
-                icon.replace(self.context.invoke('HelperPlugin.getRegex', 'space', 'g'), '.') +
-                ')';
-            ui.toggleBtnActive(self.$popover.find(thisIconSel), $target.hasClass(className));
-        });
-
-        var size = (($target.attr('style') || '').match(/width:\s*([0-9]+)%/i) || [])[1];
-        ui.toggleBtnActive(this.$popover.find('.note-imagesize button:contains(' + (size ? size + '%' : this.lang.image.imageSizeAuto) + ')'), true);
-
-        ui.toggleBtnActive(this.$popover.find('.note-cropImage button'), $target.hasClass('o_cropped_img_to_save'));
-
-        // update alt button in popover
-        if ($target.attr('alt')) {
-            var $altLabel = $(this.altBtnPrefix).text(function (i, v) {
-                var newText = v + '\u00A0' + $target.attr('alt');
-                return $.trim(newText).substring(0, 30).trim(this) + "...";
-            });
-            this.$popover.find('.note-alt button').contents().replaceWith($altLabel);
-        }
+    isImg: function (node) {
+        return node && node.tagName === "IMG";
     },
+
 
     //--------------------------------------------------------------------------
     // Private
@@ -767,8 +530,8 @@ var ImagePlugin = AbstractMediaPlugin.extend({
      */
     _saveCroppedImages: function () {
         var self = this;
-        var defs = this.$editables.find('.o_cropped_img_to_save').map(function () {
-            var $croppedImg = $(this);
+        var defs = [].map.call(this.editable.querySelectorAll('.o_cropped_img_to_save'), function (node) {
+            var $croppedImg = $(node);
             $croppedImg.removeClass('o_cropped_img_to_save');
             var resModel = $croppedImg.data('crop:resModel');
             var resID = $croppedImg.data('crop:resID');
@@ -813,449 +576,187 @@ var ImagePlugin = AbstractMediaPlugin.extend({
                 });
             }
         }).get();
-        return Promise.all(defs);
-    },
-    /**
-     * Add the image popovers' buttons:
-     * From _super:
-     * - Replacement
-     * - Removal
-     * - Alignment
-     * - Padding
-     * From this override:
-     * - Shape
-     * - Crop
-     * - Alt
-     * - Size
-     *
-     * @private
-     */
-    _addButtons: function () {
-        var self = this;
-        this._super();
-        // add all shape buttons if this option is active
-        this.context.memo('button.imageShape', function () {
-            var $el = $();
-            _.each(['rounded', 'rounded-circle', 'shadow', 'img-thumbnail'], function (shape) {
-                $el = $el.add(self._createToggleButton(null, self.options.icons.imageShape[shape], self.lang.image.imageShape[shape], shape));
-            });
-            return $el;
-        });
-        this.context.memo('button.cropImage', function () {
-            return self.context.invoke('buttons.button', {
-                contents: self.ui.icon(self.options.icons.cropImage),
-                tooltip: self.lang.image.cropImage,
-                click: self.context.createInvokeHandler('ImagePlugin.cropImageDialog')
-            }).render();
-        });
-        this.altBtnPrefix = '<b>' + self.lang.image.alt + '</b>';
-        this.context.memo('button.alt', function () {
-            return self.context.invoke('buttons.button', {
-                contents: self.altBtnPrefix,
-                click: self.context.createInvokeHandler('ImagePlugin.altDialg')
-            }).render();
-        });
-        this.context.memo('button.imageSizeAuto', function () {
-            return self.context.invoke('buttons.button', {
-                contents: '<span class="note-iconsize-10">' + self.lang.image.imageSizeAuto + '</span>',
-                click: self._wrapCommand(function () {
-                    var target = this.context.invoke('editor.restoreTarget');
-                    $(target).css({
-                        width: '',
-                        height: ''
-                    });
-                })
-            }).render();
-        });
-    },
-    /**
-     * Return true if the target is an image.
-     *
-     * @override
-     * @param {Node} target
-     * @returns {Boolean} true if the target is an image
-     */
-    _isMedia: function (target) {
-        return dom.isImg(target);
+        return $.when.apply($, defs);
     },
 });
 
-_.extend(wysiwygOptions.icons, {
-    padding: 'fa fa-plus-square-o',
-    cropImage: 'fa fa-crop',
-    imageShape: {
-        rounded: 'fa fa-square',
-        'rounded-circle': 'fa fa-circle-o',
-        shadow: 'fa fa-sun-o',
-        'img-thumbnail': 'fa fa-picture-o',
-    },
-});
-_.extend(wysiwygTranslation.image, {
-    padding: _t('Padding'),
-    paddingList: [_t('None'), _t('Small'), _t('Medium'), _t('Large'), _t('Xl')],
-    imageSizeAuto: _t('Auto'),
-    cropImage: _t('Crop image'),
-    imageShape: {
-        rounded: _t('Shape: Rounded'),
-        'rounded-circle': _t('Shape: Circle'),
-        shadow: _t('Shape: Shadow'),
-        'img-thumbnail': _t('Shape: Thumbnail'),
-    },
-    alt: _t('Description:'),
-});
+Manager.addPlugin('Image', ImagePlugin);
 
 //--------------------------------------------------------------------------
 // Video
 //--------------------------------------------------------------------------
 
-/**
- * Return true if the node is a video.
- *
- * @param {Node} node
- * @returns {Boolean}
- */
-dom.isVideo = function (node) {
-    node = node && !node.tagName ? node.parentNode : node;
-    return (node.tagName === "IFRAME" || node.tagName === "DIV") &&
-        (node.parentNode.className && node.parentNode.className.indexOf('media_iframe_video') !== -1 ||
-            node.className.indexOf('media_iframe_video') !== -1);
-};
-
 var VideoPlugin = AbstractMediaPlugin.extend({
-    targetType: 'video',
+    isMediaMethod: 'isVideo',
+    popoverConstructor: 'VideoPopover',
+
+    init: function () {
+        this._super.apply(this, arguments);
+    },
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
-    /**
-     * Show the video target's popover.
-     *
-     * @override
-     * @param {Node} target
-     * @param {Object} mousePosition {pageX: Number, pageY: Number}
-     */
-    show: function (target, mousePosition) {
-        if (target.tagName === "DIV" && target.className.indexOf('css_editable_mode_display') !== -1) {
-            target = target.parentNode;
-            this.context.invoke('editor.saveTarget', target);
+    get: function (range) {
+        var video = this.isVideo(range.sc);
+        if (video) {
+            return range.replace({
+                sc: video,
+                so: 0
+            });
         }
-        return this._super.apply(this, arguments);
     },
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
     /**
-     * Return true if the target is a video.
+     * Return true if the node is a video.
      *
-     * @override
-     * @param {Node} target
+     * @param {Node} node
+     * @returns {Boolean}
      */
-    _isMedia: function (target) {
-        return dom.isVideo(target);
+    isVideo: function (node) {
+        node = node && !node.tagName ? node.parentNode : node;
+        return (node.tagName === "IFRAME" || node.tagName === "DIV") &&
+            (node.parentNode.className && node.parentNode.className.indexOf('media_iframe_video') !== -1 ||
+                node.className.indexOf('media_iframe_video') !== -1);
     },
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    getTargetRange: function (target) {
+        target = this.utils[isMediaMethod](target) && $(target).closest('.media_iframe_video')[0];
+        if (target) {
+            var wRange = this.dependencies.Range.getRange();
+            wRange.sc = range.ec = target;
+            wRange.so = range.eo = target;
+            return wRange;
+        }
+    },
+
 });
 
-//--------------------------------------------------------------------------
-// Icons: Icon Awsome (and other with themes)
-//--------------------------------------------------------------------------
+Manager.addPlugin('Video', VideoPlugin);
 
-/**
- * Return true if the node is an icon.
- *
- * @param {Node} node
- * @returns {Boolean}
- */
-dom.isIcon = function (node) {
-    node = node && !node.tagName ? node.parentNode : node;
-    return node && node.className && node.className.indexOf(' fa-') !== -1;
-};
+//--------------------------------------------------------------------------
+// Icons: Fontawesome (and other with themes)
+//--------------------------------------------------------------------------
 
 var IconPlugin = AbstractMediaPlugin.extend({
-    targetType: 'icon',
+    isMediaMethod: 'isIcon',
+    popoverConstructor: 'IconPopover',
+
+    init: function () {
+        this._super.apply(this, arguments);
+    },
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
-    /**
-     * Hide this icon's popover.
-     *
-     * @override
-     */
-    hide: function () {
-        this._super();
-        this.removeSelectedClass(this.lastIcon);
+    get: function (range) {
+        return this.isIcon(range.sc) && range.collapse(true);
     },
     /**
-     * Show the icon target's popover.
+     * Return true if the node is an icon.
      *
-     * @override
-     * @param {Node} target
+     * @param {Node} node
+     * @returns {Boolean}
      */
-    show: function (target) {
-        this.removeSelectedClass(this.lastIcon);
-        this.lastIcon = target;
-
-        this._super.apply(this, arguments);
-
-        var $target = $(target);
-        ui.toggleBtnActive(this.$popover.find('.note-faSpin button'), $target.hasClass('fa-spin'));
-        var faSize = parseInt((($target.attr('style') || '').match(/font-size:\s*([0-9](em|px))(;|$)/) || [])[1] || 0);
-        if (!faSize) {
-            faSize = (($target.attr('class') || '').match(/(^| )fa-([0-9])x( |$)/) || [])[2];
-        }
-        ui.toggleBtnActive(this.$popover.find('.note-faSize a[data-value="fa-' + faSize + 'x"]'), true);
-        this.addSelectedClass(target);
-    },
-    /**
-     * Add a class to the current target so as to show it's selected.
-     *
-     * @param {Node} target
-     */
-    addSelectedClass: function (target) {
-        if (target) {
-            $(target).addClass('o_we_selected_image');
-        }
-    },
-    /**
-     * Remove a class to the current target so as to show it's not selected.
-     *
-     * @param {Node} target
-     */
-    removeSelectedClass: function (target) {
-        if (target) {
-            $(target).removeClass('o_we_selected_image');
-        }
-    },
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * Add the icon popovers' buttons:
-     * From _super:
-     * - Replacement
-     * - Removal
-     * - Alignment
-     * - Padding
-     * From this override:
-     * - Size
-     * - Spin
-     *
-     * @private
-     */
-    _addButtons: function () {
-        var self = this;
-        this._super();
-        var values = [{
-                value: '',
-                string: '1x',
-            },
-            {
-                value: 'fa-2x',
-                string: '2x',
-            },
-            {
-                value: 'fa-3x',
-                string: '3x',
-            },
-            {
-                value: 'fa-4x',
-                string: '4x',
-            },
-            {
-                value: 'fa-5x',
-                string: '5x',
-            },
-        ];
-        var onFaSize = function (e) {
-            var classNames = _.map(values, function (item) {
-                return item.value;
-            }).join(' ');
-            var $target = $(self.context.invoke('editor.restoreTarget'));
-            $target.removeClass(classNames);
-            if ($(e.target).data('value')) {
-                $target.addClass($(e.target).data('value'));
-                $target.css('fontSize', '');
-            }
-        };
-        this._createDropdownButton('faSize', this.options.icons.faSize, this.lang.image.faSize, values, onFaSize);
-        this._createToggleButton('faSpin', this.options.icons.faSpin, this.lang.image.faSpin, 'fa-spin');
-    },
-    /**
-     * Return true if the target is an icon.
-     *
-     * @override
-     * @param {Node} target
-     */
-    _isMedia: function (target) {
-        return dom.isIcon(target);
-    },
-    /**
-     * Update the position of the popover in CSS.
-     *
-     * @override
-     * @param {Node} target
-     * @param {Object} mousePosition {pageX: Number, pageY: Number}
-     */
-    _popoverPosition: function (target, mousePosition) {
-        var pos = $(target).offset();
-        var posContainer = $(this.options.container).offset();
-        pos.left = pos.left - posContainer.left + this.options.POPOVER_MARGIN + parseInt($(target).css('font-size')) + 10;
-        pos.top = pos.top - posContainer.top + this.options.POPOVER_MARGIN;
-
-        var popoverPos = this._popoverFitEditor(pos.left + 10, pos.top - 15);
-        this.$popover.css({
-            display: 'block',
-            left: popoverPos.left,
-            top: popoverPos.top,
-        });
+    isIcon: function (node) {
+        return node && node.className && node.className.indexOf(' fa-') !== -1;
     },
 });
-_.extend(wysiwygOptions.icons, {
-    faSize: 'fa fa-expand',
-    faSpin: 'fa fa-refresh',
-});
-_.extend(wysiwygTranslation.image, {
-    faSize: _t('Icon size'),
-    faSpin: _t('Spin'),
-});
+
+Manager.addPlugin('Icon', IconPlugin);
 
 //--------------------------------------------------------------------------
 // Media Document
 //--------------------------------------------------------------------------
 
-/**
- * Return true is the node is a document.
- * @param {Node} node
- * @returns {Boolean}
- */
-dom.isDocument = function (node) {
-    node = node && !node.tagName ? node.parentNode : node;
-    return node && (node.tagName === "A" && node.className.indexOf('o_image') !== -1);
-};
-
 var DocumentPlugin = AbstractMediaPlugin.extend({
-    targetType: 'document',
+    isMediaMethod: 'isDocument',
+    popoverConstructor: 'DocumentPopover',
+
+    init: function () {
+        this._super.apply(this, arguments);
+    },
 
     //--------------------------------------------------------------------------
-    // Private
+    // Public
     //--------------------------------------------------------------------------
 
-    /**
-     * Return true if the target is an icon.
-     *
-     * @override
-     * @param {Node} target
-     */
-    _isMedia: function (target) {
-        return dom.isDocument(target);
+    get: function (range) {
+        return this.isDocument(range) && range.collapse(true);
     },
     /**
-     * Update the position of the popover in CSS.
+     * Return true is the node is a document.
      *
-     * @override
-     * @param {Node} target
-     * @param {Object} mousePosition {pageX: Number, pageY: Number}
+     * @param {Node} node
+     * @returns {Boolean}
      */
-    _popoverPosition: function (target, mousePosition) {
-        var pos = $(target).offset();
-        var posContainer = $(this.options.container).offset();
-        pos.left = pos.left - posContainer.left + this.options.POPOVER_MARGIN;
-        pos.top = pos.top - posContainer.top + this.options.POPOVER_MARGIN;
-
-        var popoverPos = this._popoverFitEditor(pos.left + 10, pos.top - 15);
-        this.$popover.css({
-            display: 'block',
-            left: popoverPos.left,
-            top: popoverPos.top,
-        });
+    isDocument: function (node) {
+        node = node && !node.tagName ? node.parentNode : node;
+        return node && (node.tagName === "A" && node.className.indexOf('o_image') !== -1);
     },
 });
+
+Manager.addPlugin('Document', DocumentPlugin);
 
 //--------------------------------------------------------------------------
 // Handle (hover image)
 //--------------------------------------------------------------------------
 
-var HandlePlugin = Plugins.handle.extend({
-    /**
-     * Update the handle.
-     *
-     * @param {Node} target
-     * @returns {Boolean}
-     */
-    update: function (target) {
-        if (this.context.isDisabled()) {
-            return false;
-        }
-        var isImage = dom.isImg(target);
-        var $selection = this.$handle.find('.note-control-selection');
-        this.context.invoke('imagePopover.update', target);
-        if (!isImage) {
-            return isImage;
-        }
+// Make sure not to forget https://github.com/odoo/odoo/pull/31226 !!!
+// var HandlePlugin = Plugins.handle.extend({
+//     /**
+//      * Update the handle.
+//      *
+//      * @param {Node} target
+//      * @returns {Boolean}
+//      */
+//     update: function (target) {
+//         if (this.context.isDisabled()) {
+//             return false;
+//         }
+//         var isImage = this.utils.isImg(target);
+//         var $selection = this.$handle.find('.note-control-selection');
+//         this.context.invoke('imagePopover.update', target);
+//         if (!isImage) {
+//             return isImage;
+//         }
 
-        var $target = $(target);
-        var pos = $target.offset();
-        var posContainer = $selection.closest('.note-handle').offset();
+//         var $target = $(target);
+//         var pos = $target.offset();
+//         var posContainer = $selection.closest('.note-handle').offset();
 
-        // exclude margin
-        var imageSize = {
-            w: $target.outerWidth(false),
-            h: $target.outerHeight(false)
-        };
+//         // exclude margin
+//         var imageSize = {
+//             w: $target.outerWidth(false),
+//             h: $target.outerHeight(false)
+//         };
+//         $selection.css({
+//             display: 'block',
+//             left: pos.left - posContainer.left,
+//             top: pos.top - posContainer.top,
+//             width: imageSize.w,
+//             height: imageSize.h,
+//         }).data('target', $target); // save current target element.
 
-        $selection.css({
-            display: 'block',
-            left: pos.left - posContainer.left,
-            top: pos.top - posContainer.top,
-            width: imageSize.w,
-            height: imageSize.h,
-        }).data('target', $target); // save current target element.
+//         var src = $target.attr('src');
+//         var sizingText = imageSize.w + 'x' + imageSize.h;
+//         if (src) {
+//             var origImageObj = new Image();
+//             origImageObj.src = src;
+//             sizingText += ' (' + this.lang.image.original + ': ' + origImageObj.width + 'x' + origImageObj.height + ')';
+//         }
+//         $selection.find('.note-control-selection-info').text(sizingText);
 
-        var src = $target.attr('src');
-        var displayInfo = imageSize.w >= 170 || (imageSize.w >= 120 && imageSize.h >= 58) || (imageSize.w >= 80 && imageSize.h >= 76);
+//         return isImage;
+//     },
+// });
 
-        var sizingText = '';
-        if (displayInfo) {
-            sizingText = imageSize.w + 'x' + imageSize.h;
-            sizingText += ' (' + this.lang.image.original + ': ';
-        } else if (src && imageSize.w >= 80 && imageSize.h >= 32) {
-            displayInfo = true;
-            sizingText = '(';
-        }
-
-        if (src) {
-            var origImageObj = new Image();
-            origImageObj.src = src;
-            sizingText += origImageObj.width + 'x' + origImageObj.height + ')';
-        }
-
-        $selection.find('.note-control-selection-info').text(sizingText);
-        this.context.invoke('editor.saveTarget', target);
-
-        return isImage;
-    },
-});
-
-//--------------------------------------------------------------------------
-// add to registry
-//--------------------------------------------------------------------------
-
-registry.add('MediaPlugin', MediaPlugin)
-    .add('ImagePlugin', ImagePlugin)
-    .add('VideoPlugin', VideoPlugin)
-    .add('IconPlugin', IconPlugin)
-    .add('DocumentPlugin', DocumentPlugin)
-    .add('HandlePlugin', HandlePlugin);
-
-// modules to remove from summernote
-registry.add('imagePopover', null)
-    .add('handle', null);
+// Manager.addPlugin('Handle', HandlePlugin);
 
 return {
     MediaPlugin: MediaPlugin,

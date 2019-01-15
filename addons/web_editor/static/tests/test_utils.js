@@ -421,7 +421,6 @@ function createWysiwyg(params) {
 /**
  * Char codes.
  */
-var dom = $.summernote.dom;
 var keyboardMap = {
     "8": "BACKSPACE",
     "9": "TAB",
@@ -526,9 +525,17 @@ var testKeyboard = function ($editable, assert, keyboardTests, addTests) {
         $(target.tagName ? target : target.parentNode).trigger("mousedown");
         if (end) {
             end = _select(end);
-            Wysiwyg.setRange(start.node, start.offset, end.node, end.offset);
+            Wysiwyg.setRange({
+                sc: start.node,
+                so: start.offset,
+                ec: end.node,
+                eo: end.offset,
+            });
         } else {
-            Wysiwyg.setRange(start.node, start.offset);
+            Wysiwyg.setRange({
+                sc: start.node,
+                so: start.offset,
+            });
         }
         target = end ? end.node : start.node;
         $(target.tagName ? target : target.parentNode).trigger('mouseup');
@@ -541,9 +548,9 @@ var testKeyboard = function ($editable, assert, keyboardTests, addTests) {
             point.offset === point.node.textContent.length &&
             !/\S|\u00A0/.test(point.node.textContent)
         ) {
-            point = dom.nextPoint(dom.nextPoint(point));
+            point = point.next().next();
             while (point.node.tagName && point.node.textContent.length) {
-                point = dom.nextPoint(point);
+                point = point.next();
             }
         }
         return point;
@@ -628,9 +635,9 @@ var testKeyboard = function ($editable, assert, keyboardTests, addTests) {
                 var value = $editable.data('wysiwyg').getValue({
                     keepPopover: true,
                 });
-                var allInvisible = /\u200B/g;
-                value = value.replace(allInvisible, '&#8203;');
-                var result = test.test.content.replace(allInvisible, '&#8203;');
+                var allInvisible = /\uFEFF/g;
+                value = value.replace(allInvisible, '&#65279;');
+                var result = test.test.content.replace(allInvisible, '&#65279;');
                 assert.strictEqual(value, result, test.name);
 
                 if (test.test.start && value !== result) {
@@ -747,13 +754,13 @@ var keydown = function (key, $editable, options) {
     }
     var range = Wysiwyg.getRange($editable[0]);
     if (!range) {
-        console.error("Editor have not any range");
+        console.error("Editor has no range");
         return;
     }
     if (options && options.firstDeselect) {
         range.sc = range.ec;
         range.so = range.eo;
-        Wysiwyg.setRange(range.sc, range.so, range.ec, range.eo);
+        Wysiwyg.setRange(range.getPoints());
     }
     var target = range.ec;
     var $target = $(target.tagName ? target : target.parentNode);

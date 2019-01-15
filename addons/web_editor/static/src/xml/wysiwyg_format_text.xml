@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+    <group t-name="wysiwyg.buttons.fontsize">
+        <button class="dropdown-toggle" data-toggle="dropdown" title="Font Size">
+            <placeholder/>
+        </button>
+        <div class="dropdown-menu">
+            <button t-attf-name="size-{{fontSize.toLowerCase()}}" class="wysiwyg-dropdown-item" data-method="update" t-att-data-value="fontSize.toLowerCase()" t-foreach="options.fontSizes" t-as="fontSize"><t t-esc="fontSize"/></button>
+        </div>
+    </group>
+
+    <t t-name="wysiwyg.buttons.fontstyle">
+        <group>
+            <button class="dropdown-toggle" data-toggle="dropdown" title="Style">
+                <i class="note-icon-magic"></i>
+            </button>
+            <div class="dropdown-menu">
+                <t t-foreach="options.styleTags" t-as="styleTag">
+                    <button t-attf-name="formatBlock-{{styleTag.value || styleTag}}"
+                        class="wysiwyg-dropdown-item" data-method="formatBlock" t-att-data-value="styleTag.value || styleTag">
+                        <t t-esc="styleTag.title || styleTag"/>
+                    </button>
+                </t>
+            </div>
+        </group>
+        <group>
+            <button name="formatText-b" data-method="formatText" data-value="B" title="Bold (CTRL+B)">
+                <i class="note-icon-bold"></i>
+            </button>
+            <button name="formatText-i" data-method="formatText" data-value="I" title="Italic (CTRL+I)">
+                <i class="note-icon-italic"></i>
+            </button>
+            <button name="formatText-u" data-method="formatText" data-value="U" title="Underline (CTRL+U)">
+                <i class="note-icon-underline"></i>
+            </button>
+            <button name="formatText-remove" data-method="removeFormat" title="Remove Font Style (CTRL+\)">
+                <i class="note-icon-eraser"></i>
+            </button>
+        </group>
+    </t>
+
+    <group t-name="wysiwyg.buttons.paragraph">
+        <button class="dropdown-toggle" data-toggle="dropdown" title="Paragraph">
+            <placeholder/>
+        </button>
+        <div class="dropdown-menu">
+            <button name="align-left" data-method="formatBlockStyle" data-value="justifyLeft" title="Float Left">
+                <i class="fa fa-align-left"></i>
+            </button>
+            <button name="align-center" data-method="formatBlockStyle" data-value="justifyCenter" title="Align Center">
+                <i class="fa fa-align-center"></i>
+            </button>
+            <button name="align-right" data-method="formatBlockStyle" data-value="justifyRight" title="Float Right">
+                <i class="fa fa-align-right"></i>
+            </button>
+            <button name="align-justify" data-method="formatBlockStyle" data-value="justifyFull" title="Float Justify">
+                <i class="fa fa-align-justify"></i>
+            </button>
+        </div>
+        <button name="indent-out" data-method="outdent" title="Outdent">
+            <i class="note-icon-align-outdent"></i>
+        </button>
+        <button name="indent-in" data-method="indent" title="Indent">
+            <i class="note-icon-align-indent"></i>
+        </button>
+    </group>
+</templates>

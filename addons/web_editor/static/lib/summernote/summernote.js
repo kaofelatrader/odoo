@@ -3984,9 +3984,9 @@ var Editor = /** @class */ (function () {
         }).on('blur', function (event) {
             _this.context.triggerEvent('blur', event);
         }).on('mousedown', function (event) {
-            _this.context.triggerEvent('mousedown', event);
+            //_this.context.triggerEvent('mousedown', event);
         }).on('mouseup', function (event) {
-            _this.context.triggerEvent('mouseup', event);
+            //_this.context.triggerEvent('mouseup', event);
         }).on('scroll', function (event) {
             _this.context.triggerEvent('scroll', event);
         }).on('paste', function (event) {
@@ -4684,7 +4684,7 @@ var CodeView = /** @class */ (function () {
         this.$editable.height(this.options.height ? this.$codable.height() : 'auto');
         this.$editor.removeClass('codeview');
         if (isChange) {
-            this.context.triggerEvent('change', this.$editable.html(), this.$editable);
+            this.$editable.trigger('change', this.$editable.html());
         }
         this.$editable.focus();
         this.context.invoke('toolbar.updateCodeview', false);
@@ -7130,7 +7130,12 @@ $$1.summernote = $$1.extend($$1.summernote, {
         maxTextLength: 0,
         styleTags: [
             'p',
-            { title: 'Blockquote', tag: 'blockquote', className: 'blockquote', value: 'blockquote' },
+            {
+                title: 'Blockquote',
+                tag: 'div',
+                className: 'blockquote',
+                value: 'blockquote'
+            },
             'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'
         ],
         fontNames: [

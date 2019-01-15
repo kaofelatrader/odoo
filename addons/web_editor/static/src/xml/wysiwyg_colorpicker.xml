@@ -1,35 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates>
-    <div t-name="wysiwyg.plugin.font.paletteButton" t-attf-class="note-btn-group btn-group {{className}}">
-        <button type="button" class="note-btn btn btn-light btn-sm dropdown-toggle" tabindex="-1" data-toggle="dropdown"><i
-                t-att-class="icon"></i></button>
-        <div class="dropdown-menu" />
-    </div>
+    
+    <group t-name="wysiwyg.buttons.forecolor">
+        <button class="dropdown-toggle" data-toggle="dropdown" title="Color">
+            <placeholder/>
+            <i class="fa fa-font"></i>
+        </button>
+        <t t-call="wysiwyg.buttons.palette"/>
+    </group>
 
-    <div t-name="wysiwyg.plugin.font.colorPalette" class="note-palette">
-        <button type="button" class="note-color-reset btn btn-light note-color-btn bg-undefined">
-            <t t-esc="lang.color.resetToDefault" /></button>
-        <div class="note-holder">
-            <div class="note-color-palette">
-                <h6 class="mt-2">Theme colors</h6>
-                <div class="o_theme_color_placeholder" />
-                <h6 class="mt-2">Transparent colors</h6>
-                <div class="o_transparent_color_placeholder" />
-                <h6 class="mt-2">Common colors</h6>
-                <div class="o_common_color_placeholder">
-                    <div class="note-color-row" t-foreach="colors" t-as="rowColors">
-                        <button t-foreach="rowColors" t-as="color" type="button" class="note-color-btn" data-toggle="button"
-                            tabindex="-1" t-attf-style="background-color:{{color}}" t-att-data-value="color"
-                            t-att-title="color" />
-                    </div>
-                </div>
-            </div>
-            <h6 class="note-custom-color mt8">
-                <t t-esc="lang.color.customColor" />
-            </h6>
-            <button class="note-custom-color-btn note-color-btn" style="display: none;"></button>
-        </div>
-    </div>
+    <group t-name="wysiwyg.buttons.bgcolor">
+        <button class="dropdown-toggle" data-toggle="dropdown" title="Background color">
+            <placeholder/>
+            <i class="fa fa-paint-brush"></i>
+        </button>
+        <t t-call="wysiwyg.buttons.palette"/>
+    </group>
+
+    <palette t-name="wysiwyg.buttons.palette" class="dropdown-menu">
+        <button name="color-reset" data-method="update">Reset to default</button>
+        <!-- 
+        colors = [
+            ['#000000', '#424242', '#636363', '#9C9C94', '#CEC6CE', '#EFEFEF', '#F7F7F7', '#FFFFFF'],
+            ['#FF0000', '#FF9C00', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#9C00FF', '#FF00FF']
+            'theme',
+            ['#FF0000', '#FF9C00', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#9C00FF', '#FF00FF']
+        ]
+        -->
+        <row t-foreach="plugin._colors" t-as="row">
+            <t t-if="typeof row === 'object'">
+                <t t-foreach="row" t-as="color">
+                    <button t-if="color.indexOf('#') === 0" t-attf-name="color-{{color}}" t-attf-style="background-color: #{color};" data-method="update" t-att-data-value="color"></button>
+                    <button t-else="" t-attf-class="bg-#{color}" t-attf-name="color-{{color}}" data-method="update" t-att-data-value="color"></button>
+                </t>
+            </t>
+            <t t-else="" t-esc="row || ''"/>
+        </row>
+        <button data-method="custom">Custom color</button>
+        <div class="wysiwyg-palette-custom"></div>
+    </palette>
 
     <div t-name="wysiwyg.widgets.ColorpickerDialog" class="o_colorpicker_widget">
         <div class="row">

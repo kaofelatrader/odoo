@@ -178,7 +178,6 @@ var Widget = core.Class.extend(mixins.PropertiesMixin, ServicesMixin, {
         if (this.$el) {
             this.$el.remove();
         }
-        mixins.PropertiesMixin.destroy.call(this);
     },
 
     //--------------------------------------------------------------------------

@@ -88,7 +88,10 @@ tour.register('rte_translator', {
     trigger: '#wrap p font:first',
     run: function (action_helper) {
         action_helper.text('translated french text');
-        Wysiwyg.setRange(this.$anchor.contents()[0], 22);
+        Wysiwyg.setRange({
+            sc: this.$anchor.contents()[0],
+            so: 22,
+        });
         this.$anchor.trigger($.Event( "keyup", {key: '_', keyCode: 95}));
     },
 }, {
@@ -97,7 +100,10 @@ tour.register('rte_translator', {
     run: function (action_helper) {
         action_helper.click();
         this.$anchor.prepend('&lt;{translated}&gt;');
-        Wysiwyg.setRange(this.$anchor.contents()[0], 0);
+        Wysiwyg.setRange({
+            sc: this.$anchor.contents()[0],
+            so: 0,
+        });
         this.$anchor.trigger($.Event( "keyup", {key: '_', keyCode: 95}));
     },
 }, {
@@ -153,7 +159,12 @@ tour.register('rte_translator', {
         action_helper.click();
         var el = this.$anchor[0];
         this.$anchor.trigger('mousedown');
-        Wysiwyg.setRange(el.childNodes[2], 6, el.childNodes[2], 13);
+        Wysiwyg.setRange({
+            sc: el.childNodes[2],
+            so: 6,
+            ec: el.childNodes[2],
+            eo: 13,
+        });
         this.$anchor.trigger('mouseup');
     },
 }, {

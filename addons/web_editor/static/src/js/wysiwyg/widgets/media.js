@@ -863,8 +863,8 @@ var VideoWidget = MediaWidget.extend({
         if (this.$('.o_video_dialog_iframe').is('iframe')) {
             this.$media = $(
                 '<div class="media_iframe_video" data-oe-expression="' + this.$content.attr('src') + '">' +
-                    '<div class="css_editable_mode_display">&nbsp;</div>' +
-                    '<div class="media_iframe_video_size" contenteditable="false">&nbsp;</div>' +
+                    '<div class="css_editable_mode_display">' + this.utils.char('nbsp', true) + '</div>' +
+                    '<div class="media_iframe_video_size" contenteditable="false">' + this.utils.char('nbsp', true) + '</div>' +
                     '<iframe src="' + this.$content.attr('src') + '" frameborder="0" contenteditable="false"></iframe>' +
                 '</div>'
             );

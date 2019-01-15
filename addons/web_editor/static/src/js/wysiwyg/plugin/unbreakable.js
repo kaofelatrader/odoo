@@ -2,30 +2,31 @@ odoo.define('web_editor.wysiwyg.plugin.unbreakable', function (require) {
 'use strict';
 
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
-var registry = require('web_editor.wysiwyg.plugin.registry');
-
-var dom = $.summernote.dom;
+var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 //--------------------------------------------------------------------------
 // unbreakable node preventing editing
 //--------------------------------------------------------------------------
 
+/**
+ * o_editable
+ * o_not_editable
+ * o_fake_editable
+ * o_fake_not_editable
+ *
+ * contentEditable
+ */
+
 var Unbreakable = AbstractPlugin.extend({
-    events: {
-        'wysiwyg.range .note-editable': '_onRange',
-        'summernote.mouseup': '_onMouseUp',
-        'summernote.keyup': '_onKeyup',
-        'summernote.keydown': '_onKeydown',
-        // 'summernote.focusnode': '_onFocusnode', => add this event to summernote.
+    dependencies: ['Range'],
+    editableDomEvents: {
+        'keydown': '_onKeydown',
     },
 
-    initialize: function () {
-        var self = this;
-        this._super.apply(this, arguments);
-        setTimeout(function () {
-            self.secureArea();
-            self.context.invoke('HistoryPlugin.clear');
-        });
+    start: function () {
+        this._super();
+        this.secureArea();
+        this.dependencies.Range.on('range', this, this._onRange.bind(this));
     },
 
     //--------------------------------------------------------------------------
@@ -78,8 +79,11 @@ var Unbreakable = AbstractPlugin.extend({
      * @returns {WrappedRange}
      */
     secureRange: function () {
+        if (this._selfRerange) {
+            return;
+        }
         var self = this;
-        var range = this.context.invoke('editor.createRange');
+        var range = this.dependencies.Range.getRange();
         var isCollapsed = range.isCollapsed();
         var needReselect = false;
         var startPoint = range.getStartPoint();
@@ -89,7 +93,7 @@ var Unbreakable = AbstractPlugin.extend({
         var prev;
         if (
             isCollapsed && startPoint.node.tagName && startPoint.node.childNodes[startPoint.offset] &&
-            (prev = dom.prevPoint(startPoint)) && dom.isMedia(prev.node) &&
+            (prev = startPoint.prev()) && this.utils.isMedia(prev.node) &&
             this.options.isEditableNode(prev.node.parentNode)
         ) {
             return range;
@@ -97,22 +101,22 @@ var Unbreakable = AbstractPlugin.extend({
 
         // move the start selection to an allowed node
         var target = startPoint.node.childNodes[startPoint.offset] || startPoint.node;
-        if (startPoint.offset && startPoint.offset === dom.nodeLength(startPoint.node)) {
-            startPoint.node = this.context.invoke('HelperPlugin.lastLeaf', startPoint.node);
-            startPoint.offset = dom.nodeLength(startPoint.node);
+        if (startPoint.offset && startPoint.offset === this.utils.nodeLength(startPoint.node)) {
+            startPoint.node = this.utils.lastLeaf(startPoint.node);
+            startPoint.offset = this.utils.nodeLength(startPoint.node);
         }
-        if (!dom.isMedia(target) || !this.options.isEditableNode(target)) {
+        if (!this.utils.isMedia(target) || !this.options.isEditableNode(target)) {
             var afterEnd = false;
-            startPoint = dom.nextPointUntil(startPoint, function (point) {
+            startPoint = startPoint.nextUntil(function (point) {
                 if (point.node === endPoint.node && point.offset === endPoint.offset) {
                     afterEnd = true;
                 }
-                return self.options.isEditableNode(point.node) && dom.isVisiblePoint(point) || !point.node;
+                return self.options.isEditableNode(point.node) && point.isVisible() || !point.node;
             });
             if (!startPoint || !startPoint.node) { // no allowed node, search the other way
                 afterEnd = false;
-                startPoint = dom.prevPointUntil(range.getStartPoint(), function (point) {
-                    return self.options.isEditableNode(point.node) && dom.isVisiblePoint(point) || !point.node;
+                startPoint = range.getStartPoint().prevUntil(function (point) {
+                    return self.options.isEditableNode(point.node) && point.isVisible() || !point.node;
                 });
             }
             if (startPoint && !startPoint.node) {
@@ -138,66 +142,66 @@ var Unbreakable = AbstractPlugin.extend({
             endPoint = false;
 
             // if the start point was moved after the end point
-            var toCollapse = !dom.prevPointUntil(point, function (point) {
-                return point.node === range.sc && point.offset === range.so;
+            var toCollapse = !point.prevUntil(function (pt) {
+                return pt.node === range.sc && pt.offset === range.so;
             });
 
             if (!toCollapse) {
                 // find the first allowed ancestor
-                var commonUnbreakableParent = dom.ancestor(range.sc, function (node) {
-                    return !dom.isMedia(node) && self.options.isUnbreakableNode(node);
+                var commonUnbreakableParent = this.utils.ancestor(range.sc, function (node) {
+                    return !self.utils.isMedia(node) && self.options.isUnbreakableNode(node);
                 });
                 if (!commonUnbreakableParent) {
                     commonUnbreakableParent = this.editable;
                 }
 
                 var lastCheckedNode;
-                if (point.offset === dom.nodeLength(point.node)) {
-                    point = dom.nextPoint(point);
+                if (point.offset === this.utils.nodeLength(point.node)) {
+                    point = point.next();
                 }
 
                 // move the end selection to an allowed node in the first allowed ancestor
-                endPoint = dom.prevPointUntil(point, function (point) {
-                    if (point.node === range.sc && point.offset === range.so) {
+                endPoint = point.prevUntil(function (pt) {
+                    if (pt.node === range.sc && pt.offset === range.so) {
                         return true;
                     }
-                    if (lastCheckedNode === point.node) {
+                    if (lastCheckedNode === pt.node) {
                         return false;
                     }
 
                     // select the entirety of the unbreakable node
                     if (
-                        point.node.tagName && point.offset &&
-                        $.contains(commonUnbreakableParent, point.node) &&
-                        self.options.isUnbreakableNode(point.node)
+                        pt.node.tagName && pt.offset &&
+                        $.contains(commonUnbreakableParent, pt.node) &&
+                        self.options.isUnbreakableNode(pt.node)
                     ) {
                         return true;
                     }
 
-                    var unbreakableParent = dom.ancestor(point.node, function (node) {
-                        return !dom.isMedia(node) && self.options.isUnbreakableNode(node);
+                    var unbreakableParent = this.utils.ancestor(pt.node, function (node) {
+                        return !self.utils.isMedia(node) && self.options.isUnbreakableNode(node);
                     });
                     if (!unbreakableParent) {
                         unbreakableParent = self.editable;
                     }
 
                     if (commonUnbreakableParent !== unbreakableParent) {
-                        lastCheckedNode = point.node;
+                        lastCheckedNode = pt.node;
                         return false;
                     }
-                    lastCheckedNode = point.node;
-                    if (!self.options.isEditableNode(point.node)) {
+                    lastCheckedNode = pt.node;
+                    if (!self.options.isEditableNode(pt.node)) {
                         return false;
                     }
                     if (
-                        (/\S|\u200B|\u00A0/.test(point.node.textContent) ||
-                            dom.isMedia(point.node)) &&
-                        dom.isVisiblePoint(point)
+                        (/\S|\uFEFF|\u00A0/.test(pt.node.textContent) ||
+                            this.utils.isMedia(pt.node)) &&
+                        pt.isVisible()
                     ) {
                         return true;
                     }
-                    if (dom.isText(point.node)) {
-                        lastCheckedNode = point.node;
+                    if (this.utils.isText(pt.node)) {
+                        lastCheckedNode = pt.node;
                     }
                     return false;
                 });
@@ -215,8 +219,10 @@ var Unbreakable = AbstractPlugin.extend({
         }
 
         if (needReselect) {
-            range = range.select();
-            this.context.invoke('editor.saveRange');
+            this._selfRerange = true;
+            range = this.dependencies.Range.setRange(range.getPoints());
+            this._selfRerange = false;
+            this.dependencies.Range.save(range);
         }
         return range;
     },
@@ -226,11 +232,12 @@ var Unbreakable = AbstractPlugin.extend({
      * @param {DOM} [node] default is editable area
      */
     secureArea: function (node) {
-        this.$editable.find('o_not_editable').attr('contentEditable', 'false');
+        var self = this;
+        $(this.editable).find('o_not_editable').attr('contentEditable', 'false');
 
         var medias = (function findMedia(node) {
             var medias = [];
-            if (node.tagName !== 'IMG' && dom.isMedia(node)) {
+            if (node.tagName !== 'IMG' && self.utils.isMedia(node)) {
                 medias.push(node);
             } else {
                 $(node.childNodes).each(function () {
@@ -244,31 +251,15 @@ var Unbreakable = AbstractPlugin.extend({
         $(medias).addClass('o_fake_not_editable').attr('contentEditable', 'false');
 
         $(medias).each(function () {
-            if (dom.isVideo(this) && !$(this).children('.o_fake_editable').length) {
+            if (self.utils.isVideo(this) && !$(this).children('.o_fake_editable').length) {
                 // allow char insertion
                 $(this).prepend('<div class="o_fake_editable o_wysiwyg_to_remove" style="position: absolute;" contentEditable="true"/>');
                 $(this).append('<div class="o_fake_editable o_wysiwyg_to_remove" style="position: absolute;" contentEditable="true"/>');
             }
         });
     },
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * Trigger a focusnode event when the focus enters another node.
-     *
-     * @param {DOM} node
-     */
-    _focusNode: function (node) {
-        if (!node.tagName) {
-            node = node.parentNode;
-        }
-        if (this._focusedNode !== node) {
-            this._focusedNode = node;
-            this.context.triggerEvent('focusnode', node);
-        }
+    setValue: function () {
+        this.secureArea();
     },
 
     //--------------------------------------------------------------------------
@@ -276,41 +267,30 @@ var Unbreakable = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     /**
-     * Method called on wysiwyg.range event on the editable: secures the range, refocuses.
-     */
-    _onRange: function () {
-        var range = this.secureRange();
-        this._focusNode(range.sc);
-    },
-    /**
-     * Method called on mouseup event: secures the range, refocuses.
-     */
-    _onMouseUp: function () {
-        var range = this.secureRange();
-        this._focusNode(range.ec);
-    },
-    /**
      * Method called on keydown event: prevents changes to unbreakable nodes.
      *
-     * @param {SummernoteEvent} se
      * @param {jQueryEvent} e
      */
-    _onKeydown: function (se, e) {
+    _onKeydown: function (e) {
         if (!e.key || (e.key.length !== 1 && e.keyCode !== 8 && e.keyCode !== 46)) {
             return;
         }
         var range;
+        var focusNode = this.dependencies.Range.getFocusedNode();
         // for test tour, to trigger Keydown on target (instead of use Wysiwyg.setRange)
         if (
-            e.target !== this._focusedNode &&
+            e.target !== focusNode &&
             (this.editable === e.target || $.contains(this.editable, e.target))
         ) {
-            range = this.context.invoke('editor.createRange');
+            range = this.dependencies.Range.getRange();
             if (!$.contains(e.target, range.sc) && !$.contains(e.target, range.ec)) {
-                range = this.context.invoke('editor.setRange', e.target, 0);
-                range = range.normalize().select();
-                this.context.invoke('editor.saveRange');
-                this._focusNode(range.ec);
+                this._selfRerange = true;
+                range = this.dependencies.Range.setRange({
+                    sc: e.target,
+                    so: 0,
+                }).normalize();
+                this._selfRerange = false;
+                this.dependencies.Range.save(range);
             }
         }
 
@@ -324,40 +304,24 @@ var Unbreakable = AbstractPlugin.extend({
                 e.preventDefault();
             }
         } else if (e.keyCode === 46) { // delete
-            target = dom.nextPointUntil(dom.nextPoint(target), dom.isVisiblePoint);
+            target = target.next().nextUntil(function (pt) {
+                return pt.isVisible();
+            });
             if (!target || this.options.isUnbreakableNode(target.node)) {
                 e.preventDefault();
             }
         }
     },
     /**
-     * Method called on keyup event: prevents selection of unbreakable nodes.
-     *
-     * @param {SummernoteEvent} se
-     * @param {jQueryEvent} se
+     * Method called on range event: secures the range, refocuses.
      */
-    _onKeyup: function (se, e) {
-        if (e.keyCode < 37 || e.keyCode > 40) {
-            return;
-        }
-        var range;
-        if (e.keyCode === 37) { // left
-            range = this.secureRange();
-            this._focusNode(range.sc);
-        } else if (e.keyCode === 39) { // right
-            range = this.secureRange();
-            this._focusNode(range.ec);
-        } else if (e.keyCode === 38) { // up
-            range = this.secureRange();
-            this._focusNode(range.sc);
-        } else { // down
-            range = this.secureRange();
-            this._focusNode(range.ec);
-        }
+    _onRange: function (e) {
+        e.stopImmediatePropagation();
+        this.secureRange();
     },
 });
 
-registry.add('UnbreakablePlugin', Unbreakable);
+Manager.addPlugin('Unbreakable', Unbreakable);
 
 return Unbreakable;
 

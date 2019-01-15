@@ -2,12 +2,12 @@ odoo.define('web_editor.wysiwyg.plugin.hint', function (require) {
 'use strict';
 
 var Plugins = require('web_editor.wysiwyg.plugins');
-var registry = require('web_editor.wysiwyg.plugin.registry');
-
-var dom = $.summernote.dom;
+var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 
 var HintPlugin = Plugins.hintPopover.extend({
+    dependencies: ['Range'],
+
     init: function (context) {
         context.options.hint = (context.options.hint || []).concat(this._hints());
         this._super.apply(this, arguments);
@@ -24,16 +24,23 @@ var HintPlugin = Plugins.hintPopover.extend({
         var self = this;
         var $item = this.$content.find('.note-hint-item.active');
         if ($item.length) {
-            this.lastWordRange.select();
-            this.context.invoke('HelperPlugin.deleteSelection');
-            var range = this.context.invoke('editor.createRange');
+            var range = this.dependencies.Range.setRange(this.lastWordRange);
+            var point = this.dom.deleteSelection(range);
+            range = this.dependencies.Range.setRange({
+                sc: point.node,
+                so: point.offset,
+            });
+            this.dependencies.Range.save(range);
+
+            range = this.dependencies.Range.getRange();
 
             this.nodeFromItem($item).each(function () {
                 $(range.sc).after(this);
-                range = self.context.invoke('editor.setRange', this, dom.nodeLength(this));
+                range.sc = this;
+                range.so = self.utils.nodeLength(this);
             });
-            range.select();
-            this.context.invoke('editor.saveRange');
+            range = this.dependencies.Range.setRange(range);
+            this.dependencies.Range.save(range);
             this.lastWordRange = null;
             this.hide();
             this.context.triggerEvent('change', this.$editable.html(), this.$editable[0]);
@@ -46,7 +53,7 @@ var HintPlugin = Plugins.hintPopover.extend({
     handleKeyup: function (e) {
         var self = this;
         if ([13, 38, 40].indexOf(e.keyCode) === -1) { // enter, up, down
-            var wordRange = this.context.invoke('editor.createRange');
+            var wordRange = this.dependencies.Range.getRange();
             var keyword_1 = wordRange.sc.textContent.slice(0, wordRange.so);
             if (this.hints.length && keyword_1) {
                 this.$content.empty();
@@ -116,7 +123,7 @@ var HintPlugin = Plugins.hintPopover.extend({
                     return partner.name + (partner.email ? ' <i style="color: #999;">(' + partner.email + ')</i>' : '');
                 },
                 content: function (item) {
-                    return $(self.document.createTextNode('@' + item.name + '\u00A0'));
+                    return $(self.document.createTextNode('@' + item.name + self.utils.char('nbsp')));
                 },
             },
             {
@@ -124,7 +131,7 @@ var HintPlugin = Plugins.hintPopover.extend({
                 match: /:([\-+\w]+)$/,
                 search: function () {},
                 template: function () {
-                    return '<span class="fa fa-star">\u200B</span>';
+                    return '<span class="fa fa-star">\uFEFF</span>';
                 },
                 content: function () {}
             },
@@ -132,7 +139,7 @@ var HintPlugin = Plugins.hintPopover.extend({
     },
 });
 
-registry.add('hintPopover', null);
+Manager.addPlugin('hintPopover', null);
 
 return HintPlugin;
 

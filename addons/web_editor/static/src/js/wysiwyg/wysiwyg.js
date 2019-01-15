@@ -1,14 +1,17 @@
 odoo.define('web_editor.wysiwyg', function (require) {
 'use strict';
 
-var Widget = require('web.Widget');
 var config = require('web.config');
 var core = require('web.core');
 var session = require('web.session');
-var modulesRegistry = require('web_editor.wysiwyg.plugin.registry');
-var wysiwygOptions = require('web_editor.wysiwyg.options');
+var utils = require('wysiwyg.utils');
+var Widget = require('web.Widget');
+var WrappedRange = require('wysiwyg.WrappedRange');
+var wysiwygOptions = require('wysiwyg.options');
+var Editor = require('wysiwyg.editor');
 
 var _t = core._t;
+
 
 var Wysiwyg = Widget.extend({
     xmlDependencies: [
@@ -16,13 +19,10 @@ var Wysiwyg = Widget.extend({
     ],
     custom_events: {
         getRecordInfo: '_onGetRecordInfo',
-        wysiwyg_blur: '_onWysiwygBlur',
+        change: '_onChange',
     },
     defaultOptions: {
-        codeview: config.debug,
-        recordInfo: {
-            context: {},
-        },
+        codeview: config.debug
     },
 
     /**
@@ -49,7 +49,6 @@ var Wysiwyg = Widget.extend({
         this.hints = [];
         this.$el = null;
         this._dirty = false;
-        this.id = _.uniqueId('wysiwyg_');
     },
     /**
      * Load assets and color picker template then call summernote API
@@ -58,47 +57,22 @@ var Wysiwyg = Widget.extend({
      * @override
      **/
     willStart: function () {
-        var self = this;
         this.$target = this.$el;
         this.$el = null; // temporary null to avoid hidden error, setElement when start
-        return this._super()
-            .then(function () {
-                return modulesRegistry.start(self).then(function () {
-                    return self._loadInstance();
-                });
-            });
+        return this._super().then(this._loadInstance.bind(this));
     },
     /**
      *
      * @override
      */
     start: function () {
+        return $.when();
         var value = this._summernote.code();
         this._value = value;
-        if (this._summernote.invoke('HelperPlugin.hasJinja', value)) {
+        if (utils.hasJinja(value)) {
             this._summernote.invoke('codeview.forceActivate');
         }
-        return Promise.resolve();
-    },
-    /**
-     * @override
-     */
-    destroy: function () {
-        if (this._summernote) {
-            // prevents the replacement of the target by the content of summernote
-            // (in order to be able to cancel)
-            var removeLayout = $.summernote.ui.removeLayout;
-            $.summernote.ui.removeLayout = function ($note, layoutInfo) {
-                layoutInfo.editor.remove();
-                $note.show();
-            };
-            this._summernote.destroy();
-            $.summernote.ui.removeLayout = removeLayout;
-        }
-        this.$target.removeAttr('data-wysiwyg-id');
-        this.$target.removeData('wysiwyg');
-        $(document).off('.' + this.id);
-        this._super();
+        return $.when();
     },
 
     //--------------------------------------------------------------------------
@@ -109,6 +83,7 @@ var Wysiwyg = Widget.extend({
      * Add a step (undo) in editor.
      */
     addHistoryStep: function () {
+        return;
         var editor = this._summernote.modules.editor;
         editor.createRange();
         editor.history.recordUndo();
@@ -119,7 +94,8 @@ var Wysiwyg = Widget.extend({
      * @returns {jQuery}
      */
     getEditable: function () {
-        if (this._summernote.invoke('HelperPlugin.hasJinja', this._summernote.code())) {
+        return;
+        if (utils.hasJinja(this._summernote.code())) {
             return this._summernote.layoutInfo.codable;
         } else if (this._summernote.invoke('codeview.isActivated')) {
             this._summernote.invoke('codeview.deactivate');
@@ -132,6 +108,7 @@ var Wysiwyg = Widget.extend({
      * @param {integer} step
      */
     history: function (step) {
+        return;
         if (step < 0) {
             while (step) {
                 this._summernote.modules.editor.history.rewind();
@@ -145,17 +122,6 @@ var Wysiwyg = Widget.extend({
         }
     },
     /**
-     * Return true if the content has changed.
-     *
-     * @returns {Boolean}
-     */
-    isDirty: function () {
-        if (!this._dirty && this._value !== this._summernote.code()) {
-            console.warn("not dirty flag ? Please fix it.");
-        }
-        return this._value !== this._summernote.code();
-    },
-    /**
      * Return true if the current node is unbreakable.
      * An unbreakable node can be removed or added but can't by split into
      * different nodes (for keypress and selection).
@@ -165,8 +131,7 @@ var Wysiwyg = Widget.extend({
      * @returns {Boolean}
      */
     isUnbreakableNode: function (node) {
-        return ["TD", "TR", "TBODY", "TFOOT", "THEAD", "TABLE"].indexOf(node.tagName) !== -1 || $(node).is(this.getEditable()) ||
-            !this.isEditableNode(node.parentNode) || !this.isEditableNode(node) || $.summernote.dom.isMedia(node);
+        return $(node).is(this.getEditable());
     },
     /**
      * Return true if the current node is editable (for keypress and selection).
@@ -175,7 +140,7 @@ var Wysiwyg = Widget.extend({
      * @returns {Boolean}
      */
     isEditableNode: function (node) {
-        return $(node).is(':o_editable') && !$(node).is('table, thead, tbody, tfoot, tr');
+        return $(node).is(':o_editable');
     },
     /**
      * Set the focus on the element.
@@ -183,69 +148,17 @@ var Wysiwyg = Widget.extend({
     focus: function () {
         this.$el.mousedown();
     },
-    /**
-     * Get the value of the editable element.
-     *
-     * @param {object} [options]
-     * @param {Boolean} [options.keepPopover]
-     * @returns {String}
-     */
-    getValue: function (options) {
-        if (!options || !options.keepPopover) {
-            this._summernote.invoke('editor.hidePopover');
-        }
-        var $editable = this.getEditable().clone();
-        $editable.find('.o_wysiwyg_to_remove').remove();
-        $editable.find('[contenteditable]').removeAttr('contenteditable');
-        $editable.find('.o_fake_not_editable').removeClass('o_fake_not_editable');
-        $editable.find('.o_fake_editable').removeClass('o_fake_editable');
-        $editable.find('[class=""]').removeAttr('class');
-        $editable.find('[style=""]').removeAttr('style');
-        $editable.find('[title=""]').removeAttr('title');
-        $editable.find('[alt=""]').removeAttr('alt');
-        $editable.find('[data-original-title=""]').removeAttr('data-original-title');
-        $editable.find('a.o_image, span.fa, i.fa').html('');
-        $editable.find('[aria-describedby]').removeAttr('aria-describedby').removeAttr('data-original-title');
-
-        return $editable.html() || $editable.val();
-    },
-    /**
-     * Save the content in the target
-     *      - in init option beforeSave
-     *      - receive editable jQuery DOM as attribute
-     *      - called after deactivate codeview if needed
-     * @returns {Promise}
-     *      - resolve with true if the content was dirty
-     */
     save: function () {
-        var isDirty = this.isDirty();
-        var html = this.getValue();
-        if (this.$target.is('textarea')) {
-            this.$target.val(html);
-        } else {
-            this.$target.html(html);
-        }
-        return Promise.resolve({isDirty:isDirty, html:html});
+        return this.editor.save();
     },
-    /**
-     * @param {String} value
-     * @param {Object} options
-     * @param {Boolean} [options.notifyChange]
-     * @returns {String}
-     */
-    setValue: function (value, options) {
-        if (this._summernote.invoke('HelperPlugin.hasJinja', value)) {
-            this._summernote.invoke('codeview.forceActivate');
-        }
-        this._dirty = true;
-        this._summernote.invoke('HistoryPlugin.clear');
-        this._summernote.invoke('editor.hidePopover');
-        this._summernote.invoke('editor.clearTarget');
-        var $editable = this.getEditable().html(value + '');
-        this._summernote.invoke('UnbreakablePlugin.secureArea');
-        if (!options || options.notifyChange !== false) {
-            $editable.change();
-        }
+    setValue: function (value) {
+        return this.editor.setValue(value);
+    },
+    getValue: function () {
+        return this.editor.getValue();
+    },
+    isDirty: function () {
+        return this.editor.isDirty();
     },
 
     //--------------------------------------------------------------------------
@@ -257,12 +170,10 @@ var Wysiwyg = Widget.extend({
      * @returns {Object} the summernote configuration
      */
     _editorOptions: function () {
-        var self = this;
         var allowAttachment = !this.options.noAttachment;
 
         var options = JSON.parse(JSON.stringify(wysiwygOptions));
 
-        options.parent = this;
         options.lang = "odoo";
 
         options.focus = false;
@@ -278,92 +189,20 @@ var Wysiwyg = Widget.extend({
         delete options.keyMap.pc['CTRL+RIGHTBRACKET'];
         delete options.keyMap.mac['CMD+RIGHTBRACKET'];
 
-        options.toolbar = [
-            ['style', ['style']],
-            ['font', ['bold', 'italic', 'underline', 'clear']],
-            ['fontsize', ['fontsize']],
-            ['color', ['colorpicker']],
-            ['para', ['ul', 'ol', 'paragraph']],
-            ['table', ['table']],
-            ['insert', allowAttachment ? ['linkPlugin', 'mediaPlugin'] : ['linkPlugin']],
-            ['history', ['undo', 'redo']],
-            ['view', this.options.codeview ? ['fullscreen', 'codeview', 'help'] : ['fullscreen', 'help']]
-        ];
-        options.popover = {
-            image: [
-                ['padding'],
-                ['imagesize', ['imageSizeAuto', 'imageSize100', 'imageSize50', 'imageSize25']],
-                ['float', ['alignLeft', 'alignCenter', 'alignRight', 'alignNone']],
-                ['imageShape'],
-                ['cropImage'],
-                ['media', ['mediaPlugin', 'removePluginMedia']],
-                ['alt']
-            ],
-            video: [
-                ['padding'],
-                ['imagesize', ['imageSize100', 'imageSize50', 'imageSize25']],
-                ['float', ['alignLeft', 'alignCenter', 'alignRight', 'alignNone']],
-                ['media', ['mediaPlugin', 'removePluginMedia']]
-            ],
-            icon: [
-                ['padding'],
-                ['faSize'],
-                ['float', ['alignLeft', 'alignCenter', 'alignRight', 'alignNone']],
-                ['faSpin'],
-                ['media', ['mediaPlugin', 'removePluginMedia']]
-            ],
-            document: [
-                ['float', ['alignLeft', 'alignCenter', 'alignRight', 'alignNone']],
-                ['media', ['mediaPlugin', 'removePluginMedia']]
-            ],
-            link: [
-                ['link', ['linkPlugin', 'unlink']]
-            ],
-            table: [
-                ['add', ['addRowDown', 'addRowUp', 'addColLeft', 'addColRight']],
-                ['delete', ['deleteRow', 'deleteCol', 'deleteTable']]
-            ],
-        };
-
         options.callbacks = {
-            onBlur: this._onBlurEditable.bind(this),
-            onFocus: this._onFocusEditable.bind(this),
             onChange: this._onChange.bind(this),
             onImageUpload: this._onImageUpload.bind(this),
             onFocusnode: this._onFocusnode.bind(this),
         };
 
-        options.isUnbreakableNode = function (node) {
-            node = node && (node.tagName ? node : node.parentNode);
-            if (!node) {
-                return true;
-            }
-            return self.isUnbreakableNode(node);
-        };
-        options.isEditableNode = function (node) {
-            node = node && (node.tagName ? node : node.parentNode);
-            if (!node) {
-                return false;
-            }
-            return self.isEditableNode(node);
-        };
-        options.displayPopover = this._isDisplayingPopover.bind(this);
-        options.hasFocus = function () {
-            return self._isFocused;
-        };
+        options.isUnbreakableNode = this.isUnbreakableNode.bind(this);
+        options.isEditableNode = this.isEditableNode.bind(this);
 
         if (this.options.generateOptions) {
             this.options.generateOptions(options);
         }
 
         return options;
-    },
-    /**
-     * @private
-     * @returns {Object} modules list to load
-     */
-    _getPlugins: function () {
-        return _.extend({}, wysiwygOptions.modules, modulesRegistry.plugins());
     },
     /**
      * Return an object describing the linked record.
@@ -383,61 +222,18 @@ var Wysiwyg = Widget.extend({
         return data;
     },
     /**
-     * Return true if the editor is displaying the popover.
-     *
-     * @private
-     * @param {Node} node
-     * @returns {Boolean}
-     */
-    _isDisplayingPopover: function (node) {
-        return true;
-    },
-    /**
-     * Return true if the given node is in the editor.
-     * Note: a button in the MediaDialog returns true.
-     *
-     * @private
-     * @param {Node} node
-     * @returns {Boolean}
-     */
-    _isEditorContent: function (node) {
-        if (this.el === node) {
-            return true;
-        }
-        if ($.contains(this.el, node)) {
-            return true;
-        }
-
-        var children = this.getChildren();
-        var allChildren = [];
-        var child;
-        while ((child = children.pop())) {
-            allChildren.push(child);
-            children = children.concat(child.getChildren());
-        }
-
-        var childrenDom = _.filter(_.unique(_.flatten(_.map(allChildren, function (obj) {
-            return _.map(obj, function (value) {
-                return value instanceof $ ? value.get() : value;
-            });
-        }))), function (node) {
-            return node && node.DOCUMENT_NODE && node.tagName && node.tagName !== 'BODY' && node.tagName !== 'HTML';
-        });
-        return !!$(node).closest(childrenDom).length;
-    },
-    /**
      * Create an instance with the API lib.
      *
      * @private
      * @returns {$.Promise}
      */
     _loadInstance: function () {
+        var self = this;
         var defaultOptions = this._editorOptions();
-        var summernoteOptions = _.extend({
-            id: this.id,
-        }, defaultOptions, _.omit(this.options, 'isEditableNode', 'isUnbreakableNode'));
+        var summernoteOptions = _.extend({}, defaultOptions, _.omit(this.options, 'isEditableNode', 'isUnbreakableNode'));
 
         _.extend(summernoteOptions.callbacks, defaultOptions.callbacks, this.options.callbacks);
+
         if (this.options.keyMap) {
             _.defaults(summernoteOptions.keyMap.pc, defaultOptions.keyMap.pc);
             _.each(summernoteOptions.keyMap.pc, function (v, k, o) {
@@ -453,56 +249,23 @@ var Wysiwyg = Widget.extend({
             });
         }
 
-        var plugins = _.extend(this._getPlugins(), this.options.plugins);
-        summernoteOptions.modules = _.omit(plugins, function (v) {
-            return !v;
+        delete summernoteOptions.recordInfo;
+        this.editor = new Editor(this, this.$target[0], summernoteOptions);
+        return this.editor.start().then(function () {
+            self.setElement(self.editor.editor);
+            self.$el.removeClass('card');
         });
-
-        if (this.$target.parent().length) {
-            summernoteOptions.container = this.$target.parent().css('position', 'relative')[0];
-        } else {
-            summernoteOptions.container = this.$target[0].ownerDocument.body;
+    },
+    _select: function (range) {
+        var nativeRange = range.toNativeRange();
+        var selection = range.getSelection();
+        if (selection.rangeCount > 0) {
+            selection.removeAllRanges();
         }
-
-        this.$target.summernote(summernoteOptions);
-
-        this._summernote = this.$target.data('summernote');
-        this._summernote.layoutInfo.editable.data('wysiwyg', this);
-        this.$target.attr('data-wysiwyg-id', this.id).data('wysiwyg', this);
-        $('.note-editor, .note-popover').not('[data-wysiwyg-id]').attr('data-wysiwyg-id', this.id);
-
-        this.setElement(this._summernote.layoutInfo.editor);
-        $(document).on('mousedown.' + this.id, this._onMouseDown.bind(this));
-        $(document).on('mouseenter.' + this.id, '*', this._onMouseEnter.bind(this));
-        $(document).on('mouseleave.' + this.id, '*', this._onMouseLeave.bind(this));
-        $(document).on('mousemove.' + this.id, this._onMouseMove.bind(this));
-
-        this.$el.removeClass('card');
-
-        return Promise.resolve();
-    },
-
-    //--------------------------------------------------------------------------
-    // Handlers
-    //--------------------------------------------------------------------------
-
-    /**
-     * trigger_up 'wysiwyg_focus'.
-     *
-     * @private
-     * @param {Object} [options]
-     */
-    _onFocus: function (options) {
-        this.trigger_up('wysiwyg_focus', options);
-    },
-    /**
-     * trigger_up 'wysiwyg_blur'.
-     *
-     * @private
-     * @param {Object} [options]
-     */
-    _onBlur: function (options) {
-        this.trigger_up('wysiwyg_blur', options);
+        selection.addRange(nativeRange);
+        var sc = nativeRange.startContainer;
+        $(sc.tagName ? sc : sc.parentNode).trigger('wysiwyg.range');
+        return range;
     },
 
     //--------------------------------------------------------------------------
@@ -510,129 +273,24 @@ var Wysiwyg = Widget.extend({
     //--------------------------------------------------------------------------
 
     /**
-     * @private
-     * @param {jQueryEvent} ev
-     */
-    _onMouseEnter: function (ev) {
-        if (this._isFocused && !this._mouseInEditor && this._isEditorContent(ev.target)) {
-            this._mouseInEditor = true;
-        }
-    },
-    /**
-     * @private
-     * @param {jQueryEvent} ev
-     */
-    _onMouseLeave: function (ev) {
-        if (this._isFocused && this._mouseInEditor) {
-            this._mouseInEditor = null;
-        }
-    },
-    /**
-     * @private
-     * @param {jQueryEvent} ev
-     */
-    _onMouseMove: function (ev) {
-        if (this._mouseInEditor === null) {
-            this._mouseInEditor = !!this._isEditorContent(ev.target);
-        }
-    },
-    /**
-     * @private
-     * @param {jQueryEvent} ev
-     */
-    _onMouseDown: function (ev) {
-        var self = this;
-        if (this._isEditorContent(ev.target)) {
-            setTimeout(function () {
-                if (!self._editableHasFocus && !self._isEditorContent(document.activeElement)) {
-                    self._summernote.layoutInfo.editable.focus();
-                }
-                if (!self._isFocused) {
-                    self._isFocused = true;
-                    self._onFocus();
-                }
-            });
-        } else if (this._isFocused) {
-            this._isFocused = false;
-            this._onBlur();
-        }
-    },
-    /**
-     * @private
-     * @param {jQueryEvent} ev
-     */
-    _onBlurEditable: function (ev) {
-        var self = this;
-        this._editableHasFocus = false;
-        if (!this._isFocused) {
-            return;
-        }
-        if (!this._justFocused && !this._mouseInEditor) {
-            if (this._isFocused) {
-                this._isFocused = false;
-                this._onBlur();
-            }
-        } else if (!this._forceEditableFocus) {
-            this._forceEditableFocus = true;
-            setTimeout(function () {
-                if (!self._isEditorContent(document.activeElement)) {
-                    self._summernote.layoutInfo.editable.focus();
-                }
-                self._forceEditableFocus = false; // prevent stack size exceeded.
-            });
-        } else {
-            this._mouseInEditor = null;
-        }
-    },
-    /**
-     * @private
-     * @param {OdooEvent} ev
-     */
-    _onWysiwygBlur: function (ev) {
-        if (ev.target === this) {
-            return;
-        }
-        ev.stopPropagation();
-        this._isFocused = false;
-        this._forceEditableFocus = false;
-        this._mouseInEditor = false;
-        this._summernote.disable();
-        this.$target.focus();
-        setTimeout(this._summernote.enable.bind(this._summernote));
-        this._onBlur(ev.data);
-    },
-    /**
-     * @private
-     * @param {jQueryEvent} ev
-     */
-    _onFocusEditable: function (ev) {
-        var self = this;
-        this._editableHasFocus = true;
-        this._justFocused = true;
-        setTimeout(function () {
-            self._justFocused = false;
-        });
-    },
-    /**
      * trigger_up 'wysiwyg_change'
      *
      * @private
+     * @param {OdooEvent} ev
      */
-    _onChange: function () {
-        var html = this._summernote.code();
-        if (this.hints.length) {
-            var hints = [];
-            _.each(this.hints, function (hint) {
-                if (html.indexOf('@' + hint.name) !== -1) {
-                    hints.push(hint);
-                }
-            });
-            this.hints = hints;
-        }
+    _onChange: function (ev) {
+        // if (this.hints.length) {
+        //     var hints = [];
+        //     _.each(this.hints, function (hint) {
+        //         if (html.indexOf('@' + hint.name) !== -1) {
+        //             hints.push(hint);
+        //         }
+        //     });
+        //     this.hints = hints;
+        // }
 
-        this._dirty = true;
         this.trigger_up('wysiwyg_change', {
-            html: html,
+            html: this.getValue(),
             hints: this.hints,
             attachments: this.attachments,
         });
@@ -697,6 +355,41 @@ var Wysiwyg = Widget.extend({
 //--------------------------------------------------------------------------
 
 /**
+ * Load wysiwyg assets if needed.
+ *
+ * @see Wysiwyg.createReadyFunction
+ * @param {Widget} parent
+ * @returns {$.Promise}
+ */
+Wysiwyg.prepare = (function () {
+    var assetsLoaded = false;
+    var def;
+    return function prepare(parent) {
+        if (assetsLoaded) {
+            return $.when();
+        }
+        if (def) {
+            return def;
+        }
+        def = $.Deferred();
+        var timeout = setTimeout(function () {
+            throw _t("Can't load assets of the wysiwyg editor");
+        }, 10000);
+        var wysiwyg = new Wysiwyg(parent, {
+            recordInfo: {
+                context: {},
+            }
+        });
+        wysiwyg.attachTo($('<textarea>')).then(function () {
+            assetsLoaded = true;
+            clearTimeout(timeout);
+            wysiwyg.destroy();
+            def.resolve();
+        });
+        return def;
+    };
+})();
+/**
  * @param {Node} node (editable or node inside)
  * @returns {Object}
  * @returns {Node} sc - start container
@@ -705,53 +398,36 @@ var Wysiwyg = Widget.extend({
  * @returns {Number} eo - end offset
  */
 Wysiwyg.getRange = function (node) {
-    var range = $.summernote.range.create();
-    return range && {
-        sc: range.sc,
-        so: range.so,
-        ec: range.ec,
-        eo: range.eo,
-    };
+    return this.setRange({}, node);
 };
 /**
- * @param {Node} startNode
- * @param {Number} startOffset
- * @param {Node} endNode
- * @param {Number} endOffset
  */
-Wysiwyg.setRange = function (startNode, startOffset, endNode, endOffset) {
-    $(startNode).focus();
-    if (endNode) {
-        $.summernote.range.create(startNode, startOffset, endNode, endOffset).select();
-    } else {
-        $.summernote.range.create(startNode, startOffset).select();
-    }
-    // trigger for Unbreakable
-    $(startNode.tagName ? startNode : startNode.parentNode).trigger('wysiwyg.range');
-};
-/**
- * @param {Node} node - dom node
- * @param {Object} [options]
- * @param {Boolean} options.begin move the range to the beginning of the first node.
- * @param {Boolean} options.end move the range to the end of the last node.
- */
-Wysiwyg.setRangeFromNode = function (node, options) {
-    var last = node;
-    while (last.lastChild) {
-        last = last.lastChild;
-    }
-    var first = node;
-    while (first.firstChild) {
-        first = first.firstChild;
+Wysiwyg.setRange = function (range, node) {
+    var isEmpty = _.isEmpty(range);
+    var ownerDocument = node && node.ownerDocument || node || range.sc.ownerDocument;
+    range = new WrappedRange({
+        sc: range.sc || null,
+        so: typeof range.so === 'number' ? range.so : null,
+        ec: range.ec || range.sc || null,
+        eo: range.ec ? range.eo : range.so || null,
+    }, ownerDocument);
+
+    function _select (wrappedRange) {
+        var nativeRange = wrappedRange.toNativeRange();
+        var selection = wrappedRange.getSelection();
+        if (selection.rangeCount > 0) {
+            selection.removeAllRanges();
+        }
+        selection.addRange(nativeRange);
+        var sc = nativeRange.startContainer;
+        if (!isEmpty) {
+            $(sc.tagName ? sc : sc.parentNode).trigger('wysiwyg.range');
+            console.log('wysiwyg.range');
+        }
+        return wrappedRange;
     }
 
-    if (options && options.begin && !options.end) {
-        Wysiwyg.setRange(first, 0);
-    } else if (options && !options.begin && options.end) {
-        Wysiwyg.setRange(last, last.textContent.length);
-    } else {
-        Wysiwyg.setRange(first, 0, last, last.tagName ? last.childNodes.length : last.textContent.length);
-    }
+    return range.sc ? _select(range) : null;
 };
 
 //--------------------------------------------------------------------------
@@ -762,20 +438,19 @@ $.extend($.expr[':'], {
     o_editable: function (node, i, m) {
         while (node) {
             if (node.attributes) {
-                var className = _.isString(node.className) && node.className || '';
                 if (
-                    className.indexOf('o_not_editable') !== -1 ||
+                    node.classList.contains('o_not_editable') ||
                     (node.attributes.contenteditable &&
                         node.attributes.contenteditable.value !== 'true' &&
-                        className.indexOf('o_fake_not_editable') === -1)
+                        !node.classList.contains('o_fake_not_editable'))
                 ) {
                     return false;
                 }
                 if (
-                    className.indexOf('o_editable') !== -1 ||
+                    node.classList.contains('o_editable') ||
                     (node.attributes.contenteditable &&
                         node.attributes.contenteditable.value === 'true' &&
-                        className.indexOf('o_fake_editable') === -1)
+                        !node.classList.contains('o_fake_editable'))
                 ) {
                     return true;
                 }

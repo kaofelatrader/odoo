@@ -1,278 +1,165 @@
-// NOTE EDITOR
+// V2
 
-.note-editor.note-frame {
-    background-color: inherit;
+editor {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
 
-    .note-editing-area .note-editable {
-        background-color: transparent !important;
-        color: inherit;
-        padding-left: 0;
-        padding-right: 0;
-    }
-
-    &.fullscreen {
+    popover {
+        display: none;
+        position: absolute;
+        bottom: -10px;
         background-color: #fff;
-    }
-}
+        border-radius: 0.2rem;
+        height: fit-content;
+        padding: 2px;
 
-.note-popover.popover {
-    z-index: $o-wysiwyg-zindex;
-    height: auto;
-    background-color: $o-wysiwyg-bg-color;
-
-    .popover-content {
-        padding-bottom: 0;
-        max-width: 334px;
-
-        >note-btn-group {
+        > * {
             white-space: nowrap;
         }
     }
-}
 
-.note-editor .note-toolbar {
-    white-space: nowrap;
-    z-index: $o-wysiwyg-zindex + 10;
-    height: $o-wysiwyg-toolbar-height;
-}
-
-.note-popover.popover .popover-content,
-.note-editor .note-toolbar {
-    font-family: $o-wysiwyg-font-family;
-
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6,
-    .h1,
-    .h2,
-    .h3,
-    .h4,
-    .h5,
-    .h6 {
-        font-family: $o-wysiwyg-font-family;
-    }
-
-    .btn {
-        height: $o-wysiwyg-toolbar-height;
-        border: none;
-        border-radius: 0;
-        background-color: inherit;
-        color: inherit;
-        border-top: 2px solid transparent;
-        transition: all 0.3s ease 0s;
-
-        >.fa {
-            color: inherit;
-        }
-
-        &:hover {
-            border-top: 2px solid inherit;
-            color: inherit;
-
-            >.fa {
-                color: inherit;
-            }
-        }
-
-        .o_image_alt {
-            @include o-text-overflow(inline-block);
-            max-width: 100px;
-        }
-
-        &.active {
-            border-top: 2px solid white;
-            background-color: inherit;
-            color: inherit;
-            box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.5);
-
-            >.fa {
-                color: inherit;
-            }
-        }
-
-        &.o_disabled {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-    }
-
-    .note-btn-group {
-        margin: 0;
-    }
-
-    >.btn-group {
-        margin-top: 0;
-
-        &.show,
-        .btn-group.show {
-            .dropdown-toggle {
-                border-top: 2px solid white;
-                background-color: $o-wysiwyg-bg-color-dark;
-                box-shadow: none;
-
-                >.fa,
-                >span {
-                    color: inherit;
-                }
-            }
-        }
-    }
-
-    .dropdown-menu {
-        margin: 0;
-        border-radius: 0;
-        background-color: $o-wysiwyg-bg-color;
-        color: inherit;
-        white-space: normal;
-
-        .dropdown-item {
-            width: 100%;
-            color: inherit;
-
-            >.fa {
-                color: inherit;
-            }
-
-            &:hover {
-                background-color: $o-wysiwyg-bg-color-dark;
-                color: inherit;
-
-                >.fa {
-                    color: inherit;
-                }
-            }
-        }
-    }
-
-    .note-para .dropdown-menu {
-        min-width: 0;
-        white-space: nowrap;
-    }
-
-    .note-color {
-
-        .note-back-color-preview,
-        .note-fore-color-preview {
-            .dropdown-toggle {
-                padding: 0px 7px;
-                height: 35px;
-                width: auto;
-                border-top: none;
-                border-bottom: 3px solid;
-
-                &:after {
-                    display: none;
-                }
-            }
-        }
-
-        .dropdown-menu {
-            min-width: 180px;
-
-            .note-custom-color {
-                cursor: pointer;
-                border-radius: 5px;
-
-                &:hover {
-                    background-color: gray('400');
-                    color: black
-                }
-            }
-        }
-
-        .dropdown-toggle:after {
+    toolbar {
+        z-index: 1;
+        background-color: #fff;
+        position: relative;
+        button[data-method="removeMedia"] {
             display: none;
         }
+    }
 
-        .note-palette:first-child {
+    popover, toolbar {
+        group {
+            position: relative;
+            display: inline-flex;
+            vertical-align: middle;
+            margin: 0 2px;
+
+            > button {
+                &:not(:first-child) {
+                    border-top-left-radius: 0;
+                    border-bottom-left-radius: 0;
+                }
+                &:not(:last-child) {
+                    border-top-right-radius: 0;
+                    border-bottom-right-radius: 0;
+                }
+            }
+        }
+        button {
+            position: relative;
+            padding: 0.25rem 0.5rem;
+            margin: 0;
+            line-height: 1.5;
+            border-radius: 0.2rem;
+            display: inline-block;
+            font-weight: 500;
+            color: #666666;
+            text-align: center;
+            vertical-align: middle;
+            user-select: none;
+            background-color: transparent;
+            border: 1px solid #dee2e6;
+            line-height: 1.5;
+            flex: 1 1 auto;
+
+            &.active, &:active {
+                color: #212529;
+                background-color: #e6e5e5;
+                border-color: #dfdfdf;
+            }
+
+            &.disabled {
+                color: #aaaaaa;
+                button {
+                    color: #aaaaaa;
+                }
+            }
+        }
+        > button {
+            margin: 0 2px;
+        }
+        placeholder button {
+            display: inline-block;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            width: auto;
+            background-color: transparent;
+
+            &[name^=color-] {
+                width: 20px;
+                height: 2px;
+                position: absolute;
+                bottom: 1px;
+            }
+        }
+        .dropdown-menu {
+            padding: 2px;
+
+            .wysiwyg-dropdown-item {
+                width: 100%;
+                display: block;
+            }
+        }
+    }
+
+    editable {
+        flex: 1;
+        outline: none;
+        overflow: auto;
+    }
+
+    palette.dropdown-menu.show {
+        padding: 4px 4px 10px 4px;
+        > button {
             width: 100%;
-
-            .note-color-reset,
-            .note-custom-color {
-                width: 162px;
+            margin: 4px 0;
+        }
+        row {
+            display: block;
+            white-space: nowrap;
+            button {
+                width: 20px;
+                height: 20px;
+                padding: 0;
+                margin: 0;
+                border: 1px solid #fff;
             }
+        }
+    }
 
-            .note-color-reset {
-                padding: 0 3px !important;
-                height: 32px;
+    tablepicker.dropdown-menu.show {
+        min-width: 3em;
+        min-height: 3em;
+        padding: 0;
+        margin: 0;
+        .wysiwyg-dimension-picker {
+            overflow: hidden;
+        }
+        row {
+            display: block;
+            white-space: nowrap;
+            button {
+                width: 1em;
+                height: 1em;
+                padding: 0;
+                margin: 0;
+                border: 1px solid #000;
+                border-radius: 0;
+
+                &:hover {
+                    background-color: #875A7B;
+                }
             }
-
-            .note-holder,
-            .note-color-palette .note-color-row,
-            .note-custom-color-palette .note-color-row {
-                height: auto !important;
-
-                &::after {
-                    content: "";
-                    display: table;
-                    clear: both;
-                }
-
-                .note-color-btn {
-                    float: left;
-                    height: 20px;
-                    width: 20px;
-                    margin: 1px 1px 0 0;
-                    border: 1px solid black;
-                    cursor: pointer;
-                    @include o-alpha-button-preview;
-
-                    &.o_small {
-                        width: 16px;
-                        height: 16px;
-                        margin: 3px 3px 2px 2px;
-                        border-radius: 50%;
-                    }
-
-                    &.o_clear {
-                        clear: both;
-                    }
-
-                    &.o_btn_transparent {
-                        display: none;
-                    }
-                }
+            button.wysiwyg-tablepicker-highlighted {
+                background-color: #875A7B;
             }
         }
     }
 }
 
-.note-popover.popover.note-hint-popover .popover-content {
-    height: auto;
-}
-
-.note-popover,
-.note-editor {
-    .modal .modal-footer p {
-        display: none;
-    }
-}
-
-.note-handle {
-    pointer-events: none;
-
-    .note-control-selection {
-        z-index: 1;
-        overflow: hidden;
-
-        .note-control-se {
-            border-top: 0;
-            border-left: 0;
-            background: transparent;
-        }
-    }
-}
-
-.o_fake_editable:not([data-oe-model]):focus {
-    outline: none;
-}
-
-.note-editor.dragover .note-dropzone {
-    z-index: $o-wysiwyg-zindex + 1;
-}
 
 // MODALS
 
@@ -488,35 +375,6 @@ img.o_we_selected_image {
 }
 
 .fa.mx-auto,
-img.o_we_custom_image.mx-auto {
+img.mx-auto {
     display: block;
-}
-
-// ENTER IN EDIT MODE
-
-.note-editor .css_editable_mode_display {
-    border: 1px dashed rgba(153, 153, 153, 0.5);
-    display: block !important;
-}
-
-.note-editable {
-
-    li,
-    p,
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-        &:empty:after {
-            content: "\00a0"
-        }
-    }
-}
-
-.wysiwyg_iframe {
-    margin: 0;
-    padding: 0;
-    border: 0;
 }

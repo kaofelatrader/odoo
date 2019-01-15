@@ -3,6 +3,7 @@ odoo.define('web_editor.wysiwyg.snippets', function (require) {
 
 var Wysiwyg = require('web_editor.wysiwyg');
 var snippetsEditor = require('web_editor.snippet.editor');
+var utils = require('wysiwyg.utils');
 
 Wysiwyg.include({
     events: _.extend({}, Wysiwyg.prototype.events, {
@@ -104,7 +105,7 @@ Wysiwyg.include({
                 return true;
             }
             if (!_.find(node.childNodes, function (node) {
-                var char = this.context.invoke('HelperPlugin.getRegex', 'char');
+                var char = utils.getRegex('char');
                 return node.tagName !== 'DIV' && (node.tagName || node.textContent.match(char));
             })) {
                 return false;
@@ -150,7 +151,6 @@ Wysiwyg.include({
         if (this.snippets) {
             this.snippets.updateCurrentSnippetEditorOverlay();
         }
-        this._summernote.invoke('toolbar.update', true);
         this._super.apply(this, arguments);
     },
     /**
@@ -168,9 +168,7 @@ Wysiwyg.include({
      * @private
      */
     _onCoverWillChange: function () {
-        var context = this._summernote;
-        var target = context.invoke('editor.restoreTarget', target);
-        context.invoke('MediaPlugin.hidePopovers');
+        this._summernote.invoke('MediaPlugin.hidePopovers');
     },
     /**
      * trigger reload_snippet_dropzones on snippets
@@ -207,11 +205,10 @@ Wysiwyg.include({
      *
      * @private
      */
-    _onSnippetFocused: function () {
+    _onSnippetFocused: function (ev) {
         var context = this._summernote;
-        var target = context.invoke('editor.restoreTarget', target);
         context.invoke('MediaPlugin.hidePopovers');
-        context.invoke('MediaPlugin.update', target);
+        context.invoke('MediaPlugin.update', ev.target);
     },
 });
 
@@ -227,7 +224,14 @@ $.fn.extend({
      */
     focusIn: function () {
         if (this.length) {
-            Wysiwyg.setRangeFromNode(this[0], {begin: true});
+            var first = this[0];
+            while (first.firstChild) {
+                first = first.firstChild;
+            }
+            Wysiwyg.setRange({
+                sc: first,
+                so: 0,
+            });
             $(this).trigger('mouseup');
         }
         return this;
@@ -239,7 +243,14 @@ $.fn.extend({
      */
     focusInEnd: function () {
         if (this.length) {
-            Wysiwyg.setRangeFromNode(this[0], {end: true});
+            var last = this[0];
+            while (last.lastChild) {
+                last = last.lastChild;
+            }
+            Wysiwyg.setRange({
+                sc: last,
+                so: last.textContent.length,
+            });
             $(this).trigger('mouseup');
         }
         return this;
@@ -250,19 +261,32 @@ $.fn.extend({
      * @returns {JQuery}
      */
     selectContent: function () {
+        var range;
         if (this.length) {
-            Wysiwyg.setRangeFromNode(this[0]);
-            var range = $.summernote.range.create();
-            if (!range.sc.tagName && range.so === 0 && range.sc.textContent[range.so] === '\u200B') {
+            var first = this[0];
+            while (first.firstChild) {
+                first = first.firstChild;
+            }
+            var last = this[0];
+            while (last.lastChild) {
+                last = last.lastChild;
+            }
+            range = {
+                sc: first,
+                so: 0,
+                ec: last,
+                eo: last.tagName ? last.childNodes.length : last.textContent.length,
+            };
+            if (!range.sc.tagName && range.so === 0 && range.sc.textContent[range.so] === '\uFEFF') {
                 range.so += 1;
             }
-            if (!range.ec.tagName && range.eo === range.ec.textContent.length && range.ec.textContent[range.eo - 1] === '\u200B') {
+            if (!range.ec.tagName && range.eo === range.ec.textContent.length && range.ec.textContent[range.eo - 1] === '\uFEFF') {
                 range.eo -= 1;
             }
-            range.select();
+            Wysiwyg.setRange(range);
             $(this).trigger('mouseup');
         }
-        return this;
+        return range || Wysiwyg.getRange();
     },
 });
 

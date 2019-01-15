@@ -5,7 +5,6 @@ var core = require('web.core');
 var Dialog = require('web.Dialog');
 var Widget = require('web.Widget');
 var weWidgets = require('wysiwyg.widgets');
-var FontPlugin = require('web_editor.wysiwyg.plugin.font');
 var ColorpickerDialog = require('wysiwyg.widgets.ColorpickerDialog');
 
 var qweb = core.qweb;
@@ -652,7 +651,8 @@ registry.colorpicker = SnippetOption.extend({
             this.colorPrefix = this.data.colorPrefix;
         }
 
-        if (!this.$el.find('.colorpicker').length) {
+        console.warn('restore colorpicker overrides');
+        /* if (!this.$el.find('.colorpicker').length) {
             // Add common colors to palettes if not excluded
             var fontPlugin = new FontPlugin({
                 layoutInfo: {
@@ -686,7 +686,7 @@ registry.colorpicker = SnippetOption.extend({
             var $pt = $(qweb.render('web_editor.snippet.option.colorpicker'));
             $pt.find('.o_colorpicker_section_tabs').append($clpicker);
             this.$el.find('.dropdown-menu').append($pt);
-        }
+        } */
 
         var bgColor = ColorpickerDialog.formatColor(self.$target.css('background-color'));
         var classes = [];
