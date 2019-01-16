@@ -1,8 +1,10 @@
 odoo.define('mail.model.DMChat', function (require) {
 "use strict";
 
-var core = require('web.core');
 var TwoUserChannel = require('mail.model.TwoUserChannel');
+
+var core = require('web.core');
+
 var _t = core._t;
 
 /**
@@ -20,8 +22,8 @@ var DMChat = TwoUserChannel.extend({
      * @param {integer} params.data.direct_partner[0].id
      * @param {string} params.data.direct_partner[0].im_status
      * @param {string} params.data.direct_partner[0].name
-     * @param {string} [params.data.direct_partner[0].out_of_office_message='']
-     * @param {string} [params.data.direct_partner[0].out_of_office_date_end='']
+     * @param {string} [params.data.direct_partner[0].out_of_office_message]
+     * @param {string} [params.data.direct_partner[0].out_of_office_date_end]
      */
     init: function (params) {
         this._super.apply(this, arguments);
@@ -34,8 +36,8 @@ var DMChat = TwoUserChannel.extend({
             id: this._directPartnerID,
             im_status: data.direct_partner[0].im_status
         }]);
-        this._outOfOfficeMessage = data.direct_partner[0].out_of_office_message || '';
-        this._outOfOfficeDateEnd = data.direct_partner[0].out_of_office_date_end || '';
+        this._outOfOfficeMessage = data.direct_partner[0].out_of_office_message;
+        this._outOfOfficeDateEnd = data.direct_partner[0].out_of_office_date_end;
         this._type = 'dm_chat';
     },
 
@@ -56,34 +58,29 @@ var DMChat = TwoUserChannel.extend({
     /**
     * Get the out of office info
     *
-    * @returns {string}
+    * @override {mail.model.AbstractThread}
+    * @returns {string|undefined}
     */
     getOutOfOfficeInfo: function () {
-        if (this.getStatus().indexOf('leave') === -1) {
+        if (!this._outOfOfficeDateEnd) {
             return undefined;
         }
-        var date = moment(this._outOfOfficeDateEnd);
-        var formated_date = date.format('ll');
-        if (moment().format('ll') === formated_date) {
-            formated_date = date.format("HH:mm");
-        } else {
-            var current_year = (new Date()).getFullYear();
-            if (formated_date.endsWith(current_year)) { // Dummy logic to remove year (only if current year), we will maybe need to improve it
-                formated_date = formated_date.slice(0, -4);
-                formated_date = formated_date.replace(/( |,)*$/g, "");
-            }
+        var currentDate = new Date();
+        var date = new Date(this._outOfOfficeDateEnd);
+        var options = { day: 'numeric', month: 'short' };
+        if (currentDate.getFullYear() !== date.getFullYear()) {
+            options.year = 'numeric';
         }
-        return _.str.sprintf(_t("Out of office until %s"), formated_date);
+        var formattedDate = this._outOfOfficeDateEnd.toLocaleDateString(window.navigator.language, options);
+        return _.str.sprintf(_t("Out of office until %s"), formattedDate);
     },
     /**
     * Get the out of office message of the thread
     *
+    * @override {mail.model.AbstractThread}
     * @returns {string}
     */
    getOutOfOfficeMessage: function () {
-        if (this._outOfOfficeMessage === '') {
-            return undefined;
-        }
         return this._outOfOfficeMessage;
     },
     /**
@@ -96,10 +93,10 @@ var DMChat = TwoUserChannel.extend({
     },
     /**
      * @override
-     * return {string}
+     * @return {string}
      */
     getStatus: function () {
-        return this.call('mail_service', 'getImStatus', this._directPartnerID);
+        return this.call('mail_service', 'getImStatus', { partnerID: this._directPartnerID });
     },
 });
 

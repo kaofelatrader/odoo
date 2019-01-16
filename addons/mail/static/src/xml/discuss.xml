@@ -177,6 +177,7 @@
 
     <!--
         @param {string} status
+        @param {integer|undefined} [partnerID]
     -->
     <t t-name="mail.UserStatus">
         <span t-att-class="partnerID ? 'o_updatable_im_status' : ''" t-att-data-partner-id="partnerID">

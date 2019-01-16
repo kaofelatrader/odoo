@@ -87,7 +87,7 @@ var Message =  AbstractMessage.extend(Mixins.EventDispatcherMixin, ServicesMixin
         if (!this.hasAuthor()) {
             return undefined;
         }
-        return this.call('mail_service', 'getImStatus', this._serverAuthorID[0]);
+        return this.call('mail_service', 'getImStatus', { partnerID: this.getAuthorID() });
     },
     /**
      * Get the name of the author of this message

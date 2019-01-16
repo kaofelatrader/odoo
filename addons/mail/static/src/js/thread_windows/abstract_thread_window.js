@@ -153,28 +153,18 @@ var AbstractThreadWindow = Widget.extend({
     * @returns {string|undefined}
     */
     getOutOfOfficeInfo: function () {
-        if (
-            !(
-                this.hasThread() &&
-                this._thread.getType() === 'dm_chat'
-            )
-        ) {
+        if (!this.hasThread()) {
             return undefined;
         }
         return this._thread.getOutOfOfficeInfo();
     },
     /**
-    * Get out of office user text
-    *
-    * @returns {string|undefined}
-    */
-   getOutOfOfficeMessage: function () {
-        if (
-            !(
-                this.hasThread() &&
-                this._thread.getType() === 'dm_chat'
-            )
-        ) {
+     * Get out of office user text
+     *
+     * @returns {string|undefined}
+     */
+    getOutOfOfficeMessage: function () {
+        if (!this.hasThread()) {
             return undefined;
         }
         return this._thread.getOutOfOfficeMessage();

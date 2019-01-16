@@ -15,7 +15,7 @@ UserMenu.include({
     init: function () {
         this._super.apply(this, arguments);
         var session = this.getSession();
-        this.out_of_office_message = session.out_of_office_message;
+        this.outOfOfficeMessage = session.out_of_office_message;
     },
 });
 

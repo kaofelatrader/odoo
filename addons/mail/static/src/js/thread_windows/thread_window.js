@@ -81,7 +81,7 @@ var ThreadWindow = AbstractThreadWindow.extend({
                 self.$input = self.$('.o_composer_text_field');
             });
         }
-        this._updateOutOfOfficeReadMoreButton();
+        this._updateOutOfOfficeReadMoreLessButton();
 
         return $.when(superDef, composerDef);
     },
@@ -252,18 +252,17 @@ var ThreadWindow = AbstractThreadWindow.extend({
             })
             .focus();
     },
-    _updateOutOfOfficeReadMoreButton: function () {
-        var $readMoreElement = this.$('.o_out_of_office_text');
-        var isOverflowing = $readMoreElement.prop('scrollWidth') > $readMoreElement.width();
-        var isOverwlowShown = ! $readMoreElement.hasClass('o_text_wrap');
-        if (isOverflowing || isOverwlowShown) {
+    /**
+     * @private
+     */
+    _updateOutOfOfficeReadMoreLessButton: function () {
+        var $readMore = this.$('.o_out_of_office_text');
+        var isOverflowing = $readMore.prop('scrollWidth') > $readMore.width();
+        var isOverflowShown = !$readMore.hasClass('o_text_wrap');
+        if (isOverflowing || isOverflowShown) {
             var $button = this.$('.o_out_of_office_read_more_less_button');
             $button.show();
-            if (isOverflowing) {
-                $button.text(_t('Read more'));
-            } else {
-                $button.text(_t('Read less'));
-            }
+            $button.text(isOverflowing ? _t('Read more') : _t('Read less'));
         }
     },
 
@@ -308,9 +307,8 @@ var ThreadWindow = AbstractThreadWindow.extend({
      */
     _onClickOutOfOfficeReadMoreLess: function (ev) {
         ev.preventDefault();
-        var $readMoreElement = this.$('.o_out_of_office_text');
-        $readMoreElement.toggleClass('o_text_wrap');
-        this._updateOutOfOfficeReadMoreButton();
+        this.$('.o_out_of_office_text').toggleClass('o_text_wrap');
+        this._updateOutOfOfficeReadMoreLessButton();
     },
     /**
      * @override

@@ -328,7 +328,7 @@ MailManager.include({
             .on('new_channel', this, this._onNewChannel)
             .on('is_thread_bottom_visible', this, this._onIsThreadBottomVisible)
             .on('unsubscribe_from_channel', this, this._onUnsubscribeFromChannel)
-            .on('update_im_status', this, this._onUpdateImStatus)
+            .on('updated_im_status', this, this._onUpdatedImStatus)
             .on('update_thread_unread_counter', this, this._onUpdateThreadUnreadCounter);
 
         core.bus.on('resize', this, _.debounce(this._repositionThreadWindows.bind(this), 100));
@@ -671,7 +671,7 @@ MailManager.include({
      * @private
      * @param {integer} partnerID
      */
-    _onUpdateImStatus: function (partnerIDs) {
+    _onUpdatedImStatus: function (partnerIDs) {
         var self = this;
         _.each(partnerIDs, function (partnerID) {
             var thread = self.getDMChatFromPartnerID(partnerID);

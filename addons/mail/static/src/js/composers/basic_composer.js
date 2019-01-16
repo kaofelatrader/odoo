@@ -375,14 +375,12 @@ var BasicComposer = Widget.extend({
                 var missing = [];
                 _.each(suggestions, function (suggestionsset) {
                     _.each(suggestionsset, function (suggestion) {
-                        suggestion.im_status = self.call('mail_service', 'getImStatus', suggestion.id);
+                        suggestion.im_status = self.call('mail_service', 'getImStatus', { partnerID: suggestion.id });
                         if (suggestion.im_status === undefined) {
                             missing.push(suggestion.id);
                         }
                     });
                 });
-                //force asynchronous update of missing im_status before bus update
-                self.call('mail_service', 'fetchImStatus', missing); // TODO xdo keep this or rely on get ?
                 return suggestions;
             });
         });
