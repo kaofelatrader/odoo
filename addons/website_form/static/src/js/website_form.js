@@ -11,13 +11,18 @@ odoo.define('website_form.animation', function (require) {
 
     publicWidget.registry.form_builder_send = publicWidget.Widget.extend({
         selector: '.s_website_form',
-
+        jsLibs: [
+            '/web/static/lib/intl-tel-input/js/intlTelInput.js',
+            '/web/static/lib/intl-tel-input/js/utils.js',
+        ],
+        cssLibs: [
+            '/web/static/lib/intl-tel-input/css/intlTelInput.css',
+        ],
         willStart: function () {
-            var prom;
             if (!$.fn.datetimepicker) {
-                prom = ajax.loadJS("/web/static/lib/tempusdominus/tempusdominus.js");
+                this.jsLibs.push("/web/static/lib/tempusdominus/tempusdominus.js");
             }
-            return Promise.all([this._super.apply(this, arguments), prom]);
+            return Promise.all([this._super.apply(this, arguments), ajax.loadLibs(this)]);
         },
 
         start: function (editable_mode) {
@@ -51,8 +56,31 @@ odoo.define('website_form.animation', function (require) {
             // Adapt options to date-only pickers
             datepickers_options.format = time.getLangDateFormat();
             this.$target.find('.o_website_form_date').datetimepicker(datepickers_options);
+            // For now we identify phone number with text inputs having class 'o_website_form_phone'
+            // because we don't have specific field type for phone numbers
+            this.phoneNumberInput = {};
+            this.$('input.o_website_form_phone[type=text]').each(function () {
+                self.phoneNumberInput[$(this).attr('name')] = self.createPhoneNumberInput(this);
+            });
 
             return this._super.apply(this, arguments);
+        },
+
+        createPhoneNumberInput: function (input) {
+            var self = this;
+            return intlTelInput(input, {
+                separateDialCode: true,
+                initialCountry: 'auto',
+                customContainer: 'w-100',
+                geoIpLookup: function (callback) {
+                    var defaultCountryCode = 'US';
+                    var always = function (res) {
+                        var countryCode = (res && res.country_code) ? res.country_code : defaultCountryCode;
+                        callback(countryCode);
+                    };
+                    self._rpc({ route: '/web/session/get_geoip_info' }).then(always).guardedCatch(always);
+                },
+            });
         },
 
         destroy: function () {
@@ -83,6 +111,14 @@ odoo.define('website_form.animation', function (require) {
                         value: file
                     });
                 });
+            });
+
+            // Format the phone numbers in valid international format
+            _.each(_.keys(this.phoneNumberInput), function (fieldName) {
+                var phoneData = _.findWhere(self.form_fields, { name: fieldName });
+                if (phoneData.value.trim()) {
+                    phoneData.value = self.phoneNumberInput[fieldName].getNumber(intlTelInputUtils.numberFormat.INTERNATIONAL);
+                }
             });
 
             // Serialize form inputs into a single object
@@ -169,13 +205,17 @@ odoo.define('website_form.animation', function (require) {
                         });
                         return !_.any(checkboxes, function (checkbox) { return checkbox.checked; });
 
-                    // Special cases for dates and datetimes
+                    // Special cases for dates, datetimes and phone numbers
                     } else if ($(input).hasClass('o_website_form_date')) {
                         if (!self.is_datetime_valid(input.value, 'date')) {
                             return true;
                         }
                     } else if ($(input).hasClass('o_website_form_datetime')) {
                         if (!self.is_datetime_valid(input.value, 'datetime')) {
+                            return true;
+                        }
+                    } else if ($(input).hasClass('o_website_form_phone')) {
+                        if (!self.is_phone_number_valid(input)) {
                             return true;
                         }
                     }
@@ -208,6 +248,14 @@ odoo.define('website_form.animation', function (require) {
                 } catch (e) {
                     return false;
                 }
+            }
+        },
+
+        is_phone_number_valid: function (input) {
+            if (input.required || (!input.required && input.value.trim())) {
+                return this.phoneNumberInput[input.name].isValidNumber();
+            } else {
+                return true;
             }
         },
 
