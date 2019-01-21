@@ -42,7 +42,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <table class="table table-sm mt48" t-if="o.state!='done'">
+                    <table class="table table-sm mt48" t-if="o.state!='done'" name="stock_move_table">
                         <thead>
                             <tr>
                                 <th><strong>Product</strong></th>
@@ -68,7 +68,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <table class="table table-sm mt48" t-if="o.move_line_ids and o.state=='done'">
+                    <table class="table table-sm mt48" t-if="o.move_line_ids and o.state=='done'" name="stock_move_line_table">
                         <t t-set="has_serial_number" t-value="o.move_line_ids.mapped('lot_id')" />
                         <thead>
                             <tr>
