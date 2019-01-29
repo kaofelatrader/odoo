@@ -411,8 +411,7 @@ class PricelistItem(models.Model):
     applied_on = fields.Selection([
         ('3_global', 'Global'),
         ('2_product_category', ' Product Category'),
-        ('1_product', 'Product'),
-        ('0_product_variant', 'Product Variant')], "Apply On",
+        ('1_product', 'Product')], "Apply On",
         default='3_global', required=True,
         help='Pricelist Item applicable on selected option')
     base = fields.Selection([
@@ -497,10 +496,9 @@ class PricelistItem(models.Model):
 
     @api.onchange('applied_on')
     def _onchange_applied_on(self):
-        if self.applied_on != '0_product_variant':
-            self.product_id = False
         if self.applied_on != '1_product':
             self.product_tmpl_id = False
+            self.product_id = False
         if self.applied_on != '2_product_category':
             self.categ_id = False
 
@@ -518,6 +516,11 @@ class PricelistItem(models.Model):
                 'price_min_margin': 0.0,
                 'price_max_margin': 0.0,
             })
+
+    @api.onchange('product_tmpl_id')
+    def _onchange_product_tmpl_id(self):
+        if self.product_tmpl_id:
+            self.product_id = False
 
     @api.multi
     def write(self, values):

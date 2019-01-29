@@ -130,8 +130,8 @@ class ProductProduct(models.Model):
     volume = fields.Float('Volume')
     weight = fields.Float('Weight', digits=dp.get_precision('Stock Weight'))
 
-    pricelist_item_ids = fields.Many2many(
-        'product.pricelist.item', 'Pricelist Items', compute='_get_pricelist_items')
+    pricelist_item_ids = fields.One2many(
+        'product.pricelist.item', 'product_id', 'Variant Pricelist Items')
 
     packaging_ids = fields.One2many(
         'product.packaging', 'product_id', 'Product Packages',
@@ -270,13 +270,6 @@ class ProductProduct(models.Model):
             ('product_tmpl_id', '=', self.product_tmpl_id.id),
             ('active', '=', True),
         ]) <= 1
-
-    @api.one
-    def _get_pricelist_items(self):
-        self.pricelist_item_ids = self.env['product.pricelist.item'].search([
-            '|',
-            ('product_id', '=', self.id),
-            ('product_tmpl_id', '=', self.product_tmpl_id.id)]).ids
 
     @api.constrains('attribute_value_ids')
     def _check_attribute_value_ids(self):
