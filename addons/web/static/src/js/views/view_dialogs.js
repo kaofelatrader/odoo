@@ -332,7 +332,8 @@ var SelectCreateDialog = ViewDialog.extend({
         }
         var self = this;
         var _super = this._super.bind(this);
-        return this.loadViews(this.res_model, this.context, [[false, 'list'], [false, 'search']], {})
+        var viewType = config.device.isMobile ? 'kanban' : 'list';
+        return this.loadViews(this.res_model, this.context, [[false, viewType], [false, 'search']], {})
             .then(this.setup.bind(this))
             .then(function (fragment) {
                 self.opened().then(function () {
@@ -354,7 +355,17 @@ var SelectCreateDialog = ViewDialog.extend({
         if (this.initialIDs) {
             domain = domain.concat([['id', 'in', this.initialIDs]]);
         }
-        var listView = new ListView(fieldsViews.list, _.extend({
+        var viewType = config.device.isMobile ? 'kanban' : 'list';
+        var View = view_registry.get(viewType);
+        var viewOptions = {};
+        if (!config.device.isMobile) { // add listview specific options
+            _.extend(viewOptions, {
+                hasSelectors: !this.options.disable_multiple_selection,
+                readonly: true,
+
+            }, this.options.list_view_options);
+        }
+        var View = new View(fieldsViews[viewType], _.extend(viewOptions, {
             action: {
                 controlPanelFieldsView: fieldsViews.search,
             },
@@ -362,13 +373,11 @@ var SelectCreateDialog = ViewDialog.extend({
             dynamicFilters: this.options.dynamicFilters,
             context: this.context,
             domain: domain,
-            hasSelectors: !this.options.disable_multiple_selection,
             modelName: this.res_model,
-            readonly: true,
             withBreadcrumbs: false,
-        }, this.options.list_view_options));
-        listView.setController(SelectCreateListController);
-        return listView.getController(this).then(function (controller) {
+        }));
+        View.setController(SelectCreateListController);
+        return View.getController(this).then(function (controller) {
             self.listController = controller;
             // render the footer buttons
             self.__buttons = [{

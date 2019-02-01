@@ -84,7 +84,6 @@ var KanbanView = BasicView.extend({
 
         this.controllerParams.on_create = archAttrs.on_create;
         this.controllerParams.readOnlyMode = false;
-        this.controllerParams.hasButtons = true;
         this.controllerParams.quickCreateEnabled = this.rendererParams.quickCreateEnabled;
 
 
