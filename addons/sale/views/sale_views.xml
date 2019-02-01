@@ -424,7 +424,7 @@
                                         attrs="{
                                             'column_invisible': [('parent.state', 'not in', ['sale', 'done'])],
                                             'readonly': [('qty_delivered_method', '!=', 'manual')]
-                                        }" widget="uom" options="{'uom_field': 'product_uom'}"
+                                        }"
                                     />
                                     <field name="qty_delivered_manual" invisible="1"/>
                                     <field name="qty_delivered_method" invisible="1"/>
