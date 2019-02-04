@@ -114,6 +114,9 @@
                                 <div class="col-2"><span class="text-muted">to</span></div>
                                 <div class="col-8"><t t-esc="record.date_to.value"/></div>
                             </div>
+                            <div class="row no-gutters">
+                                <field name="activity_ids" widget="kanban_activity"/>
+                            </div>
                         </div>
                     </t>
                 </templates>
