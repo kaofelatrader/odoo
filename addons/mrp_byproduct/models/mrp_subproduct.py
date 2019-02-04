@@ -2,7 +2,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, fields, models, _
-from odoo.addons import decimal_precision as dp
 
 
 class MrpSubProduct(models.Model):
@@ -10,9 +9,9 @@ class MrpSubProduct(models.Model):
     _description = 'Byproduct'
 
     product_id = fields.Many2one('product.product', 'Product', required=True)
-    product_qty = fields.Float(
+    product_qty = fields.Uom(
         'Product Qty',
-        default=1.0, digits=dp.get_precision('Product Unit of Measure'), required=True)
+        default=1.0, uom_field='product_uom_id', required=True)
     product_uom_id = fields.Many2one('uom.uom', 'Unit of Measure', required=True)
     bom_id = fields.Many2one('mrp.bom', 'BoM', ondelete='cascade')
     operation_id = fields.Many2one('mrp.routing.workcenter', 'Produced at Operation')
