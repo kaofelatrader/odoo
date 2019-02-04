@@ -132,6 +132,7 @@ var BasicActivity = AbstractField.extend({
         'click .o_schedule_activity': '_onScheduleActivity',
         'click .o_activity_template_send': '_onSendMailTemplate',
         'click .o_unlink_activity': '_onUnlinkActivity',
+        'click .o_activity_custom_action': '_onCustomAction'
     },
     init: function () {
         this._super.apply(this, arguments);
@@ -298,6 +299,33 @@ var BasicActivity = AbstractField.extend({
                 $popover.popover('hide');
             }
         });
+    },
+
+    /**
+     * @private
+     * @param {MouseEvent} ev
+     * @returns {Promise}
+     */
+    _onCustomAction: function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        var self = this;
+        var data = $(ev.currentTarget).data();
+        if (data.actionType === 'object' && data.action) {
+            return this._rpc({
+                model: self.model,
+                args: [[self.res_id]],
+                method: data.action,
+            }).then(function (data) {
+                self.trigger_up('reload');
+            });
+        } else if (data.actionType === 'action' && data.action) {
+            return self.do_action(data.action, {
+                on_close: function () {
+                    self.trigger_up('reload');
+                },
+            });
+        }
     },
 
     /**
