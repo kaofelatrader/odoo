@@ -1,14 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates id="template" xml:space="preserve">
-<t t-name="website_mass_mailing.edition.wrapper">
-    <div role="dialog" class="modal-dialog modal-md d-block" id="o_newsletter_popup">
-        <div class="modal-content o_popup_modal_content">
-            <div class="o_popup_modal_body text-center">
-                <div class="o_popup_content_dev">
-                    <div id="wrapper"></div>
+
+    <t t-name="website_mass_mailing.popup">
+        <div class="modal fade o_newsletter_modal" t-attf-data-backdrop="#{isEditMode ? 'false' : 'true'}" role="dialog">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content rounded-0">
+                    <span class="btn btn-default text-center rounded-circle o_popup_close o_not_editable fa fa-close" data-dismiss="modal"/>
+                    <div class="modal-body p-0">
+                        <t t-raw="content"/>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</t>
+    </t>
+
+    <t t-name="website_mass_mailing.subscribe_input">
+        <div class="form-row justify-content-center o_subscribe_mailing_input">
+            <div class="col-10">
+                <div class="input-group">
+                    <input type="text" class="form-control o_popup_subscribe_email" placeholder="your email..." required=""/>
+                    <div class="input-group-append">
+                        <button class="btn btn-primary o_popup_subscribe_btn" type="button">Subscribe</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
 </templates>
