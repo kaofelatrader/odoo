@@ -4,7 +4,6 @@
 from datetime import datetime
 import pytz
 from dateutil.relativedelta import relativedelta
-from odoo import exceptions
 from odoo.tests.common import tagged
 from odoo.addons.hr_payroll.tests.common import TestPayslipBase
 
@@ -200,7 +199,7 @@ class TestBenefit(TestPayslipBase):
             'date_start': start,
             'date_stop': end + relativedelta(hours=5),
         })
-        benef2 = self.env['hr.benefit'].create({
+        self.env['hr.benefit'].create({
             'name': '2',
             'employee_id': self.richard_emp.id,
             'benefit_type_id': self.env.ref('hr_payroll.benefit_type_attendance').id,
@@ -209,7 +208,7 @@ class TestBenefit(TestPayslipBase):
             'date_stop': end,
         })
         self.assertFalse(benef1.action_validate(benef1.ids), "It should not validate benefits conflicting with others")
-        self.assertTrue(benef1.display_warning)
+        self.assertTrue(benef1.state == 'conflict')
         self.assertNotEqual(benef1.state, 'validated')
 
     def test_validate_non_approved_leave_benefit(self):
@@ -221,7 +220,7 @@ class TestBenefit(TestPayslipBase):
             'date_start': self.start,
             'date_stop': self.end,
         })
-        leave_1 = self.env['hr.leave'].create({
+        self.env['hr.leave'].create({
             'name': 'Doctor Appointment',
             'employee_id': self.richard_emp.id,
             'holiday_status_id': self.leave_type.id,
@@ -229,8 +228,8 @@ class TestBenefit(TestPayslipBase):
             'date_to': self.start + relativedelta(days=1),
             'number_of_days': 2,
         })
-        self.assertFalse(benef1.action_validate(benef1.ids),"It should not validate benefits conflicting with non approved leaves")
-        self.assertTrue(benef1.display_warning)
+        self.assertFalse(benef1.action_validate(benef1.ids), "It should not validate benefits conflicting with non approved leaves")
+        self.assertTrue(benef1.state == 'conflict')
 
     def test_validate_undefined_benefit(self):
         benef1 = self.env['hr.benefit'].create({
@@ -302,9 +301,9 @@ class TestBenefit(TestPayslipBase):
             'leave_id': leave.id
         })
         benef.action_validate(benef.ids)
-        self.assertTrue(benef.display_warning, "It should have an error (conflicting leave to approve")
+        self.assertTrue(benef.state == 'conflict', "It should have an error (conflicting leave to approve")
         leave.action_refuse()
-        self.assertFalse(benef.display_warning, "It should not have an error")
+        self.assertFalse(benef.state == 'conflict', "It should not have an error")
 
     def test_time_normal_benefit(self):
         # Normal attendances (global to all employees)
@@ -372,7 +371,7 @@ class TestBenefit(TestPayslipBase):
         })
         leave_benef.action_validate(leave_benef.ids)
         payslip_wizard = self.env['hr.payslip.employees'].create({'employee_ids': [(4, self.richard_emp.id)]})
-        payslip_wizard.with_context({'default_date_start': start.strftime('%Y-%m-%d'),'default_date_end': end.strftime('%Y-%m-%d')}).compute_sheet()
+        payslip_wizard.with_context({'default_date_start': start.strftime('%Y-%m-%d'), 'default_date_end': end.strftime('%Y-%m-%d')}).compute_sheet()
         payslip = self.env['hr.payslip'].search([('employee_id', '=', self.richard_emp.id)])
         work_line = payslip.worked_days_line_ids.filtered(lambda l: l.code == 'WORK100') # From default calendar.attendance
         leave_line = payslip.worked_days_line_ids.filtered(lambda l: l.code == 'LEAVE100')

@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import pytz
 import itertools
+import pytz
 from psycopg2 import IntegrityError
 from dateutil.relativedelta import relativedelta
 from odoo import api, fields, models, exceptions, _
 from odoo.tools import mute_logger
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import ValidationError
 from odoo.addons.resource.models.resource import Intervals
+
 
 class HrBenefit(models.Model):
     _name = 'hr.benefit'
@@ -28,9 +29,9 @@ class HrBenefit(models.Model):
         ('draft', 'Draft'),
         ('confirmed', 'Confirmed'),
         ('validated', 'Validated'),
-        ('cancelled', 'Cancelled')
+        ('cancelled', 'Cancelled'),
+        ('conflict', 'Conflict'),
     ], default='draft')
-    display_warning = fields.Boolean(string="Error")
     leave_id = fields.Many2one('hr.leave', string='Leave')
 
     _sql_constraints = [
@@ -42,14 +43,14 @@ class HrBenefit(models.Model):
         """ verifies if benefit has an end. """
         for benefit in self:
             if not (benefit.date_stop or benefit.duration):
-                    raise exceptions.ValidationError(_('Benefit must end. Please define an end date or a duration.'))
+                raise exceptions.ValidationError(_('Benefit must end. Please define an end date or a duration.'))
 
     @api.constrains('date_start', 'date_stop')
     def _check_validity_start_before_end(self):
         """ verifies if benefit has an end. """
         for benefit in self:
             if benefit.date_stop < benefit.date_start:
-                    raise exceptions.ValidationError(_('Starting time should be before end time.'))
+                raise exceptions.ValidationError(_('Starting time should be before end time.'))
 
 
     @api.onchange('duration')
@@ -59,7 +60,7 @@ class HrBenefit(models.Model):
     @api.depends('date_stop', 'date_start')
     def _compute_duration(self):
         for benefit in self:
-             if benefit.date_start and benefit.date_stop:
+            if benefit.date_start and benefit.date_stop:
                 dt = benefit.date_stop - benefit.date_start
                 benefit.duration = dt.days * 24 + dt.seconds / 3600 # Number of hours
 
@@ -82,7 +83,6 @@ class HrBenefit(models.Model):
         if not self:
             return False
         undefined_type = self.filtered(lambda b: not b.benefit_type_id)
-        undefined_type.write({'display_warning': True})
         conflict = self._compute_schedule_conflicts()
         conflict_with_leaves = self.compute_conflicts_leaves_to_approve()
         return undefined_type or conflict or conflict_with_leaves
@@ -99,11 +99,11 @@ class HrBenefit(models.Model):
 
         benefs = self.search(domain)
         benefits_by_employee = itertools.groupby(benefs, lambda b: b.employee_id)
-        for employee, benefs in benefits_by_employee:
+        for _, benefs in benefits_by_employee:
             intervals = Intervals(intervals=((b.date_start, b.date_stop, b) for b in benefs))
             for interval in intervals:
                 if len(interval[2]) > 1:
-                    interval[2].write({'display_warning': True})
+                    interval[2].write({'state': 'conflict'})
                     conflict = True
         return conflict
 
@@ -129,7 +129,7 @@ class HrBenefit(models.Model):
         conflicts = self.env.cr.dictfetchall()
         for res in conflicts:
             self.browse(res.get('benefit_id')).write({
-                'display_warning': True,
+                'state': 'conflict',
                 'leave_id': res.get('leave_id')
             })
         return bool(conflicts)
@@ -226,7 +226,6 @@ class HrBenefit(models.Model):
 
         for benefit in self:
             if not benefit.leave_id:
-                tz = pytz.timezone(benefit.employee_id.tz)
                 self.env['resource.calendar.leaves'].create({
                     'name': benefit.name,
                     'date_from': benefit.date_start,
@@ -267,12 +266,12 @@ class HrBenefit(models.Model):
     @api.model
     def action_validate(self, ids):
         benefits = self.env['hr.benefit'].search([('id', 'in', ids), ('state', '!=', 'validated')])
-        benefits.write({'display_warning': False})
         if not benefits.check_if_error():
             benefits.write({'state': 'validated'})
             benefits._duplicate_to_calendar()
             return True
         return False
+
 
 class HrBenefitType(models.Model):
     _name = 'hr.benefit.type'
@@ -285,6 +284,7 @@ class HrBenefitType(models.Model):
     active = fields.Boolean('Active', default=True,
                             help="If the active field is set to false, it will allow you to hide the benefit type without removing it.")
     is_leave = fields.Boolean(default=False, string="Leave")
+
 
 class Contacts(models.Model):
     """ Personnal calendar filter """

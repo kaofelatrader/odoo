@@ -21,7 +21,7 @@
                 color="benefit_type_id"
                 event_limit="5">
                 <field name="state" invisible="1"/>
-                <field name="display_warning" invisible="1"/>
+                <field name="benefit_type_id" invisible="1"/>
                 <!-- Sidebar favorites filters -->
                 <field name="employee_id" write_model="hr.user.benefit.employee" write_field="employee_id" avatar_field="image_small"/>
                 <templates>
@@ -30,7 +30,7 @@
                         <div t-att-style="typeof color === 'string' ? ('background-color:'+color)+';' : ''" t-attf-class="#{record.is_highlighted &amp;&amp; record.is_highlighted.value ? 'o_event_hightlight' : ''} #{typeof color === 'number' ? 'o_calendar_color_'+color : ''}">
                             <div class="fc-time"/>
                             <div class="o_fields">
-                                <t t-if="record.display_warning">
+                                <t t-if="record.state === 'conflict' or !record.benefit_type_id">
                                     <span class="fa fa-exclamation-triangle mr-2" aria-label="Conflict" title="error"/>
                                 </t>
                                 <t t-if="record.state == 'validated'">
@@ -54,24 +54,21 @@
         <field name="arch" type="xml">
             <form string="Benefit" >
                 <header>
-                    <field name="display_warning" invisible="1"/>
                     <field name="leave_id" invisible="1"/>
-                    <button string="Go To Conflicting Leave" name="action_leave" type="object" attrs="{'invisible': ['|', '|', '!',('display_warning', '=', True), '!', ('leave_id', '!=', False), ('benefit_type_id', '=', False)]}"/>
+                    <button string="Go To Conflicting Leave" name="action_leave" type="object" attrs="{'invisible': ['|', '|', ('state', '!=', 'conflict'), '!', ('leave_id', '!=', False), ('benefit_type_id', '=', False)]}"/>
                     <field name="state" widget="statusbar" options="{'clickable': '1'}"/>
                 </header>
                 <sheet>
-                    <div attrs="{'invisible': [('display_warning', '=', False)]}">
-                        <div class="alert alert-warning" role="alert" attrs="{'invisible': ['!', ('benefit_type_id', '=', False)]}">
-                            This benefit cannot be validated.  The benefit type is undefined.
+                    <div class="alert alert-warning" role="alert" attrs="{'invisible': [('benefit_type_id', '!=', False)]}">
+                        This benefit cannot be validated.  The benefit type is undefined.
+                    </div>
+                    <div attrs="{'invisible': [('state', '!=', 'conflict')]}">
+                        <div class="alert alert-warning" role="alert" attrs="{'invisible': [('leave_id', '=', False)]}">
+                            This benefit cannot be validated.  There is a leave to approve (or refuse) at the same time.
                         </div>
-                        <div attrs="{'invisible': [('benefit_type_id', '=', False)]}">
-                            <div class="alert alert-warning" role="alert" attrs="{'invisible': [('leave_id', '=', False)]}">
-                                This benefit cannot be validated.  There is a leave to approve (or refuse) at the same time.
-                            </div>
-                            <div class="alert alert-warning" role="alert" attrs="{'invisible': ['!', ('leave_id', '=', False)]}">
-                                This benefit cannot be validated. It is conflicting with at least one benefit. <br/>
-                                Two benefits of the same employee cannot overlap at the same time.
-                            </div>
+                        <div class="alert alert-warning" role="alert" attrs="{'invisible': [('leave_id', '!=', False)]}">
+                            This benefit cannot be validated. It is conflicting with at least one benefit. <br/>
+                            Two benefits of the same employee cannot overlap at the same time.
                         </div>
                     </div>
                     <div class="oe_title">
@@ -100,6 +97,22 @@
         </field>
     </record>
 
+    <record id="hr_benefit_view_list" model="ir.ui.view">
+        <field name="name">hr.benefit.list.view</field>
+        <field name="model">hr.benefit</field>
+        <field name="arch" type="xml">
+            <tree create="0" editable="bottom" decoration-warning="(state == 'conflict')" decoration-info="(benefit_type_id == False)">
+                <field name="state" invisible="1"/>
+                <field name="leave_id" invisible="1"/>
+                <field name="benefit_type_id"/>
+                <field name="name" readonly="1"/>
+                <field name="employee_id" readonly="1"/>
+                <field name="duration" readonly="1"/>
+                <button name="action_leave" string="Go to Conflicting Leave" type="object" attrs="{'invisible': ['|', ('state', '!=', 'conflict'), ('leave_id', '=', False)]}" icon="fa-exclamation-triangle text-danger"/>
+            </tree>
+        </field>
+    </record>
+
     <record id="view_hr_benefit_filter" model="ir.ui.view">
         <field name="name">hr.benefit.filter</field>
         <field name="model">hr.benefit</field>
@@ -108,7 +121,7 @@
                 <field name="employee_id"/>
                 <field name="name"/>
                 <filter string="My Benefits" domain="[('employee_id.user_id','=',uid)]" name="my_benefits"/>
-                <filter string="With error" domain="[('display_warning','=', True)]" name="benefits_error"/>
+                <filter string="With error" domain="['|', ('state','=', 'conflict'), ('benefit_type_id', '=', False)]" name="benefits_error"/>
                 <filter name="date_filter" string="Date" date="date_start"/>
                 <filter name="group_employee" string="Employee" context="{'group_by':'employee_id'}"/>
             </search>

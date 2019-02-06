@@ -1,8 +1,7 @@
 # -*- coding:utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-import math
-from dateutil.relativedelta import relativedelta
 from datetime import datetime, date
+from dateutil.relativedelta import relativedelta
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 from odoo.addons.resource.models.resource import Intervals
@@ -138,7 +137,7 @@ class HrLeave(models.Model):
     def action_refuse(self):
         super(HrLeave, self).action_refuse()
         benefits = self.env['hr.benefit'].search([('leave_id', 'in', self.ids)])
-        benefits.write({'display_warning': False, 'active': False})
+        benefits.write({'state': 'confirmed', 'active': False})
         return True
 
     def _get_number_of_days(self, date_from, date_to, employee_id):

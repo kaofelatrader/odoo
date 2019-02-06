@@ -202,5 +202,16 @@
             <field name="benefit_type_id" ref="benefit_type_leave"></field>
         </record>
 
-</odoo>
+        <record id="hr_holidays.hr_holiday_status_hl" model="hr.leave.type">
+            <field name="benefit_type_id" ref="benefit_type_leave"></field>
+        </record>
 
+        <record id="hr_holidays.hr_holiday_status_dv" model="hr.leave.type">
+            <field name="benefit_type_id" ref="benefit_type_leave"></field>
+        </record>
+
+        <record id="hr_holidays.holiday_status_cla" model="hr.leave.type">
+            <field name="benefit_type_id" ref="benefit_type_home_working"></field>
+        </record>
+
+</odoo>
