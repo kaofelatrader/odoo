@@ -4,6 +4,7 @@ odoo.define('project.update_kanban', function (require) {
 var core = require('web.core');
 var Dialog = require('web.Dialog');
 var KanbanRecord = require('web.KanbanRecord');
+var KanbanRenderer=require('web.KanbanRenderer');
 
 var QWeb = core.qweb;
 var _t = core._t;
@@ -109,5 +110,20 @@ KanbanRecord.include({
             dialog.open();
         }
     },
+});
+KanbanRenderer.include({
+    /**
+     * Overrides the default method to return custom columns for the project.task kanban view.
+     *
+     * @private
+     * @override
+    */
+    _getGhostColumns: function () {
+        if (this.state.model === 'project.task') {
+            return [_t('New'), _t('Assigned'), _t('In progress'), _t('Done')];
+        } else {
+            return this._super.apply(this, arguments);
+        }
+    }
 });
 });

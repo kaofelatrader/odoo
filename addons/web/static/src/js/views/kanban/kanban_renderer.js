@@ -12,6 +12,7 @@ var utils = require('web.utils');
 var viewUtils = require('web.viewUtils');
 
 var qweb = core.qweb;
+var _t = core._t;
 
 function findInNode(node, predicate) {
     if (predicate(node)) {
@@ -283,8 +284,21 @@ var KanbanRenderer = BasicRenderer.extend({
      * @param {DocumentFragment} fragment
      */
     _renderExampleBackground: function (fragment) {
-        var $background = $(qweb.render('KanbanView.ExamplesBackground'));
+        var $background = $(qweb.render('KanbanView.ExamplesBackground', {ghostColumns: this._getGhostColumns()}));
         $background.appendTo(fragment);
+    },
+    /**
+     * Returns the default columns for the kanban view example background.
+     * You can override this method to easily customize the column names.
+     *
+     * @private
+     */
+    _getGhostColumns: function() {
+        var ghostColumns = [];
+        _.each(_.range(1, 5), function (num) {
+            ghostColumns.push(_.str.sprintf(_t("Column %s"), num));
+        });
+        return ghostColumns
     },
     /**
      * Renders empty invisible divs in a document fragment.
