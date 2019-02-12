@@ -1,0 +1,171 @@
+// ------------------------------------------------------------------
+// Layout
+// ------------------------------------------------------------------
+
+.o_mail_wip_discuss_root > .o_sidebar .o_item {
+    display: flex;
+    align-items: center;
+    margin: 5px 0;
+
+    &.o_add {
+        margin-left: $o-mail-discuss-sidebar-active-indicator-width + $o-mail-discuss-sidebar-active-indicator-margin-right;
+        margin-right: $o-mail-discuss-sidebar-scrollbar-width;
+
+        > input {
+            width: 100%;
+        }
+    }
+
+    &:hover > .o_commands {
+        display: flex;
+    }
+
+    > div {
+        margin-left: 3px;
+        margin-right: 3px;
+
+        &:first-of-type {
+            margin-left: 0px;
+            margin-right: $o-mail-discuss-sidebar-active-indicator-margin-right;
+        }
+
+        &:last-of-type {
+            margin-right: $o-mail-discuss-sidebar-scrollbar-width;
+        }
+    }
+
+    > .o_active_indicator {
+        width: $o-mail-discuss-sidebar-active-indicator-width;
+        align-self: stretch;
+    }
+
+    > .o_commands {
+        display: none;
+
+        > .o_command {
+            margin-left: 3px;
+            margin-right: 3px;
+
+            &:first-of-type {
+                margin-left: 0px;
+            }
+
+            &:last-of-type {
+                margin-right: 0px;
+            }
+        }
+    }
+
+    > .o_icon {
+        display: flex;
+        width: 13px;
+        justify-content: center;
+
+        > .o_typing {
+            display: flex;
+            flex: 1 1 auto;
+            justify-content: space-between;
+            align-items: center;
+
+            > .o_dot {
+                display: inline-block;
+                flex: 0 0 auto;
+            }
+        }
+    }
+
+    > .o_name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+// ------------------------------------------------------------------
+// Style
+// ------------------------------------------------------------------
+
+.o_mail_wip_discuss_root > .o_sidebar .o_item {
+    cursor: pointer;
+
+    &[data-thread-local-id="mail.box_starred"] {
+        > .o_counter {
+            border: none;
+            background-color: gray('600');
+        }
+    }
+
+    &.o_add > input {
+        outline: none;
+        border: none;
+        border-radius: 2px;
+    }
+
+    &:not(.o_active):hover {
+        background-color: darken(gray('900'), 2%);
+    }
+
+    > .o_active_indicator.o_active {
+        background-color: $o-brand-primary;
+    }
+
+    > .o_commands > .o_command:not(:hover) {
+        color: gray('600');
+    }
+
+    > .o_counter {
+        background-color: $o-brand-primary;
+    }
+
+    > .o_editable_name > input {
+        outline: none;
+        border: none;
+        border-radius: 2px;
+    }
+
+    > .o_icon {
+
+        > .o_online {
+            color: $o-enterprise-primary-color;
+        }
+
+        > .o_away {
+            color: theme-color('warning');
+        }
+
+        > .o_typing > .o_dot {
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: gray('500');
+        }
+    }
+
+    > .o_name.o_unread {
+        font-weight: bold;
+    }
+}
+
+// ------------------------------------------------------------------
+// Animation
+// ------------------------------------------------------------------
+
+.o_mail_wip_discuss_root > .o_sidebar .o_item > .o_icon > .o_typing > .o_dot {
+    animation: o_typing_dot 1.5s linear infinite;
+
+    &:nth-child(2) {
+        animation-delay: -1.35s;
+    }
+
+    &:nth-child(3) {
+        animation-delay: -1.2s;
+    }
+}
+
+@keyframes o_typing_dot {
+    0%, 40%, 100% {
+        transform: initial;
+    }
+    20% {
+        transform: translateY(-5px);
+    }
+}

@@ -96,6 +96,44 @@
                 <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/activity_view.scss"/>
                 <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/kanban_view.scss"/>
                 <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/attachment_box.scss"/>
+
+                <!-- WIP -->
+                <script type="text/javascript" src="/mail/static/src/js/wip/lib/owl.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/model/mail_failure.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/model/message.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/model/model.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/model/partner.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/model/thread.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/model/thread_cache.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/old_widget/discuss.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/old_widget/store_mixin.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/service/chat_window_service.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/service/store_service.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/store/actions.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/store/mutations.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/utils.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/widget/autocomplete_input.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/widget/chat_window_manager.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/widget/composer.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/widget/discuss_root.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/widget/discuss_sidebar.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/widget/discuss_sidebar_item.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/widget/editable_text.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/widget/emojis_button.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/widget/emojis_popover.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/widget/message.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/widget/message_list.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/wip/widget/thread.js"></script>
+
+                <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/wip/composer.scss"/>
+                <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/wip/discuss.scss"/>
+                <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/wip/discuss_root.scss"/>
+                <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/wip/discuss_sidebar.scss"/>
+                <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/wip/discuss_sidebar_item.scss"/>
+                <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/wip/emojis_popover.scss"/>
+                <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/wip/message.scss"/>
+                <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/wip/message_list.scss"/>
+                <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/wip/thread.scss"/>
             </xpath>
         </template>
 
@@ -136,6 +174,9 @@
                 <script type="text/javascript" src="/mail/static/tests/activity_tests.js"></script>
                 <!-- services -->
                 <script type="text/javascript" src="/mail/static/tests/mail_status_manager_tests.js"></script>
+
+                <!-- WIP -->
+                <script type="text/javascript" src="/mail/static/tests/wip/discuss_tests.js"></script>
             </xpath>
         </template>
 

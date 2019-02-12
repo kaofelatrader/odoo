@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!--
+        @param {mail.wip.Discuss} widget
+    -->
+    <div t-name="mail.wip.Discuss" class="o_mail_wip_discuss"/>
+
+</templates>

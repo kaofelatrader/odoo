@@ -1,0 +1,27 @@
+// ------------------------------------------------------------------
+// Variables
+// ------------------------------------------------------------------
+
+$o-mail-discuss-sidebar-active-indicator-margin-right: 10px !default;
+$o-mail-discuss-sidebar-active-indicator-width: 3px !default;
+$o-mail-discuss-sidebar-scrollbar-width: 15px !default;
+
+// ------------------------------------------------------------------
+// Layout
+// ------------------------------------------------------------------
+
+// Autogrow flex-item to have auto-space on left and right items in a horizontal flex container
+.o_mail_wip_autogrow {
+    flex: 1 1 auto;
+}
+
+.o_mail_wip_discuss {
+    display: flex;
+    flex: 0 0 100%;
+    flex-flow: column;
+    height: 100%
+}
+
+// ------------------------------------------------------------------
+// Style
+// ------------------------------------------------------------------
