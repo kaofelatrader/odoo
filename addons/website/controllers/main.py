@@ -286,7 +286,7 @@ class Website(Home):
         views = views.sorted(key=lambda v: (v.inherit_id.id, v.name))
         return views.read(['name', 'id', 'key', 'xml_id', 'arch', 'active', 'inherit_id'])
 
-    @http.route('/website/reset_templates', type='http', auth='user', methods=['POST'], website=True, csrf=False)
+    @http.route('/website/reset_templates', type='http', auth='user', methods=['POST'], website=True)  #, csrf=False)
     def reset_template(self, templates, redirect='/', **kwargs):
         """ This method will try to reset a list of broken views ids.
         It will read the original `arch` from the view's XML file (arch_fs).

@@ -209,9 +209,8 @@ class Http(models.AbstractModel):
 
             if isinstance(exception, QWebException):
                 values.update(qweb_exception=exception)
-                # TODO: exception.qweb not exist
-                # if isinstance(exception.qweb.get('cause'), odoo.exceptions.AccessError):
-                #     code = 403
+                if type(exception.error) == odoo.exceptions.AccessError:
+                    code = 403
 
             values.update(
                 status_message=werkzeug.http.HTTP_STATUS_CODES[code],

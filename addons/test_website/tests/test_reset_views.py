@@ -62,15 +62,17 @@ class TestWebsiteResetViews(odoo.tests.HttpCase):
         break_view(self.test_view_child_broken.with_context(website_id=1))
         self.do_test('test_reset_specific_view_controller_inherit')
 
-    # also mute ir.ui.view as `get_view_id()` will raise "Could not find view object with xml_id 'not.exist'""
-    @mute_logger('odoo.addons.website.models.ir_http', 'odoo.addons.website.models.ir_ui_view')
-    def test_reset_specific_view_controller_broken_request(self):
-        total_views = self.View.search_count([('type', '=', 'qweb')])
-        # Trigger COW then break the QWEB XML on it
-        break_view(self.test_view.with_context(website_id=1), to='<t t-esc="request.env[\'website\'].browse(\'-1\').name" />')
-        self.assertEqual(total_views + 1, self.View.search_count([('type', '=', 'qweb')]), "Ensure COW was correctly created (1)")
-        self.do_test('test_reset_specific_view_controller_broken_request')
+    # This test work in real life, but not in test mode since we cannot rollback savepoint once
+    # the cursor is broken.
+    # @mute_logger('odoo.addons.website.models.ir_http', 'odoo.addons.website.models.ir_ui_view')
+    # def test_reset_specific_view_controller_broken_request(self):
+    #     total_views = self.View.search_count([('type', '=', 'qweb')])
+    #     # Trigger COW then break the QWEB XML on it
+    #     break_view(self.test_view.with_context(website_id=1), to='<t t-esc="request.env[\'website\'].browse(\'a\').name" />')
+    #     self.assertEqual(total_views + 1, self.View.search_count([('type', '=', 'qweb')]), "Ensure COW was correctly created (1)")
+    #     self.do_test('test_reset_specific_view_controller_broken_request')
 
+    # also mute ir.ui.view as `get_view_id()` will raise "Could not find view object with xml_id 'not.exist'""
     @mute_logger('odoo.addons.website.models.ir_http', 'odoo.addons.website.models.ir_ui_view')
     def test_reset_specific_view_controller_inexisting_template(self):
         total_views = self.View.search_count([('type', '=', 'qweb')])
