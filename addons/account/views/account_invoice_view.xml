@@ -694,7 +694,6 @@
         <record id="action_invoice_tree" model="ir.actions.act_window">
             <field name="name">Invoices</field>
             <field name="res_model">account.invoice</field>
-            <field name="view_type">form</field>
             <field name="view_mode">tree,form,calendar,graph</field>
             <field name="view_id" ref="invoice_tree"/>
             <field name="context">{'type':'out_invoice'}</field>
@@ -704,7 +703,6 @@
         <record id="action_invoice_refund_out_tree" model="ir.actions.act_window">
             <field name="name">Invoices</field>
             <field name="res_model">account.invoice</field>
-            <field name="view_type">form</field>
             <field name="view_mode">tree,form,kanban,calendar,graph,pivot</field>
             <field name="view_id" ref="invoice_tree"/>
             <field name="domain">[('type','in', ['out_invoice', 'out_refund']), ('state', 'not in', ['draft', 'cancel'])]</field>
@@ -729,7 +727,6 @@
         <record id="action_invoice_tree_pending_invoice" model="ir.actions.act_window">
             <field name="name">Pending Invoice</field>
             <field name="res_model">account.invoice</field>
-            <field name="view_type">form</field>
             <field name="view_mode">tree,form,calendar,graph</field>
             <field name="view_id" ref="invoice_tree"/>
             <field name="context">{'type':'out_invoice'}</field>
@@ -753,7 +750,6 @@
         <record id="action_invoice_tree1" model="ir.actions.act_window">
             <field name="name">Invoices</field>
             <field name="res_model">account.invoice</field>
-            <field name="view_type">form</field>
             <field name="view_mode">tree,kanban,form,calendar,pivot,graph,activity</field>
             <field eval="False" name="view_id"/>
             <field name="domain">[('type','=','out_invoice')]</field>
@@ -787,7 +783,6 @@
         <record id="action_invoice_out_refund" model="ir.actions.act_window">
             <field name="name">Credit Notes</field>
             <field name="res_model">account.invoice</field>
-            <field name="view_type">form</field>
             <field name="view_mode">tree,kanban,form,calendar,pivot,graph,activity</field>
             <field eval="False" name="view_id"/>
             <field name="domain">[('type','=','out_refund')]</field>
@@ -825,7 +820,6 @@
         <record id="action_vendor_bill_template" model="ir.actions.act_window">
             <field name="name">Vendor Bills</field>
             <field name="res_model">account.invoice</field>
-            <field name="view_type">form</field>
             <field name="view_mode">tree,kanban,form,calendar,pivot,graph,activity</field>
             <field eval="False" name="view_id"/>
             <field name="domain">[('type','=','in_invoice')]</field>
@@ -872,7 +866,6 @@ action = action_values
         <record id="action_invoice_in_refund" model="ir.actions.act_window">
             <field name="name">Refund</field>
             <field name="res_model">account.invoice</field>
-            <field name="view_type">form</field>
             <field name="view_mode">tree,kanban,form,calendar,pivot,graph,activity</field>
             <field eval="False" name="view_id"/>
             <field name="domain">[('type','=','in_refund')]</field>
