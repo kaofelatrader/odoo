@@ -335,7 +335,6 @@ form: module.record_id""" % (xml_id,)
         domain = rec.get('domain') or '[]'
         res_model = rec.get('res_model')
         src_model = rec.get('src_model')
-        view_type = rec.get('view_type') or 'form'
         view_mode = rec.get('view_mode') or 'tree,form'
         usage = rec.get('usage')
         limit = rec.get('limit')
@@ -364,7 +363,6 @@ form: module.record_id""" % (xml_id,)
             'domain': domain,
             'res_model': res_model,
             'src_model': src_model,
-            'view_type': view_type,
             'view_mode': view_mode,
             'usage': usage,
             'limit': limit,
@@ -392,7 +390,6 @@ form: module.record_id""" % (xml_id,)
             'context': context,
             'res_model': res_model,
             'src_model': src_model,
-            'view_type': view_type,
             'view_mode': view_mode,
             'usage': usage,
             'limit': limit,

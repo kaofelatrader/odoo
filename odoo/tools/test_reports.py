@@ -139,7 +139,7 @@ def try_report_action(cr, uid, action_id, active_model=None, active_ids=None,
         context.update(context1)
         env = env(context=context)
         if action['type'] in ['ir.actions.act_window', 'ir.actions.submenu']:
-            for key in ('res_id', 'res_model', 'view_type', 'view_mode',
+            for key in ('res_id', 'res_model', 'view_mode',
                         'limit', 'search_view', 'auto_search', 'search_view_id'):
                 datas[key] = action.get(key, datas.get(key, None))
 
@@ -156,10 +156,10 @@ def try_report_action(cr, uid, action_id, active_model=None, active_ids=None,
 
             assert datas['res_model'], "Cannot use the view without a model"
             # Here, we have a view that we need to emulate
-            log_test("will emulate a %s view: %s#%s",
-                        action['view_type'], datas['res_model'], view_id or '?')
+            log_test("will emulate a view: %s#%s",
+                        datas['res_model'], view_id or '?')
 
-            view_res = env[datas['res_model']].fields_view_get(view_id, action['view_type'])
+            view_res = env[datas['res_model']].fields_view_get(view_id)
             assert view_res and view_res.get('arch'), "Did not return any arch for the view"
             view_data = {}
             if view_res.get('fields'):
