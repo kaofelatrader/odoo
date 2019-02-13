@@ -541,10 +541,16 @@ var AbstractController = mvc.Controller.extend(ActionMixin, {
      * @param {Array[]} ev.data.domain
      * @param {Object} ev.data.context
      * @param {string[]} ev.data.groupby
+     * @param {function} ev.data.callback used to send the search end
      */
     _onSearch: function (ev) {
         ev.stopPropagation();
-        this.reload(_.extend({offset: 0}, ev.data));
+        this.reload(_.extend({offset: 0}, ev.data))
+            .then(function () {
+                if (ev.data.callback) {
+                    ev.data.callback();
+                }
+            });
     },
     /**
      * Intercepts the 'switch_view' event to add the controllerID into the data,

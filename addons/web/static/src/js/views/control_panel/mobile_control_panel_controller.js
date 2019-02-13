@@ -11,11 +11,37 @@ if (!config.device.isMobile) {
 ControlPanelController.include({
     custom_events:_.extend({}, ControlPanelController.prototype.custom_events, {
         'search_bar_cleared': '_onSearchBarCleared',
+        'trigger_search': '_onTriggerSearch'
     }),
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     *
+     * @override
+     * @private
+     */
+    _reportNewQueryAndRender: function () {
+        var state = this.model.get();
+        return this.renderer.updateState(state);
+    },
 
     //--------------------------------------------------------------------------
     // Handlers
     //--------------------------------------------------------------------------
+
+    /**
+     *
+     * @param ev
+     * @private
+     */
+    _onTriggerSearch: function (ev) {
+        var query = this.model.getQuery();
+        query.callback = ev.data.callback || function () {};
+        this.trigger_up('search', query);
+    },
 
     /**
      * There is a 'Clear' button in the mobile control panel view.

@@ -75,6 +75,9 @@ QUnit.module('Mobile Search view Screen', {
         // click on Active filter
         testUtils.dom.click($('.o_filters_menu a:contains(Active)'));
 
+        // trigger the rpc call
+        testUtils.dom.click($('.btn.o_mobile_search_show_result'));
+
         actionManager.destroy();
     });
 

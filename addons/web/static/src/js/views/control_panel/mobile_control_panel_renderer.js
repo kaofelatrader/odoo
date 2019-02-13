@@ -11,7 +11,8 @@ if (!config.device.isMobile) {
 ControlPanelRenderer.include({
     template:'MobileControlPanel',
     events:_.extend({}, ControlPanelRenderer.prototype.events, {
-        'click .o_mobile_search_close, .o_mobile_search_show_result, .o_enable_searchview': '_toggleMobileSearchView',
+        'click .o_enable_searchview': '_toggleMobileSearchView',
+        'click .o_mobile_search_close, .o_mobile_search_show_result': '_triggerSearch',
         'click': '_onOpenMobileSearchView',
         'click .o_mobile_search_clear_facets': '_onEmptyAll',
         'show.bs.dropdown .o_mobile_search_filter .o_dropdown': '_onDropdownToggle',
@@ -60,6 +61,17 @@ ControlPanelRenderer.include({
     _toggleMobileSearchView: function () {
         this.$('.o_enable_searchview').toggleClass('btn-secondary', !!this.state.query.length);
         this.$('.o_mobile_search').toggleClass('o_hidden');
+    },
+
+    /**
+     * Process the search
+     *
+     * @private
+     */
+    _triggerSearch: function () {
+        this.trigger_up('trigger_search', {
+            callback: this._toggleMobileSearchView.bind(this)
+        });
     },
 
     //--------------------------------------------------------------------------
