@@ -137,6 +137,18 @@ class AccountMove(models.Model):
     reverse_entry_id = fields.Many2one('account.move', String="Reverse entry", store=True, readonly=True)
     to_check = fields.Boolean(string='To Check', default=False, help='If this checkbox is ticked, it means that the user was not sure of all the related informations at the time of the creation of the move and that the move needs to be checked again.')
     tax_type_domain = fields.Char(store=False, help='Technical field used to have a dynamic taxes domain on the form view.')
+    #Technical field to the hide  'Reconciled entries' button when there exists one or less record to current move.
+    reconcile_entry_count = fields.Integer(compute="_compute_reconcile_entry_count")
+
+    @api.depends('line_ids')
+    def _compute_reconcile_entry_count(self):
+        for move in self:
+            aml_ids = []
+            for aml in move.line_ids:
+                if aml.account_id.reconcile:
+                    aml_ids.extend([r.debit_move_id.id for r in aml.matched_debit_ids] if aml.credit > 0 else [r.credit_move_id.id for r in aml.matched_credit_ids])
+                    aml_ids.append(aml.id)
+            move.reconcile_entry_count = len(aml_ids)
 
     @api.constrains('line_ids', 'journal_id', 'auto_reverse', 'reverse_date')
     def _validate_move_modification(self):
