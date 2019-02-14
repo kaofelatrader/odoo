@@ -6,6 +6,24 @@ from odoo.exceptions import UserError
 from odoo.tools import float_compare, float_is_zero
 
 
+class HrEmployee(models.Model):
+    _inherit = 'hr.employee'
+    _description = 'Employee'
+
+    unit_id = fields.Many2one(
+        'res.partner', string="Operating Unit",
+        ondelete="restrict", default=lambda self: self.env.user._get_default_unit())
+
+    def _sync_user(self, user):
+        vals = super(HrEmployee, self)._sync_user(user)
+        vals['unit_id'] = user.unit_id.id
+        return vals
+
+    @api.onchange('company_id')
+    def _onchange_company(self):
+        res = super(HrEmployee, self)._onchange_company()
+        self.unit_id = self.company_id.partner_id
+
 class HrPayslipLine(models.Model):
     _inherit = 'hr.payslip.line'
 
@@ -32,6 +50,11 @@ class HrPayslip(models.Model):
     journal_id = fields.Many2one('account.journal', 'Salary Journal', readonly=True, required=True,
         states={'draft': [('readonly', False)], 'verify': [('readonly', False)]}, default=lambda self: self.env['account.journal'].search([('type', '=', 'general')], limit=1))
     move_id = fields.Many2one('account.move', 'Accounting Entry', readonly=True, copy=False)
+    unit_id = fields.Many2one(
+        'res.partner', string="Operating Unit",
+        ondelete="restrict", readonly=True,
+        states={'draft': [('readonly', False)], 'verify': [('readonly', False)]},
+        default=lambda self: self.env.user._get_default_unit())
 
     @api.model
     def create(self, vals):
@@ -43,6 +66,11 @@ class HrPayslip(models.Model):
     def onchange_employee(self):
         super(HrPayslip, self).onchange_employee()
         self.journal_id = self.contract_id.journal_id.id or self.default_get(['journal_id'])['journal_id']
+        self.unit_id = self.employee_id.unit_id
+
+    @api.onchange('company_id')
+    def _onchange_company(self):
+        self.unit_id = self.company_id.partner_id or self.env.user._get_default_unit()
 
     @api.multi
     def action_payslip_cancel(self):
@@ -67,6 +95,7 @@ class HrPayslip(models.Model):
                 'narration': name,
                 'ref': slip.number,
                 'journal_id': slip.journal_id.id,
+                'unit_id': slip.unit_id.id,
                 'date': date,
             }
             for line in slip.line_ids.filtered(lambda line: line.category_id):

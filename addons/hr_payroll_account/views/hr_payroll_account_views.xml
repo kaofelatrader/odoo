@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Employee View -->
+    <record id="payroll_hr_employee_view_form_inherit" model="ir.ui.view">
+        <field name="name">hr.employee.view.form.inherit.payroll.account</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr_payroll.payroll_hr_employee_view_form"/>
+        <field name="arch" type="xml">
+            <field name="company_id" position="after">
+                <field name="unit_id" domain="[('company_unit_id', '=', company_id)]" options="{'no_create': True, 'no_open': True}" groups="account.group_multi_operating_unit"/>
+            </field>
+        </field>
+    </record>
+
         <record model="ir.ui.view" id="view_hr_payslip_inherit_form">
             <field name="name">hr.payslip.inherit.form</field>
             <field name="model">hr.payslip</field>
@@ -9,6 +21,9 @@
                     <field name="date"/>
                     <field name="journal_id" required="1"/>
                     <field name="move_id" readonly="1"/>
+                </field>
+                <field name="company_id" position="after">
+                    <field name="unit_id" domain="[('company_unit_id', '=', company_id)]" options="{'no_create': True, 'no_open': True}" groups="account.group_multi_operating_unit"/>
                 </field>
             </field>
         </record>
