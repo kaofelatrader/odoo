@@ -45,7 +45,7 @@ class PurchaseReport(models.Model):
     weight = fields.Float('Gross Weight', readonly=True)
     volume = fields.Float('Volume', readonly=True)
     order_id = fields.Many2one('purchase.order', 'Order', readonly=True)
-    untaxed_total = fields.Float('Total Untaxed', readonly=True)
+    untaxed_total = fields.Float('Untaxed Total', readonly=True)
     qty_ordered = fields.Float('Qty Ordered', readonly=True)
     qty_received = fields.Float('Qty Received', readonly=True)
     qty_billed = fields.Float('Qty Billed', readonly=True)
