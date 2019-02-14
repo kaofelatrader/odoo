@@ -53,11 +53,20 @@ class LandedCost(models.Model):
         required=True, states={'done': [('readonly', True)]})
     company_id = fields.Many2one('res.company', string="Company",
         related='account_journal_id.company_id', readonly=False)
+    unit_id = fields.Many2one(
+        'res.partner',
+        string="Operating Unit",
+        ondelete="restrict",
+        default=lambda self: self.env.user._get_default_unit())
 
     @api.one
     @api.depends('cost_lines.price_unit')
     def _compute_total_amount(self):
         self.amount_total = sum(line.price_unit for line in self.cost_lines)
+
+    @api.onchange('company_id')
+    def _onchange_company_id(self):
+        self.unit_id = self.company_id.partner_id
 
     @api.model
     def create(self, vals):
@@ -96,6 +105,7 @@ class LandedCost(models.Model):
             move = self.env['account.move']
             move_vals = {
                 'journal_id': cost.account_journal_id.id,
+                'unit_id': cost.unit_id.id,
                 'date': cost.date,
                 'ref': cost.name,
                 'line_ids': [],
