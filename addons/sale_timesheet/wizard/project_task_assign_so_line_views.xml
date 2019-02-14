@@ -23,7 +23,6 @@
         <field name="name">Assign Sale Order Item</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">project.task.assign.sale</field>
-        <field name="view_type">form</field>
         <field name="view_mode">form</field>
         <field name="view_id" ref="project_task_assign_so_line_view_form"/>
         <field name="target">new</field>
