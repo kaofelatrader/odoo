@@ -64,7 +64,6 @@ class ResConfigSettings(models.TransientModel):
         return {
             'type': 'ir.actions.act_window',
             'name': 'My Company',
-            'view_type': 'form',
             'view_mode': 'form',
             'res_model': 'res.company',
             'res_id': self.env.user.company_id.id,
@@ -83,7 +82,6 @@ class ResConfigSettings(models.TransientModel):
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'ir.ui.view',
-            'view_type': 'form',
             'view_mode': 'form',
             'res_id': template_id.id,
         }
@@ -101,7 +99,6 @@ class ResConfigSettings(models.TransientModel):
         return {
             'name': _('Choose Your Document Layout'),
             'type': 'ir.actions.act_window',
-            'view_type': 'form',
             'view_mode': 'form',
             'res_id': self.env.user.company_id.id,
             'res_model': 'res.company',
