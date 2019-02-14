@@ -452,7 +452,6 @@ QUnit.module('Views', {
                         target: 'current',
                         res_model: args.model,
                         context: args.kwargs.context,
-                        'view_type': 'form',
                         'view_mode': 'form',
                         'views': [[false, 'form']],
                     });

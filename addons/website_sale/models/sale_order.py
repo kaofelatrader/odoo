@@ -316,7 +316,6 @@ class SaleOrder(models.Model):
             template_id = False
         return {
             'type': 'ir.actions.act_window',
-            'view_type': 'form',
             'view_mode': 'form',
             'res_model': 'mail.compose.message',
             'view_id': composer_form_view_id,
