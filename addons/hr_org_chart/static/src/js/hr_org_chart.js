@@ -141,7 +141,6 @@ var FieldOrgChart = AbstractField.extend({
         var employee_id = parseInt($(event.currentTarget).data('employee-id'));
         return this.do_action({
             type: 'ir.actions.act_window',
-            view_type: 'form',
             view_mode: 'form',
             views: [[false, 'form']],
             target: 'current',

@@ -319,7 +319,6 @@ class Employee(models.Model):
                 'type': 'ir.actions.act_window',
                 'name': _('Register Departure'),
                 'res_model': 'hr.departure.wizard',
-                'view_type': 'form',
                 'view_mode': 'form',
                 'target': 'new',
                 'context': {'active_id': self.id},
