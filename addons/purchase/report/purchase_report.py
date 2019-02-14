@@ -34,7 +34,6 @@ class PurchaseReport(models.Model):
     delay_pass = fields.Float('Days to Receive', digits=(16, 2), readonly=True)
     price_total = fields.Float('Total', readonly=True)
     price_average = fields.Float('Average Cost', readonly=True, group_operator="avg")
-    price_standard = fields.Float('Total Value', readonly=True, group_operator="sum")
     nbr_lines = fields.Integer('# of Lines', readonly=True, oldname='nbr')
     category_id = fields.Many2one('product.category', 'Product Category', readonly=True)
     product_tmpl_id = fields.Many2one('product.template', 'Product Template', readonly=True)
@@ -83,7 +82,6 @@ class PurchaseReport(models.Model):
                     extract(epoch from age(l.date_planned,s.date_order))/(24*60*60)::decimal(16,2) as delay_pass,
                     count(*) as nbr_lines,
                     sum(l.price_total / CASE COALESCE(s.currency_rate, 0) WHEN 0 THEN 1.0 ELSE s.currency_rate END)::decimal(16,2) as price_total,
-                    sum(ip.value_float*l.product_qty/u.factor*u2.factor)::decimal(16,2) as price_standard,
                     (sum(l.product_qty * l.price_unit / CASE COALESCE(s.currency_rate, 0) WHEN 0 THEN 1.0 ELSE s.currency_rate END)/NULLIF(sum(l.product_qty/u.factor*u2.factor),0.0))::decimal(16,2) as price_average,
                     partner.country_id as country_id,
                     partner.commercial_partner_id as commercial_partner_id,
