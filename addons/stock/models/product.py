@@ -529,7 +529,6 @@ class ProductTemplate(models.Model):
             'name': _('Putaway Rules'),
             'type': 'ir.actions.act_window',
             'res_model': 'stock.putaway.rule',
-            'view_type': 'list',
             'view_mode': 'list',
             'domain': domain,
         }
@@ -604,7 +603,6 @@ class ProductTemplate(models.Model):
             ctx = {'default_filter': 'product', 'default_product_id': default_product_id, 'default_name': product_ref_name}
             return {
                 'type': 'ir.actions.act_window',
-                'view_type': 'form',
                 'view_mode': 'form',
                 'res_model': 'stock.inventory',
                 'context': ctx,

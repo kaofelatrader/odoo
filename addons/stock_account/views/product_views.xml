@@ -85,7 +85,6 @@
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">product.product</field>
             <field name="view_mode">tree,form</field>
-            <field name="view_type">form</field>
             <field name="view_id" ref="view_stock_product_tree2"/>
             <field name="domain">[('type', '=', 'product'), ('qty_available', '!=', 0)]</field>
             <field name="context">{'company_owned': True, 'create': False, 'edit' : False}</field>

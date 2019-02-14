@@ -216,7 +216,6 @@ class ProductProduct(models.Model):
         action = {
             'name': _('Valuation at date'),
             'type': 'ir.actions.act_window',
-            'view_type': 'form',
             'view_mode': 'tree,form',
             'context': ctx,
         }

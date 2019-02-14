@@ -482,7 +482,6 @@ class Survey(models.Model):
         )
         return {
             'type': 'ir.actions.act_window',
-            'view_type': 'form',
             'view_mode': 'form',
             'res_model': 'survey.invite',
             'target': 'new',
