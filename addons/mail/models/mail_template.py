@@ -267,7 +267,6 @@ class MailTemplate(models.Model):
                 'type': 'ir.actions.act_window',
                 'res_model': 'mail.compose.message',
                 'src_model': template.model_id.model,
-                'view_type': 'form',
                 'context': "{'default_composition_mode': 'mass_mail', 'default_template_id' : %d, 'default_use_template': True}" % (template.id),
                 'view_mode': 'form,tree',
                 'view_id': view.id,

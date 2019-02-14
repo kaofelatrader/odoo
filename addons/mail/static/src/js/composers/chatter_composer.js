@@ -290,7 +290,6 @@ var ChatterComposer = BasicComposer.extend({
                 type: 'ir.actions.act_window',
                 res_model: 'mail.compose.message',
                 view_mode: 'form',
-                view_type: 'form',
                 views: [[false, 'form']],
                 target: 'new',
                 context: context,

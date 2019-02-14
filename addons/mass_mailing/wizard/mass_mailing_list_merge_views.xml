@@ -29,5 +29,5 @@
     <act_window id="mass_mailing_list_merge_action" name="Merge Selected Mailing Lists"
         multi="True" key2="client_action_multi" 
         res_model="mass.mailing.list.merge" src_model="mail.mass_mailing.list"
-        view_mode="form" target="new" view_type="form"/>
+        view_mode="form" target="new"/>
 </odoo>
