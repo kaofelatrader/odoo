@@ -297,6 +297,13 @@ class AccountMove(models.Model):
 
     @api.model
     def create(self, vals):
+
+        if not vals.get('unit_id'):
+            if vals.get('journal_id'):
+                journal_id = self.env['account.journal'].browse(vals['journal_id'])
+                vals['unit_id'] = journal_id.unit_id and journal_id.unit_id.id or journal_id.company_id.partner_id.id
+            else:
+                vals['unit_id'] = self.env.user.company_id.partner_id.id
         move = super(AccountMove, self.with_context(mail_create_nolog=True, check_move_validity=False, partner_id=vals.get('partner_id'))).create(vals)
         move.assert_balanced()
         return move
@@ -382,6 +389,8 @@ class AccountMove(models.Model):
             if move.line_ids:
                 if not all([x.company_id.id == move.company_id.id for x in move.line_ids]):
                     raise UserError(_("Cannot create moves for different companies."))
+                if move.unit_id and move.journal_id.unit_id and move.unit_id != move.journal_id.unit_id:
+                    raise UserError(_("Cannot create moves for different unit."))
         self.assert_balanced()
         return self._check_lock_date()
 

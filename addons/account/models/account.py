@@ -70,7 +70,7 @@ class AccountAccount(models.Model):
         result = self.read_group([('user_type_id', '=', data_unaffected_earnings.id)], ['company_id'], ['company_id'])
         for res in result:
             if res.get('company_id_count', 0) >= 2:
-                account_unaffected_earnings = self.search([('company_id', '=', res['company_id'][0]), 
+                account_unaffected_earnings = self.search([('company_id', '=', res['company_id'][0]),
                                                            ('user_type_id', '=', data_unaffected_earnings.id)])
                 raise ValidationError(_('You cannot have more than one account with "Current Year Earnings" as type. (accounts: %s)') % [a.code for a in account_unaffected_earnings])
 
@@ -453,6 +453,7 @@ class AccountJournal(models.Model):
     currency_id = fields.Many2one('res.currency', help='The currency used to enter statement', string="Currency", oldname='currency')
     company_id = fields.Many2one('res.company', string='Company', required=True, index=True, default=lambda self: self.env.user.company_id,
         help="Company related to this journal")
+    unit_id = fields.Many2one('res.partner', string="Operating Unit", ondelete="restrict", help="Unit related to this journal. If need the same journal for company all unit then keep this empty.")
 
     refund_sequence = fields.Boolean(string='Dedicated Credit Note Sequence', help="Check this box if you don't want to share the same sequence for invoices and credit notes made from this journal", default=False)
 
@@ -487,7 +488,7 @@ class AccountJournal(models.Model):
     alias_name = fields.Char('Alias Name for Vendor Bills', related='alias_id.alias_name', help="It creates draft vendor bill by sending an email.", readonly=False)
 
     _sql_constraints = [
-        ('code_company_uniq', 'unique (code, name, company_id)', 'The code and name of the journal must be unique per company !'),
+        ('code_company_uniq', 'unique (code, name, company_id, unit_id)', 'The code and name of the journal must be unique per company unit!'),
     ]
 
     @api.multi
