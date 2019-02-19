@@ -685,15 +685,16 @@ class ProductProduct(models.Model):
     def _set_standard_price(self, value):
         ''' Store the standard price change in order to be able to retrieve the cost of a product for a given date'''
         PriceHistory = self.env['product.price.history']
-        for product in self:
-            PriceHistory.create({
-                'product_id': product.id,
-                'cost': value,
-                'company_id': self._context.get('force_company', self.env.user.company_id.id),
-            })
+#        for product in self:
+#            PriceHistory.create({
+#                'product_id': product.id,
+#                'cost': value,
+#                'company_id': self._context.get('force_company', self.env.user.company_id.id),
+#            })
 
     @api.multi
     def get_history_price(self, company_id, date=None):
+        # FIXME SLE
         history = self.env['product.price.history'].search([
             ('company_id', '=', company_id),
             ('product_id', 'in', self.ids),
