@@ -10,7 +10,8 @@ from odoo.tools import float_round, float_repr
 class LunchController(http.Controller):
     @http.route('/lunch/infos', type='json', auth='user')
     def infos(self, user_id=None):
-        user = request.env['res.users'].browse(user_id) if user_id else request.env.user
+        is_manager = request.env.user.has_group('lunch.group_lunch_manager')
+        user = request.env['res.users'].browse(user_id) if user_id and is_manager else request.env.user
 
         infos = self._make_infos(user, order=False)
 
@@ -35,7 +36,8 @@ class LunchController(http.Controller):
 
     @http.route('/lunch/trash', type='json', auth='user')
     def trash(self, user_id=None):
-        user = request.env['res.users'].browse(user_id) if user_id else request.env.user
+        is_manager = request.env.user.has_group('lunch.group_lunch_manager')
+        user = request.env['res.users'].browse(user_id) if user_id and is_manager else request.env.user
 
         lines = self._get_current_lines(user.id)
         lines.action_cancel()
@@ -43,7 +45,8 @@ class LunchController(http.Controller):
 
     @http.route('/lunch/pay', type='json', auth='user')
     def pay(self, user_id=None):
-        user = request.env['res.users'].browse(user_id) if user_id else request.env.user
+        is_manager = request.env.user.has_group('lunch.group_lunch_manager')
+        user = request.env['res.users'].browse(user_id) if user_id and is_manager else request.env.user
 
         lines = self._get_current_lines(user.id)
         if lines:
