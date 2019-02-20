@@ -13,7 +13,9 @@ GOOGLE_CALENDAR_URL = 'https://www.google.com/calendar/render?'
 class EventType(models.Model):
     _name = 'event.type'
     _inherit = ['event.type']
+    _order = 'sequence, id'
 
+    sequence = fields.Integer(default=10)
     website_menu = fields.Boolean(
         'Display a dedicated menu on Website')
 
