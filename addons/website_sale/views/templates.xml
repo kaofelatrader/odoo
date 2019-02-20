@@ -356,15 +356,8 @@
     </template>
 
     <template id="option_collapse_products_categories" name="Collapsible Category List" inherit_id="website_sale.products_categories" active="False" customize_show="True">
-        <xpath expr="//div[@id='products_grid_before']/div" position="replace">
-            <ul class="nav nav-pills flex-column my-2" id="o_shop_collapse_category">
-                <li class="nav-item">
-                    <a t-att-href="keep('/shop', category=0)" t-attf-class="nav-link#{'' if category else ' active'} o_not_editable">All Products</a>
-                </li>
-                <t t-foreach="categories" t-as="categ">
-                    <t t-call="website_sale.option_collapse_categories_recursive"/>
-                </t>
-            </ul>
+        <xpath expr="//t[@t-call='website_sale.categories_recursive']">
+            <attribute name="t-call">website_sale.option_collapse_categories_recursive</attribute>
         </xpath>
     </template>
 
