@@ -358,7 +358,7 @@ var SelectCreateDialog = ViewDialog.extend({
         var viewType = config.device.isMobile ? 'kanban' : 'list';
         var View = view_registry.get(viewType);
         var viewOptions = {};
-        if (!config.device.isMobile) { // add listview specific options
+        if (viewType === 'list') { // add listview specific options
             _.extend(viewOptions, {
                 hasSelectors: !this.options.disable_multiple_selection,
                 readonly: true,
