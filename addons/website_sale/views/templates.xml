@@ -215,7 +215,7 @@
                                 <t t-set='editor_msg'>Drag building blocks here to customize the header for "<t t-esc='category.name'/>" category.</t>
                                 <div class="mb16" id="category_header" t-att-data-editor-message="editor_msg" t-field="category.website_description"/>
                             </t>
-                            <table t-if="bins" class="table table-borderless my-2">
+                            <table t-if="bins" class="table table-borderless my-2" t-att-data-ppg="ppg" t-att-data-ppr="ppr">
                                 <tbody>
                                     <tr t-foreach="bins" t-as="tr_product">
                                         <t t-foreach="tr_product" t-as="td_product">
