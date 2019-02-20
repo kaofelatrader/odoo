@@ -95,7 +95,7 @@ class WebsiteEventController(http.Controller):
                 date[3] = Event.search_count(dom_without('date') + date[2])
 
         domain = dom_without('type')
-        types = Event.read_group(domain, ["id", "event_type_id"], groupby=["event_type_id"], orderby="event_type_id")
+        types = Event.read_group(domain, ["id", "event_type_id"], groupby=["event_type_id"], orderby="sequence, event_type_id")
         types.insert(0, {
             'event_type_id_count': sum([int(type['event_type_id_count']) for type in types]),
             'event_type_id': ("all", _("All Categories"))
