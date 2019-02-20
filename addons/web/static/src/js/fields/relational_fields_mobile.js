@@ -10,7 +10,7 @@ if (!config.device.isMobile) {
 }
 
 /**
- * Override the Many2One to open a dialog in mobile.
+ * Override the Many2One to prevent autocomplete and open kanban view in mobile for search.
  */
 
 relational_fields.FieldMany2One.include({
@@ -20,8 +20,8 @@ relational_fields.FieldMany2One.include({
     //--------------------------------------------------------------------------
 
     /**
-     * Don't bind autocomplete in the mobile app as it uses a different mechanism
-     * see @_invokeMobileDialog
+     * Don't bind autocomplete in the mobile as it uses a different mechanism
+     * On clicking Many2One will directly open popup with kanban view
      *
      * @private
      * @override
@@ -33,7 +33,7 @@ relational_fields.FieldMany2One.include({
     //--------------------------------------------------------------------------
 
     /**
-     * We always open ManyToOne native dialog for select/update field value
+     * We always open Many2One search dialog for select/update field value on click of Many2One element
      *
      * @override
      * @private

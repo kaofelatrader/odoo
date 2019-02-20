@@ -120,7 +120,7 @@ QUnit.module('relational_fields', {
     QUnit.module('FieldMany2One');
 
     QUnit.test("many2one in a mobile environment", function (assert) {
-        assert.expect(8);
+        assert.expect(7);
 
         var form = createView({
             View: FormView,
@@ -145,9 +145,6 @@ QUnit.module('relational_fields', {
         });
 
         var $input = form.$('.o_field_widget[name="parent_id"] input.o_input');
-
-        assert.notStrictEqual($input[0], document.activeElement,
-            "autofocus should be disabled");
 
         assert.doesNotHaveClass($input, 'ui-autocomplete-input',
             "autocomplete should not be visible in a mobile environment");
