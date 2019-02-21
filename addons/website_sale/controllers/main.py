@@ -145,7 +145,8 @@ class WebsiteSale(http.Controller):
             pricelist_context['pricelist'] = pricelist.id
         else:
             pricelist = request.env['product.pricelist'].browse(pricelist_context['pricelist'])
-
+        print("\n\n----pricelist-", pricelist, pricelist.name)
+        print("\n\n----pricelist_context-", pricelist_context)
         return pricelist_context, pricelist
 
     def _get_compute_currency(self, pricelist, product=None):

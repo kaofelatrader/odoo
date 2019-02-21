@@ -107,7 +107,7 @@ odoo.define('point_of_sale.tour.pricelist', function (require) {
         trigger: ".selection-item:contains('Fixed')",
     }, {
         content: "prices should be updated in the product screen",
-        trigger: ".product:contains('Miscellaneous'):contains('$1.00')",
+        trigger: ".product:contains('Miscellaneous'):contains('1.00 $')",
         run: function () {}, // it's a check
     }, {
         content: "open customer list",

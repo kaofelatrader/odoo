@@ -40,6 +40,7 @@ class TestUi(odoo.tests.HttpCase):
                 ptav.price_extra = 50.4
 
         product_template.create_variant_ids()
+        print("\n\n------temp", product_template)
 
     def test_01_admin_shop_customize_tour(self):
         self.start_tour("/", 'shop_customize', login="admin")

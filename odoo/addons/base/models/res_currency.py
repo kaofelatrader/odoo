@@ -87,6 +87,7 @@ class Currency(models.Model):
         lang_code = self.env.context.get('lang') or self.env.user.lang
         language = self.env['res.lang'].search([('code', '=', lang_code)])
         for currency in self:
+            print("\n\n---currency", currency, currency.name)
             currency.position = language.position
             currency.is_space = language.is_space
             currency.sign_position = language.sign_position

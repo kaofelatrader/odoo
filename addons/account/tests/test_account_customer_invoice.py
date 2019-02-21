@@ -282,7 +282,7 @@ class TestAccountCustomerInvoice(AccountTestUsers):
         dashboard_data = journal.get_journal_dashboard_datas()
 
         self.assertEquals(dashboard_data['number_draft'], 2)
-        self.assertEquals(dashboard_data['sum_draft'], '$ 68.42')
+        self.assertEquals(dashboard_data['sum_draft'], '68.42 $')
 
         self.assertEquals(dashboard_data['number_waiting'], 0)
         self.assertEquals(dashboard_data['sum_waiting'], '$ 0.00')
