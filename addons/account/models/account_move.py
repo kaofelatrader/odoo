@@ -1376,11 +1376,14 @@ class AccountMoveLine(models.Model):
         if context.get('company_id'):
             domain += [('company_id', '=', context['company_id'])]
 
-        if context.get('company_unit_ids'):
-            domain += [('move_id.unit_id', 'in', context['company_unit_ids'])]
-
         if 'company_ids' in context:
             domain += [('company_id', 'in', context['company_ids'])]
+
+        if context.get('unit_id'):
+            domain += [('move_id.unit_id', '=', context['unit_id'])]
+
+        if context.get('unit_ids'):
+            domain += [('move_id.unit_id', 'in', context['unit_ids'])]
 
         if context.get('reconcile_date'):
             domain += ['|', ('reconciled', '=', False), '|', ('matched_debit_ids.max_date', '>', context['reconcile_date']), ('matched_credit_ids.max_date', '>', context['reconcile_date'])]
@@ -1402,7 +1405,6 @@ class AccountMoveLine(models.Model):
 
         if context.get('partner_categories'):
             domain += [('partner_id.category_id', 'in', context['partner_categories'].ids)]
-
         where_clause = ""
         where_clause_params = []
         tables = ''
