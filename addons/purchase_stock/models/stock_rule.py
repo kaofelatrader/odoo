@@ -51,6 +51,7 @@ class StockRule(models.Model):
             partner = supplier.name
             # we put `supplier_info` in values for extensibility purposes
             procurement.values['supplier'] = supplier
+            procurement.values['rule'] = rule
 
             domain = rule._make_po_get_domain(procurement.company_id, procurement.values, partner)
             procurements_by_po_domain[domain].append((procurement, rule))
@@ -115,11 +116,11 @@ class StockRule(models.Model):
 
     @api.model
     def _get_procurements_to_merge_groupby(self, procurement):
-        return procurement.product_id, procurement.product_uom
+        return procurement.product_id, procurement.product_uom, procurement.values.get('rule').id
 
     @api.model
     def _get_procurements_to_merge_sorted(self, procurement):
-        return procurement.product_id.id, procurement.product_uom.id
+        return procurement.product_id.id, procurement.product_uom.id, procurement.values.get('rule').id
 
     @api.model
     def _get_procurements_to_merge(self, procurements):
@@ -230,6 +231,7 @@ class StockRule(models.Model):
             'product_id': product_id.id,
             'product_uom': product_id.uom_po_id.id,
             'price_unit': price_unit,
+            'rule_id': values.get('rule', False) and values.get('rule').id,
             'date_planned': date_planned,
             'orderpoint_id': values.get('orderpoint_id', False) and values.get('orderpoint_id').id,
             'taxes_id': [(6, 0, taxes_id.ids)],

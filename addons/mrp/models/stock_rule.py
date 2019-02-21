@@ -86,6 +86,7 @@ class StockRule(models.Model):
             'date_planned_finished': values['date_planned'],
             'procurement_group_id': False,
             'propagate': self.propagate,
+            'rule_id': self.id,
             'orderpoint_id': values.get('orderpoint_id', False) and values.get('orderpoint_id').id,
             'picking_type_id': self.picking_type_id.id or values['warehouse_id'].manu_type_id.id,
             'company_id': company_id.id,
