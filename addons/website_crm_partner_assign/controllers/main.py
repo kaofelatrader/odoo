@@ -320,7 +320,6 @@ class WebsiteCrmPartnerAssign(WebsitePartnerPage):
         }
         return request.render("website_crm_partner_assign.index", values, status=partners and 200 or 404)
 
-
     # Do not use semantic controller due to sudo()
     @http.route(['/partners/<partner_id>'], type='http', auth="public", website=True)
     def partners_detail(self, partner_id, **post):
