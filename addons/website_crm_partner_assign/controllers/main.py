@@ -166,6 +166,13 @@ class WebsiteAccount(CustomerPortal):
         if opp.type != 'opportunity':
             raise NotFound()
 
+        unexpected_followers = [
+            p for p in opp.sudo().message_follower_ids.mapped('partner_id')
+            if p != opp.partner_assigned_id and # partner expected
+            (not p.user_ids or any([not p.has_group('base.group_user') for p in p.user_ids]))  # employee expected
+            # partner and employees are expected
+        ]
+
         return request.render(
             "website_crm_partner_assign.portal_my_opportunity", {
                 'opportunity': opp,
@@ -174,6 +181,7 @@ class WebsiteAccount(CustomerPortal):
                 'activity_types': request.env['mail.activity.type'].sudo().search([]),
                 'states': request.env['res.country.state'].sudo().search([]),
                 'countries': request.env['res.country'].sudo().search([]),
+                'unexpected_followers': unexpected_followers,
             })
 
 

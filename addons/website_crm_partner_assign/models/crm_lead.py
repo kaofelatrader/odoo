@@ -178,6 +178,15 @@ class CrmLead(models.Model):
         return res_partner_ids
 
     @api.multi
+    def _unsubscribe_customer(self):
+        for lead in self:
+            partner = self.partner_id.sudo()
+            if partner:
+                # unscubscribe customer since chatter will be between partner and salesman
+                customer_ids = partner.search([('id', 'child_of', partner.commercial_partner_id.id)])
+                lead.message_unsubscribe((lead.message_follower_ids.mapped('partner_id') & customer_ids).ids)
+
+    @api.multi
     def partner_interested(self, comment=False):
         message = _('<p>I am interested by this lead.</p>')
         if comment:
@@ -185,6 +194,7 @@ class CrmLead(models.Model):
         for lead in self:
             lead.message_post(body=message, subtype="mail.mt_note")
             lead.sudo().convert_opportunity(lead.partner_id.id)  # sudo required to convert partner data
+        self._unsubscribe_customer()
 
     @api.multi
     def partner_desinterested(self, comment=False, contacted=False, spam=False):

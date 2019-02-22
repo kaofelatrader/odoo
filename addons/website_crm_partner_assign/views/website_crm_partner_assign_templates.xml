@@ -803,6 +803,22 @@
 
             <div class="mt32">
                 <h4><strong>Message and communication history</strong></h4>
+                <t t-if="opportunity.partner_id in unexpected_followers">
+                    <div class='alert alert-danger'>The customer will probably receive this message!</div>
+                </t>
+                <div class='alert alert-info' t-else="">
+                    The conversation is dedicated to be used to communicate with your sale.
+                </div>
+                <t t-if="unexpected_followers">
+                    <div class='alert alert-warning'>
+                        Be aware, others contacts than your salesman could receive this message.
+                        <ul>
+                            <li
+                                t-foreach="unexpected_followers" t-as='unexp'
+                                t-esc="unexp.name[:3] + '*'*(len(unexp.name)-6) + unexp.name[-3:]" />
+                        </ul>
+                    </div>
+                </t>
                 <div class="mt16">
                     <t t-call="portal.message_thread">
                         <t t-set="object" t-value="opportunity"/>
