@@ -1518,6 +1518,15 @@ options.registry.anchorName = options.Class.extend({
                     text: _t("Discard"),
                     close: true,
                 },
+                {
+                    text: _t("Remove"),
+                    classes: 'btn-link float-right',
+                    icon: 'fa-trash',
+                    click: function () {
+                        self._setAnchorName();
+                        this.close();
+                    }
+                }
             ],
         }).open();
     },
