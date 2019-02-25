@@ -43,6 +43,7 @@ class TestStockCommon(common.TransactionCase):
         self.productC = self.ProductObj.create({'name': 'Product C', 'type': 'product'})
         self.productD = self.ProductObj.create({'name': 'Product D', 'type': 'product'})
         self.productE = self.ProductObj.create({'name': 'Product E', 'type': 'product'})
+        self.productS = self.ProductObj.create({'name': 'Product S', 'type': 'product', 'tracking': 'serial'})
 
         # Configure unit of measure.
         self.uom_kg = self.env['uom.uom'].search([('category_id', '=', self.categ_kgm), ('uom_type', '=', 'reference')], limit=1)
