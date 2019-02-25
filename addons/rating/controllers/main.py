@@ -15,6 +15,7 @@ class Rating(http.Controller):
         rating = request.env['rating.rating'].sudo().search([('access_token', '=', token)])
         if not rating:
             return request.not_found()
+        rating.write({'rating': rate, 'consumed': True})
         lang = rating.partner_id.lang or 'en_US'
         return request.env['ir.ui.view'].with_context(lang=lang).render_template('rating.rating_external_page_submit', {
             'rating': rating, 'token': token,
