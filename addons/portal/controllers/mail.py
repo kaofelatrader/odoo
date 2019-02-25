@@ -4,6 +4,7 @@
 import werkzeug
 from werkzeug import urls
 from werkzeug.exceptions import NotFound, Forbidden
+from ast import literal_eval
 
 from odoo import http
 from odoo.http import request
@@ -24,7 +25,7 @@ def _check_special_access(res_model, res_id, token='', _hash='', pid=False):
         raise Forbidden()
 
 
-def _message_post_helper(res_model, res_id, message, token='', nosubscribe=True, **kw):
+def _message_post_helper(res_model, res_id, message, attachment_ids=None, token='', nosubscribe=True, **kw):
     """ Generic chatter function, allowing to write on *any* object that inherits mail.thread. We
         distinguish 2 cases:
             1/ If a token is specified, all logged in users will be able to write a message regardless
@@ -47,6 +48,7 @@ def _message_post_helper(res_model, res_id, message, token='', nosubscribe=True,
                             post messages.
         :param string pid: identifier of the res.partner used to sign the hash
         :param bool nosubscribe: set False if you want the partner to be set as follower of the object when posting (default to True)
+        :param list attachment_ids: if any attachments are added to message.
 
         The rest of the kwargs are passed on to message_post()
     """
@@ -78,11 +80,11 @@ def _message_post_helper(res_model, res_id, message, token='', nosubscribe=True,
         author_id = kw.get('pid')
 
     kw.pop('csrf_token', None)
-    kw.pop('attachment_ids', None)
     kw.pop('hash', None)
     kw.pop('pid', None)
     return record.with_context(mail_create_nosubscribe=nosubscribe).message_post(body=message,
                                                                                    message_type=kw.pop('message_type', "comment"),
+                                                                                   attachment_ids=attachment_ids,
                                                                                    subtype=kw.pop('subtype', "mt_comment"),
                                                                                    author_id=author_id,
                                                                                    **kw)
@@ -91,12 +93,16 @@ def _message_post_helper(res_model, res_id, message, token='', nosubscribe=True,
 class PortalChatter(http.Controller):
 
     @http.route(['/mail/chatter_post'], type='http', methods=['POST'], auth='public', website=True)
-    def portal_chatter_post(self, res_model, res_id, message, **kw):
+    def portal_chatter_post(self, res_model, res_id, message, attachment_ids=None, **kw):
         url = request.httprequest.referrer
-        if message:
+        if attachment_ids:
+            attachment_ids = literal_eval(attachment_ids)
+            if isinstance(attachment_ids, int):
+                attachment_ids = [attachment_ids]
+        if message or attachment_ids:
             # message is received in plaintext and saved in html
             message = plaintext2html(message)
-            _message_post_helper(res_model, int(res_id), message, **kw)
+            _message_post_helper(res_model=res_model, res_id=int(res_id), message=message, attachment_ids=attachment_ids, **kw)
             url = url + "#discussion"
         return request.redirect(url)
 
