@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="l10n_be_hr_payroll.hr_payroll_rules_parent_company_car" model="hr.salary.rule">
+        <field name="condition_python">
+result = bool(contract.transport_mode_car and payslip.vehicle_id)
+        </field>
+        <field name="amount_python_compute">
+result = payslip.vehicle_id.atn
+        </field>
+    </record>
+</odoo>

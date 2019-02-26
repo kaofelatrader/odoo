@@ -11,6 +11,8 @@
         'views/fleet_views.xml',
         'views/res_config_settings_views.xml',
         'views/hr_contract_views.xml',
+        'views/hr_payslip_views.xml',
+        'data/l10n_be_hr_payroll_fleet_data.xml',
     ],
     'auto_install': True,
 }
