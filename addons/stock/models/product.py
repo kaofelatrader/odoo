@@ -386,7 +386,7 @@ class Product(models.Model):
         self.ensure_one()
         action = self.env.ref('stock.action_production_lot_form').read()[0]
         action['domain'] = [('product_id', '=', self.id)]
-        action['context'] = {'default_product_id': self.id}
+        action['context'] = {'default_product_id': self.id,  'products': self.id, 'operator': '='}
         return action
 
     def action_open_quants(self):
@@ -652,11 +652,12 @@ class ProductTemplate(models.Model):
         self.ensure_one()
         action = self.env.ref('stock.action_production_lot_form').read()[0]
         action['domain'] = [('product_id.product_tmpl_id', '=', self.id)]
+        action['context'] = {'products': self.product_variant_ids.ids, 'operator': 'in'}
         if self.product_variant_count == 1:
             action['context'] = {
                 'default_product_id': self.product_variant_id.id,
+                'products': self.product_variant_ids.ids, 'operator': 'in'
             }
-
         return action
 
 class ProductCategory(models.Model):

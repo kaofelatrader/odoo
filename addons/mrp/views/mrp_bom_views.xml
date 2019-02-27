@@ -72,12 +72,12 @@
                         <page string="Miscellaneous">
                             <group>
                                 <group>
-                                    <field name="sequence"/>
+                                    <field name="sequence" invisible="1"/>
+                                    <field name="ready_to_produce" attrs="{'invisible': [('type','=','phantom')]}" string="Manufacturing Readiness" groups="mrp.group_mrp_routings"/>
                                     <field name="consumption" attrs="{'invisible': [('type','=','phantom')]}"/>
                                 </group>
                                 <group>
-                                    <field name="ready_to_produce" attrs="{'invisible': [('type','=','phantom')]}" string="Manufacturing Readiness"/>
-                                    <field name="picking_type_id" attrs="{'invisible': [('type','=','phantom')]}" string="Operation"/>
+                                    <field name="picking_type_id" attrs="{'invisible': [('type','=','phantom')]}" groups="stock.group_adv_location" string="Operation"/>
                                 </group>
                             </group>
                         </page>
@@ -94,9 +94,9 @@
             <field name="name">mrp.bom.tree</field>
             <field name="model">mrp.bom</field>
             <field name="arch" type="xml">
-                <tree string="Bill of Materials" default_order="product_tmpl_id">
+                <tree string="Bill of Materials">
                     <field name="active" invisible="1"/>
-                    <field name="sequence" invisible="1"/>
+                    <field name="sequence" widget="handle"/>
                     <field name="product_tmpl_id"/>
                     <field name="code"/>
                     <field name="product_id" groups="product.group_product_variant"/>
