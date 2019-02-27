@@ -5,9 +5,8 @@ var config = require('web.config');
 var core = require('web.core');
 var Dialog = require('web.Dialog');
 var dom = require('web.dom');
-var ListController = require('web.ListController');
-var ListView = require('web.ListView');
 var view_registry = require('web.view_registry');
+var selectCreateControllers = require('web.select_create_controllers');
 
 var _t = core._t;
 
@@ -273,26 +272,6 @@ var FormViewDialog = ViewDialog.extend({
     },
 });
 
-var SelectCreateListController = ListController.extend({
-    //--------------------------------------------------------------------------
-    // Handlers
-    //--------------------------------------------------------------------------
-
-    /**
-     * Override to select the clicked record instead of opening it
-     *
-     * @override
-     * @private
-     */
-    _onOpenRecord: function (ev) {
-        var selectedRecord = this.model.get(ev.data.id);
-        this.trigger_up('select_record', {
-            id: selectedRecord.res_id,
-            display_name: selectedRecord.data.display_name,
-        });
-    },
-});
-
 /**
  * Search dialog (displays a list of records and permits to create a new one by switching to a form view)
  */
@@ -365,6 +344,11 @@ var SelectCreateDialog = ViewDialog.extend({
 
             }, this.options.list_view_options);
         }
+        if (viewType === 'kanban') {
+            _.extend(viewOptions, {
+                noDefaultGroupby: true,
+            });
+        }
         var View = new View(fieldsViews[viewType], _.extend(viewOptions, {
             action: {
                 controlPanelFieldsView: fieldsViews.search,
@@ -376,7 +360,11 @@ var SelectCreateDialog = ViewDialog.extend({
             modelName: this.res_model,
             withBreadcrumbs: false,
         }));
-        View.setController(SelectCreateListController);
+        var selectCreateController = config.device.isMobile ?
+            selectCreateControllers.SelectCreateKanbanController :
+            selectCreateControllers.SelectCreateListController;
+
+        View.setController(selectCreateController);
         return View.getController(this).then(function (controller) {
             self.viewController = controller;
             // render the footer buttons

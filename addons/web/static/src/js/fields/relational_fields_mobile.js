@@ -26,7 +26,7 @@ relational_fields.FieldMany2One.include({
      * @private
      * @override
      */
-    _bindAutoComplete: function () {},
+    // _bindAutoComplete: function () {},
 
     //--------------------------------------------------------------------------
     // Handlers
@@ -38,9 +38,9 @@ relational_fields.FieldMany2One.include({
      * @override
      * @private
      */
-    _onInputClick: function () {
-        return this._searchCreatePopup("search");
-    },
+    // _onInputClick: function () {
+    //     return this._searchCreatePopup("search");
+    // },
 });
 
 });
