@@ -338,7 +338,7 @@ var SelectCreateDialog = ViewDialog.extend({
             .then(function (fragment) {
                 self.opened().then(function () {
                     dom.append(self.$el, fragment, {
-                        callbacks: [{widget: self.listController}],
+                        callbacks: [{widget: self.viewController}],
                         in_DOM: true,
                     });
                     self.set_buttons(self.__buttons);
@@ -378,7 +378,7 @@ var SelectCreateDialog = ViewDialog.extend({
         }));
         View.setController(SelectCreateListController);
         return View.getController(this).then(function (controller) {
-            self.listController = controller;
+            self.viewController = controller;
             // render the footer buttons
             self.__buttons = [{
                 text: _t("Cancel"),
@@ -399,7 +399,7 @@ var SelectCreateDialog = ViewDialog.extend({
                     disabled: true,
                     close: true,
                     click: function () {
-                        var records = self.listController.getSelectedRecords();
+                        var records = self.viewController.getSelectedRecords();
                         var values = _.map(records, function (record) {
                             return {
                                 id: record.res_id,
@@ -410,7 +410,7 @@ var SelectCreateDialog = ViewDialog.extend({
                     },
                 });
             }
-            return self.listController.appendTo(fragment);
+            return self.viewController.appendTo(fragment);
         }).then(function () {
             return fragment;
         });
