@@ -48,7 +48,7 @@ class TestPayslipBase(TransactionCase):
             'struct_id': self.developer_pay_structure.id,
         })
 
-        self.benefit_type_leave = self.env['hr.benefit.type'].create({
+        self.work_entry_type_leave = self.env['hr.work.entry.type'].create({
             'name': 'Leave',
             'is_leave': True,
             'code': 'LEAVE100'
@@ -57,7 +57,7 @@ class TestPayslipBase(TransactionCase):
             'name': 'Legal Leaves',
             'time_type': 'leave',
             'allocation_type': 'no',
-            'benefit_type_id': self.benefit_type_leave.id
+            'work_entry_type_id': self.work_entry_type_leave.id
         })
 
 class TestPayslipContractBase(TestPayslipBase):
