@@ -33,7 +33,6 @@ var LunchKanbanWidget = Widget.extend({
     },
 
     init: function (parent, params) {
-        var self = this;
         this._super.apply(this, arguments);
 
         this.is_manager = params.is_manager || false;
@@ -41,22 +40,6 @@ var LunchKanbanWidget = Widget.extend({
         this.username = params.username || '';
 
         this.lunchUserField = null;
-
-        this.group_portal_id = undefined;
-
-        self._rpc({
-            model: 'ir.model.data',
-            method: 'xmlid_to_res_id',
-            kwargs: {xmlid: 'base.group_portal'},
-        }).then(function (id) {
-            self.group_portal_id = id;
-        });
-
-        if (this.is_manager) {
-            this.lunchUserField = this._createMany2One('users', 'res.users', this.username, function () {
-                return [['groups_id', 'not in', [self.group_portal_id]]];
-            });
-        }
 
         this.locations = params.locations || [];
         this.userLocation = params.user_location[1] || '';
@@ -81,6 +64,21 @@ var LunchKanbanWidget = Widget.extend({
             this.$('.o_lunch_user_field').text(this.username);
         }
         this.lunchLocationField.appendTo(this.$('.o_lunch_location_field'));
+    },
+    willStart: function () {
+        var self = this;
+
+        return self._rpc({
+            model: 'ir.model.data',
+            method: 'xmlid_to_res_id',
+            kwargs: {xmlid: 'base.group_portal'},
+        }).then(function (portal_id) {
+            if (self.is_manager) {
+                self.lunchUserField = self._createMany2One('users', 'res.users', self.username, function () {
+                    return [['groups_id', 'not in', [portal_id]]];
+                });
+            } 
+        });
     },
 
     //--------------------------------------------------------------------------
