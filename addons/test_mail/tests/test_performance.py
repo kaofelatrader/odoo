@@ -219,7 +219,7 @@ class TestAdvMailPerformance(TransactionCase):
     @warmup
     def test_message_assignation_inbox(self):
         record = self.env['mail.test.track'].create({'name': 'Test'})
-        with self.assertQueryCount(__system__=37, emp=44):  # test_mail only: 37 - 44
+        with self.assertQueryCount(__system__=39, emp=46):  # test_mail only: 36 - 46
             record.write({
                 'user_id': self.user_test.id,
             })
@@ -275,7 +275,7 @@ class TestAdvMailPerformance(TransactionCase):
     def test_message_post_one_inbox_notification(self):
         record = self.env['mail.test.simple'].create({'name': 'Test'})
 
-        with self.assertQueryCount(__system__=32, emp=44):  # com runbot 31 - 43 // test_mail only: 32 - 44
+        with self.assertQueryCount(__system__=33, emp=45):  # com runbot 31 - 45 // test_mail only: 33 - 45
             record.message_post(
                 body='<p>Test Post Performances with an inbox ping</p>',
                 partner_ids=self.user_test.partner_id.ids,
