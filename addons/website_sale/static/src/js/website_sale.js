@@ -189,15 +189,6 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
 
         this._startZoom();
 
-        var $active = null;
-        if (this.$('#products_grid').hasClass('o_wsale_layout_list')) {
-            $active = this.$('.o_wsale_apply_list');
-        } else {
-            $active = this.$('.o_wsale_apply_grid');
-        }
-        $active.find('input').prop('checked', true);
-        $active.button('toggle').blur();
-
         return def;
     },
     /**
@@ -443,6 +434,12 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
     _onApplyShopLayoutChange: function (ev) {
         var switchToList = $(ev.currentTarget).find('.o_wsale_apply_list input').is(':checked');
         this.$('#products_grid').toggleClass('o_wsale_layout_list', switchToList);
+        this._rpc({
+            route: '/shop/save_shop_layout_mode',
+            params: {
+                'layout_mode': switchToList ? 'list' : 'grid',
+            },
+        });
     },
     /**
      * @private
