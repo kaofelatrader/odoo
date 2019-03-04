@@ -352,6 +352,7 @@ var SelectCreateDialog = ViewDialog.extend({
         var View = new View(fieldsViews[viewType], _.extend(viewOptions, {
             action: {
                 controlPanelFieldsView: fieldsViews.search,
+                help: _.str.sprintf("<p>%s</p>", _t("No records found!")),
             },
             action_buttons: false,
             dynamicFilters: this.options.dynamicFilters,

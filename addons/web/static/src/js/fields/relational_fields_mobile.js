@@ -26,7 +26,49 @@ relational_fields.FieldMany2One.include({
      * @private
      * @override
      */
-    // _bindAutoComplete: function () {},
+    _bindAutoComplete: function () {},
+
+    /**
+     * Override to call name_search and directly open Search Create Popup 
+     *
+     * @override
+     * @private
+     * @param {string} search_val
+     * @returns {Deferred}
+     */
+    _search: function (search_val) {
+        var self = this;
+        var def = $.Deferred();
+        this.orderer.add(def);
+
+        var context = this.record.getContext(this.recordParams);
+        var domain = this.record.getDomain(this.recordParams);
+
+        // Add the additionalContext
+        _.extend(context, this.additionalContext);
+
+        var blacklisted_ids = this._getSearchBlacklist();
+        if (blacklisted_ids.length > 0) {
+            domain.push(['id', 'not in', blacklisted_ids]);
+        }
+
+        self._rpc({
+            model: self.field.relation,
+            method: 'name_search',
+            kwargs: {
+                name: search_val,
+                args: domain,
+                operator: "ilike",
+                limit: 160,
+                context: context,
+            },
+        })
+        .then(function (result) {
+            self._searchCreatePopup("search", result, context);
+            def.resolve();
+        });
+        return def;
+    },
 
     //--------------------------------------------------------------------------
     // Handlers
@@ -38,9 +80,9 @@ relational_fields.FieldMany2One.include({
      * @override
      * @private
      */
-    // _onInputClick: function () {
-    //     return this._searchCreatePopup("search");
-    // },
+    _onInputClick: function () {
+        return this._search();
+    },
 });
 
 });
