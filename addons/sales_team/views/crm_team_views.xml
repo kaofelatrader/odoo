@@ -26,7 +26,7 @@
             <field name="view_mode">kanban,form</field>
             <field name="view_id" ref="crm_team_salesteams_search"/>
             <field name="view_ids" eval="[(5, 0, 0),
-                (0, 0, {'view_mode': 'kanban', 'view_id': ref('sales_team.crm_team_salesteams_view_kanban')})]"/>
+                (0, 0, {'view_mode': 'kanban', 'view_id': ref('crm_team_salesteams_view_kanban')})]"/>
             <field name="context">{'in_sales_app': True}</field>
             <field name="help" type="html">
                 <p class="o_view_nocontent_smiling_face">
@@ -45,7 +45,7 @@
             <field name="view_mode">kanban,form</field>
             <field name="view_id" ref="crm_team_salesteams_search"/>
             <field name="view_ids" eval="[(5, 0, 0),
-                (0, 0, {'view_mode': 'kanban', 'view_id': ref('sales_team.crm_team_salesteams_view_kanban')})]"/>
+                (0, 0, {'view_mode': 'kanban', 'view_id': ref('crm_team_salesteams_view_kanban')})]"/>
             <field name="context">{}</field>
             <field name="help" type="html">
                 <p class="o_view_nocontent_smiling_face">
