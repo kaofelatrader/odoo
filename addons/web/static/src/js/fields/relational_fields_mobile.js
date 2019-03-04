@@ -2,8 +2,10 @@ odoo.define('web_mobile.relational_fields', function (require) {
 "use strict";
 
 var config = require('web.config');
+var core = require('web.core');
 var relational_fields = require('web.relational_fields');
 
+var _t = core._t;
 
 if (!config.device.isMobile) {
     return;
@@ -63,8 +65,18 @@ relational_fields.FieldMany2One.include({
                 context: context,
             },
         })
-        .then(function (result) {
-            self._searchCreatePopup("search", result, context);
+        .then(function (results) {
+            var dynamicFilters;
+            if (results) {
+                var ids = _.map(results, function (x) {
+                    return x[0];
+                });
+                dynamicFilters = [{
+                    description: _.str.sprintf(_t('Quick search: %s'), search_val),
+                    domain: [['id', 'in', ids]],
+                }];
+            }
+            self._searchCreatePopup("search", ids, {}, dynamicFilters);
             def.resolve();
         });
         return def;
