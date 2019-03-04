@@ -46,7 +46,7 @@
                                     Oops! Something went wrong. Try to reload the page and log in.
                                 </div>
                                 <div class="o_portal_chatter_attachment mt16"/>
-                                <div class="btn-group mt8">
+                                <div class="mt8">
                                     <button t-attf-class="o_portal_chatter_composer_btn btn btn-primary o_website_message_post_helper" type="submit">Send</button>
                                     <button class="btn btn-default fa fa-paperclip o_portal_chatter_attachment_btn" type="button"/>
                                 </div>
@@ -55,10 +55,13 @@
                         <span class="d-none">
                             <t t-call="HiddenInputFilePortal">
                                 <t t-set="fileuploadID" t-value="widget.fileuploadID"/>
-                                <t t-set="fileupload_action" t-translation="off">/web/binary/upload_attachment</t>
+                                <t t-set="fileupload_action" t-translation="off">/portal/binary/upload_attachment</t>
                                 <t t-set="multi_upload" t-value="true"/>
-                                <input type="hidden" name="model" value="mail.compose.message"/>
-                                <input type="hidden" name="id" value="0"/>
+                                <t t-if="widget.options['token']">
+                                    <t t-set="access_token" t-value="widget.options['token']"/>
+                                </t>
+                                <input type="hidden" name="model" t-att-value="widget.options['res_model']"/>
+                                <input type="hidden" name="id" t-att-value="widget.options['res_id']"/>
                             </t>
                         </span>
                     </div>
@@ -73,6 +76,7 @@
                   method="post" enctype="multipart/form-data" t-att-action="fileupload_action || '/web/binary/upload'">
                 <input type="hidden" name="csrf_token" t-att-value="csrf_token"/>
                 <input type="hidden" name="callback" t-att-value="fileuploadID"/>
+                <input type="hidden" name="access_token" t-att-value="access_token"/>
                 <input type="file" class="o_input_file" name="ufile" t-att="{'multiple': multi_upload ? 'multiple' : null}"/>
                 <t t-raw="0"/>
             </form>
@@ -112,7 +116,12 @@
                         <div class="o_portal_chatter_attachments o_attachments_list">
                             <t t-foreach='message.attachment_ids' t-as='attachment'>
                                 <t t-call="mail.Attachment">
-                                    <t t-set="attachment.url" t-value="'/web/content/'+ attachment.id + '?download=true'"/>
+                                    <t t-if="widget.options['token']">
+                                        <t t-set="attachment.url" t-value="'/portal/content/'+ attachment.id + '?access_token='+ widget.options['token'] + '&amp;model='+ widget.options['res_model'] + '&amp;id='+ widget.options['res_id'] + '&amp;download=true'"/>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-set="attachment.url" t-value="'/portal/content/'+ attachment.id + '?model='+ widget.options['res_model'] + '&amp;id='+ widget.options['res_id'] + '&amp;download=true'"/>
+                                    </t>
                                     <t t-set="disable_preview" t-value="true"/>
                                     <t t-set="disable_delete" t-value="true"/>
                                 </t>

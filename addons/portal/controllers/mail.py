@@ -1,17 +1,28 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import base64
+import json
+import logging
+import unicodedata
 import werkzeug
+
+from ast import literal_eval
 from werkzeug import urls
 from werkzeug.exceptions import NotFound, Forbidden
-from ast import literal_eval
 
 from odoo import http
 from odoo.http import request
 from odoo.osv import expression
 from odoo.tools import consteq, plaintext2html
+from odoo.tools.translate import _
 from odoo.addons.mail.controllers.main import MailController
-from odoo.exceptions import AccessError
+from odoo.exceptions import AccessError, MissingError
+
+_logger = logging.getLogger(__name__)
+
+MAX_FILE_SIZE_TO_UPOLAD = 25
+MAX_FILE_TO_UPOLAD = 10
 
 
 def _check_special_access(res_model, res_id, token='', _hash='', pid=False):
@@ -92,6 +103,25 @@ def _message_post_helper(res_model, res_id, message, attachment_ids=None, token=
 
 class PortalChatter(http.Controller):
 
+    def _document_check_access(self, model_name, document_id, access_token=None):
+        document = request.env[model_name].browse([document_id])
+        document_sudo = document.sudo().exists()
+        if not document_sudo:
+            raise MissingError("This document does not exist.")
+        try:
+            document.check_access_rights('read')
+            document.check_access_rule('read')
+        except AccessError:
+            if not access_token or not consteq(document_sudo.access_token, access_token):
+                raise
+        return document_sudo
+
+    def _neuter_mimetype(self, mimetype, user):
+        wrong_type = 'ht' in mimetype or 'xml' in mimetype or 'svg' in mimetype
+        if wrong_type and not user._is_system():
+            return 'text/plain'
+        return mimetype
+
     @http.route(['/mail/chatter_post'], type='http', methods=['POST'], auth='public', website=True)
     def portal_chatter_post(self, res_model, res_id, message, attachment_ids=None, **kw):
         url = request.httprequest.referrer
@@ -149,6 +179,93 @@ class PortalChatter(http.Controller):
             'messages': Message.search(domain, limit=limit, offset=offset).portal_message_format(),
             'message_count': Message.search_count(domain)
         }
+
+    @http.route('/portal/binary/upload_attachment', type='http', auth="public")
+    def upload_attachment(self, callback, model, id, ufile, **kwargs):
+        files = request.httprequest.files.getlist('ufile')
+        out = """<script language="javascript" type="text/javascript">
+                    var win = window.top.window;
+                    win.jQuery(win).trigger(%s, %s);
+                </script>"""
+
+        access_token = kwargs.get('access_token')
+        res_id = int(id)
+        args = []
+
+        try:
+            if request.env.user.has_group('base.group_public') and not access_token:
+                raise AccessError(_("Do not have access to the document."))
+            self._document_check_access(model, res_id, access_token=access_token)
+        except (AccessError, MissingError):
+            raise Forbidden()
+
+        if len(files) > MAX_FILE_TO_UPOLAD:
+            args.append({'error': _("Oops! You can not upload more than 10 files.")})
+            return out % (json.dumps(callback), json.dumps(args))
+
+        AttachmentSudo = request.env['ir.attachment'].sudo()
+
+        for ufile in files:
+            data = ufile.read()
+            file_size = len(data) * 3 / 4
+            if (file_size / 1024.0 / 1024.0) > MAX_FILE_SIZE_TO_UPOLAD:
+                args.append({'error': _("Oops! You can not upload a file larger than 25MB.")})
+
+            filename = ufile.filename
+            if request.httprequest.user_agent.browser == 'safari':
+                # Safari sends NFD UTF-8 (where é is composed by 'e' and [accent])
+                # we need to send it the same stuff, otherwise it'll fail
+                filename = unicodedata.normalize('NFD', ufile.filename)
+            try:
+                attachment = AttachmentSudo.create({
+                    'name': filename,
+                    'datas': base64.encodebytes(data),
+                    'datas_fname': filename,
+                    'res_model': model,
+                    'res_id': res_id,
+                })
+            except Exception:
+                args.append({'error': _("Unable to upload attachment")})
+                _logger.exception("Unable to upload attachment")
+            else:
+                args.append({
+                    'filename': filename,
+                    'mimetype': self._neuter_mimetype(ufile.content_type, http.request.env.user),
+                    'id': attachment.id,
+                    'size': attachment.file_size
+                })
+
+        return out % (json.dumps(callback), json.dumps(args))
+
+    @http.route('/portal/content/<int:attachment_id>', type='http', auth="public")
+    def download_attachment(self, attachment_id, model, id, access_token=False, download=None, **kw):
+        res_id = int(id)
+
+        try:
+            if request.env.user.has_group('base.group_public') and not access_token:
+                raise AccessError(_("Do not have access to the document."))
+            document_sudo = self._document_check_access(model, res_id, access_token=access_token)
+        except (AccessError, MissingError):
+            raise Forbidden()
+
+        record = document_sudo.website_message_ids.mapped('attachment_ids').filtered(lambda x: x.id == int(attachment_id))
+
+        if record.res_model != model and record.res_id != res_id:
+            raise AccessError(_("Do not have access to the document."))
+
+        status, content_base64, filename, mimetype, filehash = request.env['ir.http']._binary_record_content(
+            record, filename=None, default_mimetype='application/octet-stream')
+
+        status, headers, content_base64 = request.env['ir.http']._binary_set_headers(
+            status, content_base64, filename, mimetype, unique=False, filehash=filehash, download=download)
+
+        if status != 200:
+            return request.env['ir.http']._response_by_status(status, headers, content_base64)
+        content = base64.b64decode(content_base64)
+        headers.append(('Content-Length', len(content)))
+        response = request.make_response(content, headers)
+
+        return response
 
 
 class MailController(MailController):

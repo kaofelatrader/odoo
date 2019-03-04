@@ -122,7 +122,7 @@
                 </t>
 
                 <!-- Page Content -->
-                <div id="invoice_content" class="o_portal_page_content col-12 col-lg d-flex flex-column align-items-end">
+                <div id="invoice_content" class="o_portal_page_content col-12 col-lg align-items-end">
                     <div class="o_portal_page_size">
                         <t t-if="error or warning" t-call="account.portal_invoice_error"/>
                         <t t-if="success and (not error and not warning)" t-call="account.portal_invoice_success"/>

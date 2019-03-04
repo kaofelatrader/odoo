@@ -46,7 +46,7 @@ var PortalComposer = publicWidget.Widget.extend({
      */
     start: function () {
         //portal chatter
-        this.$attachmentButton = this.$(".o_portal_chatter_attachment_btn");
+        this.$attachmentButton = this.$('.o_portal_chatter_attachment_btn');
         this.$composerSendButton = this.$(".o_portal_chatter_composer_btn");
         $(window).on(this.fileuploadID, this._onAttachmentLoaded.bind(this));
         this.on("change:attachmentIDs", this, this._renderAttachments);
@@ -80,14 +80,16 @@ var PortalComposer = publicWidget.Widget.extend({
         if (attachments.length + files.length > 10) {
             this.display_alert(_t("Oops! You can not upload more than 10 files."));
         }
-        else if (!_.isEmpty(_.filter(files, function (file) {return (file.size / 1024 / 1024) > 50;}))) {
-            this.display_alert(_t("Oops! You can not upload a file larger than 50MB."));
+        else if (!_.isEmpty(_.filter(files, function (file) { 
+                return (file.size / 1024 / 1024) > 25;
+            } ))) {
+            this.display_alert(_t("Oops! You can not upload a file larger than 25MB."));
         }
         else {
             _.each(files, function (file) {
-                var duplicate_attachment = _.findWhere(attachments, {name: file.name});
-                if (duplicate_attachment) {
-                    attachments = _.without(attachments, duplicate_attachment);
+                var duplicateAttachment = _.findWhere(attachments, {name: file.name});
+                if (duplicateAttachment) {
+                    attachments = _.without(attachments, duplicateAttachment);
                 }
             });
             this.$('form.o_form_binary_form').submit();
@@ -138,8 +140,10 @@ var PortalComposer = publicWidget.Widget.extend({
 
         _.each(files, function (file) {
             if (file.error || !file.id) {
-                this.do_warn(file.error);
-                attachments = _.filter(attachments, function (attachment) { return !attachment.upload; });
+                this.display_alert(file.error);
+                attachments = _.filter(attachments, function (attachment) { 
+                    return !attachment.upload;
+                });
             } else {
                 var attachment = _.findWhere(attachments, {filename: file.filename, upload: true});
                 if (attachment) {
