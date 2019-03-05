@@ -62,6 +62,7 @@ You could use this simplified accounting in case you work with an (external) acc
         'data/account_incoterms_data.xml',
         'views/digest_views.xml',
         'wizard/account_invoice_send_views.xml',
+        'wizard/account_invoice_payment_link_view.xml',
     ],
     'demo': [
         'demo/account_demo.xml',
