@@ -1823,7 +1823,7 @@ class TestStockUOM(TestStockCommon):
         self.setUpCache()
 
     def setUpCache(self):
-        dp = self.env.ref('product.decimal_product_uom')
+        dp = self.env.ref('product.decimal_volume')
         dp.digits = 7
 
         # Trick: invoke the method 'precision_get' with the current environment.
