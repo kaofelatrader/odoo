@@ -3,7 +3,8 @@
 
 import math
 from datetime import datetime, time, timedelta
-from dateutil.rrule import rrule, DAILY
+from dateutil.relativedelta import relativedelta
+from dateutil.rrule import rrule, DAILY, WEEKLY
 from functools import partial
 from itertools import chain
 from pytz import timezone, utc
@@ -151,10 +152,7 @@ class ResourceCalendar(models.Model):
         res = super(ResourceCalendar, self).default_get(fields)
         if not res.get('name') and res.get('company_id'):
             res['name'] = _('Working Hours of %s') % self.env['res.company'].browse(res['company_id']).name
-        return res
-
-    def _get_default_attendance_ids(self):
-        return [
+        res['attendance_ids'] = [
             (0, 0, {'name': _('Monday Morning'), 'dayofweek': '0', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning'}),
             (0, 0, {'name': _('Monday Afternoon'), 'dayofweek': '0', 'hour_from': 13, 'hour_to': 17, 'day_period': 'afternoon'}),
             (0, 0, {'name': _('Tuesday Morning'), 'dayofweek': '1', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning'}),
@@ -166,6 +164,16 @@ class ResourceCalendar(models.Model):
             (0, 0, {'name': _('Friday Morning'), 'dayofweek': '4', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning'}),
             (0, 0, {'name': _('Friday Afternoon'), 'dayofweek': '4', 'hour_from': 13, 'hour_to': 17, 'day_period': 'afternoon'})
         ]
+        return res
+
+    @api.one
+    @api.depends('two_weeks_calendar')
+    def _compute_two_weeks_explanation(self):
+        today = fields.Date.today()
+        week_type = _("odd") if int(math.floor((today.toordinal()-1)/7) % 2) else _("even")
+        first_day = today + timedelta(days=-today.weekday())
+        last_day = today + timedelta(days=-today.weekday()-1, weeks=1)
+        self.two_weeks_explanation = "This week (from %s to %s) is an %s week." % (first_day, last_day, week_type)
 
     name = fields.Char(required=True)
     company_id = fields.Many2one(
@@ -173,7 +181,7 @@ class ResourceCalendar(models.Model):
         default=lambda self: self.env['res.company']._company_default_get())
     attendance_ids = fields.One2many(
         'resource.calendar.attendance', 'calendar_id', 'Working Time',
-        copy=True, default=_get_default_attendance_ids)
+        copy=True)
     leave_ids = fields.One2many(
         'resource.calendar.leaves', 'calendar_id', 'Time Off')
     global_leave_ids = fields.One2many(
@@ -186,19 +194,79 @@ class ResourceCalendar(models.Model):
         _tz_get, string='Timezone', required=True,
         default=lambda self: self._context.get('tz') or self.env.user.tz or 'UTC',
         help="This field is used in order to define in which timezone the resources will work.")
+    two_weeks_calendar = fields.Boolean(string="Calendar in 2 weeks mode")
+    two_weeks_explanation = fields.Char('Explanation', compute="_compute_two_weeks_explanation")
 
 
     def _get_global_attendances(self):
         return self.attendance_ids.filtered(lambda attendance: not attendance.date_from and not attendance.date_to and not attendance.resource_id)
 
-    @api.onchange('attendance_ids')
+    @api.onchange('attendance_ids', 'two_weeks_calendar')
     def _onchange_hours_per_day(self):
-        attendances = self._get_global_attendances()
+        attendances = self._get_global_attendances().filtered(lambda cal: cal.display_type is False)
         hour_count = 0.0
-        for attendance in attendances:
-            hour_count += attendance.hour_to - attendance.hour_from
-        if attendances:
-            self.hours_per_day = float_round(hour_count / float(len(set(attendances.mapped('dayofweek')))), precision_digits=2)
+        if self.two_weeks_calendar:
+            for attendance in attendances.filtered(lambda cal: cal.week_type is False):
+                hour_count += (attendance.hour_to - attendance.hour_from)*2
+            for attendance in attendances.filtered(lambda cal: cal.week_type is not False):
+                hour_count += attendance.hour_to - attendance.hour_from
+            if attendances:
+                number_of_days = len(set(attendances.filtered(lambda cal: cal.week_type is False).mapped('dayofweek')))*2
+                number_of_days += len(set(attendances.filtered(lambda cal: cal.week_type == '1').mapped('dayofweek')))
+                number_of_days += len(set(attendances.filtered(lambda cal: cal.week_type == '0').mapped('dayofweek')))
+                self.hours_per_day = float_round(hour_count / float(number_of_days), precision_digits=2)
+        else:
+            for attendance in attendances:
+                hour_count += attendance.hour_to - attendance.hour_from
+            if attendances:
+                self.hours_per_day = float_round(hour_count / float(len(set(attendances.mapped('dayofweek')))), precision_digits=2)
+
+    @api.one
+    def switch_calendar_type(self):
+        if not self.two_weeks_calendar:
+            self.attendance_ids.unlink()
+            self.attendance_ids = [
+                    (0, 0, {'name': 'Even week','dayofweek': '0', 'sequence': '0',
+                    'hour_from': 0, 'day_period': 'morning', 'week_type': '0',
+                    'hour_to': 0, 'display_type': 'line_section'}),
+                ]
+            default_attendance = self.default_get('')['attendance_ids']
+            for idx, att in enumerate(default_attendance):
+                att[2]["week_type"] = '0'
+                att[2]["sequence"] = idx + 1
+            self.attendance_ids = default_attendance
+            self.attendance_ids = [
+                    (0, 0, {'name': 'Odd week','dayofweek': '0', 'sequence': '25',
+                    'hour_from': 0, 'day_period': 'morning', 'week_type': '1',
+                    'hour_to': 0, 'display_type': 'line_section'}),
+                ]
+            for idx, att in enumerate(default_attendance):
+                att[2]["week_type"] = '1'
+                att[2]["sequence"] = idx + 26
+            self.attendance_ids = default_attendance
+            self.two_weeks_calendar = True
+        else:
+            self.attendance_ids.unlink()
+            self.attendance_ids = self.default_get('')['attendance_ids']
+            self.two_weeks_calendar = False
+
+    @api.onchange('attendance_ids')
+    def _onchange_attendance_ids(self):
+        if not self.two_weeks_calendar:
+            return
+        even_week_seq = self.attendance_ids.filtered(lambda att: att.display_type == 'line_section' and att.week_type == '0')
+        odd_week_seq = self.attendance_ids.filtered(lambda att: att.display_type == 'line_section' and att.week_type == '1')
+        if len(even_week_seq) != 1 or len(odd_week_seq) != 1:
+            raise ValidationError(_("You can't delete section between weeks."))
+
+        even_week_seq = even_week_seq.sequence
+        odd_week_seq = odd_week_seq.sequence
+
+        for line in self.attendance_ids.filtered(lambda att: att.display_type is False):
+            if even_week_seq > odd_week_seq:
+                line.week_type = '1' if even_week_seq > line.sequence else '0'
+            else:
+                line.week_type = '0' if odd_week_seq > line.sequence else '1'
 
     # --------------------------------------------------
     # Computation API
@@ -215,6 +283,7 @@ class ResourceCalendar(models.Model):
         domain = expression.AND([domain, [
             ('calendar_id', '=', self.id),
             ('resource_id', 'in', resource_ids),
+            ('display_type', '=', False),
         ]])
 
         # express all dates and times in the resource's timezone
@@ -231,9 +300,20 @@ class ResourceCalendar(models.Model):
             until = end_dt.date()
             if attendance.date_to:
                 until = min(until, attendance.date_to)
+            if attendance.week_type != False:
+                start_week_type = int(math.floor((start.toordinal()-1)/7) % 2)
+                if start_week_type != int(attendance.week_type):
+                    # start must be the week of the attendance
+                    # if it's not the case, we must remove one week
+                    start = start + relativedelta(weeks=-1)
             weekday = int(attendance.dayofweek)
 
-            for day in rrule(DAILY, start, until=until, byweekday=weekday):
+            if self.two_weeks_calendar and attendance.week_type != False:
+                days = rrule(WEEKLY, start, interval=2, until=until, byweekday=weekday)
+            else:
+                days = rrule(DAILY, start, until=until, byweekday=weekday)
+
+            for day in days:
                 # attendance hours are interpreted in the resource's timezone
                 dt0 = tz.localize(combine(day, float_to_time(attendance.hour_from)))
                 dt1 = tz.localize(combine(day, float_to_time(attendance.hour_to)))
@@ -397,7 +477,8 @@ class ResourceCalendar(models.Model):
 class ResourceCalendarAttendance(models.Model):
     _name = "resource.calendar.attendance"
     _description = "Work Detail"
-    _order = 'dayofweek, hour_from'
+    _order = 'week_type, dayofweek, hour_from'
+    # _order = 'sequence'
 
     name = fields.Char(required=True)
     dayofweek = fields.Selection([
@@ -415,9 +496,18 @@ class ResourceCalendarAttendance(models.Model):
         help="Start and End time of working.\n"
              "A specific value of 24:00 is interpreted as 23:59:59.999999.")
     hour_to = fields.Float(string='Work to', required=True)
-    calendar_id = fields.Many2one("resource.calendar", string="Resource's Calendar", required=True, ondelete='cascade')
+    calendar_id = fields.Many2one("resource.calendar", string="Resource's Calendar", ondelete='cascade')
     day_period = fields.Selection([('morning', 'Morning'), ('afternoon', 'Afternoon')], required=True, default='morning')
     resource_id = fields.Many2one('resource.resource', 'Resource')
+    week_type = fields.Selection([
+        ('1', 'Odd week'),
+        ('0', 'Even week')
+        ], 'Week Even/Odd', default=False)
+    two_weeks_calendar = fields.Boolean("Calendar in 2 weeks mode", related='calendar_id.two_weeks_calendar')
+    display_type = fields.Selection([
+        ('line_section', "Section")], default=False, help="Technical field for UX purpose.")
+    sequence = fields.Integer(default=10,
+        help="Gives the sequence of this line when displaying the resource calendar.")
 
     @api.onchange('hour_from', 'hour_to')
     def _onchange_hours(self):
