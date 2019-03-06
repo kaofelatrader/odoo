@@ -280,7 +280,7 @@ class HolidaysRequest(models.Model):
 
         resource_calendar_id = self.employee_id.resource_calendar_id or self.env.user.company_id.resource_calendar_id
 
-        domain = [('calendar_id', '=', resource_calendar_id.id)]
+        domain = [('calendar_id', '=', resource_calendar_id.id), ('display_type', '=', False)]
         attendances = self.env['resource.calendar.attendance'].search(domain, order='dayofweek, day_period DESC')
 
         if resource_calendar_id.two_weeks_calendar:

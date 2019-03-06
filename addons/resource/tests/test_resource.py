@@ -860,7 +860,7 @@ class TestTimezones(TestResourceCommon):
 
         # Jules with 2 weeks calendar
         # 02-04-2018 00:00:00 - 6-04-2018 23:59:59
-        data = self.jules.get_work_days_data(
+        data = self.jules._get_work_days_data(
             datetime_tz(2018, 4, 2, 0, 0, 0, tzinfo=self.jules.tz),
             datetime_tz(2018, 4, 6, 23, 59, 59, tzinfo=self.jules.tz),
         )
@@ -868,7 +868,7 @@ class TestTimezones(TestResourceCommon):
 
         # Jules with 2 weeks calendar
         # 02-04-2018 00:00:00 - 14-04-2018 23:59:59
-        data = self.jules.get_work_days_data(
+        data = self.jules._get_work_days_data(
             datetime_tz(2018, 4, 2, 0, 0, 0, tzinfo=self.jules.tz),
             datetime_tz(2018, 4, 14, 23, 59, 59, tzinfo=self.jules.tz),
         )
@@ -878,7 +878,7 @@ class TestTimezones(TestResourceCommon):
         # 12-29-2014 00:00:00 - 27-12-2019 23:59:59 => 261 weeks
         # 130 weeks type 1: 131*4 = 524 days and 131*30 = 3930 hours
         # 131 weeks type 2: 130*2 = 260 days and 130*16 = 2080 hours
-        data = self.jules.get_work_days_data(
+        data = self.jules._get_work_days_data(
             datetime_tz(2014, 12, 29, 0, 0, 0, tzinfo=self.jules.tz),
             datetime_tz(2019, 12, 27, 23, 59, 59, tzinfo=self.jules.tz),
         )

@@ -195,8 +195,6 @@
                 <field name="display_type" invisible="1"/>
                 <field name="name"/>
                 <field name="dayofweek"/>
-                <field name="two_weeks_calendar" invisible="1"/>
-                <field name="week_type" attrs="{'invisible':[('two_weeks_calendar','=',False)]}"/>
                 <field name="day_period"/>
                 <field name="hour_from" widget="float_time"/>
                 <field name="hour_to" widget="float_time"/>
@@ -215,8 +213,6 @@
                     <field name="name"/>
                     <field name="date_from"/>
                     <field name="date_to"/>
-                    <field name="two_weeks_calendar" invisible="1"/>
-                    <field name="week_type" attrs="{'invisible':[('two_weeks_calendar','=',False)]}"/>
                     <field name="dayofweek"/>
                     <label for="hour_from" string="Hours"/>
                     <div>
@@ -271,10 +267,8 @@
                         <page string="Working Hours" name="working_hours">
                         <button name="switch_calendar_type" attrs="{'invisible':[('two_weeks_calendar', '=', True)]}" string="Switch to 2 weeks calendar" type="object" confirm="Are you sure you want to switch this calendar to 2 weeks calendar ? All entries will be lost"/>
                         <button name="switch_calendar_type" attrs="{'invisible':[('two_weeks_calendar', '=', False)]}" string="Switch to 1 week calendar" type="object" confirm="Are you sure you want to switch this calendar to 1 week calendar ? All entries will be lost"/>
+                        <field name="two_weeks_calendar" invisible="1"/>
 
-                        <group class="o_label_nowrap">
-                            <field name="two_weeks_calendar"/>
-                        </group>
                         <group attrs="{'invisible':[('two_weeks_calendar', '=', False)]}">
                             <field name="two_weeks_explanation" nolabel="1"/>
                         </group>

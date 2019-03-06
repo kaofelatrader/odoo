@@ -199,11 +199,9 @@ class ResourceCalendar(models.Model):
 
 
     def _get_global_attendances(self):
-        return self.attendance_ids.filtered(lambda attendance: not attendance.date_from and not attendance.date_to and not attendance.resource_id)
+        return self.attendance_ids.filtered(lambda attendance: not attendance.date_from and not attendance.date_to and not attendance.resource_id and attendance.display_type is False)
 
-    @api.onchange('attendance_ids', 'two_weeks_calendar')
-    def _onchange_hours_per_day(self):
-        attendances = self._get_global_attendances().filtered(lambda cal: cal.display_type is False)
+    def _compute_hours_per_day(self, attendances):
         hour_count = 0.0
         if self.two_weeks_calendar:
             for attendance in attendances.filtered(lambda cal: cal.week_type is False):
@@ -214,12 +212,18 @@ class ResourceCalendar(models.Model):
                 number_of_days = len(set(attendances.filtered(lambda cal: cal.week_type is False).mapped('dayofweek')))*2
                 number_of_days += len(set(attendances.filtered(lambda cal: cal.week_type == '1').mapped('dayofweek')))
                 number_of_days += len(set(attendances.filtered(lambda cal: cal.week_type == '0').mapped('dayofweek')))
-                self.hours_per_day = float_round(hour_count / float(number_of_days), precision_digits=2)
+                return float_round(hour_count / float(number_of_days), precision_digits=2)
         else:
             for attendance in attendances:
                 hour_count += attendance.hour_to - attendance.hour_from
             if attendances:
-                self.hours_per_day = float_round(hour_count / float(len(set(attendances.mapped('dayofweek')))), precision_digits=2)
+                return float_round(hour_count / float(len(set(attendances.mapped('dayofweek')))), precision_digits=2)
+        return 0
+
+    @api.onchange('attendance_ids', 'two_weeks_calendar')
+    def _onchange_hours_per_day(self):
+        attendances = self._get_global_attendances()
+        self.hours_per_day = self._compute_hours_per_day(attendances)
 
     @api.one
     def switch_calendar_type(self):
@@ -246,9 +250,11 @@ class ResourceCalendar(models.Model):
             self.attendance_ids = default_attendance
             self.two_weeks_calendar = True
         else:
+            self.two_weeks_calendar = False
             self.attendance_ids.unlink()
             self.attendance_ids = self.default_get('')['attendance_ids']
-            self.two_weeks_calendar = False
+        self._onchange_hours_per_day()
+
 
     @api.onchange('attendance_ids')
     def _onchange_attendance_ids(self):
@@ -267,6 +273,39 @@ class ResourceCalendar(models.Model):
                 line.week_type = '1' if even_week_seq > line.sequence else '0'
             else:
                 line.week_type = '0' if odd_week_seq > line.sequence else '1'
+
+    def _check_list_hours(self, hours):
+        hours = sorted(hours, key=lambda x: [x[0], x[1]])
+        last_end_hour = 0
+        for hour in hours:
+            if hour[0] < last_end_hour:
+                raise ValidationError(_("Attendances can't be superimposed."))
+            last_end_hour = hour[1]
+
+    def _has_superimposed(self, attendance_ids):
+        days_of_week = set(attendance_ids.mapped('dayofweek'))
+        for day in days_of_week:
+            attendance_week = attendance_ids.filtered(lambda cal: cal.dayofweek == day)
+            dates = attendance_week.filtered(lambda att: att.date_from).mapped('date_from')
+            dates += attendance_week.filtered(lambda att: att.date_to).mapped('date_to')
+            hours = []
+            for attendance in attendance_week.filtered(lambda att: not att.date_from and not att.date_to):
+                hours.append((attendance.hour_from, attendance.hour_to))
+            self._check_list_hours(hours)
+
+            for date in dates:
+                hours_for_date = hours.copy()
+                for attendance in attendance_week.filtered(lambda att: (att.date_from and att.date_from <= date and att.date_to and att.date_to > date) or (not att.date_from and att.date_to and att.date_to > date) or (att.date_from and att.date_from <= date and not att.date_to)):
+                    hours_for_date.append((attendance.hour_from, attendance.hour_to))
+                self._check_list_hours(hours_for_date)
+
+    @api.one
+    @api.constrains('attendance_ids')
+    def _check_attendance(self):
+        attendance_ids = self.attendance_ids.filtered(lambda attendance: not attendance.resource_id and attendance.display_type is False)
+        self._has_superimposed(attendance_ids.filtered(lambda attendance: attendance.week_type == '0'))
+        self._has_superimposed(attendance_ids.filtered(lambda attendance: attendance.week_type == '1'))
+        self._has_superimposed(attendance_ids.filtered(lambda attendance: attendance.week_type is False))
 
     # --------------------------------------------------
     # Computation API
@@ -478,7 +517,6 @@ class ResourceCalendarAttendance(models.Model):
     _name = "resource.calendar.attendance"
     _description = "Work Detail"
     _order = 'week_type, dayofweek, hour_from'
-    # _order = 'sequence'
 
     name = fields.Char(required=True)
     dayofweek = fields.Selection([
@@ -496,7 +534,7 @@ class ResourceCalendarAttendance(models.Model):
         help="Start and End time of working.\n"
              "A specific value of 24:00 is interpreted as 23:59:59.999999.")
     hour_to = fields.Float(string='Work to', required=True)
-    calendar_id = fields.Many2one("resource.calendar", string="Resource's Calendar", ondelete='cascade')
+    calendar_id = fields.Many2one("resource.calendar", string="Resource's Calendar", required=True, ondelete='cascade')
     day_period = fields.Selection([('morning', 'Morning'), ('afternoon', 'Afternoon')], required=True, default='morning')
     resource_id = fields.Many2one('resource.resource', 'Resource')
     week_type = fields.Selection([
