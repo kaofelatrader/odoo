@@ -4,7 +4,8 @@ odoo.define('web_editor.wysiwyg.plugin.position', function (require) {
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 
-var $; // disabled jQuery
+var $ = require('web_editor.jquery');
+var _ = require('web_editor._');
 
 //--------------------------------------------------------------------------
 // Position
@@ -24,7 +25,7 @@ var PositionPlugin = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     getMousePosition: function () {
-        return _.clone(this.mousePosition);
+        return Object.assign({}, this.mousePosition);
     },
     /**
      * Focus or range position
@@ -125,13 +126,16 @@ var PositionPlugin = AbstractPlugin.extend({
      * @private
      */
     _onScroll: function () {
-        if (this.lastPos) {
-            var newTop = this.lastPos.target.getBoundingClientRect().top;
-            var movement = this.lastPos.offset.top - newTop;
-            if (movement && this.mousePosition) {
-                this.mousePosition.pageY -= movement;
-            }
+        var self = this;
+        if (this._debounceTime) {
+            return;
         }
+        this._debounceTime = true;
+        this.trigger('scroll');
+        setTimeout(function () {
+            self._debounceTime = false;
+            self.trigger('scroll');
+        }, 10);
     },
 });
 

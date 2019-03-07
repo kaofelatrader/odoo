@@ -5,7 +5,8 @@ var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var LinkDialog = require('wysiwyg.widgets.LinkDialog');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 
-var $; // disabled jQuery
+var $ = require('web_editor.jquery');
+var _ = require('web_editor._');
 
 //--------------------------------------------------------------------------
 // link
@@ -66,12 +67,13 @@ var LinkCreate = AbstractPlugin.extend({
         }
         var nodes = [];
         range.getStartPoint().walkTo(range.getEndPoint(), function (point) {
-            nodes.push(point.node.childNodes && point.node.childNodes[point.offset] || point.node);
+            var node = point.node.childNodes && point.node.childNodes[point.offset] || point.node;
+            if (nodes.indexOf(node) === -1 && nodes.indexOf(node.parentNode) === -1) {
+                nodes.push(node);
+            }
         });
 
-        return _.filter(_.uniq(nodes), function (node) {
-            return nodes.indexOf(node.parentNode) === -1;
-        });
+        return nodes;
     },
     _getSplitText: function (range) {
         if (!this.utils.isText(range.sc)) {
@@ -190,9 +192,11 @@ var LinkCreate = AbstractPlugin.extend({
     _replaceLink: function (style, isNewWindow) {
         var range = this.dependencies.Range.getRange();
         var anchor = this.utils.ancestor(range.sc, this.utils.isAnchor);
-        _.each(style || {}, function (value, key) {
-            anchor.style[key] = value;
-        });
+        if (style) {
+            Object.keys(style).forEach (function (key) {
+                anchor.style[key] = style[key];
+            });
+        }
         if (isNewWindow) {
             anchor.setAttribute('target', '_blank');
         } else {

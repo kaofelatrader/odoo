@@ -28,6 +28,7 @@
     </t>
 
     <!-- integration -->
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/no-dependencies.js"/>
 
     <link rel="stylesheet" type="text/scss" href="/web_editor/static/src/scss/wysiwyg.scss"/>
     <link rel="stylesheet" type="text/scss" href="/web_editor/static/src/scss/wysiwyg_iframe.scss"/>

@@ -4,7 +4,8 @@ odoo.define('wysiwyg.plugin.ui.toolbar', function (require) {
 var PopoverPlugin = require('wysiwyg.plugin.ui.popover');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 
-var $; // disabled jQuery
+var $ = require('web_editor.jquery');
+var _ = require('web_editor._');
 
 var ToolbarPlugin = PopoverPlugin.extend({
 
@@ -14,9 +15,14 @@ var ToolbarPlugin = PopoverPlugin.extend({
     },
 
     init: function (parent, editor, options) {
-        var dependencies = this.dependencies.concat();
+        var dependencies = this.dependencies.slice();
         this._super.apply(this, arguments);
-        this.dependencies = _.uniq(dependencies.concat(this.options.toolbar));
+        this.options.toolbar.forEach(function (item) {
+            if (dependencies.indexOf(item) === -1) {
+                dependencies.push(item);
+            }
+        });
+        this.dependencies = dependencies;
     },
 
     //--------------------------------------------------------------------------
@@ -34,7 +40,7 @@ var ToolbarPlugin = PopoverPlugin.extend({
     _createPopover: function () {
         var self = this;
         var toolbarWrap =  this.document.createElement('toolbar');
-        _.each(this.options.toolbar, function (pluginName) {
+        this.options.toolbar.forEach(function (pluginName) {
             var render = self._renderButtons(pluginName);
             toolbarWrap.appendChild(render.element);
         });

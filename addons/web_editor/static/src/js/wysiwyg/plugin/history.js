@@ -4,7 +4,8 @@ odoo.define('web_editor.wysiwyg.plugin.history', function (require) {
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 
-var $; // disabled jQuery
+var $ = require('web_editor.jquery');
+var _ = require('web_editor._');
 
 
 var HistoryPlugin = AbstractPlugin.extend({

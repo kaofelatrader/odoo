@@ -12,7 +12,8 @@ var utils = require('wysiwyg.utils');
 // AbstractPlugin for summernote module API
 //--------------------------------------------------------------------------
 
-var $; // disabled jQuery
+var $ = require('web_editor.jquery');
+var _ = require('web_editor._');
 
 
 var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).extend({
@@ -41,8 +42,8 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
         this.utils = utils;
         this.dom = new Dom(this.document, this.options);
 
-        var editableDomEvents = _.clone(this.editableDomEvents || []);
-        _.each(_.keys(editableDomEvents), function (key) {
+        var editableDomEvents = Object.assign({}, this.editableDomEvents);
+        Object.keys(editableDomEvents).forEach(function (key) {
             var value = editableDomEvents[key];
             if (typeof value === 'string') {
                 value = self[value].bind(self);
@@ -50,8 +51,8 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
             self.editable.addEventListener(key, value, false);
         });
 
-        var pluginEvents = _.clone(this.pluginEvents || []);
-        _.each(_.keys(pluginEvents), function (key) {
+        var pluginEvents = Object.assign({}, this.pluginEvents);
+        Object.keys(pluginEvents).forEach(function (key) {
             var value = pluginEvents[key];
             if (typeof value === 'string') {
                 value = self[value].bind(self);

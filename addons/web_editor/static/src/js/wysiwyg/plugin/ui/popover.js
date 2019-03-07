@@ -8,7 +8,10 @@ var utils = require('wysiwyg.utils');
 
 var QWeb = core.qweb;
 
-var $; // disabled jQuery
+var $ = require('web_editor.jquery');
+var _ = require('web_editor._');
+
+
 var handleSelector = function (element, selector, callback) {
     return function (ev) {
         var nodelist = element.querySelectorAll(selector);
@@ -40,17 +43,21 @@ var PopoverPlugin = AbstractPlugin.extend({
     POPOVER_MARGIN_TOP: 7,
 
     init: function (parent, editor, options) {
-        this._onKeyUp = _.throttle(this._onKeyUp, 50);
-
         this._super.apply(this, arguments);
-        var dependencies = this.dependencies.concat();
-        _.each(this.options.popover, function (plugins, checkMethod) {
+        var dependencies = this.dependencies.slice();
+
+        var popover = this.options.popover;
+        Object.keys(popover).forEach(function (checkMethod) {
+            var plugins = popover[checkMethod];
             if (checkMethod.indexOf('.') !== -1) {
                 dependencies.push(checkMethod.split('.')[0]);
             }
-            dependencies.push.apply(dependencies, plugins);
+            plugins.forEach(function (plugin) {
+            if (dependencies.indexOf(plugin) === -1)
+                dependencies.push(plugin);
+            });
         });
-        this.dependencies = _.uniq(dependencies);
+        this.dependencies = dependencies;
     },
 
     //--------------------------------------------------------------------------
@@ -69,6 +76,7 @@ var PopoverPlugin = AbstractPlugin.extend({
         this.popovers.forEach(function (popover) {
             editable.parentNode.insertBefore(popover.element, editable);
         });
+        this.dependencies.Position.on('scroll', this, this._onScroll.bind(this));
         this.dependencies.Range.on('focus', this, this._onFocusNode.bind(this));
         this.dependencies.Range.on('range', this, this._onRange.bind(this));
         return this._super();
@@ -89,14 +97,16 @@ var PopoverPlugin = AbstractPlugin.extend({
 
         var self = this;
         this.popovers = [];
-        _.each(this.options.popover, function (pluginNames, checkMethodKey) {
+        var popovers = this.options.popover;
+        Object.keys(popovers).forEach(function (checkMethodKey) {
+            var pluginNames = popovers[checkMethodKey];
             var checkMethodPluginName = checkMethodKey.split('.')[0];
             var plugin = self.dependencies[checkMethodPluginName];
             var checkMethod = plugin[checkMethodKey.split('.')[1]].bind(plugin);
 
             var popover = self.document.createElement('popover');
             var buttons = [];
-            _.each(pluginNames, function (pluginName) {
+            pluginNames.forEach(function (pluginName) {
                 var render = self._renderButtons(pluginName);
                 popover.appendChild(render.element);
                 buttons = buttons.concat(render.buttons);
@@ -142,19 +152,23 @@ var PopoverPlugin = AbstractPlugin.extend({
     },
     _addButtonHandlers: function (plugin, element) {
         // add plugins button event as handler
-        _.each(plugin.buttons.events, function (handle, key) {
-            var eventName = key.split(' ').shift();
-            var selector = key.split(' ').slice(1).join(' ');
-            if (typeof handle === 'string') {
-                handle = plugin[handle];
-            }
-            handle = handle.bind(plugin);
+        var events = plugin.buttons.events;
+        if (events) {
+            Object.keys(events).forEach(function (key) {
+                var handle = events[key];
+                var eventName = key.split(' ').shift();
+                var selector = key.split(' ').slice(1).join(' ');
+                if (typeof handle === 'string') {
+                    handle = plugin[handle];
+                }
+                handle = handle.bind(plugin);
 
-            if (selector) {
-                handle = handleSelector(element, selector, handle);
-            }
-            element.addEventListener(eventName, handle, false);
-        });
+                if (selector) {
+                    handle = handleSelector(element, selector, handle);
+                }
+                element.addEventListener(eventName, handle, false);
+            });
+        }
 
         // add plugins named button handler
         var _onButtonMousedown = this._onButtonMousedown.bind(this, plugin);
@@ -398,8 +412,11 @@ var PopoverPlugin = AbstractPlugin.extend({
 
         var method = button.getAttribute('data-method');
         var value = button.getAttribute('data-value');
-        var popover = _.find(this.popovers, function (popover) {
-            return popover.buttons.indexOf(button) !== -1;
+        var popover;
+        this.popovers.forEach(function (p) {
+            if (p.buttons.indexOf(button) !== -1) {
+                popover = p;
+            }
         });
         var checkMethod = popover && popover.checkMethod;
         var range = this.dependencies.Range.getRange();
@@ -462,17 +479,7 @@ var PopoverPlugin = AbstractPlugin.extend({
      * @private
      */
     _onScroll: function () {
-        var self = this;
-        if (this._debounceTime) {
-            return;
-        }
-        var range = this.dependencies.Range.getRange();
-        this._updatePositions(range);
-        this._debounceTime = true;
-        setTimeout(function () {
-            self._debounceTime = false;
-            self._updatePositions(range);
-        }, 10);
+        self._updatePositions(this.dependencies.Range.getRange());
     },
 });
 
