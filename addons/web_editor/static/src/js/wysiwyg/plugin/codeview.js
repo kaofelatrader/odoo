@@ -30,28 +30,6 @@ var CodeViewPlugin = AbstractPlugin.extend({
         this._insertCodable();
         this._deactivate();
     },
-
-    /**
-     * Activate the code view
-     */
-    activate: function () {
-        var self = this;
-        this.trigger_up('get_value', {
-            callback: function (html) {
-                self.codeview.value = html;
-            },
-        });
-        this._activate();
-    },
-    /**
-     * @override
-     */
-    deactivate: function () {
-        this._deactivate();
-        this.trigger_up('set_value', {
-            value: this.codeview.value,
-        });
-    },
     /**
      * @override
      */
@@ -59,42 +37,86 @@ var CodeViewPlugin = AbstractPlugin.extend({
         this.isBeingDestroyed = true;
         this._super();
     },
+    /**
+     * @override
+     */
     save: function () {
         return;
     },
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
     /**
      * Toggle the code view
      */
     toggle: function () {
-        return this._active() ? this.deactivate() : this.activate();
+        var self = this;
+        if (this._active()) {
+            this._deactivate();
+            this.trigger_up('set_value', {
+                value: this.codeview.value.trim(),
+            });
+        } else {
+            this.trigger_up('get_value', {
+                callback: function (html) {
+                    self._setCodeViewValue(html);
+                },
+            });
+            this._activate();
+        }
     },
 
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
 
+    /**
+     * Activate the code view and deactivate the wysiwyg view
+     */
     _activate: function () {
         this.isActive = true;
         this.codeview.style.display = '';
         this.editable.style.display = 'none';
+        this._resize();
         this._focus();
     },
+    /**
+     * Return true if the codeview is active
+     *
+     * @returns {Boolean}
+     */
     _active: function () {
         return this.isActive;
     },
+    /**
+     * Blur the code view and focus the wysiwyg view
+     */
     _blur: function() {
         this.codeview.blur();
         this.editable.focus();
     },
+    /**
+     * Deactivate the code view and activate the wysiwyg view
+     */
     _deactivate: function () {
         this.isActive = false;
         this.codeview.style.display = 'none';
         this.editable.style.display = '';
         this._blur();
     },
+    /**
+     * Return true if the codeview is active
+     *
+     * @returns {Boolean}
+     */
     _enabled: function () {
         return true;
     },
+    /**
+     * Focus the code view and blur the wysiwyg view
+     */
     _focus: function () {
         this.editable.blur();
         this.codeview.focus();
@@ -110,21 +132,44 @@ var CodeViewPlugin = AbstractPlugin.extend({
         var reHasJinja = this.utils.getRegex('jinja', '', jinjaExp);
         return reHasJinja.test(value);
     },
+    /**
+     * Insert the codable view into the DOM
+     */
     _insertCodable: function () {
         this.codeview = this.document.createElement('textarea');
         this.codeview.name = this.nameAttr;
+        this.codeview.oninput = this._resize.bind(this);
         this.editor.insertBefore(this.codeview, this.editable);
         this.isActive = true;
     },
+    /**
+     * Resize the code view textarea to fit its contents
+     */
+    _resize: function () {
+        this.codeview.style.height = '';
+        this.codeview.style.height = this.codeview.scrollHeight + "px";
+    },
+    /**
+     * Set the value of the code view
+     *
+     * @param {String} value
+     */
+    _setCodeViewValue: function (value) {
+        this.codeview.value = value.trim();
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
 
     /**
-     * Set the value of the codeview.
+     * Force activation of the code view if the editable has Jinja code
      *
      * @param {String} value
      */
     _onSetValue: function (value) {
         if (this._hasJinja(value)) {
-            this.codeview.value = value;
+            this._setCodeViewValue(value);
             if (!this._active()) {
                 this._activate();
             }
