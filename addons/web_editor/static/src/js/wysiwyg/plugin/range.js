@@ -36,7 +36,7 @@ var RangePlugin = AbstractPlugin.extend({
         this.utils.isVoidBlock = function (node) {
             return (!this.isBR(node) && this.isVoid(node)) ||
                 node.contentEditable === 'false' ||
-                node.classList.contains('o_fake_editable');
+                node.classList && node.classList.contains('o_fake_editable');
         };
     },
 
