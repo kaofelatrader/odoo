@@ -37,12 +37,6 @@ var CodeViewPlugin = AbstractPlugin.extend({
         this.isBeingDestroyed = true;
         this._super();
     },
-    /**
-     * @override
-     */
-    save: function () {
-        return;
-    },
 
     //--------------------------------------------------------------------------
     // Public
