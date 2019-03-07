@@ -234,8 +234,8 @@ var ListRenderer = BasicRenderer.extend({
                 if (!formatFunc) {
                     formatFunc = field_utils.format[field.type];
                 }
-                var formattedValue = formatFunc(value, field, { escape: true });
-                $cell.addClass('o_list_number').attr('title', help).html(formattedValue);
+                // var formattedValue = formatFunc(value, field, { escape: true });
+                $cell.addClass('o_list_number').attr('title', help).html(value);
             }
             return $cell;
         });
