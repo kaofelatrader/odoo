@@ -226,9 +226,6 @@ var PopoverPlugin = AbstractPlugin.extend({
         });
     },
     _togglePluginButtonToggle: function (plugin, focusNode, buttonName, methodName) {
-        if (!focusNode) {
-            return false;
-        }
         var enabledMedthodName = plugin.buttons[methodName];
         if (enabledMedthodName) {
             var active = true;
@@ -241,7 +238,7 @@ var PopoverPlugin = AbstractPlugin.extend({
                 return true;
             }
         }
-        return null;
+        return focusNode ? null : false;
     },
     _updatePluginButton: function (plugin, focusNode, button) {
         var enabled = this._togglePluginButtonToggle(plugin, focusNode, button.name, 'enabled');
