@@ -106,7 +106,9 @@ var CodeViewPlugin = AbstractPlugin.extend({
      * @returns {Boolean}
      */
     _hasJinja: function (value) {
-        return this.utils.getRegex('jinja').test(value);
+        var jinjaExp = /(^|\n)\s*%\send|%\sset/;
+        var reHasJinja = this.utils.getRegex('jinja', '', jinjaExp);
+        return reHasJinja.test(value);
     },
     _insertCodable: function () {
         this.codeview = this.document.createElement('textarea');

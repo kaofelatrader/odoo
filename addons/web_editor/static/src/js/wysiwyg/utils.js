@@ -68,9 +68,6 @@ return {
         invisible: {
             noflag: /\uFEFF/,
         },
-        jinja: {
-            noflag: /(^|\n)\s*%\send|%\sset/,
-        },
         notWhitespace: {
             noflag: /\S/,
         },
