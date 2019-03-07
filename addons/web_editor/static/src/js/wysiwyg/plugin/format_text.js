@@ -11,39 +11,6 @@ var Manager = require('web_editor.wysiwyg.plugin.manager');
 //--------------------------------------------------------------------------
 
 var TextPlugin = AbstractPlugin.extend({
-    // See: https://dvcs.w3.org/hg/editing/raw-file/tip/editing.html#removeformat-candidate
-    formatTags: [
-        'abbr',
-        'acronym',
-        'b',
-        'bdi',
-        'bdo',
-        'big',
-        'blink',
-        'cite',
-        'code',
-        'dfn',
-        'em',
-        'font',
-        'i',
-        'ins',
-        'kbd',
-        'mark',
-        'nobr',
-        'q',
-        's',
-        'samp',
-        'small',
-        'span',
-        'strike',
-        'strong',
-        'sub',
-        'sup',
-        'tt',
-        'u',
-        'var',
-    ],
-
     get : function (range) {
         var target = range.sc[range.so] || range.sc;
         if (this.utils.isText(target)) {
@@ -858,7 +825,7 @@ var FontStylePlugin = AbstractPlugin.extend({
      * - It is contained within the editable area
      * - It is not unbreakable
      *
-     * @see formatTags the list of removeFormat candidates as defined by W3C
+     * @see utils.formatTags the list of removeFormat candidates as defined by W3C
      *
      * @private
      * @param {Node} node
@@ -870,7 +837,7 @@ var FontStylePlugin = AbstractPlugin.extend({
         }
         var isEditableOrAbove = parent && (parent === this.editable || $.contains(parent, this.editable));
         var isUnbreakable = parent && this.options.isUnbreakableNode(parent);
-        var isRemoveFormatCandidate = parent && parent.tagName && this.dependencies.Text.formatTags.indexOf(parent.tagName.toLowerCase()) !== -1;
+        var isRemoveFormatCandidate = parent && parent.tagName && this.utils.formatTags.indexOf(parent.tagName.toLowerCase()) !== -1;
         return parent && !isEditableOrAbove && !isUnbreakable && isRemoveFormatCandidate;
     },
     /**

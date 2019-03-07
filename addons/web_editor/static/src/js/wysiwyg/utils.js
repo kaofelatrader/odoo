@@ -23,6 +23,43 @@ return {
         return "<p>" + this.blank + "</p>";
     }),
     /**
+     * List of removeFormat candidates (tags that format text inline).
+     *
+     * @see: https://dvcs.w3.org/hg/editing/raw-file/tip/editing.html#removeformat-candidate
+     * @property {String []} formatTags
+     */
+    formatTags: [
+        'abbr',
+        'acronym',
+        'b',
+        'bdi',
+        'bdo',
+        'big',
+        'blink',
+        'cite',
+        'code',
+        'dfn',
+        'em',
+        'font',
+        'i',
+        'ins',
+        'kbd',
+        'mark',
+        'nobr',
+        'q',
+        's',
+        'samp',
+        'small',
+        'span',
+        'strike',
+        'strong',
+        'sub',
+        'sup',
+        'tt',
+        'u',
+        'var',
+    ],
+    /**
      * Name and tag of text format nodes.
      *
      * @property {Object} textFormats

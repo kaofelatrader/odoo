@@ -6,6 +6,7 @@ var mixins = require('web.mixins');
 var PluginsManager = require('web_editor.wysiwyg.plugin.manager');
 var defaultOptions = require('wysiwyg.options');
 var id = 0;
+var utils = require('wysiwyg.utils');
 
 /*
  * trigger on each plugins
@@ -132,6 +133,9 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         $editable.find('[alt=""]').removeAttr('alt');
         $editable.find('a.o_image, span.fa, i.fa').html('');
         $editable.find('[aria-describedby]').removeAttr('aria-describedby').removeAttr('data-original-title');
+        $editable.find(utils.formatTags.join(',')).filter(function (node) {
+            return !node.firstChild;
+        }).remove();
         return $editable.html() || $editable.val();
     },
     /**
