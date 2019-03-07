@@ -278,7 +278,7 @@ var PopoverPlugin = AbstractPlugin.extend({
             return;
         }
         this.popovers.forEach(function (popover) {
-            self._updatePopover(popover, range.copy());
+            self._updatePopover(popover, range);
             if (popover.targetText) {
                 self._hasDisplayedPopoverTargetText = true;
             }
@@ -286,7 +286,7 @@ var PopoverPlugin = AbstractPlugin.extend({
         this._updatePositionAvoidOverlap();
     },
     _updatePopover: function (popover, range) {
-        var targetRange = popover.checkMethod(range);
+        var targetRange = popover.checkMethod(range.copy());
         if (!targetRange) {
             popover.targetRange = null;
             return;
