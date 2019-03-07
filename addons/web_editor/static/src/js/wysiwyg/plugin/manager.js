@@ -115,7 +115,12 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
         return pluginNames;
     },
     _createPluginInstance: function (params, options) {
-        var pluginNames = Object.keys(params.plugins);
+        var pluginNames = [];
+        Object.keys(params.plugins).forEach(function (pluginName) {
+            if (params.plugins[pluginName]) {
+                pluginNames.push(pluginName);
+            }
+        });
 
         this.editor = params.editor;
         this.target = params.target;

@@ -234,7 +234,8 @@ var Link = AbstractPlugin.extend({
 
     get: function () {
         var range = this.dependencies.Range.getRange();
-        return this.utils.ancestor(range.sc, this.utils.isAnchor);
+        var anchor = this.utils.ancestor(range.sc, this.utils.isAnchor);
+        return anchor && range.replace({sc: anchor, so: 0});
     },
 
     /**

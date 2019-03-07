@@ -297,7 +297,6 @@ var PopoverPlugin = AbstractPlugin.extend({
         if (utils.isText(targetRange.sc)) {
             popover.targetText = true;
         }
-        popover.element.style.display = 'block';
         popover.display = true;
         popover.targetRange = targetRange;
 
@@ -341,7 +340,7 @@ var PopoverPlugin = AbstractPlugin.extend({
             targetRange = range;
             var fontSize = this.window.getComputedStyle(targetRange.sc.parentNode, null).getPropertyValue('font-size');
             top += parseInt(fontSize);
-        } else if (targetRange.sc.contains(range.sc)) {
+        } else if (targetRange.sc !== range.sc && targetRange.sc.contains(range.sc)) {
             top += targetRange.sc.offsetHeight;
         }
 

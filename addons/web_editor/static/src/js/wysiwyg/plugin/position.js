@@ -48,12 +48,23 @@ var PositionPlugin = AbstractPlugin.extend({
 
     _getNodePosition: function (node, offset) {
         if (!node.tagName) {
+            var parent = node.parentNode;
+            var clone = node.cloneNode();
+            parent.insertBefore(clone, node);
+            //parent.removeChild(node);
+
             var span = this.document.createElement('span');
             span.style.position = "absolute";
-            node.parentNode.insertBefore(span, node.splitText(offset));
+            var nextClone = clone.splitText(offset);
+            parent.insertBefore(span, nextClone);
+
             box = span.getBoundingClientRect();
-            node.parentNode.removeChild(span);
-            node.parentNode.normalize();
+
+            //this.dom._insertAfter(node, nextClone);
+            parent.removeChild(clone);
+            parent.removeChild(span);
+            parent.removeChild(nextClone);
+
             return {
                 top: box.top,
                 left: box.left,

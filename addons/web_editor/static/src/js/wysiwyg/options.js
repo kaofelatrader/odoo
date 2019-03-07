@@ -34,7 +34,7 @@ return {
         'Document.get': ['Float', 'Media'],
         'Link.get': ['Link'],
         'Table.get':  ['Table'],
-        'Text.get': ['FontStyle', 'FontSize', 'ForeColor', 'BgColor'],
+        // 'Text.get': ['FontStyle', 'FontSize', 'ForeColor', 'BgColor'],
     },
     // air mode: inline editor
     width: null,

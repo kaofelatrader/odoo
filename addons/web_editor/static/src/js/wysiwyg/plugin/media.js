@@ -129,7 +129,7 @@ var MediaPlugin = AbstractPlugin.extend({
      */
     showImageDialog: function (value, range) {
         var self = this;
-        var target = range.sc;
+        var media = this.isMedia(range.sc) && range.sc;
         return new Promise(function (resolve) {
             var $mediaParent = $(media).parent();
             if ($mediaParent.hasClass('media_iframe_video')) {
@@ -189,6 +189,7 @@ var MediaPlugin = AbstractPlugin.extend({
     * @returns {Boolean}
     */
     isMedia: function (node) {
+        return node.tagName === 'IMG';
         return this.isImg(node) ||
             this.isIcon(node) ||
             this.isDocument(node) ||

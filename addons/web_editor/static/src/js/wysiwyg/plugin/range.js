@@ -141,7 +141,6 @@ var RangePlugin = AbstractPlugin.extend({
     _clearFocusedNode: function () {
         if (this.focusedNode) {
             this.focusedNode = null;
-            this.trigger('blur');
         }
     },
     _getRange: function () {
@@ -213,6 +212,7 @@ var RangePlugin = AbstractPlugin.extend({
      * trigger up a range event when receive a mouseup from editable
      */
     _onMouseUp: function () {
+        this.lastRange = null;
         this._setFocusedNode();
         this._onRange();
     },
