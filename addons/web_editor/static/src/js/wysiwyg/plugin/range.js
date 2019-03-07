@@ -3,7 +3,10 @@ odoo.define('wysiwyg.plugin.range', function (require) {
 
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
-var utils = require('wysiwyg.utils');
+
+var $ = require('web_editor.jquery');
+var _ = require('web_editor._');
+
 
 var RangePlugin = AbstractPlugin.extend({
     editableDomEvents: {
@@ -30,10 +33,10 @@ var RangePlugin = AbstractPlugin.extend({
         * @param {Node} node
         * @returns {Boolean}
         */
-        utils.isVoidBlock = function (node) {
+        this.utils.isVoidBlock = function (node) {
             return (!this.isBR(node) && this.isVoid(node)) ||
                 node.contentEditable === 'false' ||
-                $(node).hasClass('o_fake_editable');
+                node.classList.contains('o_fake_editable');
         };
     },
 
@@ -47,13 +50,13 @@ var RangePlugin = AbstractPlugin.extend({
         this.trigger('range');
     },
     getFocusedNode: function () {
-        return this.focusedNode && $.contains(this.editable, this.focusedNode) ? this.focusedNode : null;
+        return this.focusedNode && this.editable.contains(this.focusedNode) ? this.focusedNode : null;
     },
     getRange: function () {
         var range = this.lastRange;
-        if (!range || !$.contains(this.editable, range.sc)) {
+        if (!range || !this.editable.contains(range.sc)) {
             range = this._getRange();
-            if (range && !$.contains(this.editable, range.sc)) {
+            if (range && !this.editable.contains(range.sc)) {
                 range = null;
             }
         } else {
@@ -77,20 +80,25 @@ var RangePlugin = AbstractPlugin.extend({
      * @param {Boolean} left
      */
     setRangeOnVoidBlock: function (target, left) {
-        if (!target || !utils.isVoidBlock(target)) {
+        if (!target || !this.utils.isVoidBlock(target)) {
             return;
         }
         var range = this._getRange();
-        var $contentEditable;
+        var contentEditable;
 
         if (
-            range.sc.tagName && $.contains(target, range.sc) &&
-            $(range.sc).hasClass('o_fake_editable') &&
+            range.sc.tagName && target.contains(range.sc) &&
+            range.sc.classList.contains('o_fake_editable') &&
             left === !range.sc.previousElementSibling
         ) {
-            $contentEditable = $(range.sc).closest('[contentEditable]');
-            if ($(target).closest('[contentEditable]')[0] !== $contentEditable[0]) {
-                $contentEditable.focus();
+            contentEditable = this.utils.ancestor(range.sc, function (node) {
+                return node.getAttribute('contentEditable');
+            });
+            var targetClosest = this.utils.ancestor(target, function (node) {
+                return node.getAttribute('contentEditable');
+            });
+            if (targetClosest !== contentEditable) {
+                contentEditable.focus();
             }
             this.save();
             return;
@@ -99,19 +107,24 @@ var RangePlugin = AbstractPlugin.extend({
         var next = this.getPoint(target, 0);
         var method = left ? 'prevUntil' : 'nextUntil';
         next = next[method](function (point) {
-            return point.node !== target && !$.contains(target, point.node) ||
+            return point.node !== target && !target.contains(point.node) ||
                 point.node.contentEditable === 'true' ||
-                $(point.node).hasClass('o_fake_editable');
+                point.node.classList.contains('o_fake_editable');
         });
-        if (!next || next.node !== target && !$.contains(target, next.node)) {
+        if (!next || next.node !== target && !target.contains(next.node)) {
             next = this.getPoint(target, 0);
         }
 
-        $contentEditable = $(next.node).closest('[contentEditable]');
-        if ($(target).closest('[contentEditable]')[0] !== $contentEditable[0]) {
+        contentEditable = this.utils.ancestor(next.node, function (node) {
+            return node.getAttribute('contentEditable');
+        });
+        var targetClosest = this.utils.ancestor(target, function (node) {
+            return node.getAttribute('contentEditable');
+        });
+        if (targetClosest !== contentEditable) {
             // move the focus only if the new contentEditable is not the same (avoid scroll up)
             // (like in the case of a video, which uses two contentEditable in the media, so as to write text)
-            $contentEditable.focus();
+            contentEditable.focus();
         }
 
         if (range.sc !== next.node || range.so !== next.offset) {
@@ -125,7 +138,7 @@ var RangePlugin = AbstractPlugin.extend({
     save: function (range) {
         this.lastRange = range || this._getRange();
 
-        if (this.lastRange && !$.contains(this.editable, this.lastRange.sc) || !$.contains(this.editable, this.lastRange.ec)) {
+        if (this.lastRange && !this.editable.contains(this.lastRange.sc) || !this.editable.contains(this.lastRange.ec)) {
             throw new Error("Try to save a wrong range.");
         }
     },
@@ -202,7 +215,7 @@ var RangePlugin = AbstractPlugin.extend({
             var point = this._getRange().getStartPoint();
             point = e.keyCode === 37 ? point.prev() : point.next();
             var node = point.node.childNodes[point.offset] || point.node;
-            if (utils.isVoidBlock(node)) {
+            if (this.utils.isVoidBlock(node)) {
                 this.setRangeOnVoidBlock(node, e.keyCode === 37);
             }
         }
@@ -216,7 +229,7 @@ var RangePlugin = AbstractPlugin.extend({
     /**
      * trigger up a range event when receive a mouseup from editable
      */
-    _onMouseUp: function () {
+    _onMouseUp: function (ev) {
         this.lastRange = null;
         this._setFocusedNode();
         this._onRange();

@@ -4,6 +4,9 @@ odoo.define('web_editor.wysiwyg.plugin.unbreakable', function (require) {
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 
+var $ = require('web_editor.jquery');
+var _ = require('web_editor._');
+
 //--------------------------------------------------------------------------
 // unbreakable node preventing editing
 //--------------------------------------------------------------------------
@@ -233,28 +236,36 @@ var Unbreakable = AbstractPlugin.extend({
      */
     secureArea: function (node) {
         var self = this;
-        $(this.editable).find('o_not_editable').attr('contentEditable', 'false');
+        this.editable.querySelectorAll('.o_not_editable').forEach(function (node) {
+            node.contentEditable = false;
+        });
 
         var medias = (function findMedia(node) {
             var medias = [];
             if (node.tagName !== 'IMG' && self.utils.isMedia(node)) {
                 medias.push(node);
             } else {
-                $(node.childNodes).each(function () {
-                    if (this.tagName) {
-                        medias.push.apply(medias, findMedia(this));
+                [].forEach.call(node.childNodes, function (node) {
+                    if (node.tagName) {
+                        medias.push.apply(medias, findMedia(node));
                     }
                 });
             }
             return medias;
         })(node || this.editable);
-        $(medias).addClass('o_fake_not_editable').attr('contentEditable', 'false');
 
-        $(medias).each(function () {
-            if (self.utils.isVideo(this) && !$(this).children('.o_fake_editable').length) {
+        medias.forEach(function (media) {
+            media.classList.add('o_fake_not_editable');
+            media.contentEditable = false;
+
+            if (self.utils.isVideo(media) && !media.querySelector('.o_fake_editable')) {
                 // allow char insertion
-                $(this).prepend('<div class="o_fake_editable o_wysiwyg_to_remove" style="position: absolute;" contentEditable="true"/>');
-                $(this).append('<div class="o_fake_editable o_wysiwyg_to_remove" style="position: absolute;" contentEditable="true"/>');
+                var div = self.document.createElement('div');
+                div.className = 'o_fake_editable o_wysiwyg_to_remove';
+                div.style.position = 'absolute';
+                div.contentEditable = true;
+                media.insertBefore(div, media.firstChild);
+                media.appendChild(div.cloneNode());
             }
         });
     },

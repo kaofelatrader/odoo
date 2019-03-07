@@ -326,7 +326,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @param {Object} [options]
      */
     _onBlur: function (options) {
-        this._pluginsManager.triggerEach('blur');
+        this._pluginsManager.triggerEach('blurEditor');
         this.trigger_up('blur', options);
     },
     /**
@@ -399,7 +399,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @param {Object} [options]
      */
     _onFocus: function (options) {
-        this._pluginsManager.triggerEach('focus');
+        this._pluginsManager.triggerEach('focusEditor');
         this.trigger_up('focus', options);
     },
     /**

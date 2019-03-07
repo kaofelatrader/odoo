@@ -36,7 +36,7 @@ var PopoverPlugin = AbstractPlugin.extend({
     pluginEvents: {
         'update': '_onChange',
         'change': '_onChange',
-        'blur': '_onBlur',
+        'blurEditor': '_onBlurEditor',
     },
 
     POPOVER_MARGIN_LEFT: 5,
@@ -417,7 +417,7 @@ var PopoverPlugin = AbstractPlugin.extend({
     // Handlers
     //--------------------------------------------------------------------------
 
-    _onBlur: function () {
+    _onBlurEditor: function () {
         this._onFocusNode(null);
     },
     _onButtonMousedown: function (plugin, ev) {
