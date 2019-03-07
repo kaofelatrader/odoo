@@ -1,11 +1,8 @@
 odoo.define('web_editor.wysiwyg.plugin.codeview', function (require) {
 'use strict';
 
-var core = require('web.core');
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
-
-var _t = core._t;
 
 
 var CodeViewPlugin = AbstractPlugin.extend({
@@ -31,7 +28,7 @@ var CodeViewPlugin = AbstractPlugin.extend({
      */
     start: function () {
         this._insertCodable();
-        this.deactivate();
+        this._deactivate();
     },
 
     /**
@@ -39,20 +36,21 @@ var CodeViewPlugin = AbstractPlugin.extend({
      */
     activate: function () {
         var self = this;
-        this.trigger_up('getValue', {callback: function (html) {
-            self.codeview.innerHTML = html;
-        }});
+        this.trigger_up('get_value', {
+            callback: function (html) {
+                self.codeview.value = html;
+            },
+        });
         this._activate();
     },
     /**
      * @override
      */
     deactivate: function () {
-        this.codeview.style.display = 'none';
-        this.isActive = false;
-        this.editable.style.display = '';
-        this._blur();
-        this.trigger_up('setValue', {value: this.codeview.innerHTML});
+        this._deactivate();
+        this.trigger_up('set_value', {
+            value: this.codeview.value,
+        });
     },
     /**
      * @override
@@ -88,12 +86,27 @@ var CodeViewPlugin = AbstractPlugin.extend({
         this.codeview.blur();
         this.editable.focus();
     },
+    _deactivate: function () {
+        this.isActive = false;
+        this.codeview.style.display = 'none';
+        this.editable.style.display = '';
+        this._blur();
+    },
     _enabled: function () {
         return true;
     },
     _focus: function () {
         this.editable.blur();
         this.codeview.focus();
+    },
+    /**
+     * Returns true if the value contains jinja logic
+     *
+     * @param {String} value
+     * @returns {Boolean}
+     */
+    _hasJinja: function (value) {
+        return this.utils.getRegex('jinja').test(value);
     },
     _insertCodable: function () {
         this.codeview = this.document.createElement('textarea');
@@ -108,8 +121,8 @@ var CodeViewPlugin = AbstractPlugin.extend({
      * @param {String} value
      */
     _onSetValue: function (value) {
-        if (this.utils.hasJinja(value)) {
-            this.codeview.innerHTML = value;
+        if (this._hasJinja(value)) {
+            this.codeview.value = value;
             if (!this._active()) {
                 this._activate();
             }

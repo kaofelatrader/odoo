@@ -20,7 +20,8 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     custom_events: {
         wysiwyg_blur: '_onBlurCustom',
         command: '_onCommand',
-        getValue: '_onGetValue',
+        get_value: '_onGetValue',
+        set_value: '_onSetValue',
     },
 
     init: function (parent, target, params) {

@@ -465,14 +465,6 @@ return {
         return !!(node && node.childNodes && node.childNodes.length);
     },
     /**
-     * Returns true if the value contains jinja logic.
-     *
-     * @returns {Boolean}
-     */
-    hasJinja: function (value) {
-        return this.getRegex('jinja').test(value);
-    },
-    /**
      * Return true if the given node is an anchor element (A, BUTTON, .btn).
      *
      * @param {Node} node
