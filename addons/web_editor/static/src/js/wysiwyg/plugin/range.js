@@ -41,6 +41,11 @@ var RangePlugin = AbstractPlugin.extend({
     // Public
     //--------------------------------------------------------------------------
 
+    clear: function () {
+        this.focusedNode = null;
+        this.lastRange = null;
+        this.trigger('range');
+    },
     getFocusedNode: function () {
         return this.focusedNode && $.contains(this.editable, this.focusedNode) ? this.focusedNode : null;
     },

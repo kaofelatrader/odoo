@@ -20,6 +20,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     custom_events: {
         wysiwyg_blur: '_onBlurCustom',
         command: '_onCommand',
+        getValue: '_onGetValue',
     },
 
     init: function (parent, target, params) {
@@ -113,12 +114,13 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @returns {String}
      */
     getValue: function () {
-        var result = this._compactResults(this._pluginsManager.triggerEach('getValue', null));
+        var $editable = $(this.editable).clone();
+
+        var result = this._compactResults(this._pluginsManager.triggerEach('getValue', $editable));
         if (result !== null) {
             return result;
         }
 
-        var $editable = $(this.editable).clone();
         $editable.find('.o_wysiwyg_to_remove').remove();
         $editable.find('[contenteditable]').removeAttr('contenteditable');
         $editable.find('.o_fake_not_editable').removeClass('o_fake_not_editable');
@@ -366,9 +368,15 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     _onCommand: function (ev) {
         var self = this;
         ev.stopPropagation();
-        this._pluginsManager.call('Range', 'save');
+        if (ev.data.disableRange) {
+            this._pluginsManager.call('Range', 'clear');
+        } else {
+            this._pluginsManager.call('Range', 'save');
+        }
         Promise.all([ev.data.method.apply(null, ev.data.args)]).then(function (result) {
-            self._pluginsManager.call('Range', 'restore');
+            if (!ev.data.disableRange) {
+                self._pluginsManager.call('Range', 'restore');
+            }
             if (result && result.noChange) {
                 return;
             }
@@ -400,6 +408,9 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         setTimeout(function () {
             self._justFocused = true;
         });
+    },
+    _onGetValue: function (ev) {
+        return ev.data.callback(this.getValue());
     },
     /**
      * @private
@@ -448,6 +459,9 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         if (this._mouseInEditor === null) {
             this._mouseInEditor = !!this._isEditorContent(ev.target);
         }
+    },
+    _onSetValue: function (ev) {
+        this.setValue(ev.data.value);
     },
 });
 

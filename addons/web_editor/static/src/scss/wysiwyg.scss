@@ -105,6 +105,15 @@ editor {
         }
     }
 
+    textarea[name="codeview"] {
+        flex: 1;
+        border: 0;
+        resize: none;
+        background-color: black;
+        color: white;
+        font-family: "Lucida Console", Monaco, monospace;
+    }
+
     editable {
         flex: 1;
         outline: none;

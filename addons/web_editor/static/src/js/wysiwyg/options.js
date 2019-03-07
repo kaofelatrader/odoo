@@ -24,7 +24,8 @@ return {
         'LinkCreate',
         'Media',
         'History',
-        // 'FullScreen', 'CodeView', 'Help'
+        'CodeView',
+        // 'FullScreen', 'Help'
     ],
     // popover
     popover: {

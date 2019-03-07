@@ -22,7 +22,7 @@ var handleSelector = function (element, selector, callback) {
                 break;
             }
         }
-    }
+    };
 };
 
 
@@ -460,6 +460,7 @@ var PopoverPlugin = AbstractPlugin.extend({
         this.trigger_up('command', {
             method: plugin[method].bind(plugin),
             args: [value, range],
+            disableRange: plugin.disableRange,
         });
     },
     /**

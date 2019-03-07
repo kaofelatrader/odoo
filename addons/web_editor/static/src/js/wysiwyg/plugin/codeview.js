@@ -2,49 +2,57 @@ odoo.define('web_editor.wysiwyg.plugin.codeview', function (require) {
 'use strict';
 
 var core = require('web.core');
-var Plugins = require('web_editor.wysiwyg.plugins');
+var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 var _t = core._t;
 
 
-var CodeviewPlugin = Plugins.codeview.extend({
+var CodeViewPlugin = AbstractPlugin.extend({
+    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_codeview.xml'],
+    dependencies: ['Range'],
 
-    setValue: function () {
-        // if (this.utils.hasJinja(value)) {
-        //     this._summernote.invoke('codeview.forceActivate');
-        // }
-        console.warn('todo');
+    pluginEvents: {
+        'setValue': '_onSetValue',
     },
+
+    nameAttr: 'codeview',
+
+    buttons: {
+        template: 'wysiwyg.buttons.codeview',
+        active: '_active',
+        enabled: '_enabled',
+    },
+
+    disableRange: true,
 
     /**
      * @override
      */
+    start: function () {
+        this._insertCodable();
+        this.deactivate();
+    },
+
+    /**
+     * Activate the code view
+     */
     activate: function () {
-        this._super();
-        if (this.$codable.height() === 0) {
-            this.$codable.height(180);
-        }
-        this.context.invoke('editor.hidePopover');
-        this.context.invoke('editor.clearTarget'); // todo: replace by disable editable + event
+        var self = this;
+        this.trigger_up('getValue', {callback: function (html) {
+            self.codeview.innerHTML = html;
+        }});
+        this._activate();
     },
     /**
      * @override
      */
     deactivate: function () {
-        if (
-            utils.hasJinja(this.context.invoke('code')) &&
-            !this.isBeingDestroyed
-        ) {
-            var message = _t("Your code contains JINJA conditions.\nRemove them to return to WYSIWYG HTML edition.");
-            this.do_warn(_t("Cannot edit HTML"), message);
-            this.$codable.focus();
-            return;
-        }
-        this._super();
-        this.$editable.css('height', '');
-
-        // todo: enable editable + event
+        this.codeview.style.display = 'none';
+        this.isActive = false;
+        this.editable.style.display = '';
+        this._blur();
+        this.trigger_up('setValue', {value: this.codeview.innerHTML});
     },
     /**
      * @override
@@ -53,18 +61,64 @@ var CodeviewPlugin = Plugins.codeview.extend({
         this.isBeingDestroyed = true;
         this._super();
     },
+    save: function () {
+        return;
+    },
     /**
-     * Force activation of the code view.
+     * Toggle the code view
      */
-    forceActivate: function () {
-        if (!this.isActivated()) {
-            this.activate();
+    toggle: function () {
+        return this._active() ? this.deactivate() : this.activate();
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    _activate: function () {
+        this.isActive = true;
+        this.codeview.style.display = '';
+        this.editable.style.display = 'none';
+        this._focus();
+    },
+    _active: function () {
+        return this.isActive;
+    },
+    _blur: function() {
+        this.codeview.blur();
+        this.editable.focus();
+    },
+    _enabled: function () {
+        return true;
+    },
+    _focus: function () {
+        this.editable.blur();
+        this.codeview.focus();
+    },
+    _insertCodable: function () {
+        this.codeview = this.document.createElement('textarea');
+        this.codeview.name = this.nameAttr;
+        this.editor.insertBefore(this.codeview, this.editable);
+        this.isActive = true;
+    },
+
+    /**
+     * Set the value of the codeview.
+     *
+     * @param {String} value
+     */
+    _onSetValue: function (value) {
+        if (this.utils.hasJinja(value)) {
+            this.codeview.innerHTML = value;
+            if (!this._active()) {
+                this._activate();
+            }
         }
     },
 });
 
-Manager.addPlugin('codeview', CodeviewPlugin);
+Manager.addPlugin('CodeView', CodeViewPlugin);
 
-return CodeviewPlugin;
+return CodeViewPlugin;
 
 });
