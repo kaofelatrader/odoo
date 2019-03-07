@@ -10,7 +10,7 @@ var ListRenderer = require('web.ListRenderer');
 
 var SectionListRenderer = ListRenderer.extend({
     /**
-     * We want section and note to take the whole line (except handle and trash)
+     * We want section to take the whole line (except handle and trash)
      * to look better and to hide the unnecessary fields.
      *
      * @override
@@ -60,9 +60,10 @@ var SectionListRenderer = ListRenderer.extend({
      * @private
      */
     _renderView: function () {
-        var def = this._super();
-        this.$el.find('> table').addClass('o_section_list_view');
-        return def;
+        var self = this;
+        return this._super.apply(this, arguments).then(function () {
+            self.$('> table').addClass('o_section_list_view');
+        });
     },
 });
 

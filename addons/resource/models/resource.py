@@ -166,7 +166,6 @@ class ResourceCalendar(models.Model):
         ]
         return res
 
-    @api.one
     @api.depends('two_weeks_calendar')
     def _compute_two_weeks_explanation(self):
         today = fields.Date.today()
@@ -197,35 +196,27 @@ class ResourceCalendar(models.Model):
     two_weeks_calendar = fields.Boolean(string="Calendar in 2 weeks mode")
     two_weeks_explanation = fields.Char('Explanation', compute="_compute_two_weeks_explanation")
 
-
-    def _get_global_attendances(self):
-        return self.attendance_ids.filtered(lambda attendance: not attendance.date_from and not attendance.date_to and not attendance.resource_id and attendance.display_type is False)
-
     def _compute_hours_per_day(self, attendances):
+        if not attendances:
+            return 0
+
         hour_count = 0.0
+        for attendance in attendances:
+            hour_count += attendance.hour_to - attendance.hour_from
+
         if self.two_weeks_calendar:
-            for attendance in attendances.filtered(lambda cal: cal.week_type is False):
-                hour_count += (attendance.hour_to - attendance.hour_from)*2
-            for attendance in attendances.filtered(lambda cal: cal.week_type is not False):
-                hour_count += attendance.hour_to - attendance.hour_from
-            if attendances:
-                number_of_days = len(set(attendances.filtered(lambda cal: cal.week_type is False).mapped('dayofweek')))*2
-                number_of_days += len(set(attendances.filtered(lambda cal: cal.week_type == '1').mapped('dayofweek')))
-                number_of_days += len(set(attendances.filtered(lambda cal: cal.week_type == '0').mapped('dayofweek')))
-                return float_round(hour_count / float(number_of_days), precision_digits=2)
+            number_of_days = len(set(attendances.filtered(lambda cal: cal.week_type == '1').mapped('dayofweek')))
+            number_of_days += len(set(attendances.filtered(lambda cal: cal.week_type == '0').mapped('dayofweek')))
         else:
-            for attendance in attendances:
-                hour_count += attendance.hour_to - attendance.hour_from
-            if attendances:
-                return float_round(hour_count / float(len(set(attendances.mapped('dayofweek')))), precision_digits=2)
-        return 0
+            number_of_days = len(set(attendances.mapped('dayofweek')))
+
+        return float_round(hour_count / float(number_of_days), precision_digits=2)
 
     @api.onchange('attendance_ids', 'two_weeks_calendar')
     def _onchange_hours_per_day(self):
-        attendances = self._get_global_attendances()
+        attendances = self.attendance_ids.filtered(lambda attendance: not attendance.date_from and not attendance.date_to and not attendance.resource_id and attendance.display_type is False)
         self.hours_per_day = self._compute_hours_per_day(attendances)
 
-    @api.one
     def switch_calendar_type(self):
         if not self.two_weeks_calendar:
             self.attendance_ids.unlink()
@@ -234,21 +225,22 @@ class ResourceCalendar(models.Model):
                     'hour_from': 0, 'day_period': 'morning', 'week_type': '0',
                     'hour_to': 0, 'display_type': 'line_section'}),
                 ]
-            default_attendance = self.default_get('')['attendance_ids']
-            for idx, att in enumerate(default_attendance):
-                att[2]["week_type"] = '0'
-                att[2]["sequence"] = idx + 1
-            self.attendance_ids = default_attendance
             self.attendance_ids = [
                     (0, 0, {'name': 'Odd week','dayofweek': '0', 'sequence': '25',
                     'hour_from': 0, 'day_period': 'morning', 'week_type': '1',
                     'hour_to': 0, 'display_type': 'line_section'}),
                 ]
+
+            self.two_weeks_calendar = True
+            default_attendance = self.default_get('')['attendance_ids']
+            for idx, att in enumerate(default_attendance):
+                att[2]["week_type"] = '0'
+                att[2]["sequence"] = idx + 1
+            self.attendance_ids = default_attendance
             for idx, att in enumerate(default_attendance):
                 att[2]["week_type"] = '1'
                 att[2]["sequence"] = idx + 26
             self.attendance_ids = default_attendance
-            self.two_weeks_calendar = True
         else:
             self.two_weeks_calendar = False
             self.attendance_ids.unlink()
@@ -260,6 +252,7 @@ class ResourceCalendar(models.Model):
     def _onchange_attendance_ids(self):
         if not self.two_weeks_calendar:
             return
+
         even_week_seq = self.attendance_ids.filtered(lambda att: att.display_type == 'line_section' and att.week_type == '0')
         odd_week_seq = self.attendance_ids.filtered(lambda att: att.display_type == 'line_section' and att.week_type == '1')
         if len(even_week_seq) != 1 or len(odd_week_seq) != 1:
@@ -275,6 +268,8 @@ class ResourceCalendar(models.Model):
                 line.week_type = '0' if odd_week_seq > line.sequence else '1'
 
     def _check_list_hours(self, hours):
+        """ hours is a list of tuple (hour from, hour to).
+            Check that there aren't overlap between hours tuples """
         hours = sorted(hours, key=lambda x: [x[0], x[1]])
         last_end_hour = 0
         for hour in hours:
@@ -283,6 +278,8 @@ class ResourceCalendar(models.Model):
             last_end_hour = hour[1]
 
     def _has_superimposed(self, attendance_ids):
+        """ attendance_ids correspond to attendance of a week,
+            will check for each day of week that there are no superimpose. """
         days_of_week = set(attendance_ids.mapped('dayofweek'))
         for day in days_of_week:
             attendance_week = attendance_ids.filtered(lambda cal: cal.dayofweek == day)
@@ -299,13 +296,14 @@ class ResourceCalendar(models.Model):
                     hours_for_date.append((attendance.hour_from, attendance.hour_to))
                 self._check_list_hours(hours_for_date)
 
-    @api.one
     @api.constrains('attendance_ids')
     def _check_attendance(self):
         attendance_ids = self.attendance_ids.filtered(lambda attendance: not attendance.resource_id and attendance.display_type is False)
-        self._has_superimposed(attendance_ids.filtered(lambda attendance: attendance.week_type == '0'))
-        self._has_superimposed(attendance_ids.filtered(lambda attendance: attendance.week_type == '1'))
-        self._has_superimposed(attendance_ids.filtered(lambda attendance: attendance.week_type is False))
+        if self.two_weeks_calendar:
+            self._has_superimposed(attendance_ids.filtered(lambda attendance: attendance.week_type == '0'))
+            self._has_superimposed(attendance_ids.filtered(lambda attendance: attendance.week_type == '1'))
+        else:
+            self._has_superimposed(attendance_ids)
 
     # --------------------------------------------------
     # Computation API

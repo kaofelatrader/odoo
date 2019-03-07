@@ -43,15 +43,10 @@ class ResourceCalendar(models.Model):
         for calendar in self:
             calendar.is_fulltime = not float_compare(calendar.full_time_required_hours, calendar.hours_per_week, 3)
 
-    def _get_global_attendances(self):
-        res = super(ResourceCalendar, self)._get_global_attendances()
-        res |= self.normal_attendance_ids.filtered(lambda attendance: not attendance.date_from and not attendance.date_to)
-        return res
-
-    # Add a key on the api.onchange decorator
     @api.onchange('normal_attendance_ids', 'two_weeks_calendar')
     def _onchange_hours_per_day(self):
-        self.hours_per_day = super(ResourceCalendar, self)._compute_hours_per_day(self.normal_attendance_ids)
+        attendances = self.normal_attendance_ids.filtered(lambda attendance: not attendance.date_from and not attendance.date_to and not attendance.resource_id and attendance.display_type is False)
+        self.hours_per_day = super(ResourceCalendar, self)._compute_hours_per_day(attendances)
 
     @api.onchange('normal_attendance_ids')
     def _onchange_normal_attendance_ids(self):
@@ -71,14 +66,15 @@ class ResourceCalendar(models.Model):
             else:
                 line.week_type = '0' if odd_week_seq > line.sequence else '1'
 
-    @api.one
     @api.constrains('normal_attendance_ids')
     def _check_attendance(self):
         self._onchange_normal_attendance_ids()
         attendance_ids = self.normal_attendance_ids.filtered(lambda attendance: attendance.display_type is False)
-        super(ResourceCalendar, self)._has_superimposed(attendance_ids.filtered(lambda attendance: attendance.week_type == '0'))
-        super(ResourceCalendar, self)._has_superimposed(attendance_ids.filtered(lambda attendance: attendance.week_type == '1'))
-        super(ResourceCalendar, self)._has_superimposed(attendance_ids.filtered(lambda attendance: attendance.week_type is False))
+        if self.two_weeks_calendar:
+            super(ResourceCalendar, self)._has_superimposed(attendance_ids.filtered(lambda attendance: attendance.week_type == '0'))
+            super(ResourceCalendar, self)._has_superimposed(attendance_ids.filtered(lambda attendance: attendance.week_type == '1'))
+        else:
+            super(ResourceCalendar, self)._has_superimposed(attendance_ids)
 
     @api.multi
     def transfer_leaves_to(self, other_calendar, resources=None, from_date=None):
@@ -98,7 +94,6 @@ class ResourceCalendar(models.Model):
             'calendar_id': other_calendar.id,
         })
 
-    @api.one
     def switch_calendar_type(self):
         if not self.two_weeks_calendar:
             self.normal_attendance_ids.unlink()
@@ -107,21 +102,22 @@ class ResourceCalendar(models.Model):
                     'hour_from': 0, 'day_period': 'morning', 'week_type': '0',
                     'hour_to': 0, 'display_type': 'line_section'}),
                 ]
-            default_attendance = self.default_get('')['normal_attendance_ids']
-            for idx, att in enumerate(default_attendance):
-                att[2]["week_type"] = '0'
-                att[2]["sequence"] = idx + 1
-            self.normal_attendance_ids = default_attendance
             self.normal_attendance_ids = [
                     (0, 0, {'name': 'Odd week','dayofweek': '0', 'sequence': '25',
                     'hour_from': 0, 'day_period': 'morning', 'week_type': '1',
                     'hour_to': 0, 'display_type': 'line_section'}),
                 ]
+
+            self.two_weeks_calendar = True
+            default_attendance = self.default_get('')['normal_attendance_ids']
+            for idx, att in enumerate(default_attendance):
+                att[2]["week_type"] = '0'
+                att[2]["sequence"] = idx + 1
+            self.normal_attendance_ids = default_attendance
             for idx, att in enumerate(default_attendance):
                 att[2]["week_type"] = '1'
                 att[2]["sequence"] = idx + 26
             self.normal_attendance_ids = default_attendance
-            self.two_weeks_calendar = True
         else:
             self.two_weeks_calendar = False
             self.normal_attendance_ids.unlink()

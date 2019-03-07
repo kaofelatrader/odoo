@@ -32,6 +32,8 @@ class TestResourceCommon(TransactionCase):
                     'hour_to': att[1],
                     'dayofweek': str(att[2]),
                     'week_type': att[3],
+                    'display_type': att[4],
+                    'sequence': att[5],
                 })
                 for index, att in enumerate(attendances)
             ],
@@ -47,8 +49,10 @@ class TestResourceCommon(TransactionCase):
         # UTC-8 winter, UTC-7 summer
         self.calendar_john = self._define_calendar('8+12 Hours', [(8, 16, 1), (8, 13, 4), (16, 23, 4)], 'America/Los_Angeles')
         # UTC+1 winter, UTC+2 summer
-        self.calendar_jules = self._define_calendar_2_weeks('Week 1: 30 Hours - Week 2: 16 Hours',
-            [(8, 16, 0, False), (9, 17, 1, '0'), (7, 15, 2, '1'), (8, 16, 3, '1'), (10, 16, 4, '1')], 'Europe/Brussels')
+        self.calendar_jules = self._define_calendar_2_weeks('Week 1: 30 Hours - Week 2: 16 Hours', [
+            (0, 0, 0, '0', 'line_section', 0), (8, 16, 0, '0', False, 1), (9, 17, 1, '0', False, 2),
+            (0, 0, 0, '1', 'line_section', 10), (8, 16, 0, '1', False, 11), (7, 15, 2, '1', False, 12),
+            (8, 16, 3, '1', False, 13), (10, 16, 4, '1', False, 14)], 'Europe/Brussels')
 
         # Employee is linked to a resource.resource via resource.mixin
         self.jean = self.env['resource.test'].create({
