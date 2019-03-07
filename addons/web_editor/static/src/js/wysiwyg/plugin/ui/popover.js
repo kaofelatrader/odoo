@@ -40,7 +40,7 @@ var PopoverPlugin = AbstractPlugin.extend({
     },
 
     POPOVER_MARGIN_LEFT: 5,
-    POPOVER_MARGIN_TOP: 7,
+    POPOVER_MARGIN_TOP: 5,
 
     init: function (parent, editor, options) {
         this._super.apply(this, arguments);
@@ -225,37 +225,32 @@ var PopoverPlugin = AbstractPlugin.extend({
             });
         });
     },
-    _togglePluginButtonEnabled: function (plugin, focusNode, button) {
+    _togglePluginButtonToggle: function (plugin, focusNode, buttonName, methodName) {
         if (!focusNode) {
-            return ' disabled';
+            return false;
         }
-        var enabledMedthodName = plugin.buttons.enabled;
+        var enabledMedthodName = plugin.buttons[methodName];
         if (enabledMedthodName) {
-            var enabled = true;
+            var active = true;
             if (typeof enabledMedthodName === 'string') {
-                enabled = !!plugin[enabledMedthodName](button.name, focusNode);
+                active = !!plugin[enabledMedthodName](buttonName, focusNode);
             } else {
-                enabled = !!enabledMedthodName.call(plugin, button.name, focusNode);
-            }
-            if (!enabled) {
-                return ' disabled';
-            }
-        }
-        return '';
-    },
-    _togglePluginButtonActive: function (plugin, focusNode, button) {
-        if (!focusNode) {
-            return '';
-        }
-        var activeMedthodName = plugin.buttons.active;
-        if (activeMedthodName) {
-            var active = false;
-            if (typeof activeMedthodName === 'string') {
-                active = !!plugin[activeMedthodName](button.name, focusNode);
-            } else {
-                active = !!activeMedthodName.call(plugin, button.name, focusNode);
+                active = !!enabledMedthodName.call(plugin, buttonName, focusNode);
             }
             if (active) {
+                return true;
+            }
+        }
+        return null;
+    },
+    _updatePluginButton: function (plugin, focusNode, button) {
+        var enabled = this._togglePluginButtonToggle(plugin, focusNode, button.name, 'enabled');
+        if (enabled || enabled === null) {
+            button.classList.remove('disabled');
+            var active = this._togglePluginButtonToggle(plugin, focusNode, button.name, 'active');
+            if (active) {
+                button.classList.add('active');
+
                 var group = button.parentNode;
                 while (group.tagName !== 'GROUP') {
                     group = group.parentNode;
@@ -267,22 +262,16 @@ var PopoverPlugin = AbstractPlugin.extend({
                         var clone = button.cloneNode(true);
                         clone.removeAttribute('data-method');
                         clone.removeAttribute('data-value');
+                        clone.classList.remove('active');
                         placeholder.appendChild(clone);
                     }
                 }
-                return ' active';
+            } else {
+                button.classList.remove('active');
             }
+        } else {
+            button.classList.add('disabled');
         }
-        return '';
-    },
-    _updatePluginButton: function (plugin, focusNode, button) {
-        button.className = button.className.replace(/(^|\s)\s*(active|disabled)(\s+|$)/g, '\$1');
-        var className = button.className;
-        className += this._togglePluginButtonEnabled(plugin, focusNode, button);
-        if (className.indexOf('disabled') === -1) {
-            className += this._togglePluginButtonActive(plugin, focusNode, button);
-        }
-        button.className = className;
     },
     _updatePopovers: function (range) {
         var self = this;
@@ -292,19 +281,27 @@ var PopoverPlugin = AbstractPlugin.extend({
             return;
         }
         this.popovers.forEach(function (popover) {
-            var targetRange = popover.checkMethod(range.copy());
-            if (!targetRange) {
-                return;
-            }
-            if (utils.isText(targetRange.sc)) {
+            self._updatePopover(popover, range.copy());
+            if (popover.targetText) {
                 self._hasDisplayedPopoverTargetText = true;
-                popover.targetText = true;
             }
-            popover.element.style.display = 'block';
-            popover.display = true;
-
-            self._updatePosition(popover, targetRange);
         });
+        this._updatePositionAvoidOverlap();
+    },
+    _updatePopover: function (popover, range) {
+        var targetRange = popover.checkMethod(range);
+        if (!targetRange) {
+            popover.targetRange = null;
+            return;
+        }
+        if (utils.isText(targetRange.sc)) {
+            popover.targetText = true;
+        }
+        popover.element.style.display = 'block';
+        popover.display = true;
+        popover.targetRange = targetRange;
+
+        this._updatePosition(popover, range);
     },
     _updatePopoverButtons: function (focusNode) {
         var self = this;
@@ -336,21 +333,29 @@ var PopoverPlugin = AbstractPlugin.extend({
      * @private
      */
     _updatePosition: function (popover, range) {
-        var top = 0;
+        var targetRange = popover.targetRange;
         var popoverElement = popover.element;
+        var top = this.POPOVER_MARGIN_TOP;
+
         if (popover.targetText) {
-            top += parseInt(this.window.getComputedStyle(range.sc.parentNode, null).getPropertyValue('font-size'));
+            targetRange = range;
+            var fontSize = this.window.getComputedStyle(targetRange.sc.parentNode, null).getPropertyValue('font-size');
+            top += parseInt(fontSize);
+        } else if (targetRange.sc.contains(range.sc)) {
+            top += targetRange.sc.offsetHeight;
         }
-        var position = this.dependencies.Position.getPosition(range.sc, range.so);
+
+        var position = this.dependencies.Position.getPosition(targetRange.sc, targetRange.so);
         var pos = this.editor.getBoundingClientRect();
         var newPos = {
             left: position.left - pos.left + this.POPOVER_MARGIN_LEFT,
-            top: position.top - pos.top + this.POPOVER_MARGIN_TOP + top,
+            top: position.top - pos.top + top,
         };
         if (newPos.top < 0) {
             popoverElement.style.display = 'none';
             return;
         }
+
         var mouse = this.dependencies.Position.getMousePosition();
         var top = mouse.pageY - pos.top;
         var height = 40;
@@ -378,7 +383,7 @@ var PopoverPlugin = AbstractPlugin.extend({
 
         popoverElement.style.display = 'block';
         popoverElement.style.left = newPos.left + 'px';
-        popoverElement.style.top = (newPos.top + this.POPOVER_MARGIN_TOP) + 'px';
+        popoverElement.style.top = newPos.top + 'px';
     },
     _updatePositions: function (range) {
         var self = this;
@@ -386,6 +391,29 @@ var PopoverPlugin = AbstractPlugin.extend({
             if (popover.display) {
                 self._updatePosition(popover, range);
             }
+        });
+        this._updatePositionAvoidOverlap();
+    },
+    _updatePositionAvoidOverlap: function () {
+        var popovers = [];
+        this.popovers.forEach(function (popover) {
+            if (popover.display) {
+                popovers.push(popover);
+            }
+        });
+        popovers.sort(function (a, b) {
+            return a.targetRange.sc.contains(b.targetRange.sc) ? 1 : -1;
+        });
+        var bottom = 0;
+        popovers.forEach(function (popover) {
+            var pos = popover.element.getBoundingClientRect();
+            var top = parseInt(popover.element.style.top);
+            if (top < bottom) {
+                popover.element.style.top = bottom + 'px';
+            } else {
+                bottom = top;
+            }
+            bottom += pos.height;
         });
     },
 
@@ -466,20 +494,21 @@ var PopoverPlugin = AbstractPlugin.extend({
      */
     _onRange: function () {
         var self = this;
-        if (self._hasDisplayedPopoverTargetText) {
+        if (this._hasDisplayedPopoverTargetText) {
             var range = this.dependencies.Range.getRange();
             this.popovers.forEach(function (popover) {
                 if (popover.targetText) {
                     self._updatePosition(popover, range);
                 }
             });
+            this._updatePositionAvoidOverlap();
         }
     },
     /**
      * @private
      */
     _onScroll: function () {
-        self._updatePositions(this.dependencies.Range.getRange());
+        this._updatePositions(this.dependencies.Range.getRange());
     },
 });
 

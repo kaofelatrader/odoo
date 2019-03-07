@@ -38,12 +38,7 @@ var PositionPlugin = AbstractPlugin.extend({
         if (this.utils.isText(node)) {
             return this._getNodePosition(node, offset);
         } else {
-            var box = node.getBoundingClientRect();
-            var style = this.window.getComputedStyle(node);
-            return {
-                top: box.top + parseInt(style.paddingTop),
-                left: box.left + parseInt(style.paddingLeft),
-            };
+            return node.getBoundingClientRect();
         }
     },
 
