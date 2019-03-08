@@ -379,7 +379,7 @@ Manager.addPlugin('Media', MediaPlugin);
 //--------------------------------------------------------------------------
 
 var AbstractMediaPlugin = AbstractPlugin.extend({
-    dependencies: ['Media'],
+    dependencies: ['Media', 'Range'],
     editableDomEvents: {
         // 'wysiwyg.Position.mouse': '_onMouseChange',
         // 'wysiwyg.MediaPlugin.focus': '_onFocus',
@@ -402,13 +402,11 @@ var AbstractMediaPlugin = AbstractPlugin.extend({
         return false;
     },
     getTargetRange: function (target) {
-        if (this.utils[isMediaMethod](target)) {
-            return {
+        if (this.isMediaMethod && this[this.isMediaMethod](target)) {
+            return this.dependencies.getRange().replace({
                 sc: target,
                 so: 0,
-                ec: target,
-                eo: 0
-            };
+            });
         }
     },
 
@@ -421,8 +419,9 @@ var AbstractMediaPlugin = AbstractPlugin.extend({
      * @param {jQueryEvent} e
      */
     _onDblclick: function (e) {
-        if (isMediaMethod && this.utils[isMediaMethod](e.target)) {
-            this.dependencies.Media.showImageDialog(null, e.target);
+        if (this.isMediaMethod && this[this.isMediaMethod](e.target)) {
+            var range = this.getTargetRange(e.target);
+            this.dependencies.Media.showImageDialog(null, range);
         }
     },
     /**
@@ -443,7 +442,7 @@ var AbstractMediaPlugin = AbstractPlugin.extend({
             this.popover.destroy();
             this.popover = null;
         }
-        if (this.utils[isMediaMethod](target)) {
+        if (this.isMediaMethod && this[this.isMediaMethod](target)) {
             if (!this.popover && this.options.displayPopover(target)) {
                 this.popover = new (popovers[this.popoverConstructor])(this, target);
                 this.appendTo(this.editor);
@@ -626,7 +625,7 @@ var VideoPlugin = AbstractMediaPlugin.extend({
     //--------------------------------------------------------------------------
 
     getTargetRange: function (target) {
-        target = this.utils[isMediaMethod](target) && $(target).closest('.media_iframe_video')[0];
+        target = this[this.isMediaMethod](target) && $(target).closest('.media_iframe_video')[0];
         if (target) {
             var wRange = this.dependencies.Range.getRange();
             wRange.sc = range.ec = target;
