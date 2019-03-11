@@ -123,9 +123,29 @@
             </tree>
         </field>
     </record>
+    <record model="ir.ui.view" id="survey_kanban_mobilr">
+        <field name="name">Kanban view for survey mobile</field>
+        <field name="model">survey.survey</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="certificate" />
+                <templates>
+                    <div t-name="kanban-box" t-attf-class="oe_kanban_card oe_kanban_global_click">
+                        <div class="o_kanban_record_top">
+                            <div class="col-10 p-0">
+                                <h4 class="o_kanban_record_title mb4"><field name="title"/></h4>
+                            </div>
+                            <div class="col-2"><i t-if="record.certificate.raw_value === true" title="Certification" class="certification_icon fa fa-trophy"></i></div>
+                        </div>
+                    </div>
+                </templates>
+            </kanban>
+        </field>
+    </record>
     <record model="ir.ui.view" id="survey_kanban">
         <field name="name">Kanban view for survey</field>
         <field name="model">survey.survey</field>
+        <field name="priority">20</field>
         <field name="arch" type="xml">
             <kanban default_group_by="stage_id">
                 <field name="stage_id" />
@@ -214,6 +234,8 @@
         <field name="res_model">survey.survey</field>
         <field name="view_type">form</field>
         <field name="view_mode">kanban,tree,form,activity</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('survey_kanban')})]"/>
         <field name="help" type="html">
           <p class="o_view_nocontent_smiling_face">
             Add a new survey
