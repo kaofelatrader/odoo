@@ -50,11 +50,11 @@ QUnit.module('Basic', {
         };
     },
     afterEach: function () {
-        var ls;
         // reset thread window append to body
         this.services.mail_service.prototype.THREAD_WINDOW_APPENDTO = 'body';
-        if ((ls = this.services.local_storage)) {
-            ls.storage && ls.storage.destroy();
+        var storage = this.services.local_storage.prototype.storage;
+        if (storage && !storage.isDestroyed()) {
+            storage.destroy();
         }
     },
 });
