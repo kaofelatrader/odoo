@@ -48,12 +48,23 @@ QUnit.module('Views', {
             },
         };
 
+        this._ram = new RamStorage();
         var RamStorageService = AbstractStorageService.extend({
-            storage: new RamStorage(),
+            storage: this._ram,
         });
         this.services = {
             local_storage: RamStorageService,
         };
+    },
+    afterEach: function () {
+        // beforeEach creates a RamStorage to provide a services map as most
+        // tests want a generic one, but for the few tests which don't (need
+        // their own services / ramstorage) the storage doesn't get mounted
+        // and the RamStorage doesn't get destroyed. Cleanup these cases
+        // explicitly.
+        if (!this._ram.isDestroyed()) {
+            this._ram.destroy()
+        }
     },
 }, function () {
 
