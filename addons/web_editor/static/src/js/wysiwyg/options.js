@@ -26,7 +26,7 @@ return {
         'History',
         'CodeView',
         'FullScreen',
-        // 'Help'
+        'Help',
     ],
     // popover
     popover: {

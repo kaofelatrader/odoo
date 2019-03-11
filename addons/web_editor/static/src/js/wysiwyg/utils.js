@@ -291,6 +291,16 @@ return {
         var breakableSpace = this.removeExtremeBreakableSpace(clone, 0).end;
         return breakableSpace === 1 ? 0 : breakableSpace;
     },
+    dictToArray: function (dict, keyName, valueName) {
+        var array = [];
+        Object.keys(dict).forEach(function (key) {
+            var pair = {};
+            pair[keyName || 'key'] = key;
+            pair[valueName || 'value'] = dict[key];
+            array.push(pair);
+        });
+        return array;
+    },
     /**
      * Find the given node's `editable` ancestor, if any.
      *

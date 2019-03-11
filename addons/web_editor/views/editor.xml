@@ -85,7 +85,7 @@
     <!-- <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/hint.js"/> -->
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/list.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/codeview.js"/>
-    <!-- <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/help_dialog.js"/> -->
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/help.js"/>
 
     <!-- additional plugins -->
 

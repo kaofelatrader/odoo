@@ -217,7 +217,11 @@ editor {
 // MODALS
 
 body .modal {
-
+    .help-list-item {
+        .help-shortcut {
+            min-width: 33%;
+        }
+    }
     // SELECT MEDIA
     .o_select_media_dialog {
         max-width: 80%;

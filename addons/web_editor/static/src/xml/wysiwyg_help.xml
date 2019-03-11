@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="template" xml:space="preserve">
+    <group t-name="wysiwyg.buttons.help">
+        <button name="help-show" title="Help" data-method="showHelpDialog">
+            <i class="note-icon-question"></i>
+        </button>
+    </group>
+    <div t-name="wysiwyg.help_dialog">
+        <t t-foreach="keymap" t-as="item">
+            <div class="help-list-item">
+                <label class="help-shortcut">
+                    <kbd><t t-esc="item.shortcut"/></kbd>
+                </label>
+                <span class="help-description">
+                    <t t-esc="item.description"/>
+                </span>
+            </div>
+        </t>
+    </div>
+</templates>
