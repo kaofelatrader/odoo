@@ -135,7 +135,7 @@
                             <div class="col-10 p-0">
                                 <h4 class="o_kanban_record_title mb4"><field name="title"/></h4>
                             </div>
-                            <div class="col-2"><i t-if="record.certificate.raw_value === true" title="Certification" class="certification_icon fa fa-trophy"></i></div>
+                            <div class="col-2"><i t-if="record.certificate.raw_value === true" title="Certification" class="certification_icon fa fa-trophy" aria-label="Certification"></i></div>
                         </div>
                     </div>
                 </templates>

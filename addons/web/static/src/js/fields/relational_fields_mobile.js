@@ -58,7 +58,7 @@ relational_fields.FieldMany2One.include({
             model: self.field.relation,
             method: 'name_search',
             kwargs: {
-                name: search_val,
+                name: search_val || "",
                 args: domain,
                 operator: "ilike",
                 limit: 160,
