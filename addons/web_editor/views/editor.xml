@@ -13,10 +13,8 @@
 <template id="assets_wysiwyg" name="Wysiwyg Editor Assets">
     <!-- lib -->
 
-    <link rel="stylesheet" type="text/css" href="/web_editor/static/lib/summernote/summernote.css"/>
     <link rel="stylesheet" type="text/css" href="/web_editor/static/lib/cropper/css/cropper.css"/>
 
-    <script type="text/javascript" src="/web_editor/static/lib/summernote/summernote.js"/>
     <script type="text/javascript" src="/web_editor/static/lib/cropper/js/cropper.js"/>
     <script type="text/javascript" src="/web_editor/static/lib/jQuery.transfo.js"/>
 
@@ -71,6 +69,7 @@
     <!-- plugins -->
 
     <!-- <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/dropzone.js"/> -->
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/keymap.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/history.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/table.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/clipboard.js"/>

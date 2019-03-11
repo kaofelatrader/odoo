@@ -17,7 +17,7 @@ var _ = require('web_editor._');
 
 
 var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).extend({
-    xmlDependencies: [],
+    templatesDependencies: [],
     dependencies: [],
 
     editableDomEvents: null,

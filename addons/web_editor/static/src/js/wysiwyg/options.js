@@ -8,7 +8,7 @@ return {
         Popover: true,
         // Unbreakable: true,
         // Handle: true,
-        // KeyMap: true,
+        KeyMap: true,
     },
     lang: 'en_US',
     // toolbar

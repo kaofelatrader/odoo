@@ -3,11 +3,11 @@
     <group t-name="wysiwyg.buttons.list">
         <button name="list-ul" title="Unordered list (CTRL+SHIFT+NUM7)"
             data-method="insertList" data-value="ul">
-            <i class="note-icon-unorderedlist"></i>
+            <i class="fa fa-list-ul"></i>
         </button>
         <button name="list-ol" title="Ordered list (CTRL+SHIFT+NUM8)"
             data-method="insertList" data-value="ol">
-            <i class="note-icon-orderedlist"></i>
+            <i class="fa fa-list-ol"></i>
         </button>
         <button name="list-checklist" title="Checklist"
             data-method="insertList" data-value="checklist">

@@ -8,7 +8,7 @@ var $ = require('web_editor.jquery');
 var _ = require('web_editor._');
 
 var TablePicker = AbstractPlugin.extend({
-    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_table.xml'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_table.xml'],
     dependencies: ['Range'],
 
     buttons: {
@@ -233,7 +233,7 @@ var TablePicker = AbstractPlugin.extend({
 });
 
 var Table = AbstractPlugin.extend({
-    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_table.xml'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_table.xml'],
     dependencies: ['Range'],
 
     buttons: {

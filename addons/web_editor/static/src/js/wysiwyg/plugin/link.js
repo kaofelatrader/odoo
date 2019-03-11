@@ -13,7 +13,7 @@ var _ = require('web_editor._');
 //--------------------------------------------------------------------------
 
 var LinkCreate = AbstractPlugin.extend({
-    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_link.xml'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_link.xml'],
     dependencies: ['Range'],
 
     buttons: {
@@ -222,7 +222,7 @@ var LinkCreate = AbstractPlugin.extend({
 });
 
 var Link = AbstractPlugin.extend({
-    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_link.xml'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_link.xml'],
     dependencies: ['Range', 'LinkCreate'],
 
     buttons: {

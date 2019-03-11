@@ -26,7 +26,7 @@ var TextPlugin = AbstractPlugin.extend({
 });
 
 var ForeColorPlugin = AbstractPlugin.extend({
-    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_colorpicker.xml'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_colorpicker.xml'],
     dependencies: ['Range', 'FontStyle'],
 
     buttons: {
@@ -129,7 +129,7 @@ var ForeColorPlugin = AbstractPlugin.extend({
 });
 
 var BgColorPlugin = ForeColorPlugin.extend({
-    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_colorpicker.xml'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_colorpicker.xml'],
     dependencies: ['FontStyle'],
 
     buttons: {
@@ -193,7 +193,7 @@ var BgColorPlugin = ForeColorPlugin.extend({
 
 var FontSizePlugin = AbstractPlugin.extend({
     dependencies: ['FontStyle'],
-    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_format_text.xml'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_format_text.xml'],
 
     buttons: {
         template: 'wysiwyg.buttons.fontsize',
@@ -241,7 +241,7 @@ var FontSizePlugin = AbstractPlugin.extend({
 
 var FontStylePlugin = AbstractPlugin.extend({
     dependencies: ['Range', 'Media', 'Text'],
-    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_format_text.xml'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_format_text.xml'],
 
     buttons: {
         template: 'wysiwyg.buttons.fontstyle',
@@ -1076,7 +1076,7 @@ var FontStylePlugin = AbstractPlugin.extend({
 
 var ParagraphPlugin = AbstractPlugin.extend({
     dependencies: ['Range', 'FontStyle', 'List'],
-    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_format_text.xml'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_format_text.xml'],
 
     buttons: {
         template: 'wysiwyg.buttons.paragraph',

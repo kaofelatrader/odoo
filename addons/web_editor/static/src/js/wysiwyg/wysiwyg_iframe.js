@@ -5,13 +5,6 @@ var Wysiwyg = require('web_editor.wysiwyg');
 var ajax = require('web.ajax');
 
 
-var _fnSummernoteMaster = $.fn.summernote;
-var _summernoteMaster = $.summernote;
-$.fn.summernote = function () {
-    var summernote = this[0].ownerDocument.defaultView._fnSummenoteSlave || _fnSummernoteMaster;
-    return summernote.apply(this, arguments);
-};
-
 /**
  * Add option (inIframe) to load Wysiwyg in an iframe.
  **/
@@ -48,12 +41,8 @@ Wysiwyg.include({
         this.$target = this.$el;
         return this.defAsset
             .then(this._loadIframe.bind(this))
-            .then(this._super.bind(this)).then(function () {
-                var _summernoteMaster = $.summernote;
-                var _summernoteSlave = this.$iframe[0].contentWindow._summernoteSlave;
-                _summernoteSlave.options = _.extend({}, _summernoteMaster.options, {modules: _summernoteSlave.options.modules});
-                this._enableBootstrapInIframe();
-            }.bind(this));
+            .then(this._super.bind(this))
+            .then(this._enableBootstrapInIframe.bind(this));
     },
     /**
      * @override
@@ -187,20 +176,6 @@ Wysiwyg.include({
                         '<body class="o_in_iframe">\n' +
                             '<div id="iframe_target" style="height: calc(100vh - 6px);"></div>\n' +
                             '<script type="text/javascript">' +
-                                'window.$ = window.jQuery = window.top.jQuery;' +
-                                'var _summernoteMaster = $.summernote;' +
-                                'var _fnSummernoteMaster = $.fn.summernote;' +
-                                'delete $.summernote;' +
-                                'delete $.fn.summernote;' +
-                            '</script>\n' +
-                            '<script type="text/javascript" src="/web_editor/static/lib/summernote/summernote.js"></script>\n' +
-                            '<script type="text/javascript">' +
-                                'window._summernoteSlave = $.summernote;' +
-                                'window._summernoteSlave.iframe = true;' +
-                                'window._summernoteSlave.lang = _summernoteMaster.lang;' +
-                                'window._fnSummenoteSlave = $.fn.summernote;' +
-                                '$.summernote = _summernoteMaster;' +
-                                '$.fn.summernote = _fnSummernoteMaster;' +
                                 'if (window.top.' + this._onUpdateIframeId + ') {' +
                                     'window.top.' + this._onUpdateIframeId + '(' + _avoidDoubleLoad + ')' +
                                 '}' +

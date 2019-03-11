@@ -6,7 +6,7 @@ var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 
 var FullScreenPlugin = AbstractPlugin.extend({
-    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_fullscreen.xml'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_fullscreen.xml'],
     dependencies: [],
 
     className: 'fullscreen',

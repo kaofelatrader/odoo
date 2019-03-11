@@ -2,7 +2,7 @@
 <templates id="template" xml:space="preserve">
     <group t-name="wysiwyg.buttons.codeview">
         <button name="codeview-toggle" title="Toggle the Code View" data-method="toggle">
-            <i class="note-icon-code"></i>
+            <i class="fa fa-code"></i>
         </button>
     </group>
 </templates>

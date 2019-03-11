@@ -6,7 +6,7 @@ var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 
 var CodeViewPlugin = AbstractPlugin.extend({
-    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_codeview.xml'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_codeview.xml'],
     dependencies: ['Range'],
 
     pluginEvents: {

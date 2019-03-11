@@ -2,7 +2,7 @@
 <templates id="template" xml:space="preserve">
     <group t-name="wysiwyg.buttons.help">
         <button name="help-show" title="Help" data-method="showHelpDialog">
-            <i class="note-icon-question"></i>
+            <i class="fa fa-question"></i>
         </button>
     </group>
     <div t-name="wysiwyg.help_dialog">

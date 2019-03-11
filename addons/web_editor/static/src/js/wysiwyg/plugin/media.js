@@ -44,7 +44,7 @@ Manager.addPlugin('Float', Float);
 //--------------------------------------------------------------------------
 
 var MediaSize = AbstractPlugin.extend({
-    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_media.xml'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_media.xml'],
     buttons: {
         template: 'wysiwyg.buttons.size',
         active: '_active',
@@ -70,7 +70,7 @@ Manager.addPlugin('MediaSize', MediaSize);
 //--------------------------------------------------------------------------
 
 var Padding = AbstractPlugin.extend({
-    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_media.xml'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_media.xml'],
     buttons: {
         template: 'wysiwyg.buttons.padding',
         active: '_active',
@@ -99,7 +99,7 @@ Manager.addPlugin('Padding', Padding);
 //--------------------------------------------------------------------------
 
 var MediaPlugin = AbstractPlugin.extend({
-    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_media.xml'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_media.xml'],
     dependencies: ['Range'],
 
     buttons: {
@@ -488,7 +488,7 @@ var AbstractMediaPlugin = AbstractPlugin.extend({
 //--------------------------------------------------------------------------
 
 var ImagePlugin = AbstractMediaPlugin.extend({
-    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_media.xml'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_media.xml'],
     buttons: {
         template: 'wysiwyg.buttons.media',
     },

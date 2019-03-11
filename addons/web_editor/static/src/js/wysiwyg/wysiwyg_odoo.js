@@ -2,14 +2,30 @@ odoo.define('web_editor.wysiwyg.odoo', function (require) {
 'use strict';
 
 var Wysiwyg = require('web_editor.wysiwyg');
+var ajax = require('web.ajax');
 var core = require('web.core');
 
 var QWeb = core.qweb;
+var _t = core._t;
 
 Wysiwyg.include({
     _editorOptions: function () {
         var options = this._super();
         options.getColors = this._getColors.bind(this);
+        options.loadTemplates = function (xmlPath) {
+            return ajax.loadXML(xmlPath, QWeb);
+        };
+        options.renderTemplate = function (pluginName, template, values) {
+            var xml = QWeb.render(template, values);
+            var fragment = document.createElement('fragment');
+            fragment.innerHTML = xml;
+            this.translateTemplateNodes(pluginName, fragment);
+            return fragment.innerHTML;
+        };
+        options.translate = function (pluginName, string) {
+            return _t(string);
+        };
+
         return options;
     },
     _getColors: function () {

@@ -5,20 +5,17 @@ var core = require('web.core');
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var wysiwygOptions = require('wysiwyg.options');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
-var wysiwygTranslation = require('web_editor.wysiwyg.translation');
 
 var _t = core._t;
 
 wysiwygOptions.keyMap.pc['CTRL+SHIFT+NUM9'] = 'insertCheckList';
 wysiwygOptions.keyMap.mac['CMD+SHIFT+NUM9'] = 'insertCheckList';
-wysiwygTranslation.lists.checklist = _t('Checklist');
-wysiwygTranslation.help.checklist = _t('Toggle checkbox list');
 
 
 var ListPlugin = AbstractPlugin.extend({
     dependencies: ['Range', 'FontStyle'],
 
-    xmlDependencies: ['/web_editor/static/src/xml/wysiwyg_list.xml'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_list.xml'],
 
     buttons: {
         template: 'wysiwyg.buttons.list',

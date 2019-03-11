@@ -2,7 +2,7 @@
 <templates id="template" xml:space="preserve">
     <dropdown t-name="wysiwyg.buttons.tablepicker">
         <toggler title="Table">
-            <i class="note-icon-table"></i>
+            <i class="fa fa-table"></i>
         </toggler>
         <tablepicker>
             <div class="wysiwyg-dimension-picker">

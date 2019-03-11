@@ -6,6 +6,9 @@ var mixins = require('web.mixins');
 
 var pluginsRegistry = {};
 
+var $ = require('web_editor.jquery');
+var _ = require('web_editor._');
+
 
 var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
     /**
@@ -38,7 +41,7 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
             for (var pluginName in self._plugins) {
                 startPromises.push(self._plugins[pluginName].start());
             }
-            return $.when.apply($, startPromises);
+            return Promise.all(startPromises);
         });
     },
 
@@ -60,11 +63,14 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
         }
         return results;
     },
-    triggerEach: function (eventName, value) {
+    triggerEach: function (eventName) {
         var results = [];
         var callback = results.push.bind(results);
+        var args = [].slice.call(arguments);
+        args.push(callback);
         for (var i = 0; i < this._pluginNames.length; i++) {
-            this._plugins[this._pluginNames[i]].trigger(eventName, value, callback);
+            var plugin = this._plugins[this._pluginNames[i]];
+            plugin.trigger.apply(plugin, args);
         }
         return results;
     },
@@ -76,17 +82,22 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
     _loadPlugins: function (params, options) {
         this._plugins = this._createPluginInstance(params, options);
         this._pluginNames = this._getSortedPluginNames(this._plugins);
-        var promises = [this._loadXmlDependencies(this._pluginNames, this._plugins)];
+        var promises = [this._loadTemplatesDependencies(this._pluginNames, this._plugins, options)];
 
         for (var i = 0; i < this._pluginNames.length; i++) {
             var pluginName = this._pluginNames[i];
             var pluginInstance = this._plugins[pluginName];
             pluginInstance.pluginName = pluginName;
-            pluginInstance.dependencies = Object.freeze(_.pick(this._plugins, pluginInstance.dependencies));
+            var dependencies = {};
+            for (var k = 0; k < pluginInstance.dependencies.length; k++) {
+                var depName = pluginInstance.dependencies[k];
+                dependencies[depName] = this._plugins[depName];
+            }
+            pluginInstance.dependencies = Object.freeze(dependencies);
             promises.push(pluginInstance.isInitialized());
         }
 
-        return $.when.apply($, promises).then(function () {
+        return Promise.all(promises).then(function () {
             Object.freeze(self._plugins);
         });
     },
@@ -144,24 +155,23 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
         }
         return pluginInstances;
     },
-    _loadXmlDependencies: function (pluginNames, pluginInstances) {
-        var xmlDependencies = [];
+    _loadTemplatesDependencies: function (pluginNames, pluginInstances, options) {
+        var templatesDependencies = [];
         for (var i = 0; i < pluginNames.length; i++) {
             var pluginInstance = pluginInstances[pluginNames[i]];
-            for (var k = 0; pluginInstance.xmlDependencies.length < k; k++) {
-                var src = pluginInstance.xmlDependencies[k];
-                if (xmlDependencies.indexOf(src) === -1) {
-                    xmlDependencies.push(src);
+            for (var k = 0; pluginInstance.templatesDependencies.length < k; k++) {
+                var src = pluginInstance.templatesDependencies[k];
+                if (templatesDependencies.indexOf(src) === -1) {
+                    templatesDependencies.push(src);
                 }
             }
         }
-
-        var defs = [];
-        var xmlPath;
-        while ((xmlPath = xmlDependencies.shift())) {
-            defs.push(ajax.loadXML(xmlPath, core.qweb));
+        var promises = [];
+        var templatesPath;
+        while ((templatesPath = templatesDependencies.shift())) {
+            promises.push(options.loadTemplates(templatesPath));
         }
-        return $.when.apply($, defs);
+        return Promise.all(promises);
     },
 });
 

@@ -245,11 +245,93 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         _.defaults(params.keyMap.pc, defaults.keyMap.pc);
         _.defaults(params.keyMap.mac, defaults.keyMap.mac);
 
+        var templates = {};
+        _.defaults(params, {
+            /**
+             * @param {string[]} templatesDependencies
+             * @returns {Promise}
+             */
+            loadTemplates: function (templatesDependencies) {
+                var defs = [];
+                var xmlPath;
+                while ((xmlPath = templatesDependencies.shift())) {
+                    defs.push($.get(xmlPath, function (data) {
+                        templates;
+                        debugger
+                    }));
+                }
+                return $.when.apply($, defs);
+            },
+
+            /**
+             * @param {string} template
+             * @param {any} values
+             * @returns {string}
+             */
+            renderTemplate: function (pluginName, template, values) {
+                var self = this;
+                var html = templates[template];
+                var fragment = document.createElement('fragment');
+                fragment.innerHTML = html;
+                this.translateTemplateNodes(pluginName, fragment);
+                return fragment.innerHTML;
+            },
+
+            translateTemplateNodes: function (pluginName, node) {
+                var params = this;
+                var regExpText = /^([\s\n\r\t]*)(.*?)([\s\n\r\t]*)$/;
+                (function translateNodes(elem) {
+                    if (elem.attributes) {
+                        Object.values(elem.attributes).forEach(function (attribute) {
+                            if (attribute.name === 'title' || attribute.name === 'alt' || attribute.name === 'help') {
+                                var before = attribute.value;
+                                var text = before.match(regExpText);
+                                if (text) {
+                                    var value = text[1] + params.translate(pluginName, text[2]) + text[3];
+                                    value = self._pluginsManager.triggerEach('translate', pluginName, elem, attribute.name, value, before);
+                                    attribute.value = value;
+                                }
+                            }
+                        });
+                    }
+
+                    var nodes = elem.childNodes;
+                    var i = nodes.length;
+                    while (i--) {
+                        var node = nodes[i];
+                        if (node.nodeType == 3) {
+                            var text = node.nodeValue.match(regExpText);
+                            if (text) {
+                                var value = text[1] + params.translate(pluginName, text[2]) + text[3];
+                                node.nodeValue = value;
+                            }
+                        } else if (node.nodeType == 1 || node.nodeType == 9 || node.nodeType == 11) {
+                            translateNodes(node);
+                        }
+                    }
+                })(node);
+            },
+
+            /**
+             * @param {string}
+             * @returns {string}
+             */
+            translate: function (pluginName, string) {
+                string = string.replace(/\s\s+/, ' ');
+                if (params.lang && params.lang[string]) {
+                    return params.lang[string];
+                }
+                console.warn("Missing translation: " + string);
+                return string;
+            },
+        });
+
         if (!params.hasFocus) {
             params.hasFocus = function () {
                 return self._isFocused;
             };
         }
+
         /**
          * Return true if the current node is unbreakable.
          * An unbreakable node can be removed or added but can't by split into
@@ -271,6 +353,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
                         !params.isEditableNode(node) ||
                         (_isUnbreakableNode && _isUnbreakableNode(node));
         };
+
         /**
          * Return true if the current node is editable (for keypress and selection).
          *

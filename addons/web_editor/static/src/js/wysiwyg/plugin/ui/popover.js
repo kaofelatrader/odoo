@@ -6,8 +6,6 @@ var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 var utils = require('wysiwyg.utils');
 
-var QWeb = core.qweb;
-
 var $ = require('web_editor.jquery');
 var _ = require('web_editor._');
 
@@ -135,7 +133,7 @@ var PopoverPlugin = AbstractPlugin.extend({
         }
 
         var group = this.document.createElement('group');
-        group.innerHTML = QWeb.render(plugin.buttons.template, {
+        group.innerHTML = this.options.renderTemplate(plugin.pluginName, plugin.buttons.template, {
             plugin: plugin,
             options: this.options,
         });

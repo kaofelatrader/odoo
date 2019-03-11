@@ -12,7 +12,7 @@
     <t t-name="wysiwyg.buttons.fontstyle">
         <dropdown>
             <toggler title="Style">
-                <i class="note-icon-magic"></i>
+                <i class="fa fa-magic"></i>
             </toggler>
             <vertical-items direction="vertical">
                 <t t-foreach="options.styleTags" t-as="styleTag">
@@ -24,17 +24,17 @@
             </vertical-items>
         </dropdown>
         <group>
-            <button name="formatText-b" data-method="formatText" data-value="B" title="Bold (CTRL+B)">
-                <i class="note-icon-bold"></i>
+            <button name="formatText-b" data-method="formatText" data-value="B" title="Bold">
+                <i class="fa fa-bold"></i>
             </button>
-            <button name="formatText-i" data-method="formatText" data-value="I" title="Italic (CTRL+I)">
-                <i class="note-icon-italic"></i>
+            <button name="formatText-i" data-method="formatText" data-value="I" title="Italic">
+                <i class="fa fa-italic"></i>
             </button>
-            <button name="formatText-u" data-method="formatText" data-value="U" title="Underline (CTRL+U)">
-                <i class="note-icon-underline"></i>
+            <button name="formatText-u" data-method="formatText" data-value="U" title="Underline">
+                <i class="fa fa-underline"></i>
             </button>
-            <button name="formatText-remove" data-method="removeFormat" title="Remove Font Style (CTRL+\)">
-                <i class="note-icon-eraser"></i>
+            <button name="formatText-remove" data-method="removeFormat" title="Remove Font Style">
+                <i class="fa fa-eraser"></i>
             </button>
         </group>
     </t>
@@ -64,10 +64,10 @@
             </group>
         </dropdown>
         <button name="indent-out" data-method="outdent" title="Outdent">
-            <i class="note-icon-align-outdent"></i>
+            <i class="fa fa-outdent"></i>
         </button>
         <button name="indent-in" data-method="indent" title="Indent">
-            <i class="note-icon-align-indent"></i>
+            <i class="fa fa-indent"></i>
         </button>
     </group>
 </templates>

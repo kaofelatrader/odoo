@@ -14,7 +14,7 @@ var _t = core._t;
 
 
 var Wysiwyg = Widget.extend({
-    xmlDependencies: [
+    templatesDependencies: [
         '/web_editor/static/src/xml/wysiwyg.xml',
     ],
     custom_events: {
