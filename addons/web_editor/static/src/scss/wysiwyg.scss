@@ -202,6 +202,15 @@ editor {
             margin-left: -4px;
         }
     }
+
+    &.fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1050;
+        width: 100%;
+        background-color: white;
+    }
 }
 
 
@@ -421,14 +430,4 @@ img.o_we_selected_image {
 .fa.mx-auto,
 img.mx-auto {
     display: block;
-}
-
-// TODO: move up + use variables
-editor.fullscreen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1050;
-    width: 100%;
-    background-color: white;
 }
