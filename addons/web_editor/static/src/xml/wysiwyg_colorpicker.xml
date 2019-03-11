@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates>
     
-    <group t-name="wysiwyg.buttons.forecolor">
-        <button class="dropdown-toggle" data-toggle="dropdown" title="Color">
+    <dropdown t-name="wysiwyg.buttons.forecolor">
+        <toggler title="Color">
             <placeholder/>
             <i class="fa fa-font"></i>
-        </button>
+        </toggler>
         <t t-call="wysiwyg.buttons.palette"/>
-    </group>
+    </dropdown>
 
-    <group t-name="wysiwyg.buttons.bgcolor">
-        <button class="dropdown-toggle" data-toggle="dropdown" title="Background color">
+    <dropdown t-name="wysiwyg.buttons.bgcolor">
+        <toggler title="Background color">
             <placeholder/>
             <i class="fa fa-paint-brush"></i>
-        </button>
+        </toggler>
         <t t-call="wysiwyg.buttons.palette"/>
-    </group>
+    </dropdown>
 
-    <palette t-name="wysiwyg.buttons.palette" class="dropdown-menu">
+    <palette t-name="wysiwyg.buttons.palette">
         <button name="color-reset" data-method="update">Reset to default</button>
         <!-- 
         colors = [

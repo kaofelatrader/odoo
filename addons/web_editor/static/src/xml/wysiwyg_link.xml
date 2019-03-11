@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <templates id="template" xml:space="preserve">
     <t t-name="wysiwyg.buttons.link">
-        <group class="btn-group wysiwyg-button-link">
+        <group class="wysiwyg-button-link">
             <button name="link-add" title="Link (CTRL+K)" data-method="showLinkDialog">
                 <i class="fa fa-link"></i>
             </button>
@@ -12,7 +12,7 @@
         <span>
             <a target="_blank" href="#">#</a>&amp;nbsp;
         </span>
-        <group class="btn-group wysiwyg-button-link">
+        <group class="wysiwyg-button-link">
             <button name="link-add" title="Link (CTRL+K)" data-method="showLinkDialog">
                 <i class="fa fa-link"></i>
             </button>

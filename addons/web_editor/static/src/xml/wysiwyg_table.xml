@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <templates id="template" xml:space="preserve">
-    <group t-name="wysiwyg.buttons.tablepicker">
-        <button class="dropdown-toggle" data-toggle="dropdown" title="Table">
+    <dropdown t-name="wysiwyg.buttons.tablepicker">
+        <toggler title="Table">
             <i class="note-icon-table"></i>
-        </button>
-        <tablepicker class="dropdown-menu">
+        </toggler>
+        <tablepicker>
             <div class="wysiwyg-dimension-picker">
                 <div class="wysiwyg-dimension-picker-mousecatcher">
                     <row t-foreach="plugin._tableMatrix" t-as="row">
@@ -16,7 +16,7 @@
             </div>
             <div class="wysiwyg-dimension-display"/>
         </tablepicker>
-    </group>
+    </dropdown>
 
     <t t-name="wysiwyg.popover.table">
         <group>

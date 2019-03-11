@@ -15,7 +15,7 @@ var TablePicker = AbstractPlugin.extend({
         template: 'wysiwyg.buttons.tablepicker',
         events: {
             'click': '_updatePicker',
-            'mouseover button': '_updatePicker',
+            'mouseover row button': '_updatePicker',
         },
     },
 
@@ -213,7 +213,7 @@ var TablePicker = AbstractPlugin.extend({
      * @param {MouseEvent} ev 
      */
     _updatePicker: function (ev) {
-        if (!ev.target || ev.target.tagName !== "BUTTON" || ev.target.classList.contains('dropdown-toggle')) {
+        if (!ev.target || ev.target.tagName !== "BUTTON" || ev.target.parentNode.tagName === 'DROPDOWN') {
             this._row = this._col = 1;
         } else {
             var values = ev.target.getAttribute('data-value').split('x');

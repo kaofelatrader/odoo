@@ -151,6 +151,19 @@ var PopoverPlugin = AbstractPlugin.extend({
         };
     },
     _addButtonHandlers: function (plugin, element) {
+        this._addButtonHandlersEvents(plugin, element);
+        this._addButtonHandlersDataMethod(plugin, element);
+        this._addButtonHandlersDropdown(element);
+
+        // prevent all click (avoid href...)
+        element.addEventListener('mousedown', function (ev) {
+            ev.preventDefault();
+        }, false);
+        element.addEventListener('click', function (ev) {
+            ev.preventDefault();
+        }, false);
+    },
+    _addButtonHandlersEvents: function (plugin, element) {
         // add plugins button event as handler
         var events = plugin.buttons.events;
         if (events) {
@@ -169,18 +182,38 @@ var PopoverPlugin = AbstractPlugin.extend({
                 element.addEventListener(eventName, handle, false);
             });
         }
-
-        // add plugins named button handler
+    },
+    _addButtonHandlersDataMethod: function (plugin, element) {
         var _onButtonMousedown = this._onButtonMousedown.bind(this, plugin);
         if (!element.getAttribute('data-method')) {
             _onButtonMousedown = handleSelector(element, 'button[data-method]', _onButtonMousedown);
         }
         element.addEventListener('mousedown', _onButtonMousedown, false);
+    },
+    _addButtonHandlersDropdown: function (element) {
+        var dropdowns = element.tagName === 'DROPDOWN' ? [element] : element.querySelectorAll('dropdown');
+        dropdowns.forEach(function (dropdown) {
+            var toggler = dropdown.querySelector('toggler');
+            var dropdownContents = dropdown.lastElementChild;
+            dropdownContents.style.display = 'none';
 
-        // prevent all click (avoid href...)
-        element.addEventListener('click', function (ev) {
-            ev.preventDefault();
-        }, false);
+            var mousedownCloseDropdown = function (ev) {
+                if (!dropdown.contains(ev.target)) {
+                    dropdownContents.style.display = 'none';
+                    document.removeEventListener('click', mousedownCloseDropdown);
+                }
+            }
+
+            dropdown.addEventListener('click', function () {
+                var open = dropdownContents.style.display !== 'none';
+                if (!toggler.classList.contains('disabled')) {
+                    dropdownContents.style.display = open ? 'none' : '';
+                    document.addEventListener('click', mousedownCloseDropdown, false);
+                } else if (open) {
+                    dropdownContents.style.display = 'none';
+                }
+            }, false);
+        });
     },
     _recordPluginButtons: function (plugin, element) {
         // add created dom on plugin buttons object
@@ -215,13 +248,10 @@ var PopoverPlugin = AbstractPlugin.extend({
             if (!popover.display) {
                 return;
             }
-            popover.element.querySelectorAll('.dropdown-menu').forEach(function (dropdown) {
-                var classList = dropdown.previousElementSibling.classList;
-                if (!dropdown.querySelector('button[name]:not(.disabled)')) {
-                    classList.add('disabled');
-                } else {
-                    classList.remove('disabled');
-                }
+            popover.element.querySelectorAll('dropdown').forEach(function (dropdown) {
+                var toggler = dropdown.querySelector('toggler');
+                var dropdownContents = dropdown.lastElementChild;
+                toggler.classList.toggle('disabled', !dropdownContents.querySelector('button[name]:not(.disabled)'));
             });
         });
     },
@@ -247,28 +277,34 @@ var PopoverPlugin = AbstractPlugin.extend({
             var active = this._togglePluginButtonToggle(plugin, focusNode, button.name, 'active');
             if (active) {
                 button.classList.add('active');
-
-                var group = button.parentNode;
-                while (group.tagName !== 'GROUP') {
-                    group = group.parentNode;
-                }
-                if (group.tagName === 'GROUP') {
-                    var placeholder = group.getElementsByTagName('placeholder')[0];
-                    if (placeholder) {
-                        placeholder.innerHTML = '';
-                        var clone = button.cloneNode(true);
-                        clone.removeAttribute('data-method');
-                        clone.removeAttribute('data-value');
-                        clone.classList.remove('active');
-                        placeholder.appendChild(clone);
-                    }
-                }
             } else {
                 button.classList.remove('active');
             }
         } else {
             button.classList.add('disabled');
         }
+    },
+    _updatePluginPlaceholder: function (plugin, focusNode, button) {
+        this.popovers.forEach(function (popover) {
+            popover.element.querySelectorAll('dropdown').forEach(function (dropdown) {
+                var placeholder = dropdown.querySelector('placeholder');
+                if (!placeholder || dropdown.querySelector('toggler').classList.contains('disabled')) {
+                    return;
+                }
+
+                placeholder.innerHTML = '';
+                var activeButton = dropdown.querySelector('button.active');
+                if (!activeButton) {
+                    return;
+                }
+
+                var clone = activeButton.cloneNode(true);
+                clone.removeAttribute('data-method');
+                clone.removeAttribute('data-value');
+                clone.classList.remove('active');
+                placeholder.appendChild(clone);
+            });
+        });
     },
     _updatePopovers: function (range) {
         var self = this;
@@ -305,9 +341,6 @@ var PopoverPlugin = AbstractPlugin.extend({
             if (!popover.display) {
                 return;
             }
-            popover.element.querySelectorAll('placeholder').forEach(function (placeholder) {
-                placeholder.innerHTML = '';
-            });
 
             var buttons = [].slice.call(popover.element.getElementsByTagName('button'));
             if (popover.element.tagName === 'BUTTON') {
@@ -322,6 +355,7 @@ var PopoverPlugin = AbstractPlugin.extend({
             });
         });
         this._toggleDropDownEnabled();
+        this._updatePluginPlaceholder();
     },
     /**
      * Update the position of the popover in CSS.

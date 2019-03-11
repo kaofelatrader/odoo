@@ -17,7 +17,7 @@ var RangePlugin = AbstractPlugin.extend({
     pluginEvents: {
         'change': '_onChange',
         'disable': '_onDisable',
-        'blur': '_onBlur',
+        'blurEditor': '_onBlur',
     },
 
     /**

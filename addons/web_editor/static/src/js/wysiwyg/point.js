@@ -339,7 +339,7 @@ BoundaryPoint.prototype = {
      */
     walkTo: function (endPoint, handler, isSkipInnerOffset) {
         var point = new BoundaryPoint(this.node, this.offset);
-        while (point) {
+        while (point && point.node) {
             handler(point);
             if (point.isSameAs(endPoint)) {
                 break;

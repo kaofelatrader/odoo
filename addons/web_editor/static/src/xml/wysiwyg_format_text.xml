@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <templates>
-    <group t-name="wysiwyg.buttons.fontsize">
-        <button class="dropdown-toggle" data-toggle="dropdown" title="Font Size">
-            <placeholder/>
-        </button>
-        <div class="dropdown-menu">
-            <button t-attf-name="size-{{fontSize.toLowerCase()}}" class="wysiwyg-dropdown-item" data-method="update" t-att-data-value="fontSize.toLowerCase()" t-foreach="options.fontSizes" t-as="fontSize"><t t-esc="fontSize"/></button>
-        </div>
-    </group>
+    <dropdown t-name="wysiwyg.buttons.fontsize">
+        <toggler title="Font Size">
+            <placeholder>Default</placeholder>
+        </toggler>
+        <vertical-items direction="vertical">
+            <button t-attf-name="size-{{fontSize.toLowerCase()}}" data-method="update" t-att-data-value="fontSize.toLowerCase()" t-foreach="options.fontSizes" t-as="fontSize"><t t-esc="fontSize"/></button>
+        </vertical-items>
+    </dropdown>
 
     <t t-name="wysiwyg.buttons.fontstyle">
-        <group>
-            <button class="dropdown-toggle" data-toggle="dropdown" title="Style">
+        <dropdown>
+            <toggler title="Style">
                 <i class="note-icon-magic"></i>
-            </button>
-            <div class="dropdown-menu">
+            </toggler>
+            <vertical-items direction="vertical">
                 <t t-foreach="options.styleTags" t-as="styleTag">
                     <button t-attf-name="formatBlock-{{styleTag.value || styleTag}}"
-                        class="wysiwyg-dropdown-item" data-method="formatBlock" t-att-data-value="styleTag.value || styleTag">
+                        data-method="formatBlock" t-att-data-value="styleTag.value || styleTag">
                         <t t-esc="styleTag.title || styleTag"/>
                     </button>
                 </t>
-            </div>
-        </group>
+            </vertical-items>
+        </dropdown>
         <group>
             <button name="formatText-b" data-method="formatText" data-value="B" title="Bold (CTRL+B)">
                 <i class="note-icon-bold"></i>
@@ -40,23 +40,29 @@
     </t>
 
     <group t-name="wysiwyg.buttons.paragraph">
-        <button class="dropdown-toggle" data-toggle="dropdown" title="Paragraph">
-            <placeholder/>
-        </button>
-        <div class="dropdown-menu">
-            <button name="align-left" data-method="formatBlockStyle" data-value="justifyLeft" title="Float Left">
-                <i class="fa fa-align-left"></i>
-            </button>
-            <button name="align-center" data-method="formatBlockStyle" data-value="justifyCenter" title="Align Center">
-                <i class="fa fa-align-center"></i>
-            </button>
-            <button name="align-right" data-method="formatBlockStyle" data-value="justifyRight" title="Float Right">
-                <i class="fa fa-align-right"></i>
-            </button>
-            <button name="align-justify" data-method="formatBlockStyle" data-value="justifyFull" title="Float Justify">
-                <i class="fa fa-align-justify"></i>
-            </button>
-        </div>
+        <dropdown>
+            <toggler title="Paragraph">
+                <placeholder>
+                    <button name="align-left" title="Float Left">
+                        <i class="fa fa-align-left"></i>
+                    </button>
+                </placeholder>
+            </toggler>
+            <group>
+                <button name="align-left" data-method="formatBlockStyle" data-value="justifyLeft" title="Float Left">
+                    <i class="fa fa-align-left"></i>
+                </button>
+                <button name="align-center" data-method="formatBlockStyle" data-value="justifyCenter" title="Align Center">
+                    <i class="fa fa-align-center"></i>
+                </button>
+                <button name="align-right" data-method="formatBlockStyle" data-value="justifyRight" title="Float Right">
+                    <i class="fa fa-align-right"></i>
+                </button>
+                <button name="align-justify" data-method="formatBlockStyle" data-value="justifyFull" title="Float Justify">
+                    <i class="fa fa-align-justify"></i>
+                </button>
+            </group>
+        </dropdown>
         <button name="indent-out" data-method="outdent" title="Outdent">
             <i class="note-icon-align-outdent"></i>
         </button>

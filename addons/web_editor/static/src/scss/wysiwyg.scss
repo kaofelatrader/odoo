@@ -6,6 +6,16 @@ editor {
     flex-direction: column;
     min-height: 200px;
 
+    editable {
+        flex: 1;
+        outline: none;
+        overflow: auto;
+    }
+
+
+    // style for dropdown & buttons (in popover & toolbar)
+
+
     popover {
         display: none;
         position: absolute;
@@ -24,12 +34,11 @@ editor {
         z-index: 1;
         background-color: #fff;
         position: relative;
-        button[data-method="removeMedia"] {
-            display: none;
-        }
     }
 
     popover, toolbar {
+        user-select: none;
+
         group {
             position: relative;
             display: inline-flex;
@@ -47,22 +56,19 @@ editor {
                 }
             }
         }
-        button {
-            position: relative;
+        button, toggler {
+            display: inline-block;
             padding: 0.25rem 0.5rem;
             margin: 0;
             line-height: 1.5;
             border-radius: 0.2rem;
-            display: inline-block;
             font-weight: 500;
             color: #666666;
             text-align: center;
             vertical-align: middle;
-            user-select: none;
             background-color: transparent;
             border: 1px solid #dee2e6;
             line-height: 1.5;
-            flex: 1 1 auto;
 
             &.active, &:active {
                 color: #212529;
@@ -77,35 +83,59 @@ editor {
                 }
             }
         }
+        button {
+            flex: 1 1 auto;
+        }
+        button:focus {
+            outline: none;
+        }
         > button {
             margin: 0 2px;
         }
-        placeholder button {
-            display: inline-block;
-            margin: 0;
-            padding: 0;
-            border: 0;
-            width: auto;
-            background-color: transparent;
+    }
 
-            &[name^=color-] {
-                width: 20px;
-                height: 2px;
-                position: absolute;
-                bottom: 1px;
+    dropdown {
+        position: relative;
+        margin: 0 2px;
+
+        > toggler {
+            position: relative;
+
+            placeholder button {
+                display: inline-block;
+                margin: 0;
+                padding: 0;
+                border: 0;
+                width: auto;
+                background-color: transparent;
             }
         }
-        .dropdown-menu {
-            padding: 2px;
+        > *:nth-child(2) {
+            position: absolute;
+            left: 0;
+            box-shadow: 0 6px 12px -4px rgba(0, 0, 0, 0.25);
+            background-color: #FFFFFF;
+            padding: 4px;
+        }
+        > vertical-items {
+            display: block;
 
-            .wysiwyg-dropdown-item {
+            > button {
                 width: 100%;
                 display: block;
             }
         }
     }
 
-    textarea[name="codeview"] {
+
+    // style for plugins
+
+
+    toolbar button[data-method="removeMedia"] {
+        display: none;
+    }
+
+    > textarea[name="codeview"] {
         flex: 1;
         border: 0;
         resize: none;
@@ -114,32 +144,8 @@ editor {
         font-family: "Lucida Console", Monaco, monospace;
     }
 
-    editable {
-        flex: 1;
-        outline: none;
-        overflow: auto;
-    }
-
-    palette.dropdown-menu.show {
-        padding: 4px 4px 10px 4px;
-        > button {
-            width: 100%;
-            margin: 4px 0;
-        }
-        row {
-            display: block;
-            white-space: nowrap;
-            button {
-                width: 20px;
-                height: 20px;
-                padding: 0;
-                margin: 0;
-                border: 1px solid #fff;
-            }
-        }
-    }
-
-    tablepicker.dropdown-menu.show {
+    dropdown[data-plugin="TablePicker"] tablepicker {
+        display: block;
         min-width: 3em;
         min-height: 3em;
         padding: 0;
@@ -165,6 +171,35 @@ editor {
             button.wysiwyg-tablepicker-highlighted {
                 background-color: #875A7B;
             }
+        }
+    }
+    dropdown[data-plugin="ForeColor"],
+    dropdown[data-plugin="BgColor"] {
+        palette {
+            display: block;
+            padding: 4px 4px 10px 4px;
+            > button {
+                width: 100%;
+                margin: 4px 0;
+            }
+            row {
+                display: block;
+                white-space: nowrap;
+                button {
+                    width: 20px;
+                    height: 20px;
+                    padding: 0;
+                    margin: 0;
+                    border: 1px solid #fff;
+                }
+            }
+        }
+        placeholder button, {
+            width: 20px;
+            height: 2px;
+            position: absolute;
+            bottom: 1px;
+            margin-left: -4px;
         }
     }
 }

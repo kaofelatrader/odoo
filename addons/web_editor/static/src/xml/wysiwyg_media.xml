@@ -16,18 +16,18 @@
         <button name="size-25" data-method="update" data-value="25%" title="Resize Quarter">25%</button>
     </group>
 
-    <group t-name="wysiwyg.buttons.padding">
-        <button class="dropdown-toggle" data-toggle="dropdown" title="Padding">
+    <dropdown t-name="wysiwyg.buttons.padding">
+        <toggler title="Padding">
             <i class="fa fa-plus-square-o"></i>
-        </button>
-        <div class="dropdown-menu">
-            <button name="padding-none" class="wysiwyg-dropdown-item" data-method="update" data-value="">None</button>
-            <button name="padding-small" class="wysiwyg-dropdown-item" data-method="update" data-value="padding-small">Small</button>
-            <button name="padding-medium" class="wysiwyg-dropdown-item" data-method="update" data-value="padding-medium">Medium</button>
-            <button name="padding-large" class="wysiwyg-dropdown-item" data-method="update" data-value="padding-large">Large</button>
-            <button name="padding-xl" class="wysiwyg-dropdown-item" data-method="update" data-value="padding-xl">Xl</button>
-        </div>
-    </group>
+        </toggler>
+        <vertical-items>
+            <button name="padding-none" data-method="update" data-value="">None</button>
+            <button name="padding-small" data-method="update" data-value="padding-small">Small</button>
+            <button name="padding-medium" data-method="update" data-value="padding-medium">Medium</button>
+            <button name="padding-large" data-method="update" data-value="padding-large">Large</button>
+            <button name="padding-xl" data-method="update" data-value="padding-xl">Xl</button>
+        </vertical-items>
+    </dropdown>
 
     <group t-name="wysiwyg.buttons.align">
         <button name="align-left" data-method="update" data-value="left" title="Float Left">

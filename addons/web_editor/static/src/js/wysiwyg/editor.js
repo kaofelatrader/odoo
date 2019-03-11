@@ -133,8 +133,8 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         $editable.find('[alt=""]').removeAttr('alt');
         $editable.find('a.o_image, span.fa, i.fa').html('');
         $editable.find('[aria-describedby]').removeAttr('aria-describedby').removeAttr('data-original-title');
-        $editable.find(utils.formatTags.join(',')).filter(function (node) {
-            return !node.firstChild;
+        $editable.find(utils.formatTags.join(',')).filter(function () {
+            return !this.firstChild;
         }).remove();
         return $editable.html() || $editable.val();
     },
