@@ -460,7 +460,12 @@ class MailThread(models.AbstractModel):
                 _sub_relative2absolute.base_url = self.env["ir.config_parameter"].sudo().get_param("web.base.url")
             return match.group(1) + urls.url_join(_sub_relative2absolute.base_url, match.group(2))
 
+        def _sub_add_dbname(match):
+            # adding database name to logo url
+            return match.group(1) + match.group(2) + ("&dbname=" if '?' in match.group(2) else "?dbname=") + self.env.cr.dbname
+
         _sub_relative2absolute.base_url = base_url
+        html = re.sub(r"""(<img(?=\s)[^>]*\ssrc=")(/(web/binary/company_logo|logo|logo.png)(?!.*dbname)[^\"]+)""", _sub_add_dbname, html)
         html = re.sub(r"""(<img(?=\s)[^>]*\ssrc=")(/[^/][^"]+)""", _sub_relative2absolute, html)
         html = re.sub(r"""(<a(?=\s)[^>]*\shref=")(/[^/][^"]+)""", _sub_relative2absolute, html)
         html = re.sub(r"""(<[^>]+\bstyle="[^"]+\burl\('?)(/[^/'][^'")]+)""", _sub_relative2absolute, html)
