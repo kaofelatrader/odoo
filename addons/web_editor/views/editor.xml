@@ -74,6 +74,7 @@
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/history.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/table.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/clipboard.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/fullscreen.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/media.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/link.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/format_text.js"/>

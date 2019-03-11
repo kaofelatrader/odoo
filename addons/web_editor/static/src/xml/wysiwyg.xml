@@ -130,12 +130,6 @@
         <button name="redo" data-method="redo" title="Redo (CTRL+Y)"><i class="note-icon-redo"></i></button>
     </group>
 
-    <t t-name="wysiwyg.buttons.fullscreen">
-        <button class="btn" title="Full Screen">
-            <i class="note-icon-arrows-alt"></i>
-        </button>
-    </t>
-
     <t t-name="wysiwyg.buttons.help">
         <button class="btn" title="Help">
             <i class="note-icon-question"></i>

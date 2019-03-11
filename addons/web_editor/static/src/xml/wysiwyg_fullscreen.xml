@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="template" xml:space="preserve">
+    <group t-name="wysiwyg.buttons.fullscreen">
+        <button name="fullscreen-toggle" title="Toggle Fullscreen" data-method="toggle">
+            <i class="note-icon-arrows-alt"></i>
+        </button>
+    </group>
+</templates>
