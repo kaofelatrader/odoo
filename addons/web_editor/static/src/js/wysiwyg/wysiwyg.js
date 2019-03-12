@@ -398,7 +398,7 @@ Wysiwyg.prepare = (function () {
  * @returns {Number} eo - end offset
  */
 Wysiwyg.getRange = function (node) {
-    return this.setRange({}, node);
+    return new WrappedRange({}, node.ownerDocument || node);
 };
 /**
  */
