@@ -144,7 +144,8 @@ var RangePlugin = AbstractPlugin.extend({
         this.lastRange = range ? this.setRange(range) : this._getRange();
 
         if (this.lastRange && !this.editable.contains(this.lastRange.sc) || !this.editable.contains(this.lastRange.ec)) {
-            throw new Error("Try to save a wrong range.");
+            console.warn("Try to save a wrong range.");
+            this.lastRange = null;
         }
     },
     restore: function () {

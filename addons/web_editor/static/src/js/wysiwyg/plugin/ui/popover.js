@@ -54,7 +54,10 @@ var PopoverPlugin = AbstractPlugin.extend({
         this.dependencies = dependencies;
     },
     blurEditor: function () {
-        this._onFocusNode(null);
+        this._hidePopovers();
+    },
+    focusEditor: function () {
+        this._onFocusNode(this.dependencies.Range.getFocusedNode());
     },
     changeEditorValue: function () {
         this._onFocusNode(this.dependencies.Range.getFocusedNode());

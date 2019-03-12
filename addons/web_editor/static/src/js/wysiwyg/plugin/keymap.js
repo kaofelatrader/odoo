@@ -123,7 +123,9 @@ var keyMapPlugin = AbstractPlugin.extend({
     showHelpDialog: function () {
         var self = this;
         return new Promise(function (resolve) {
-            var html = self.options.renderTemplate('KeyMap', 'wysiwyg.help_dialog', self);
+            var html = self.options.renderTemplate('KeyMap', 'wysiwyg.help_dialog', {
+                keyMap: Object.values(self.keyMap),
+            });
             var helpDialog = new Dialog(self, {
                 title: self.options.translate('KeyMap', 'Help'),
                 size: 'medium',

@@ -32,43 +32,15 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @property {Object []} editor_events
      * {target: {String}, name: {String}, method: {String}}
      */
-    editor_events: [
-        {
-            target: 'document',
-            name: 'mousedown',
-            method: '_onMouseDown',
-        },
-        {
-            target: 'document',
-            name: 'mouseenter',
-            method: '_onMouseEnter',
-        },
-        {
-            target: 'document',
-            name: 'mouseleave',
-            method: '_onMouseLeave',
-        },
-        {
-            target: 'document',
-            name: 'mousemove',
-            method: '_onMouseMove',
-        },
-        {
-            target: 'editable',
-            name: 'blur',
-            method: '_onBlurEditable',
-        },
-        {
-            target: 'editable',
-            name: 'focus',
-            method: '_onFocusEditable',
-        },
-        {
-            target: 'editable',
-            name: 'paste',
-            method: '_onPaste',
-        },
-    ],
+    editor_events: {
+        'mousedown document': '_onMouseDown',
+        'mouseenter document': '_onMouseEnter',
+        'mouseleave document': '_onMouseLeave',
+        'mousemove document': '_onMouseMove',
+        'blur editable': '_onBlurEditable',
+        'focus editable': '_onFocusEditable',
+        'paste editable': '_onPaste',
+    },
 
     init: function (parent, target, params) {
         this._super();
@@ -223,11 +195,8 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @private
      */
     _bindEvents: function () {
-        var self = this;
-        var target;
         this.editor_events.forEach(function (event) {
-            target = event.target === 'document' ? document : self[event.target];
-            target.addEventListener(event.name, self[event.method]);
+            event.target.addEventListener(event.name, event.method);
         });
     },
     /**
@@ -258,11 +227,8 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * Destroy all events defined in `editor_events`.
      */
     _destroyEvents: function () {
-        var self = this;
-        var target;
         this.editor_events.forEach(function (event) {
-            target = event.target === 'document' ? document : self[event.target];
-            target.removeEventListener(event.name, self[event.method]);
+            event.target.removeEventListener(event.name, event.method);
         });
     },
     /**
@@ -492,9 +458,16 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      */
     _saveEventMethods: function () {
         var self = this;
-        this.editor_events.forEach(function (event) {
-            self[event.method] = self[event.method].bind(self);
+        var events = [];
+        Object.keys(this.editor_events).forEach(function (key) {
+            var parts = key.split(' ');
+            events.push({
+                name: parts[0],
+                target: parts[1] === 'document' ? document : self[parts[1]],
+                method: self[self.editor_events[key]].bind(self),
+            });
         });
+        this.editor_events = events;
     },
 
     //--------------------------------------------------------------------------

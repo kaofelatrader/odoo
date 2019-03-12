@@ -168,7 +168,6 @@ var CodeViewPlugin = AbstractPlugin.extend({
     _setCodeViewValue: function (value) {
         this.codeview.value = value.trim();
     },
-
 });
 
 Manager.addPlugin('CodeView', CodeViewPlugin);

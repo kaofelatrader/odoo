@@ -24,6 +24,12 @@ var ToolbarPlugin = PopoverPlugin.extend({
         });
         this.dependencies = dependencies;
     },
+    blurEditor: function () {
+        var toolbar = this.popovers[0];
+        toolbar.element.querySelectorAll('button[name]').forEach(function (button) {
+            button.classList.add('disabled');
+        });
+    },
 
     //--------------------------------------------------------------------------
     // Private
