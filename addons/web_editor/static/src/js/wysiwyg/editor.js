@@ -133,7 +133,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         $(this.target).removeData('wysiwyg');
         $(this.target).show();
 
-        document.removeEventListener('mousedown', this._onMouseDown);
+        this._destroyEvents();
     },
 
     //--------------------------------------------------------------------------
@@ -253,6 +253,17 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         });
 
         return Object.freeze(object);
+    },
+    /**
+     * Destroy all events defined in `editor_events`.
+     */
+    _destroyEvents: function () {
+        var self = this;
+        var target;
+        this.editor_events.forEach(function (event) {
+            target = event.target === 'document' ? document : self[event.target];
+            target.removeEventListener(event.name, self[event.method]);
+        });
     },
     /**
      * Return a list of the descendents of the current object.
