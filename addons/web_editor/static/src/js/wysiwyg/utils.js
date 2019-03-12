@@ -291,6 +291,17 @@ return {
         var breakableSpace = this.removeExtremeBreakableSpace(clone, 0).end;
         return breakableSpace === 1 ? 0 : breakableSpace;
     },
+    /**
+     * Takes an object and converts it to an array of objects.
+     * Eg: {firstKey: firstValue, secondKey: secondValue}
+     * becomes [{key: firstKey, value: firstValue}, {key: secondKey, value: secondValue}].
+     * It is possible to specify another default key name and value name.
+     *
+     * @param {Object} dict
+     * @param {String} [keyName]
+     * @param {String} [valueName]
+     * @returns {Object []}
+     */
     dictToArray: function (dict, keyName, valueName) {
         var array = [];
         Object.keys(dict).forEach(function (key) {
@@ -384,6 +395,17 @@ return {
             node = node.firstElementChild;
         }
         return node;
+    },
+    /**
+     * Flattens a nested array (the nesting can be to any depth).
+     *
+     * @param {any []} array
+     * @returns {any []}
+     */
+    flatten: function (array) {
+        return array.reduce(function (a, b) {
+            return a.concat(b);
+        }, []);
     },
     /**
      * Returns the node targeted by a path
@@ -597,6 +619,22 @@ return {
      */
     isData: function (node) {
         return this.makePredByNodeName('DATA')(node);
+    },
+    /**
+     * Return true if `node` is a descendent of `ancestor` (or is `ancestor` itself).
+     *
+     * @param {Node} node
+     * @param {Node} ancestor
+     * @returns {Boolean}
+     */
+    isDescendentOf: function (node, ancestor) {
+        while (node) {
+            if (node === ancestor) {
+                return true;
+            }
+            node = node.parentNode;
+        }
+        return false;
     },
     /**
      * Return true if the given node is `note-editable`.
@@ -1072,6 +1110,18 @@ return {
             }
         });
         return node;
+    },
+    /**
+     * Produces a duplicate-free version of the array, using === to test object equality.
+     * In particular only the first occurrence of each value is kept.
+     *
+     * @param {any []} array
+     * @returns {any []}
+     */
+    uniq: function (array) {
+        return array.filter(function (value, index, self) {
+            return self.indexOf(value) === index;
+        });
     },
 
     //--------------------------------------------------------------------------

@@ -118,7 +118,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     getValue: function () {
         var $editable = $(this.editable).clone();
 
-        var result = this._compactResults(this._pluginsManager.triggerEach('getValue', $editable));
+        var result = this._unstack(this._pluginsManager.triggerEach('getValue', $editable));
         if (result !== null) {
             return result;
         }
@@ -153,7 +153,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         var results = this._pluginsManager.triggerEach('save');
         results.unshift(html);
         return Promise.all(results).then(function (results) {
-            var html = self._compactResults(results);
+            var html = self._unstack(results);
             self.target.innerText = html;
             self.target.innerHTML = html;
             return {
@@ -177,31 +177,57 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     // Private
     //--------------------------------------------------------------------------
 
-    _compactResults: function (results) {
+    /**
+     * Return the last added, non-null element in an array.
+     *
+     * @private
+     * @param {any []} array
+     * @returns {any}
+     */
+    _unstack: function (array) {
         var result = null;
-        for (var k = results.length - 1; k >= 0; k--) {
-            if (results[k] !== null) {
-                result = results[k];
+        for (var k = array.length - 1; k >= 0; k--) {
+            if (array[k] !== null) {
+                result = array[k];
                 break;
             }
         }
         return result;
     },
+    /**
+     * Freeze an object and all its properties and return the frozen object.
+     *
+     * @param {Object} object
+     * @returns {Object}
+     */
     _deepFreeze: function (object) {
         // Retrieve the property names defined on object
         var propNames = Object.getOwnPropertyNames(object);
 
         // Freeze properties before freezing self
-        for (var name of propNames) {
+        propNames.forEach(function (name) {
             var value = object[name];
             if (value && typeof value === "object" && (typeof object.style !== "object" || typeof object.ownerDocument !== "object")) {
                 object[name] = this._deepFreeze(value);
             } else {
                 object[name] = value;
             }
-        }
+        });
 
         return Object.freeze(object);
+    },
+    /**
+     * Return a list of the descendents of the current object.
+     */
+    _getDecendents: function () {
+        var children = this.getChildren();
+        var descendents = [];
+        var child;
+        while ((child = children.pop())) {
+            descendents.push(child);
+            children = children.concat(child.getChildren());
+        }
+        return descendents;
     },
     /**
      * Return true if the given node is in the editor.
@@ -212,29 +238,18 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @returns {Boolean}
      */
     _isEditorContent: function (node) {
-        if (this.editor === node) {
-            return true;
-        }
-        if ($.contains(this.editor, node)) {
+        if (this.editor === node || this.editor.contains(node)) {
             return true;
         }
 
-        var children = this.getChildren();
-        var allChildren = [];
-        var child;
-        while ((child = children.pop())) {
-            allChildren.push(child);
-            children = children.concat(child.getChildren());
-        }
-
-        var childrenDom = _.filter(_.unique(_.flatten(_.map(allChildren, function (obj) {
-            return _.map(obj, function (value) {
-                return value instanceof $ ? value.get() : value;
-            });
-        }))), function (node) {
+        var descendents = this._getDecendents().map(function (obj) {
+            return Object.values(obj);
+        });
+        descendents = utils.uniq(utils.flatten(descendents));
+        var childrenDom = descendents.filter(function (node) {
             return node && node.DOCUMENT_NODE && node.tagName && node.tagName !== 'BODY' && node.tagName !== 'HTML';
         });
-        return !!$(node).closest(childrenDom).length;
+        return utils.isDescendentOf(node, childrenDom);
     },
     _prepareOptions: function (params) {
         var self = this;
