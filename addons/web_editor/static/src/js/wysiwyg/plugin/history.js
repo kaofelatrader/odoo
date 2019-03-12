@@ -11,13 +11,17 @@ var _ = require('web_editor._');
 var HistoryPlugin = AbstractPlugin.extend({
     dependencies: ['Range'],
 
-    custom_events: {
-        change: '_onChange',
-        setValue: '_onSetValue',
-    },
     buttons: {
         template: 'wysiwyg.buttons.history',
         enabled: '_enabled',
+    },
+
+    changeEditorValue: function () {
+        this.recordUndo();
+    },
+    setEditorValue: function (value) {
+        this.clear();
+        return value;
     },
 
     //--------------------------------------------------------------------------
@@ -195,16 +199,6 @@ var HistoryPlugin = AbstractPlugin.extend({
         return snapshot;
     },
 
-    //--------------------------------------------------------------------------
-    // Handler
-    //--------------------------------------------------------------------------
-
-    _onChange: function () {
-        this.recordUndo();
-    },
-    _onSetValue: function () {
-        this.clear();
-    },
 });
 
 Manager.addPlugin('History', HistoryPlugin);

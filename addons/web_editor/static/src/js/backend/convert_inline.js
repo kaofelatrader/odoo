@@ -390,15 +390,6 @@ function linkImgToAttachmentThumbnail($editable) {
 
 
 var ConvertInlinePlugin = AbstractPlugin.extend({
-    pluginEvents: {
-        'save': '_onSave',
-        'setValue': '_onSetValue',
-    },
-
-    //--------------------------------------------------------------------------
-    // Handler
-    //--------------------------------------------------------------------------
-
     /**
      * Converts CSS dependencies to CSS-independent HTML.
      * - CSS display for attachment link -> real image
@@ -407,18 +398,27 @@ var ConvertInlinePlugin = AbstractPlugin.extend({
      *
      * @private
      */
-    _onSave: function (value, callback) {
+    saveEditor: function (value) {
+        var html = this.editable.innerHTML;
+        this.editable.innerHTML = value;
         var $editable = $(this.editable);
         attachmentThumbnailToLinkImg($editable);
         fontToImg($editable);
         classToStyle($editable);
-        callback(this.editable.innerHTML);
+        value = this.editable.innerHTML;
+        this.editable.innerHTML = html;
+        return value;
     },
-    _onSetValue: function () {
+    setEditorValue: function (value) {
+        var html = this.editable.innerHTML;
+        this.editable.innerHTML = value;
         var $editable = $(this.editable);
         styleToClass($editable);
         imgToFont($editable);
         linkImgToAttachmentThumbnail($editable);
+        value = this.editable.innerHTML;
+        this.editable.innerHTML = html;
+        return value;
     },
 });
 

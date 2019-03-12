@@ -9,10 +9,6 @@ var CodeViewPlugin = AbstractPlugin.extend({
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_codeview.xml'],
     dependencies: ['Range'],
 
-    pluginEvents: {
-        'setValue': '_onSetValue',
-    },
-
     nameAttr: 'codeview',
 
     buttons: {
@@ -36,6 +32,27 @@ var CodeViewPlugin = AbstractPlugin.extend({
     destroy: function () {
         this.isBeingDestroyed = true;
         this._super();
+    },
+    /**
+     * @overwrite
+     */
+    getEditorValue: function (value) {
+        if (this._active()) {
+            return this.codeview.value.trim();
+        }
+        return value;
+    },
+    /**
+     * @overwrite
+     */
+    setEditorValue: function (value) {
+        if (this._hasJinja(value)) {
+            this._setCodeViewValue(value);
+            if (!this._active()) {
+                this._activate();
+            }
+        }
+        return value;
     },
 
     //--------------------------------------------------------------------------
@@ -152,23 +169,6 @@ var CodeViewPlugin = AbstractPlugin.extend({
         this.codeview.value = value.trim();
     },
 
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * Force activation of the code view if the editable has Jinja code
-     *
-     * @param {String} value
-     */
-    _onSetValue: function (value) {
-        if (this._hasJinja(value)) {
-            this._setCodeViewValue(value);
-            if (!this._active()) {
-                this._activate();
-            }
-        }
-    },
 });
 
 Manager.addPlugin('CodeView', CodeViewPlugin);

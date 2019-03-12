@@ -60,7 +60,6 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
             self.on(key, self, value);
         });
     },
-
     /**
      * return a Promise resolved when the plugin is initialized and can be started
      * This method can't start new call or perform calculations, must just return
@@ -80,6 +79,61 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
         return Promise.resolve();
     },
 
+    //--------------------------------------------------------------------------
+    // Editor methods
+    //--------------------------------------------------------------------------
+
+    /**
+     * Override any of these functions from within a plugin to allow it to add specific
+     * behavior to any of these basic functions of the editor (eg modifying the value
+     * to save, then passing to the next plugin's saveEditor override etc.).
+     */
+
+    /**
+     * @see Manager.getEditorValue
+     */
+    getEditorValue: function (value) {
+        return value;
+    },
+    /**
+     * @see Manager.setEditorValue
+     */
+    setEditorValue: function (value) {
+        return value;
+    },
+    /**
+     * @see Manager.changeEditorValue
+     */
+    changeEditorValue: function () {},
+    /**
+     * Note: Please only change the string value without using the DOM.
+     * The value is received from getEditorValue.
+     *
+     * @see Manager.saveEditor
+     */
+    saveEditor: function (value) {
+        return Promise.resolve(value);
+    },
+    /**
+     * @see Manager.cancelEditor
+     */
+    cancelEditor: function () {
+        return Promise.resolve();
+    },
+    /**
+     * @see Manager.translatePluginTerm
+     */
+    translatePluginTerm: function (pluginName, value, originalValue, elem, attributeName) {
+        return value;
+    },
+    /**
+     * @see Manager.blurEditor
+     */
+    blurEditor: function () {},
+    /**
+     * @see Manager.focusEditor
+     */
+    focusEditor: function () {},
 
     //--------------------------------------------------------------------------
     // Public

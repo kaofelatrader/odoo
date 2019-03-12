@@ -12,8 +12,12 @@ var utils = require('wysiwyg.utils');
  * trigger on each plugins
  * - getValue
  * - setValue
+ * - change
  * - save
  * - cancel
+ * - translate
+ * - blurEditor
+ * - focusEditor
  */
 
 
@@ -152,7 +156,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * Cancel the edition and destroy the editor.
      */
     cancel: function () {
-        this._pluginsManager.triggerEach('cancel');
+        this._pluginsManager.cancelEditor();
         this.destroy();
     },
     /**
@@ -162,12 +166,6 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      */
     getValue: function () {
         var $editable = $(this.editable).clone();
-
-        var result = this._unstack(this._pluginsManager.triggerEach('getValue', $editable));
-        if (result !== null) {
-            return result;
-        }
-
         $editable.find('.o_wysiwyg_to_remove').remove();
         $editable.find('[contenteditable]').removeAttr('contenteditable');
         $editable.find('.o_fake_not_editable').removeClass('o_fake_not_editable');
@@ -176,12 +174,13 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         $editable.find('[style=""]').removeAttr('style');
         $editable.find('[title=""]').removeAttr('title');
         $editable.find('[alt=""]').removeAttr('alt');
-        $editable.find('a.o_image, span.fa, i.fa').html('');
+        // $editable.find('a.o_image, span.fa, i.fa').html('');
         $editable.find('[aria-describedby]').removeAttr('aria-describedby').removeAttr('data-original-title');
         $editable.find(utils.formatTags.join(',')).filter(function () {
             return !this.firstChild;
         }).remove();
-        return $editable.html() || $editable.val();
+
+        return this._pluginsManager.getEditorValue($editable.html());
     },
     /**
      * Save the content in the target
@@ -194,11 +193,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     save: function () {
         var self = this;
         var isDirty = this.isDirty();
-        var html = this.getValue();
-        var results = this._pluginsManager.triggerEach('save');
-        results.unshift(html);
-        return Promise.all(results).then(function (results) {
-            var html = self._unstack(results);
+        return this._pluginsManager.saveEditor(this.getValue()).then(function (html) {
             self.target.innerText = html;
             self.target.innerHTML = html;
             return {
@@ -214,7 +209,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     setValue: function (value) {
         this._dirty = true;
         this.editable.innerHTML = value || '';
-        this._pluginsManager.triggerEach('setValue', value);
+        this.editable.innerHTML = this._pluginsManager.setEditorValue(value || '');
         this.trigger_up('change');
     },
 
@@ -389,11 +384,10 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
                     if (elem.attributes) {
                         Object.values(elem.attributes).forEach(function (attribute) {
                             if (attribute.name === 'title' || attribute.name === 'alt' || attribute.name === 'help') {
-                                var before = attribute.value;
-                                var text = before.match(regExpText);
+                                var text = attribute.value.match(regExpText);
                                 if (text) {
                                     var value = text[1] + params.translate(pluginName, text[2]) + text[3];
-                                    value = self._pluginsManager.triggerEach('translate', pluginName, elem, attribute.name, value, before);
+                                    value = self._pluginsManager.translatePluginValue(pluginName, value, text[2], elem, attribute.name);
                                     attribute.value = value;
                                 }
                             }
@@ -408,7 +402,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
                             var text = node.nodeValue.match(regExpText);
                             if (text) {
                                 var value = text[1] + params.translate(pluginName, text[2]) + text[3];
-                                value = self._pluginsManager.triggerEach('translate', pluginName, node, 'nodeValue', value, text[2]);
+                                value = self._pluginsManager.translatePluginValue(pluginName, value, text[2], node, 'nodeValue');
                                 node.nodeValue = value;
                             }
                         } else if (node.nodeType == 1 || node.nodeType == 9 || node.nodeType == 11) {
@@ -503,7 +497,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @param {Object} [options]
      */
     _onBlur: function (options) {
-        this._pluginsManager.triggerEach('blurEditor');
+        this._pluginsManager.blurEditor();
         this.trigger_up('blur', options);
     },
     /**
@@ -566,7 +560,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
             if (result && result.noChange) {
                 return;
             }
-            self._pluginsManager.triggerEach('change');
+            self._pluginsManager.changeEditorValue();
             self.trigger_up('change');
             if (ev.data.callback) {
                 ev.data.callback(result);
@@ -580,7 +574,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @param {Object} [options]
      */
     _onFocus: function (options) {
-        this._pluginsManager.triggerEach('focusEditor');
+        this._pluginsManager.focusEditor();
         this.trigger_up('focus', options);
     },
     /**

@@ -24,10 +24,6 @@ var keyMapPlugin = AbstractPlugin.extend({
         keydown: '_onKeydown',
     },
 
-    pluginEvents: {
-        'translate': '_onTranslate',
-    },
-
     codeFromName: {
         'BACKSPACE': 8,
         'TAB': 9,
@@ -98,6 +94,23 @@ var keyMapPlugin = AbstractPlugin.extend({
             }
         });
         this.dependencies = dependencies;
+    },
+    /**
+     * @see Manager.translatePluginTerm
+     */
+    translatePluginTerm: function (pluginName, value, originalValue, elem, attributeName) {
+        if (attributeName !== 'title' || !this.dependencies[pluginName]) {
+            return value;
+        }
+        var methodName = elem.getAttribute('data-method');
+        var keyMap = Object.values(this.keyMap);
+        for (var k = 0; k < keyMap.length; k++) {
+            var item = keyMap[k];
+            if (item.pluginName === pluginName && item.methodName === methodName) {
+                return value + ' [' + item.shortcut + ']';
+            }
+        }
+        return value;
     },
 
     //--------------------------------------------------------------------------
@@ -185,20 +198,6 @@ var keyMapPlugin = AbstractPlugin.extend({
             disableRange: plugin.disableRange,
         });
     },
-    _onTranslate: function (pluginName, node, attributeName, value, before, callback) {
-        if (attributeName !== 'title' || !this.dependencies[pluginName]) {
-            return callback(value);
-        }
-        var methodName = node.getAttribute('data-method');
-        var keyMap = Object.values(this.keyMap);
-        for (var k = 0; k < keyMap.length; k++) {
-            var item = keyMap[k];
-            if (item.pluginName === pluginName && item.methodName === methodName) {
-                callback(value + ' [' + item.shortcut + ']');
-                break;
-            }
-        }
-    }
 });
 
 Manager.addPlugin('KeyMap', keyMapPlugin);

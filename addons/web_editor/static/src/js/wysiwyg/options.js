@@ -86,7 +86,7 @@ return {
     ],
     fontSizes: ['8', '9', '10', '11', '12', '14', '18', '24', '36'],
     lineHeights: ['1.0', '1.2', '1.4', '1.5', '1.6', '1.8', '2.0', '3.0'],
-    // pallete colors(n x n)
+    // palette colors(n x n)
     colors: [
         'Grey',
         ['#000000', '#424242', '#636363', '#9C9C94', '#CEC6CE', '#EFEFEF', '#F7F7F7', '#FFFFFF'],

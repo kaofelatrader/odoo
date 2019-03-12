@@ -55,30 +55,104 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
             return plugin[methodName].apply(plugin, args);
         }
     },
-    each: function (methodName, args) {
-        var results = [];
-        for (var i = 0; i < this._pluginNames.length; i++) {
-            var plugin = this._plugins[this._pluginNames[i]];
-            results.push(plugin[methodName].apply(plugin, args));
-        }
-        return results;
+
+    /**
+     * The following methods call methods of the same name in `AbstractPlugin`, which in turn
+     * can be overridden from within any plugin to allow it to add specific behavior to any of
+     * these basic actions on the editor (eg modifying the value to save, then passing it to
+     * the next plugin's saveEditor override etc.).
+     */
+
+    /**
+     *
+     * Note: This method must be idempotent.
+     *
+     * @param {string} value
+     * @returns string
+     */
+    getEditorValue: function (value) {
+        return this._each('getEditorValue', value);
     },
-    triggerEach: function (eventName) {
-        var results = [];
-        var callback = results.push.bind(results);
-        var args = [].slice.call(arguments);
-        args.push(callback);
+    /**
+     *
+     * @param {string} value
+     * @returns string
+     */
+    setEditorValue: function (value) {
+        return this._each('setEditorValue', value);
+    },
+    /**
+     *
+     * @param {string} value
+     */
+    changeEditorValue: function () {
+        this._each('changeEditorValue');
+    },
+    /**
+     * Note: Please only change the string value without using the DOM.
+     * The value is received from getEditorValue.
+     *
+     * @param {string} value
+     * @returns {Promise<string>}
+     */
+    saveEditor: function (value) {
+        return this._eachAsync('saveEditor', value);
+    },
+    /**
+     * 
+     * @returns {Promise}
+     */
+    cancelEditor: function () {
+        return this._eachAsync('cancelEditor');
+    },
+    /**
+     *
+     * @param {string} pluginName
+     * @param {string} value
+     * @param {string} originalValue
+     * @param {Node} elem
+     * @param {string} attributeName
+     * @returns string|null
+     */
+    translatePluginValue: function (pluginName, value, originalValue, elem, attributeName) {
         for (var i = 0; i < this._pluginNames.length; i++) {
             var plugin = this._plugins[this._pluginNames[i]];
-            plugin.trigger.apply(plugin, args);
+            value = plugin.translatePluginTerm(pluginName, value, originalValue, elem, attributeName);
         }
-        return results;
+        return value;
+    },
+    /**
+     *
+     */
+    blurEditor: function () {
+        this._each('blurEditor');
+    },
+    /**
+     *
+     */
+    focusEditor: function () {
+        this._each('focusEditor');
     },
 
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
 
+    _each: function (methodName, value) {
+        for (var i = 0; i < this._pluginNames.length; i++) {
+            var plugin = this._plugins[this._pluginNames[i]];
+            value = plugin[methodName](value) || value;
+        }
+        return value;
+    },
+    _eachAsync: function (methodName, value) {
+        var promise = Promise.resolve(value);
+        for (var i = 0; i < this._pluginNames.length; i++) {
+            var plugin = this._plugins[this._pluginNames[i]];
+            promise.then(plugin[methodName].bind(plugin));
+        }
+        return promise;
+    },
     _loadPlugins: function (params, options) {
         this._plugins = this._createPluginInstance(params, options);
         this._pluginNames = this._getSortedPluginNames(this._plugins);

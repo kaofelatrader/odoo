@@ -32,11 +32,6 @@ var PopoverPlugin = AbstractPlugin.extend({
         'keydown': '_onKeyPress',
         'keyup': '_onKeyPress',
     },
-    pluginEvents: {
-        'update': '_onChange',
-        'change': '_onChange',
-        'blurEditor': '_onBlurEditor',
-    },
 
     POPOVER_MARGIN_LEFT: 5,
     POPOVER_MARGIN_TOP: 5,
@@ -57,6 +52,16 @@ var PopoverPlugin = AbstractPlugin.extend({
             });
         });
         this.dependencies = dependencies;
+    },
+    blurEditor: function () {
+        this._onFocusNode(null);
+    },
+    changeEditorValue: function () {
+        this._onFocusNode(this.dependencies.Range.getFocusedNode());
+    },
+    setEditorValue: function (value) {
+        this._hidePopovers();
+        return value;
     },
 
     //--------------------------------------------------------------------------
@@ -80,9 +85,6 @@ var PopoverPlugin = AbstractPlugin.extend({
         this.dependencies.Range.on('range', this, this._onRange.bind(this));
         return this._super();
     },
-    setValue: function () {
-        this._hidePopovers();
-    },
 
     //--------------------------------------------------------------------------
     // Private
@@ -92,8 +94,6 @@ var PopoverPlugin = AbstractPlugin.extend({
      * @returns [elements]
      */
     _createPopover: function () {
-        console.warn('TO DO: use keyMap for button name HELP');
-
         var self = this;
         this.popovers = [];
         var popovers = this.popoverOptions;
@@ -450,9 +450,6 @@ var PopoverPlugin = AbstractPlugin.extend({
     // Handlers
     //--------------------------------------------------------------------------
 
-    _onBlurEditor: function () {
-        this._onFocusNode(null);
-    },
     _onButtonMousedown: function (plugin, ev) {
         ev.preventDefault();
         if (ev.which !== 1) {
@@ -492,14 +489,6 @@ var PopoverPlugin = AbstractPlugin.extend({
             args: [value, range],
             disableRange: plugin.disableRange,
         });
-    },
-    /**
-     * On change, update the popover position and the active button
-     *
-     * @private
-     */
-    _onChange: function () {
-        this._onFocusNode(this.dependencies.Range.getFocusedNode());
     },
     /**
      * On change focus node, update the popover position and the active button

@@ -14,11 +14,6 @@ var RangePlugin = AbstractPlugin.extend({
         'keyup': '_onKeyup',
         'wysiwyg.range': '_onRange',
     },
-    pluginEvents: {
-        'change': '_onChange',
-        'disable': '_onDisable',
-        'blurEditor': '_onBlur',
-    },
 
     /**
      * @constructor
@@ -38,6 +33,16 @@ var RangePlugin = AbstractPlugin.extend({
                 node.contentEditable === 'false' ||
                 node.classList && node.classList.contains('o_fake_editable');
         };
+    },
+    blurEditor: function () {
+        this._clearFocusedNode();
+    },
+    changeEditorValue: function () {
+        this.setRangeOnVoidBlock(this.getFocusedNode());
+    },
+    setEditorValue: function (value) {
+        this.setRangeOnVoidBlock(this.getFocusedNode());
+        return value;
     },
 
     //--------------------------------------------------------------------------
@@ -188,24 +193,6 @@ var RangePlugin = AbstractPlugin.extend({
     // Handlers
     //--------------------------------------------------------------------------
 
-    /**
-     * @private
-     */
-    _onBlur: function () {
-        this._clearFocusedNode();
-    },
-    /**
-     * @private
-     */
-    _onChange: function () {
-        this.setRangeOnVoidBlock(this.getFocusedNode());
-    },
-    /**
-     * @private
-     */
-    _onDisable: function () {
-        this._clearFocusedNode();
-    },
     /**
      * @private
      * @param {jQueryEvent} e
