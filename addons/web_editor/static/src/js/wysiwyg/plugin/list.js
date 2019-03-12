@@ -8,8 +8,8 @@ var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 var _t = core._t;
 
-wysiwygOptions.keyMap.pc['CTRL+SHIFT+NUM9'] = 'insertCheckList';
-wysiwygOptions.keyMap.mac['CMD+SHIFT+NUM9'] = 'insertCheckList';
+wysiwygOptions.keyMap.pc['CTRL+SHIFT+NUM9'] = 'List.insertList:checklist';
+wysiwygOptions.keyMap.mac['CMD+SHIFT+NUM9'] = 'List.insertList:checklist';
 
 
 var ListPlugin = AbstractPlugin.extend({

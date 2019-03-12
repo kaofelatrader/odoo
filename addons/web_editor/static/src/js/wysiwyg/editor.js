@@ -240,10 +240,8 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         var self = this;
         var defaults = JSON.parse(JSON.stringify(defaultOptions));
         _.defaults(params, defaults);
+        _.defaults(params.env, defaults.env);
         _.defaults(params.plugins, defaults.plugins);
-        _.defaults(params.popover, defaults.popover);
-        _.defaults(params.keyMap.pc, defaults.keyMap.pc);
-        _.defaults(params.keyMap.mac, defaults.keyMap.mac);
 
         var templates = {};
         _.defaults(params, {
@@ -255,9 +253,14 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
                 var defs = [];
                 var xmlPath;
                 while ((xmlPath = templatesDependencies.shift())) {
-                    defs.push($.get(xmlPath, function (data) {
-                        templates;
-                        debugger
+                    defs.push($.get(xmlPath, function (html) {
+                        var fragment = document.createElement('fragment');
+                        fragment.innerHTML = html;
+                        fragment.querySelectorAll('[t-name]').forEach(function (template) {
+                            var templateName = template.getAttribute('t-name');
+                            template.removeAttribute('t-name');
+                            templates[templateName] = template.outerHTML;
+                        });
                     }));
                 }
                 return $.when.apply($, defs);
@@ -273,7 +276,6 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
                 var html = templates[template];
                 var fragment = document.createElement('fragment');
                 fragment.innerHTML = html;
-                this.translateTemplateNodes(pluginName, fragment);
                 return fragment.innerHTML;
             },
 
@@ -303,6 +305,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
                             var text = node.nodeValue.match(regExpText);
                             if (text) {
                                 var value = text[1] + params.translate(pluginName, text[2]) + text[3];
+                                value = self._pluginsManager.triggerEach('translate', pluginName, node, 'nodeValue', value, text[2]);
                                 node.nodeValue = value;
                             }
                         } else if (node.nodeType == 1 || node.nodeType == 9 || node.nodeType == 11) {
@@ -317,7 +320,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
              * @returns {string}
              */
             translate: function (pluginName, string) {
-                string = string.replace(/\s\s+/, ' ');
+                string = string.replace(/\s\s+/g, ' ');
                 if (params.lang && params.lang[string]) {
                     return params.lang[string];
                 }

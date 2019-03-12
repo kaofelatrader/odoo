@@ -23,6 +23,7 @@ Wysiwyg.include({
             return fragment.innerHTML;
         };
         options.translate = function (pluginName, string) {
+            string = string.replace(/\s\s+/g, ' ');
             return _t(string);
         };
 

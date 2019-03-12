@@ -6,7 +6,7 @@
         </button>
     </group>
     <div t-name="wysiwyg.help_dialog">
-        <t t-foreach="keymap" t-as="item">
+        <t t-foreach="keyMap" t-as="item">
             <div class="help-list-item">
                 <label class="help-shortcut">
                     <kbd><t t-esc="item.shortcut"/></kbd>

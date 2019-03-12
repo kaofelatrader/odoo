@@ -5,6 +5,7 @@ var core = require('web.core');
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 var utils = require('wysiwyg.utils');
+var defaultOptions = require('wysiwyg.options');
 
 var $ = require('web_editor.jquery');
 var _ = require('web_editor._');
@@ -41,12 +42,12 @@ var PopoverPlugin = AbstractPlugin.extend({
     POPOVER_MARGIN_TOP: 5,
 
     init: function (parent, editor, options) {
+        var self = this;
         this._super.apply(this, arguments);
+        this.popoverOptions = Object.assign(JSON.parse(JSON.stringify(defaultOptions.popover)), this.options.popover);
         var dependencies = this.dependencies.slice();
-
-        var popover = this.options.popover;
-        Object.keys(popover).forEach(function (checkMethod) {
-            var plugins = popover[checkMethod];
+        Object.keys(this.popoverOptions).forEach(function (checkMethod) {
+            var plugins = self.popoverOptions[checkMethod];
             if (checkMethod.indexOf('.') !== -1) {
                 dependencies.push(checkMethod.split('.')[0]);
             }
@@ -95,7 +96,7 @@ var PopoverPlugin = AbstractPlugin.extend({
 
         var self = this;
         this.popovers = [];
-        var popovers = this.options.popover;
+        var popovers = this.popoverOptions;
         Object.keys(popovers).forEach(function (checkMethodKey) {
             var pluginNames = popovers[checkMethodKey];
             var checkMethodPluginName = checkMethodKey.split('.')[0];

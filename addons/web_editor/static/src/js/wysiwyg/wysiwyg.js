@@ -182,8 +182,8 @@ var Wysiwyg = Widget.extend({
         options.fontSizes = [_t('Default'), '8', '9', '10', '11', '12', '13', '14', '18', '24', '36', '48', '62'];
         options.minHeight = 180;
 
-        options.keyMap.pc['CTRL+K'] = 'LinkPlugin.show';
-        options.keyMap.mac['CMD+K'] = 'LinkPlugin.show';
+        options.keyMap.pc['CTRL+K'] = 'Link.showLinkDialog';
+        options.keyMap.mac['CMD+K'] = 'Link.showLinkDialog';
         delete options.keyMap.pc['CTRL+LEFTBRACKET'];
         delete options.keyMap.mac['CMD+LEFTBRACKET'];
         delete options.keyMap.pc['CTRL+RIGHTBRACKET'];

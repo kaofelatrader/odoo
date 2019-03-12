@@ -1,7 +1,31 @@
 odoo.define('wysiwyg.options', function (require) {
 'use strict';
 
+var isSupportAmd = typeof define === 'function' && define.amd; // eslint-disable-line
+/**
+ * returns whether font is installed or not.
+ *
+ * @param {String} fontName
+ * @return {Boolean}
+ */
+var userAgent = navigator.userAgent;
+var isEdge = /Edge\/\d+/.test(userAgent);
+var env = {
+    isMac: navigator.appVersion.indexOf('Mac') > -1,
+    isMSIE: /MSIE|Trident/i.test(userAgent),
+    isEdge: isEdge,
+    isFF: !isEdge && /firefox/i.test(userAgent),
+    isPhantom: /PhantomJS/i.test(userAgent),
+    isWebkit: !isEdge && /webkit/i.test(userAgent),
+    isChrome: !isEdge && /chrome/i.test(userAgent),
+    isSafari: !isEdge && /safari/i.test(userAgent),
+    isSupportTouch: (('ontouchstart' in window) ||
+        (navigator.MaxTouchPoints > 0) ||
+        (navigator.msMaxTouchPoints > 0)),
+};
+
 return {
+    env: env,
     plugins: {
         History: true,
         Toolbar: true,
@@ -26,7 +50,7 @@ return {
         'History',
         'CodeView',
         'FullScreen',
-        'Help',
+        'KeyMap',
     ],
     // popover
     popover: {
@@ -82,62 +106,64 @@ return {
     maximumImageFileSize: null,
     keyMap: {
         pc: {
-            'ENTER': 'insertParagraph',
-            'CTRL+Z': 'undo',
-            'CTRL+Y': 'redo',
-            'TAB': 'tab',
-            'SHIFT+TAB': 'untab',
-            'CTRL+B': 'bold',
-            'CTRL+I': 'italic',
-            'CTRL+U': 'underline',
-            'CTRL+SHIFT+S': 'strikethrough',
-            'CTRL+BACKSLASH': 'removeFormat',
-            'CTRL+SHIFT+L': 'justifyLeft',
-            'CTRL+SHIFT+E': 'justifyCenter',
-            'CTRL+SHIFT+R': 'justifyRight',
-            'CTRL+SHIFT+J': 'justifyFull',
-            'CTRL+SHIFT+NUM7': 'insertUnorderedList',
-            'CTRL+SHIFT+NUM8': 'insertOrderedList',
-            'CTRL+LEFTBRACKET': 'outdent',
-            'CTRL+RIGHTBRACKET': 'indent',
-            'CTRL+NUM0': 'formatPara',
-            'CTRL+NUM1': 'formatH1',
-            'CTRL+NUM2': 'formatH2',
-            'CTRL+NUM3': 'formatH3',
-            'CTRL+NUM4': 'formatH4',
-            'CTRL+NUM5': 'formatH5',
-            'CTRL+NUM6': 'formatH6',
-            'CTRL+ENTER': 'insertHorizontalRule',
-            'CTRL+K': 'linkDialog.show'
+            'CTRL+Z':           'History.undo',
+            'CTRL+Y':           'History.redo',
+            // 'TAB':              'tab',
+            // 'SHIFT+TAB':        'untab',
+            'CTRL+B':           'FontStyle.formatText:B',
+            'CTRL+I':           'FontStyle.formatText:I',
+            'CTRL+U':           'FontStyle.formatText:U',
+            'CTRL+SHIFT+S':     'FontStyle.formatText:S',
+            'CTRL+BACKSLASH':   'FontStyle.removeFormat',
+            'CTRL+SHIFT+L':     'Paragraph.formatBlockStyle:justifyLeft',
+            'CTRL+SHIFT+E':     'Paragraph.formatBlockStyle:justifyCenter',
+            'CTRL+SHIFT+R':     'Paragraph.formatBlockStyle:justifyRight',
+            'CTRL+SHIFT+J':     'Paragraph.formatBlockStyle:justifyFull',
+            'CTRL+SHIFT+NUM7':  'List.insertList:u',
+            'CTRL+SHIFT+NUM8':  'List.insertList:o',
+            'CTRL+LEFTBRACKET': 'Paragraph.outdent',
+            'CTRL+RIGHTBRACKET':'Paragraph.indent',
+            'CTRL+NUM0':        'FontStyle.formatBlock:P',
+            'CTRL+NUM1':        'FontStyle.formatBlock:H1',
+            'CTRL+NUM2':        'FontStyle.formatBlock:H2',
+            'CTRL+NUM3':        'FontStyle.formatBlock:H3',
+            'CTRL+NUM4':        'FontStyle.formatBlock:H4',
+            'CTRL+NUM5':        'FontStyle.formatBlock:H5',
+            'CTRL+NUM6':        'FontStyle.formatBlock:H6',
+            'CTRL+NUM7':        'FontStyle.formatBlock:BLOCKQUOTE',
+            'CTRL+NUM8':        'FontStyle.formatBlock:PRE',
+            // 'CTRL+ENTER':       'insertHorizontalRule',
+            'CTRL+K':           'Media.showImageDialog'
         },
         mac: {
-            'ENTER': 'insertParagraph',
-            'CMD+Z': 'undo',
-            'CMD+SHIFT+Z': 'redo',
-            'TAB': 'tab',
-            'SHIFT+TAB': 'untab',
-            'CMD+B': 'bold',
-            'CMD+I': 'italic',
-            'CMD+U': 'underline',
-            'CMD+SHIFT+S': 'strikethrough',
-            'CMD+BACKSLASH': 'removeFormat',
-            'CMD+SHIFT+L': 'justifyLeft',
-            'CMD+SHIFT+E': 'justifyCenter',
-            'CMD+SHIFT+R': 'justifyRight',
-            'CMD+SHIFT+J': 'justifyFull',
-            'CMD+SHIFT+NUM7': 'insertUnorderedList',
-            'CMD+SHIFT+NUM8': 'insertOrderedList',
-            'CMD+LEFTBRACKET': 'outdent',
-            'CMD+RIGHTBRACKET': 'indent',
-            'CMD+NUM0': 'formatPara',
-            'CMD+NUM1': 'formatH1',
-            'CMD+NUM2': 'formatH2',
-            'CMD+NUM3': 'formatH3',
-            'CMD+NUM4': 'formatH4',
-            'CMD+NUM5': 'formatH5',
-            'CMD+NUM6': 'formatH6',
-            'CMD+ENTER': 'insertHorizontalRule',
-            'CMD+K': 'linkDialog.show'
+            'CMD+Z':           'History.undo',
+            'CMD+SHIFT+Z':      'History.redo',
+            // 'TAB':              'tab',
+            // 'SHIFT+TAB':        'untab',
+            'CMD+B':            'FontStyle.formatText:B',
+            'CMD+I':            'FontStyle.formatText:I',
+            'CMD+U':            'FontStyle.formatText:U',
+            'CMD+SHIFT+S':      'FontStyle.formatText:S',
+            'CMD+BACKSLASH':    'FontStyle.removeFormat',
+            'CMD+SHIFT+L':      'Paragraph.formatBlockStyle:justifyLeft',
+            'CMD+SHIFT+E':      'Paragraph.formatBlockStyle:justifyCenter',
+            'CMD+SHIFT+R':      'Paragraph.formatBlockStyle:justifyRight',
+            'CMD+SHIFT+J':      'Paragraph.formatBlockStyle:justifyFull',
+            'CMD+SHIFT+NUM7':   'List.insertList:u',
+            'CMD+SHIFT+NUM8':   'List.insertList:o',
+            'CMD+LEFTBRACKET':  'Paragraph.outdent',
+            'CMD+RIGHTBRACKET': 'Paragraph.indent',
+            'CMD+NUM0':         'FontStyle.formatBlock:P',
+            'CMD+NUM1':         'FontStyle.formatBlock:H1',
+            'CMD+NUM2':         'FontStyle.formatBlock:H2',
+            'CMD+NUM3':         'FontStyle.formatBlock:H3',
+            'CMD+NUM4':         'FontStyle.formatBlock:H4',
+            'CMD+NUM5':         'FontStyle.formatBlock:H5',
+            'CMD+NUM6':         'FontStyle.formatBlock:H6',
+            'CMD+NUM7':         'FontStyle.formatBlock:BLOCKQUOTE',
+            'CMD+NUM8':         'FontStyle.formatBlock:PRE',
+            // 'CMD+ENTER':       'insertHorizontalRule',
+            'CMD+K':            'Media.showImageDialog'
         }
     },
 };

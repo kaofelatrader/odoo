@@ -142,7 +142,7 @@ var MediaPlugin = AbstractPlugin.extend({
                 $(media).clone()[0]
             );
             mediaDialog.on('saved', self, function (data) {
-                self.insertMedia(media, data);
+                self._insertMedia(media, data);
                 resolve();
             });
             mediaDialog.on('closed', self, function () {
@@ -163,24 +163,6 @@ var MediaPlugin = AbstractPlugin.extend({
         };
         // TODO create range + .normalize()
         this.dependencies.Range.save(rangePoints);
-    },
-    /**
-     * Insert or replace a media.
-     *
-     * @param {Node} previous the media to replace, if any
-     * @param {Object} data contains the media to insert
-     */
-    insertMedia: function (previous, data) {
-        var newMedia = data.media;
-        var range = this.dependencies.Range.getRange();
-        this.editable.focus();
-        var isMediaBlock = this.utils.isVideo && this.utils.isVideo(newMedia);
-        if (isMediaBlock) {
-            range = this._insertBlockMedia(newMedia, range, previous);
-        } else {
-            range = this._insertInlineMedia(newMedia, range, previous);
-        }
-        this.dependencies.Range.save(range);
     },
     /**
     * Return true if the node is a media (image, icon, document or video).
@@ -258,6 +240,24 @@ var MediaPlugin = AbstractPlugin.extend({
             sc: newMedia.nextSibling || newMedia,
             so: 0,
         }).normalize();
+    },
+    /**
+     * Insert or replace a media.
+     *
+     * @param {Node} previous the media to replace, if any
+     * @param {Object} data contains the media to insert
+     */
+    _insertMedia: function (previous, data) {
+        var newMedia = data.media;
+        var range = this.dependencies.Range.getRange();
+        this.editable.focus();
+        var isMediaBlock = this.utils.isVideo && this.utils.isVideo(newMedia);
+        if (isMediaBlock) {
+            range = this._insertBlockMedia(newMedia, range, previous);
+        } else {
+            range = this._insertInlineMedia(newMedia, range, previous);
+        }
+        this.dependencies.Range.save(range);
     },
     /**
      * Insert or replace a media inside an element node (point.node).
