@@ -292,6 +292,24 @@ return {
         return breakableSpace === 1 ? 0 : breakableSpace;
     },
     /**
+     * Fill in `object`'s `undefined` writable properties with the value of the
+     * property with the same name in `defaults`, if any, then return `object`.
+     *
+     * @param {Object} object
+     * @param {Object} defaults
+     * @returns {Object}
+     */
+    defaults: function (object, defaults) {
+        var propDesc;
+        Object.keys(defaults).forEach(function (key) {
+            propDesc = Object.getOwnPropertyDescriptor(object, key);
+            if (object[key] === undefined && (!propDesc || propDesc.writable)) {
+                object[key] = defaults[key];
+            }
+        });
+        return object;
+    },
+    /**
      * Takes an object and converts it to an array of objects.
      * Eg: {firstKey: firstValue, secondKey: secondValue}
      * becomes [{key: firstKey, value: firstValue}, {key: secondKey, value: secondValue}].

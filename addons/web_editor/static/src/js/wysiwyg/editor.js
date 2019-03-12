@@ -24,6 +24,47 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         get_value: '_onGetValue',
         set_value: '_onSetValue',
     },
+    /**
+     * @property {Object []} editor_events
+     * {target: {String}, name: {String}, method: {String}}
+     */
+    editor_events: [
+        {
+            target: 'document',
+            name: 'mousedown',
+            method: '_onMouseDown',
+        },
+        {
+            target: 'document',
+            name: 'mouseenter',
+            method: '_onMouseEnter',
+        },
+        {
+            target: 'document',
+            name: 'mouseleave',
+            method: '_onMouseLeave',
+        },
+        {
+            target: 'document',
+            name: 'mousemove',
+            method: '_onMouseMove',
+        },
+        {
+            target: 'editable',
+            name: 'blur',
+            method: '_onBlurEditable',
+        },
+        {
+            target: 'editable',
+            name: 'focus',
+            method: '_onFocusEditable',
+        },
+        {
+            target: 'editable',
+            name: 'paste',
+            method: '_onPaste',
+        },
+    ],
 
     init: function (parent, target, params) {
         this._super();
@@ -44,6 +85,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         this.editable = this.document.createElement('editable');
         this.editable.contentEditable = 'true';
 
+        this._saveEventMethods();
         this._prepareOptions(params);
     },
     start: function () {
@@ -74,7 +116,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
             if (self._isDestroyed) {
                 return;
             }
-            return self._initialized();
+            return self._afterStart();
         });
 
         return this.promise;
@@ -87,7 +129,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         $(this.target).removeData('wysiwyg');
         $(this.target).show();
 
-        $(document).off('.' + this.id);
+        document.removeEventListener('mousedown', this._onMouseDown);
     },
 
     //--------------------------------------------------------------------------
@@ -106,6 +148,9 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         }
         return isDirty;
     },
+    /**
+     * Cancel the edition and destroy the editor.
+     */
     cancel: function () {
         this._pluginsManager.triggerEach('cancel');
         this.destroy();
@@ -178,25 +223,22 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     //--------------------------------------------------------------------------
 
     /**
-     * Return the last added, non-null element in an array.
+     * Bind the events defined in the editor_events property.
      *
      * @private
-     * @param {any []} array
-     * @returns {any}
      */
-    _unstack: function (array) {
-        var result = null;
-        for (var k = array.length - 1; k >= 0; k--) {
-            if (array[k] !== null) {
-                result = array[k];
-                break;
-            }
-        }
-        return result;
+    _bindEvents: function () {
+        var self = this;
+        var target;
+        this.editor_events.forEach(function (event) {
+            target = event.target === 'document' ? document : self[event.target];
+            target.addEventListener(event.name, self[event.method]);
+        });
     },
     /**
      * Freeze an object and all its properties and return the frozen object.
      *
+     * @private
      * @param {Object} object
      * @returns {Object}
      */
@@ -218,6 +260,8 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     },
     /**
      * Return a list of the descendents of the current object.
+     *
+     * @private
      */
     _getDecendents: function () {
         var children = this.getChildren();
@@ -228,6 +272,26 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
             children = children.concat(child.getChildren());
         }
         return descendents;
+    },
+    /**
+     * Method to call after completion of the `start` method.
+     *
+     * @private
+     */
+    _afterStart: function () {
+        var self = this;
+        this.target.parentNode.insertBefore(this.editor, this.target.nextSibling);
+        this.target.style.display = 'none';
+
+        this.once('change', this, function (ev) {
+            ev.stopPropagation();
+            self._dirty = false;
+        });
+
+        this._value = this.target[this.target.tagName === "TEXTAREA" ? 'value' : 'innerHtml'];
+        this.setValue(this._value);
+
+        this._bindEvents();
     },
     /**
      * Return true if the given node is in the editor.
@@ -251,15 +315,37 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         });
         return utils.isDescendentOf(node, childrenDom);
     },
+    /**
+     * Return the last added, non-null element in an array.
+     *
+     * @private
+     * @param {any []} array
+     * @returns {any}
+     */
+    _unstack: function (array) {
+        var result = null;
+        for (var k = array.length - 1; k >= 0; k--) {
+            if (array[k] !== null) {
+                result = array[k];
+                break;
+            }
+        }
+        return result;
+    },
+    /**
+     * @todo Remove JQuery
+     * @private
+     * @param {Object} params
+     */
     _prepareOptions: function (params) {
         var self = this;
         var defaults = JSON.parse(JSON.stringify(defaultOptions));
-        _.defaults(params, defaults);
-        _.defaults(params.env, defaults.env);
-        _.defaults(params.plugins, defaults.plugins);
+        utils.defaults(params, defaults);
+        utils.defaults(params.env, defaults.env);
+        utils.defaults(params.plugins, defaults.plugins);
 
         var templates = {};
-        _.defaults(params, {
+        utils.defaults(params, {
             /**
              * @param {string[]} templatesDependencies
              * @returns {Promise}
@@ -287,7 +373,6 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
              * @returns {string}
              */
             renderTemplate: function (pluginName, template, values) {
-                var self = this;
                 var html = templates[template];
                 var fragment = document.createElement('fragment');
                 fragment.innerHTML = html;
@@ -392,27 +477,15 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         delete params.plugins;
         this.params = this._deepFreeze(params);
     },
-    _initialized: function () {
+    /**
+     * Save all event methods defined in editor_events for safe destruction.
+     *
+     * @private
+     */
+    _saveEventMethods: function () {
         var self = this;
-        $(this.target).after(this.editor);
-        $(this.target).hide();
-
-        this.once('change', this, function (ev) {
-            ev.stopPropagation();
-            self._dirty = false;
-        });
-
-        this._value = $(this.target)[this.target.tagName === "TEXTAREA" ? 'val' : 'html']();
-        this.setValue(this._value);
-
-        $(document).on('mousedown.' + this.id, this._onMouseDown.bind(this));
-        $(document).on('mouseenter.' + this.id, '*', this._onMouseEnter.bind(this));
-        $(document).on('mouseleave.' + this.id, '*', this._onMouseLeave.bind(this));
-        $(document).on('mousemove.' + this.id, this._onMouseMove.bind(this));
-        $(this.editable).on('blur', this._onBlurEditable.bind(this));
-        $(this.editable).on('focus', this._onFocusEditable.bind(this));
-        $(this.editable).on('paste', function (ev) {
-            ev.preventDefault();
+        this.editor_events.forEach(function (event) {
+            self[event.method] = self[event.method].bind(self);
         });
     },
 
@@ -471,6 +544,10 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         setTimeout(this._summernote.enable.bind(this._summernote));
         this._onBlur(ev.data);
     },
+    /**
+     * @private
+     * @param {OdooEvent} ev
+     */
     _onCommand: function (ev) {
         var self = this;
         ev.stopPropagation();
@@ -515,6 +592,11 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
             self._justFocused = true;
         });
     },
+    /**
+     * @private
+     * @param {OdooEvent} ev
+     * @return {any}
+     */
     _onGetValue: function (ev) {
         return ev.data.callback(this.getValue());
     },
@@ -566,6 +648,17 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
             this._mouseInEditor = !!this._isEditorContent(ev.target);
         }
     },
+    /**
+     * @private
+     * @param {OdooEvent} ev
+     */
+    _onPaste: function (ev) {
+        ev.preventDefault();
+    },
+    /**
+     * @private
+     * @param {OdooEvent} ev
+     */
     _onSetValue: function (ev) {
         this.setValue(ev.data.value);
     },
