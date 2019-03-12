@@ -224,6 +224,7 @@ var FontSizePlugin = AbstractPlugin.extend({
      * @returns {Boolean} true if the given button should be active
      */
     _active: function (buttonName, focusNode) {
+        focusNode = this.utils.isText(focusNode) ? focusNode.parentNode : focusNode;
         var cssSize = focusNode.style.fontSize;
         var size = buttonName.split('-')[1];
         return size === 'default' && (!cssSize || cssSize === 'inherit') ||
@@ -1146,7 +1147,8 @@ var ParagraphPlugin = AbstractPlugin.extend({
      */
     _active: function (buttonName, focusNode) {
         var alignName = buttonName.split('-')[1];
-        var cssAlign = $(focusNode).css('text-align');
+        focusNode = this.utils.isText(focusNode) ? focusNode.parentNode : focusNode;
+        var cssAlign = focusNode.style.textAlign;
         if (alignName == 'left' && !cssAlign) {
             return true;
         }

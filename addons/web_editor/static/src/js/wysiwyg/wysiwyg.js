@@ -67,12 +67,6 @@ var Wysiwyg = Widget.extend({
      */
     start: function () {
         return $.when();
-        var value = this._summernote.code();
-        this._value = value;
-        if (utils.hasJinja(value)) {
-            this._summernote.invoke('codeview.forceActivate');
-        }
-        return $.when();
     },
 
     //--------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates>
     
-    <dropdown t-name="wysiwyg.buttons.forecolor">
+    <dropdown t-name="wysiwyg.buttons.forecolor" name="Color">
         <toggler title="Color">
             <placeholder/>
             <i class="fa fa-font"></i>
@@ -9,7 +9,7 @@
         <t t-call="wysiwyg.buttons.palette"/>
     </dropdown>
 
-    <dropdown t-name="wysiwyg.buttons.bgcolor">
+    <dropdown t-name="wysiwyg.buttons.bgcolor" name="Background color">
         <toggler title="Background color">
             <placeholder/>
             <i class="fa fa-paint-brush"></i>
@@ -37,7 +37,7 @@
             <t t-else="" t-esc="row || ''"/>
         </row>
         <button data-method="custom">Custom color</button>
-        <div class="wysiwyg-palette-custom"></div>
+        <div name="Custom colors" class="wysiwyg-palette-custom"></div>
     </palette>
 
     <div t-name="wysiwyg.widgets.ColorpickerDialog" class="o_colorpicker_widget">

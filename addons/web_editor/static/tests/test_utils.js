@@ -147,7 +147,6 @@ var WysiwygTest = Wysiwyg.extend({
      * @override
      */
     destroy: function () {
-        unpatch();
         this._super();
         this.$target.remove();
         this._parentToDestroyForTest.destroy();
@@ -762,10 +761,8 @@ var keydown = function (key, $editable, options) {
         range.so = range.eo;
         Wysiwyg.setRange(range.getPoints());
     }
-    var target = range.ec;
-    var $target = $(target.tagName ? target : target.parentNode);
-    var event = $.Event("keydown", keyPress);
-    $target.trigger(event);
+    var target = range.ec.tagName ? range.ec : range.ec.parentNode;
+    testUtils.dom.triggerNativeEvents(target, 'keydown', keyPress);
 };
 
 return {

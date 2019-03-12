@@ -276,6 +276,67 @@ function triggerEvents($el, events) {
     return concurrency.delay(0);
 }
 
+/**
+ * Trigger events natively (as opposed to the jQuery way)
+ * on the specified target.
+ *
+ * @param {node} el
+ * @param {string []} events
+ * @param {object} [options]
+ * @returns Promise
+ */
+function triggerNativeEvents(el, events, options) {
+    options = _.defaults(options || {}, {
+        view: window,
+        bubbles: true,
+        cancelable: true,
+    });
+    if (typeof events === 'string') {
+        events = [events];
+    }
+    events.forEach(function (eventName) {
+        var event;
+        switch (_eventType(eventName)) {
+            case 'mouse':
+                event = new MouseEvent(eventName, options);
+                break;
+            case 'keyboard':
+                event = new KeyboardEvent(eventName, options);
+                break;
+            default:
+                event = new Event(eventName, options);
+                break;
+        }
+        el.dispatchEvent(event);
+    });
+    return concurrency.delay(0);
+}
+
+/**
+ * Get the event type based on its name.
+ *
+ * @private
+ * @param {string} eventName
+ * @returns string
+ *  'mouse' | 'keyboard' | 'unknown'
+ */
+function _eventType(eventName) {
+    var types = {
+        mouse: ['click', 'mouse', 'pointer', 'contextmenu', 'select', 'wheel'],
+        keyboard: ['key'],
+    };
+    var type = 'unknown';
+    Object.keys(types).forEach(function (key, index) {
+        var isType = types[key].some(function (str) {
+            return eventName.indexOf(str) !== -1;
+        });
+        if (isType) {
+            type = key;
+        }
+    });
+    return type;
+}
+
 
 return {
     triggerKeypressEvent: triggerKeypressEvent,
@@ -287,6 +348,7 @@ return {
     clickFirst: clickFirst,
     clickLast: clickLast,
     triggerEvents: triggerEvents,
+    triggerNativeEvents: triggerNativeEvents,
 };
 
 });

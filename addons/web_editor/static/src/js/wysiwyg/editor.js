@@ -8,18 +8,6 @@ var defaultOptions = require('wysiwyg.options');
 var id = 0;
 var utils = require('wysiwyg.utils');
 
-/*
- * trigger on each plugins
- * - getValue
- * - setValue
- * - change
- * - save
- * - cancel
- * - translate
- * - blurEditor
- * - focusEditor
- */
-
 
 var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     custom_events: {
@@ -198,7 +186,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      */
     _bindEvents: function () {
         this.editor_events.forEach(function (event) {
-            event.target.addEventListener(event.name, event.method);
+            event.target.addEventListener(event.name, event.method, false);
         });
     },
     /**

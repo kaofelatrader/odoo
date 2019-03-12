@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <templates>
-    <dropdown t-name="wysiwyg.buttons.fontsize">
+    <dropdown t-name="wysiwyg.buttons.fontsize" name="Font Size">
         <toggler title="Font Size">
             <placeholder>Default</placeholder>
         </toggler>
@@ -10,7 +10,7 @@
     </dropdown>
 
     <t t-name="wysiwyg.buttons.fontstyle">
-        <dropdown>
+        <dropdown name="Style">
             <toggler title="Style">
                 <i class="fa fa-magic"></i>
             </toggler>
@@ -40,7 +40,7 @@
     </t>
 
     <group t-name="wysiwyg.buttons.paragraph">
-        <dropdown>
+        <dropdown name="Paragraph">
             <toggler title="Paragraph">
                 <placeholder>
                     <button name="align-left" title="Float Left">

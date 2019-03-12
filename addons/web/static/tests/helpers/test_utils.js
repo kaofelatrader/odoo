@@ -134,6 +134,7 @@ return Promise.all([
             clickFirst: testUtilsDom.clickFirst,
             clickLast: testUtilsDom.clickLast,
             triggerEvents: testUtilsDom.triggerEvents,
+            triggerNativeEvents: testUtilsDom.triggerNativeEvents,
         },
         form: {
             clickEdit: testUtilsForm.clickEdit,
