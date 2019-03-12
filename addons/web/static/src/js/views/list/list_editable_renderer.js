@@ -805,7 +805,9 @@ ListRenderer.include({
         var $td = $(event.currentTarget);
         var $tr = $td.parent();
         var rowIndex = this.$('.o_data_row').index($tr);
-        var fieldIndex = Math.max($tr.find('.o_data_cell').not('.o_list_button').index($td), 0);
+        var fieldIndex = Math.max(
+            $tr.find('.o_data_cell').not('.o_list_button').not(':has(button.o_list_button)').index($td), 0
+        );
         this._selectCell(rowIndex, fieldIndex, {event: event});
     },
     /**

@@ -491,7 +491,12 @@ var FormController = BasicController.extend({
             def = saveAndExecuteAction();
         }
 
-        def.then(this._enableButtons.bind(this)).guardedCatch(this._enableButtons.bind(this));
+        def.then(function () {
+            self._enableButtons();
+            if (ev.data.on_success) {
+                ev.data.on_success();
+            }
+        }).guardedCatch(this._enableButtons.bind(this));
     },
     /**
      * Called when the user wants to create a new record -> @see createRecord
