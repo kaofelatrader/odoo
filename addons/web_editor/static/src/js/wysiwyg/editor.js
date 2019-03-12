@@ -243,6 +243,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @returns {Object}
      */
     _deepFreeze: function (object) {
+        var self = this;
         // Retrieve the property names defined on object
         var propNames = Object.getOwnPropertyNames(object);
 
@@ -250,7 +251,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         propNames.forEach(function (name) {
             var value = object[name];
             if (value && typeof value === "object" && (typeof object.style !== "object" || typeof object.ownerDocument !== "object")) {
-                object[name] = this._deepFreeze(value);
+                object[name] = self._deepFreeze(value);
             } else {
                 object[name] = value;
             }
@@ -280,8 +281,10 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      */
     _afterStart: function () {
         var self = this;
-        this.target.parentNode.insertBefore(this.editor, this.target.nextSibling);
-        this.target.style.display = 'none';
+        if (this.target && this.target.parentNode) {
+            this.target.parentNode.insertBefore(this.editor, this.target.nextSibling);
+            this.target.style.display = 'none';
+        }
 
         this.once('change', this, function (ev) {
             ev.stopPropagation();
