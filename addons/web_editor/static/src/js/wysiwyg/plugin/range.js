@@ -142,17 +142,29 @@ var RangePlugin = AbstractPlugin.extend({
     },
     save: function (range) {
         this.lastRange = range ? this.setRange(range) : this._getRange();
+        var element = this.editable.style.display === 'none' ? this.editor : this.editable;
 
-        if (this.lastRange && !this.editable.contains(this.lastRange.sc) || !this.editable.contains(this.lastRange.ec)) {
+        if (this.lastRange &&
+            !element.contains(this.lastRange.sc) ||
+            !element.contains(this.lastRange.ec)) {
             console.warn("Try to save a wrong range.");
             this.lastRange = null;
+        }
+
+        var input = this.lastRange && this.lastRange.sc.childNodes[this.lastRange.so];
+        if (input && (input.tagName === 'TEXTAREA' || input.tagName === 'IMPUT')) {
+            this.lastRange.input = input;
+            this.lastRange.inputSelection = this._getTextSelection(input);
         }
     },
     restore: function () {
         if (this.lastRange) {
             var Wysiwyg = odoo.__DEBUG__.services['web_editor.wysiwyg'];
-            this.lastRange = Wysiwyg.setRange(this.lastRange);
+            Wysiwyg.setRange(this.lastRange);
             this.editable.normalize();
+            if (this.lastRange.input) {
+                this._setTextSelection(this.lastRange.input, this.lastRange.inputSelection);
+            }
             this.lastRange = null;
             this._onRange();
         }
@@ -171,6 +183,49 @@ var RangePlugin = AbstractPlugin.extend({
         var Wysiwyg = odoo.__DEBUG__.services['web_editor.wysiwyg'];
         return Wysiwyg.getRange(this.document);
     },
+    _getTextSelection: function (input) {
+        var start = 0;
+        var end = 0;
+        if (typeof input.selectionStart == "number" && typeof input.selectionEnd == "number") {
+            start = input.selectionStart;
+            end = input.selectionEnd;
+        } else {
+            var range = document.selection.createRange();
+
+            if (range && range.parentElement() == el) {
+                var len = input.value.length;
+                var normalizedValue = input.value.replace(/\r\n/g, "\n");
+
+                // Create a working TextRange that lives only in the input
+                var textInputRange = input.createTextRange();
+                textInputRange.moveToBookmark(range.getBookmark());
+
+                // Check if the start and end of the selection are at the very end
+                // of the input, since moveStart/moveEnd doesn't return what we want
+                // in those cases
+                var endRange = input.createTextRange();
+                endRange.collapse(false);
+
+                if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) {
+                    start = end = len;
+                } else {
+                    start = -textInputRange.moveStart("character", -len);
+                    start += normalizedValue.slice(0, start).split("\n").length - 1;
+
+                    if (textInputRange.compareEndPoints("EndToEnd", endRange) > -1) {
+                        end = len;
+                    } else {
+                        end = -textInputRange.moveEnd("character", -len);
+                        end += normalizedValue.slice(0, end).split("\n").length - 1;
+                    }
+                }
+            }
+        }
+        return {
+            start: start,
+            end: end,
+        };
+    },
     /**
      * Trigger a focusnode event when the focus enters another node.
      *
@@ -178,6 +233,9 @@ var RangePlugin = AbstractPlugin.extend({
      */
     _setFocusedNode: function () {
         var range = this.getRange();
+        if (!range) {
+            return;
+        }
         var node = range.sc.childNodes[range.so] || range.sc;
         if (!node.tagName) {
             node = node.parentNode;
@@ -188,6 +246,18 @@ var RangePlugin = AbstractPlugin.extend({
             this.trigger('focus', node);
         }
         return node;
+    },
+    _setTextSelection: function (input, selection) {
+        if (input.setSelectionRange) {
+            input.focus();
+            input.setSelectionRange(selection.start, selection.end);
+        } else if (input.createTextRange) {
+            var range = input.createTextRange();
+            range.collapse(true);
+            range.moveEnd('character', selection.end);
+            range.moveStart('character', selection.start);
+            range.select();
+        }
     },
 
     //--------------------------------------------------------------------------
