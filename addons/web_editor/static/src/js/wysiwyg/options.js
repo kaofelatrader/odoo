@@ -33,6 +33,7 @@ return {
         // Unbreakable: true,
         // Handle: true,
         KeyMap: true,
+        Keyboard: true,
         Jinja: true,
     },
     lang: 'en_US',

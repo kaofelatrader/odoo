@@ -5,7 +5,7 @@ var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 var KeyboardPlugin = AbstractPlugin.extend({
-    dependencies: ['Range'],
+    dependencies: ['Range', 'List', 'Link', 'History'], // TODO: Remove dependencies
 
     editableDomEvents: {
         'keydown': '_onKeydown',
@@ -16,7 +16,6 @@ var KeyboardPlugin = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
-
 
 
     //--------------------------------------------------------------------------
@@ -279,7 +278,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             !$(ancestor).find('.fa, img').length
         ) {
             // double enter in a list make oudent
-            this.context.invoke('ListPlugin.outdent');
+            this.dependencies.List.outdent();
             return true;
         }
 
@@ -394,13 +393,14 @@ var KeyboardPlugin = AbstractPlugin.extend({
             });
 
             // Force content in empty buttons, the carret can be moved there
-            this.context.invoke('LinkPopover.hide');
-            this.context.invoke('LinkPopover.fillEmptyLink', next, true);
-            this.context.invoke('LinkPopover.fillEmptyLink', btn, true);
+            this.dependencies.Link.fillEmptyLink(next, true);
+            this.dependencies.Link.fillEmptyLink(btn, true);
 
             // Move carret to the new button
-            range = this.context.invoke('editor.setRange', next.firstChild, 0);
-            range.select();
+            range = this.dependencies.Range.setRange({
+                sc: next.firstChild,
+                so: 0,
+            });
         } else {
             range = this.dependencies.Range.setRange({
                 sc: point.node,
@@ -1036,7 +1036,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _selectAll: function () {
         var self = this;
-        var range = this.context.invoke('editor.createRange');
+        var range = this.dependencies.Range.getRange();
         var unbreakable = this.utils.ancestor(range.sc, this.options.isUnbreakableNode);
         var $contents = $(unbreakable).contents();
         var startNode = $contents.length ? $contents[0] : unbreakable;
@@ -1086,7 +1086,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * @param {jQueryEvent} e
      * @returns {Boolean} true if case handled
      */
-    _onKeydown: function (se, e) {
+    _onKeydown: function (e) {
         var self = this;
         var handled = false;
 
@@ -1112,7 +1112,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
                 this.lastCharVisible = false;
             }
             // or not on top of history stack (record undo after undo)
-            var history = this.context.invoke('HistoryPlugin.getHistoryStep');
+            var history = this.dependencies.History.getHistoryStep();
             if (history && history.stack.length && history.stackOffset < history.stack.length - 1) {
                 this.lastCharVisible = false;
             }
@@ -1122,7 +1122,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             }, 500);
             if (!this.lastCharIsVisible) {
                 this.lastCharIsVisible = true;
-                this.context.invoke('HistoryPlugin.recordUndo');
+                this.dependencies.History.recordUndo();
             }
 
             if (e.key !== "Dead") {
@@ -1130,9 +1130,6 @@ var KeyboardPlugin = AbstractPlugin.extend({
             }
         } else {
             this.lastCharIsVisible = false;
-            this.context.invoke('editor.clearTarget');
-            this.context.invoke('MediaPlugin.hidePopovers');
-            this.context.invoke('editor.beforeCommand');
             switch (e.keyCode) {
                 case 8: // BACKSPACE
                     handled = this._onBackspace(e);
@@ -1151,7 +1148,6 @@ var KeyboardPlugin = AbstractPlugin.extend({
                 this._preventTextInEditableDiv();
                 this.dependencies.Range.save(this.dependencies.Range.getRange());
                 e.preventDefault();
-                this.context.invoke('editor.afterCommand');
             }
         }
         if (e.key !== "Dead") {
@@ -1191,7 +1187,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             });
             if (point.isLeftEdgeOfBlock()) {
                 if (isIndented) {
-                    this.context.invoke('ListPlugin.outdent');
+                    this.dependencies.List.outdent();
                     return true;
                 }
                 if (this.utils.ancestor(range.sc, this.utils.isLi)) {
@@ -1204,7 +1200,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
 
         if (!flag && needOutdent) {
             this.dependencies.Range.setRange(range.getPoints());
-            this.context.invoke('ListPlugin.outdent');
+            this.dependencies.List.outdent();
         }
 
         return true;
@@ -1286,9 +1282,9 @@ var KeyboardPlugin = AbstractPlugin.extend({
             }
             if (point.isLeftEdgeOfBlock() || this.utils.isEmpty(point.node)) {
                 if (e.shiftKey) {
-                    this.context.invoke('ListPlugin.outdent');
+                    this.dependencies.List.outdent();
                 } else {
-                    this.context.invoke('ListPlugin.indent');
+                    this.dependencies.List.indent();;
                 }
                 this.dependencies.Range.getRange().normalize();
                 return true;
@@ -1352,7 +1348,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
     },
 });
 
-Manager.addPlugin('KeyboardPlugin', KeyboardPlugin);
+Manager.addPlugin('Keyboard', KeyboardPlugin);
 
 return KeyboardPlugin;
 });
