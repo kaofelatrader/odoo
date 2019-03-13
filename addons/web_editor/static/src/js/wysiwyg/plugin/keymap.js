@@ -73,27 +73,43 @@ var keyMapPlugin = AbstractPlugin.extend({
             self.nameFromCode[self.codeFromName[key]] = key;
         })
 
-        var keyMap = Object.assign(JSON.parse(JSON.stringify(defaultOptions.keyMap)), this.options.keyMap);
+        var defaults = JSON.parse(JSON.stringify(defaultOptions.keyMap));
+        var help = Object.assign({}, defaults.help, this.options.keyMap.help);
+        var keyMap = Object.assign(defaults, this.options.keyMap);
         keyMap = keyMap[this.options.env.isMac ? 'mac' : 'pc'];
 
         this.keyMap = {};
         var dependencies = this.dependencies.slice();
         Object.keys(keyMap).forEach(function (shortcut) {
-            var pluginMethod = keyMap[shortcut].split('.');
+            var command = keyMap[shortcut];
+            var pluginMethod = command.split('.');
             var pluginName = pluginMethod[0];
             var method = pluginMethod[1].split(':');
             self.keyMap[shortcut] = {
+                command: command,
                 shortcut: shortcut,
                 pluginName: pluginName,
                 methodName: method[0],
                 value: method[1],
-                description: 'rrrr',
+                description: help[command],
             };
             if (dependencies.indexOf(pluginName) === -1) {
                 dependencies.push(pluginName);
             }
         });
         this.dependencies = dependencies;
+    },
+    start: function () {
+        var keyMap = Object.values(this.keyMap);
+        for (var k = 0; k < keyMap.length; k++) {
+            var item = keyMap[k];
+            if (item.description) {
+                item.description = this.options.translate('KeyMap', item.description);
+            } else {
+                console.info("No description for '" + item.command + "'");
+            }
+        }
+        return this._super();
     },
     /**
      * @see Manager.translatePluginTerm
@@ -206,35 +222,3 @@ Manager.addPlugin('KeyMap', keyMapPlugin);
 
 return keyMapPlugin;
 });
-
-/*
-    help: {
-        insertParagraph: _t('Insert Paragraph'),
-        undo: _t('Undoes the last command'),
-        redo: _t('Redoes the last command'),
-        tab: _t('Tab'),
-        untab: _t('Outdent (when at the start of a line)'),
-        bold: _t('Set a bold style'),
-        italic: _t('Set a italic style'),
-        underline: _t('Set a underline style'),
-        strikethrough: _t('Set a strikethrough style'),
-        removeFormat: _t('Clean a style'),
-        justifyLeft: _t('Set left align'),
-        justifyCenter: _t('Set center align'),
-        justifyRight: _t('Set right align'),
-        justifyFull: _t('Set full align'),
-        insertUnorderedList: _t('Toggle unordered list'),
-        insertOrderedList: _t('Toggle ordered list'),
-        outdent: _t('Outdent current paragraph'),
-        indent: _t('Indent current paragraph'),
-        formatPara: _t('Change current block\'s format as a paragraph(P tag)'),
-        formatH1: _t('Change current block\'s format as H1'),
-        formatH2: _t('Change current block\'s format as H2'),
-        formatH3: _t('Change current block\'s format as H3'),
-        formatH4: _t('Change current block\'s format as H4'),
-        formatH5: _t('Change current block\'s format as H5'),
-        formatH6: _t('Change current block\'s format as H6'),
-        insertHorizontalRule: _t('Insert horizontal rule'),
-        'linkDialog.show': _t('Show Link Dialog')
-    },
-*/
