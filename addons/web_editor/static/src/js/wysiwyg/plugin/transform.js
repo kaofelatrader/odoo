@@ -4,7 +4,6 @@ odoo.define('web_editor.wysiwyg.plugin.transform', function (require) {
 var core = require('web.core');
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
-var wysiwygTranslation = require('web_editor.wysiwyg.translation');
 var wysiwygOptions = require('wysiwyg.options');
 
 var _t = core._t;
@@ -48,9 +47,9 @@ var TransformPlugin = AbstractPlugin.extend({
 });
 
 
-_.extend(wysiwygTranslation.image, {
-    transform: _t('Transform the picture (click twice to reset transformation)'),
-});
+// _.extend(wysiwygTranslation.image, {
+//     transform: _t('Transform the picture (click twice to reset transformation)'),
+// });
 
 Manager.addPlugin('TransformPlugin', TransformPlugin);
 

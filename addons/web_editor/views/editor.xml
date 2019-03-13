@@ -26,22 +26,29 @@
     </t>
 
     <!-- integration -->
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/no-dependencies.js"/>
+
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/wysiwyg_odoo.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/wysiwyg_iframe.js"/>
+
+    <!-- lib -->
 
     <link rel="stylesheet" type="text/scss" href="/web_editor/static/src/scss/wysiwyg.scss"/>
     <link rel="stylesheet" type="text/scss" href="/web_editor/static/src/scss/wysiwyg_iframe.scss"/>
     <link rel="stylesheet" type="text/scss" href="/web_editor/static/src/scss/wysiwyg_icons.css"/>
 
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/dom.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/point.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/utils.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/range.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/tools/no-dependencies.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/tools/dom.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/tools/point.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/tools/utils.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/tools/range.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/tools/fonts.js"/>
+
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/wysiwyg.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/wysiwyg_odoo.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/wysiwyg_iframe.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/options.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/translation.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/fonts.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/editor.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/manager.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/abstract.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/range.js"/>
 
     <!-- widgets-->
 
@@ -54,15 +61,9 @@
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/widgets/media_dialog.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/widgets/widgets.js"/>
 
-    <!-- manager, abstract -->
-
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/editor.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/manager.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/abstract.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/range.js"/>
-
     <!-- ui -->
 
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/position.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/ui/toolbar.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/ui/popover.js"/>
 
@@ -78,7 +79,6 @@
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/link.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/format_text.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/keyboard.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/position.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/unbreakable.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/transform.js"/>
     <!-- <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/hint.js"/> -->
