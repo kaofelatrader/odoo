@@ -92,10 +92,10 @@ var WysiwygMultizone = Wysiwyg.extend({
                 this._onChangeThrottled();
             }
         },
-        'click .note-editable': function (ev) {
+        'click editable': function (ev) {
             ev.preventDefault();
         },
-        'submit .note-editable form .btn': function (ev) {
+        'submit editable form .btn': function (ev) {
             ev.preventDefault(); // Disable form submition in editable mode
         },
         'hide.bs.dropdown .dropdown': function (ev) {
@@ -189,13 +189,13 @@ var WysiwygMultizone = Wysiwyg.extend({
                 });
             $('body').addClass('editor_enable');
             $('.note-editor, .note-popover').filter('[data-wysiwyg-id="' + self.id + '"]').addClass('wysiwyg_multizone');
-            $('.note-editable .note-editor, .note-editable .note-editable').attr('contenteditable', false);
+            $('editable .note-editor, editable editable').attr('contenteditable', false);
 
             self._summernote.isDisabled = function () {
                 return false;
             };
 
-            self.$('.note-editable').addClass('o_not_editable').attr('contenteditable', false);
+            self.$('editable').addClass('o_not_editable').attr('contenteditable', false);
             self._getEditableArea().attr('contenteditable', true);
             self.$('[data-oe-readonly]').addClass('o_not_editable').attr('contenteditable', false);
             self.$('.oe_structure').attr('contenteditable', false).addClass('o_fake_not_editable');
@@ -389,7 +389,7 @@ var WysiwygMultizone = Wysiwyg.extend({
                 var $node = $(this);
                 $node.attr('data-old-id', $node.attr('id')).removeAttr('id');
             });
-            this.$('.note-editable:first').attr('id', id).addClass(className);
+            this.$('editable:first').attr('id', id).addClass(className);
             this.selectorEditableArea = '.o_editable';
         }.bind(this));
     },

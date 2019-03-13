@@ -8,7 +8,7 @@ var utils = require('wysiwyg.utils');
 Wysiwyg.include({
     events: _.extend({}, Wysiwyg.prototype.events, {
         'content_changed .o_editable': '_onContentChange',
-        'content_changed .note-editable': '_onContentChange',
+        'content_changed editable': '_onContentChange',
     }),
     custom_events: _.extend({}, Wysiwyg.prototype.custom_events, {
         request_history_undo_record: '_onHistoryUndoRecordRequest',
@@ -19,7 +19,7 @@ Wysiwyg.include({
         reload_snippet_dropzones: '_onReloadSnippetDropzones',
     }),
 
-    selectorEditableArea: '.note-editable',
+    selectorEditableArea: 'editable',
 
     init: function (parent, options) {
         this._super.apply(this, arguments);

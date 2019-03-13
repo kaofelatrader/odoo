@@ -24,7 +24,7 @@ var WrappedRange = Class.extend({
      */
     init: function (range, ownerDocument) {
         this.document = ownerDocument || range.sc.ownerDocument;
-        this.$editable = $(this.document).find('.note-editable');
+        this.$editable = $(this.document).find('editable');
         this.editable = this.$editable[0];
         if (!range || typeof range.so !== 'number') {
             if (range.sc) {

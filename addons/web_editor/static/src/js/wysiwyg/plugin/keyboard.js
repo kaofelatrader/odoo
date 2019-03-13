@@ -9,7 +9,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
 
     editableDomEvents: {
         'keydown': '_onKeydown',
-        'DOMNodeInserted .note-editable': '_removeGarbageSpans',
+        'DOMNodeInserted editable': '_removeGarbageSpans',
     },
     tab: '\u00A0\u00A0\u00A0\u00A0',
 

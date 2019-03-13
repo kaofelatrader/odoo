@@ -11,7 +11,7 @@ var Dom = Class.extend({
      */
     init: function (doc, options) {
         this.document = doc;
-        this.$editable = $(this.document).find('.note-editable');
+        this.$editable = $(this.document).find('editable');
         this.editable = this.$editable[0];
         this.options = options;
     },

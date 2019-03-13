@@ -16,11 +16,11 @@ odoo.define('website_forum.tour_forum_question', function (require) {
     }, {
         content: "Put your question here.",
         extra_trigger: "#wrap:not(:has(input[name=post_name]:propValue('')))",
-        trigger: '.note-editable p',
+        trigger: 'editable p',
         run: 'text First Question',
     }, {
         content: "Insert tags related to your question.",
-        extra_trigger: '.note-editable:not(:has(br))',
+        extra_trigger: 'editable:not(:has(br))',
         trigger: '.select2-choices',
         run: 'text Tag',
     }, {
@@ -33,11 +33,11 @@ odoo.define('website_forum.tour_forum_question', function (require) {
         trigger: 'button[data-dismiss="modal"]',
     }, {
         content: "Put your answer here.",
-        trigger: '.note-editable p',
+        trigger: 'editable p',
         run: 'text First Answer',
     }, {
         content: "Click to post your answer.",
-        extra_trigger: '.note-editable:not(:has(br))',
+        extra_trigger: 'editable:not(:has(br))',
         trigger: 'button:contains("Post Answer")',
     }, {
         content: "This page contain new created question and its answer.",

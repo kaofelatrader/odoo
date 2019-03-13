@@ -30,14 +30,14 @@ odoo.define("website_forum.tour_forum", function (require) {
         position: "top",
         content: _t("Give your question title."),
     }, {
-        trigger: ".note-editable p",
+        trigger: "editable p",
         extra_trigger: "input[name=post_name]:not(:propValue(\"\"))",
         content: _t("Put your question here."),
         position: "bottom",
         run: "text",
     }, {
         trigger: ".select2-choices",
-        extra_trigger: ".note-editable p:not(:containsExact(\"<br>\"))",
+        extra_trigger: "editable p:not(:containsExact(\"<br>\"))",
         content: _t("Insert tags related to your question."),
         position: "top",
         run: function (actions) {
@@ -53,13 +53,13 @@ odoo.define("website_forum.tour_forum", function (require) {
         trigger: ".modal-header button.close",
         auto: true,
     }, {
-        trigger: ".note-editable p",
+        trigger: "editable p",
         content: _t("Put your answer here."),
         position: "bottom",
         run: "text",
     }, {
         trigger: "button:contains(\"Post Answer\")",
-        extra_trigger: ".note-editable p:not(:containsExact(\"<br>\"))",
+        extra_trigger: "editable p:not(:containsExact(\"<br>\"))",
         content: _t("Click to post your answer."),
         position: "bottom",
     }, {
