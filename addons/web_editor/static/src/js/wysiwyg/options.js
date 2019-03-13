@@ -36,7 +36,6 @@ return {
     },
     lang: 'en_US',
     // toolbar
-    followingToolbar: true,
     toolbar: [
         'FontStyle',
         'FontSize',
@@ -60,16 +59,13 @@ return {
         'Document.get': ['Float', 'Media'],
         'Link.get': ['Link'],
         'Table.get':  ['Table'],
-        // 'Text.get': ['FontStyle', 'FontSize', 'ForeColor', 'BgColor'],
+        // 'Text.get': ['FontStyle', 'FontSize', 'ForeColor', 'BgColor'], // eg for air mode
     },
-    // air mode: inline editor
     width: null,
     height: null,
-    linkTargetBlank: true,
     tabSize: 4,
-    shortcuts: true,
-    tooltip: 'auto',
     maxTextLength: 0,
+    maximumImageFileSize: null,
     styleTags: [
         'p',
         {
@@ -103,7 +99,6 @@ return {
         col: 10,
         row: 10
     },
-    maximumImageFileSize: null,
     keyMap: {
         pc: {
             'CTRL+Z':           'History.undo',
@@ -172,8 +167,6 @@ return {
         help: {
             'History.undo':             'Undoes the last command',
             'History.redo':             'Redoes the last command',
-            // tab: 'Tab'),
-            // untab: 'Outdent (when at the start of a line)'),
             'FontStyle.formatText:B':   'Set a bold style',
             'FontStyle.formatText:I':   'Set a italic style',
             'FontStyle.formatText:U':   'Set a underline style',
@@ -197,10 +190,11 @@ return {
             'FontStyle.formatBlock:H6': 'Change current block\'s format as H6',
             'FontStyle.formatBlock:BLOCKQUOTE': 'Change current block\'s format as BLOCKQUOTE',
             'FontStyle.formatBlock:PRE':'Change current block\'s format as PRE for code',
-
-            // insertHorizontalRule: 'Insert horizontal rule'),
             'Media.showImageDialog':    'Show Media Dialog (image, document, video, font)',
-            'Link.showLinkDialog':    'Show Link Dialog',
+            'Link.showLinkDialog':      'Show Link Dialog',
+            // tab: 'Tab'),
+            // untab: 'Outdent (when at the start of a line)'),
+            // insertHorizontalRule: 'Insert horizontal rule'),
         }
     },
 };

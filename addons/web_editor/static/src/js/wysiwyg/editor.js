@@ -61,6 +61,8 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         this.editable = this.document.createElement('editable');
         this.editable.contentEditable = 'true';
 
+        this._templates = {};
+
         this._saveEventMethods();
         this._prepareOptions(params);
     },
@@ -83,7 +85,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
                 editor: this.editor,
                 editable: this.editable,
             },
-            this.params);
+            this.options);
 
         this.editor.innerHTML = '';
         this.editor.appendChild(this.editable);
@@ -318,127 +320,136 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         utils.defaults(params, defaults);
         utils.defaults(params.env, defaults.env);
         utils.defaults(params.plugins, defaults.plugins);
-
-        var templates = {};
         utils.defaults(params, {
-            /**
-             * @param {string[]} templatesDependencies
-             * @returns {Promise}
-             */
-            loadTemplates: function (templatesDependencies) {
-                var defs = [];
-                var xmlPath;
-                while ((xmlPath = templatesDependencies.shift())) {
-                    defs.push($.get(xmlPath, function (html) {
-                        var fragment = document.createElement('fragment');
-                        fragment.innerHTML = html;
-                        fragment.querySelectorAll('[t-name]').forEach(function (template) {
-                            var templateName = template.getAttribute('t-name');
-                            template.removeAttribute('t-name');
-                            templates[templateName] = template.outerHTML;
-                        });
-                    }));
-                }
-                return $.when.apply($, defs);
-            },
+            loadTemplates: this._optionLoadTemplates.bind(this),
+            renderTemplate: this._optionRenderTemplate.bind(this),
+            translateTemplateNodes: this._optionTranslateTemplateNodes.bind(this),
+            translate: this._optionTranslate.bind(this),
+        });
+        params.hasFocus = function () {return self._isFocused;};
+        params.isUnbreakableNode = this._optionCreateIsUnbreakableNode(params.isUnbreakableNode);
+        params.isEditableNode = this._optionCreateIsEditableNode(params.isEditableNode);
 
-            /**
-             * @param {string} template
-             * @param {any} values
-             * @returns {string}
-             */
-            renderTemplate: function (pluginName, template, values) {
-                var html = templates[template];
+        this.plugins = params.plugins;
+        delete params.plugins;
+        this.options = this._deepFreeze(params);
+    },
+    /**
+     * @param {string[]} templatesDependencies
+     * @returns {Promise}
+     */
+    _optionLoadTemplates: function (templatesDependencies) {
+        var defs = [];
+        var xmlPath;
+        while ((xmlPath = templatesDependencies.shift())) {
+            defs.push($.get(xmlPath, function (html) {
                 var fragment = document.createElement('fragment');
                 fragment.innerHTML = html;
-                return fragment.innerHTML;
-            },
-
-            translateTemplateNodes: function (pluginName, node) {
-                var params = this;
-                var regExpText = /^([\s\n\r\t]*)(.*?)([\s\n\r\t]*)$/;
-                (function translateNodes(elem) {
-                    if (elem.attributes) {
-                        Object.values(elem.attributes).forEach(function (attribute) {
-                            if (attribute.name === 'title' || attribute.name === 'alt' || attribute.name === 'help') {
-                                var text = attribute.value.match(regExpText);
-                                if (text) {
-                                    var value = text[1] + params.translate(pluginName, text[2]) + text[3];
-                                    value = self._pluginsManager.translatePluginValue(pluginName, value, text[2], elem, attribute.name);
-                                    attribute.value = value;
-                                }
-                            }
-                        });
-                    }
-
-                    var nodes = elem.childNodes;
-                    var i = nodes.length;
-                    while (i--) {
-                        var node = nodes[i];
-                        if (node.nodeType == 3) {
-                            var text = node.nodeValue.match(regExpText);
-                            if (text) {
-                                var value = text[1] + params.translate(pluginName, text[2]) + text[3];
-                                value = self._pluginsManager.translatePluginValue(pluginName, value, text[2], node, 'nodeValue');
-                                node.nodeValue = value;
-                            }
-                        } else if (node.nodeType == 1 || node.nodeType == 9 || node.nodeType == 11) {
-                            translateNodes(node);
+                fragment.querySelectorAll('[t-name]').forEach(function (template) {
+                    var templateName = template.getAttribute('t-name');
+                    template.removeAttribute('t-name');
+                    this._templates[templateName] = template.outerHTML;
+                });
+            }));
+        }
+        return $.when.apply($, defs);
+    },
+    /**
+     * @param {string} pluginName
+     * @param {string} template
+     * @param {any} values
+     * @returns {string}
+     */
+    _optionRenderTemplate: function (pluginName, template, values) {
+        var html = this._templates[template];
+        var fragment = document.createElement('fragment');
+        fragment.innerHTML = html;
+        return fragment.innerHTML;
+    },
+    /**
+     * @param {string} pluginName
+     * @param {element} node
+     * @returns {string}
+     */
+    _optionTranslateTemplateNodes: function (pluginName, node) {
+        var self = this;
+        var regExpText = /^([\s\n\r\t]*)(.*?)([\s\n\r\t]*)$/;
+        (function translateNodes(elem) {
+            if (elem.attributes) {
+                Object.values(elem.attributes).forEach(function (attribute) {
+                    if (attribute.name === 'title' || attribute.name === 'alt' || attribute.name === 'help') {
+                        var text = attribute.value.match(regExpText);
+                        if (text) {
+                            var value = text[1] + self.options.translate(pluginName, text[2]) + text[3];
+                            value = self._pluginsManager.translatePluginValue(pluginName, value, text[2], elem, attribute.name);
+                            attribute.value = value;
                         }
                     }
-                })(node);
-            },
+                });
+            }
 
-            /**
-             * @param {string}
-             * @returns {string}
-             */
-            translate: function (pluginName, string) {
-                string = string.replace(/\s\s+/g, ' ');
-                if (params.lang && params.lang[string]) {
-                    return params.lang[string];
+            var nodes = elem.childNodes;
+            var i = nodes.length;
+            while (i--) {
+                var node = nodes[i];
+                if (node.nodeType == 3) {
+                    var text = node.nodeValue.match(regExpText);
+                    if (text) {
+                        var value = text[1] + self.options.translate(pluginName, text[2]) + text[3];
+                        value = self._pluginsManager.translatePluginValue(pluginName, value, text[2], node, 'nodeValue');
+                        node.nodeValue = value;
+                    }
+                } else if (node.nodeType == 1 || node.nodeType == 9 || node.nodeType == 11) {
+                    translateNodes(node);
                 }
-                console.warn("Missing translation: " + string);
-                return string;
-            },
-        });
-
-        if (!params.hasFocus) {
-            params.hasFocus = function () {
-                return self._isFocused;
-            };
+            }
+        })(node);
+    },
+    /**
+     * @param {string} pluginName
+     * @param {string} string
+     * @returns {string}
+     */
+    _optionTranslate: function (pluginName, string) {
+        string = string.replace(/\s\s+/g, ' ');
+        if (this.options.lang && this.options.lang[string]) {
+            return this.options.lang[string];
         }
-
-        /**
-         * Return true if the current node is unbreakable.
-         * An unbreakable node can be removed or added but can't by split into
-         * different nodes (for keypress and selection).
-         * An unbreakable node can contain nodes that can be edited.
-         *
-         * @param {Node} node
-         * @returns {Boolean}
-         */
-        var _isUnbreakableNode = params.isUnbreakableNode;
-        params.isUnbreakableNode = function (node) {
+        console.warn("Missing translation: " + string);
+        return string;
+    },
+    /**
+     * Build the isUnbreakableNode method:
+     * Return true if the current node is unbreakable.
+     * An unbreakable node can be removed or added but can't by split into
+     * different nodes (for keypress and selection).
+     * An unbreakable node can contain nodes that can be edited.
+     *
+     * @param {Function} _isUnbreakableNode
+     * @returns {Function}
+     */
+    _optionCreateIsUnbreakableNode: function (_isUnbreakableNode) {
+        return function (node) {
             node = node && (node.tagName ? node : node.parentNode);
             if (!node) {
                 return true;
             }
             return ["TD", "TR", "TBODY", "TFOOT", "THEAD", "TABLE"].indexOf(node.tagName) !== -1 ||
                         $(node).is(self.editable) ||
-                        !params.isEditableNode(node.parentNode) ||
-                        !params.isEditableNode(node) ||
+                        !this.options.isEditableNode(node.parentNode) ||
+                        !this.options.isEditableNode(node) ||
                         (_isUnbreakableNode && _isUnbreakableNode(node));
         };
-
-        /**
-         * Return true if the current node is editable (for keypress and selection).
-         *
-         * @param {Node} node
-         * @returns {Boolean}
-         */
-        var _isEditableNode = params.isEditableNode;
-        params.isEditableNode = function (node) {
+    },
+    /**
+     * Build the isUnbreakableNode method:
+     * Return true if the current node is editable (for keypress and selection).
+     *
+     * @param {Function} _isUnbreakableNode
+     * @returns {Function}
+     */
+    _optionCreateIsEditableNode: function (_isEditableNode) {
+        return function (node) {
             node = node && (node.tagName ? node : node.parentNode);
             if (!node) {
                 return false;
@@ -446,10 +457,6 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
             return !$(node).is('table, thead, tbody, tfoot, tr')
                 && (!_isEditableNode || _isEditableNode(node));
         };
-
-        this.plugins = params.plugins;
-        delete params.plugins;
-        this.params = this._deepFreeze(params);
     },
     /**
      * Save all event methods defined in editor_events for safe destruction.
