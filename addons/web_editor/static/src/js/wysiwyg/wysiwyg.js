@@ -66,7 +66,11 @@ var Wysiwyg = Widget.extend({
      * @override
      */
     start: function () {
-        return $.when();
+        var self = this;
+        return this.editor.start(this.$target[0]).then(function () {
+            self.setElement(self.editor.editor);
+        });
+        return Promise.resolve();
     },
 
     //--------------------------------------------------------------------------
@@ -237,11 +241,9 @@ var Wysiwyg = Widget.extend({
         }
 
         delete summernoteOptions.recordInfo;
-        this.editor = new Editor(this, this.$target[0], summernoteOptions);
-        return this.editor.start().then(function () {
-            self.setElement(self.editor.editor);
-            self.$el.removeClass('card');
-        });
+        this.editor = new Editor(this, summernoteOptions);
+
+        return this.editor.isInitialized();
     },
     _select: function (range) {
         var nativeRange = range.toNativeRange();

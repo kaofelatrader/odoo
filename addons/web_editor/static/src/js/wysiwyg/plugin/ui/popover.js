@@ -36,22 +36,10 @@ var PopoverPlugin = AbstractPlugin.extend({
     POPOVER_MARGIN_LEFT: 5,
     POPOVER_MARGIN_TOP: 5,
 
-    init: function (parent, editor, options) {
-        var self = this;
+    init: function (parent, params) {
         this._super.apply(this, arguments);
-        this.popoverOptions = Object.assign(JSON.parse(JSON.stringify(defaultOptions.popover)), this.options.popover);
-        var dependencies = this.dependencies.slice();
-        Object.keys(this.popoverOptions).forEach(function (checkMethod) {
-            var plugins = self.popoverOptions[checkMethod];
-            if (checkMethod.indexOf('.') !== -1) {
-                dependencies.push(checkMethod.split('.')[0]);
-            }
-            plugins.forEach(function (plugin) {
-            if (dependencies.indexOf(plugin) === -1)
-                dependencies.push(plugin);
-            });
-        });
-        this.dependencies = dependencies;
+        this._setOptionalDependencies(params);
+        this._createPopover(params.insertBeforeContainer);
     },
     blurEditor: function () {
         this._hidePopovers();
@@ -72,17 +60,9 @@ var PopoverPlugin = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     start: function () {
-        Object.values(this.dependencies).forEach(function (plugin) {
-            if (plugin.buttons) {
-                plugin.buttons = Object.assign({}, plugin.buttons);
-            }
-        });
-        this._createPopover();
+        this._createPopoverCheckMethod();
+        this._createPopoverButtons();
         this._toggleDropDownEnabled();
-        var editable = this.editable;
-        this.popovers.forEach(function (popover) {
-            editable.parentNode.insertBefore(popover.element, editable);
-        });
         this.dependencies.Position.on('scroll', this, this._onScroll.bind(this));
         this.dependencies.Range.on('focus', this, this._onFocusNode.bind(this));
         this.dependencies.Range.on('range', this, this._onRange.bind(this));
@@ -94,32 +74,50 @@ var PopoverPlugin = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     /**
+     * Create popover container and add it to the beforeEditable list.
+     * Create the local popover definitions
+     *
      * @returns [elements]
      */
-    _createPopover: function () {
+    _createPopover: function (insertCallback) {
         var self = this;
         this.popovers = [];
         var popovers = this.popoverOptions;
         Object.keys(popovers).forEach(function (checkMethodKey) {
             var pluginNames = popovers[checkMethodKey];
             var checkMethodPluginName = checkMethodKey.split('.')[0];
-            var plugin = self.dependencies[checkMethodPluginName];
-            var checkMethod = plugin[checkMethodKey.split('.')[1]].bind(plugin);
 
-            var popover = self.document.createElement('popover');
-            var buttons = [];
-            pluginNames.forEach(function (pluginName) {
-                var render = self._renderButtons(pluginName);
-                popover.appendChild(render.element);
-                buttons = buttons.concat(render.buttons);
-            });
+            var popover = document.createElement('popover');
             popover.setAttribute('name', checkMethodPluginName);
+            insertCallback(popover);
 
             self.popovers.push({
-                checkMethod: checkMethod,
+                pluginNames: pluginNames,
+                checkMethodPluginName: checkMethodPluginName,
+                checkMethodName: checkMethodKey.split('.')[1],
                 element: popover,
-                buttons: buttons,
                 display: false,
+            });
+        });
+    },
+    _createPopoverCheckMethod: function () {
+        var self = this;
+        this.popovers.forEach(function (popover) {
+            var plugin = self.dependencies[popover.checkMethodPluginName];
+            popover.checkMethod = plugin[popover.checkMethodName].bind(plugin);
+        });
+    },
+    /**
+     * Create buttons into the created popovers
+     */
+    _createPopoverButtons: function () {
+        var self = this;
+        this.popovers.forEach(function (popover) {
+            popover.buttons = [];
+            popover.pluginNames.forEach(function (pluginName) {
+                var render = self._renderButtons(pluginName);
+                popover.element.appendChild(render.element);
+                popover.buttons = popover.buttons.concat(render.buttons);
             });
         });
     },
@@ -136,7 +134,7 @@ var PopoverPlugin = AbstractPlugin.extend({
             throw new Error('Button template of "' + pluginName + '" plugin is missing.');
         }
 
-        var group = this.document.createElement('group');
+        var group = document.createElement('group');
         group.innerHTML = this.options.renderTemplate(plugin.pluginName, plugin.buttons.template, {
             plugin: plugin,
             options: this.options,
@@ -244,6 +242,22 @@ var PopoverPlugin = AbstractPlugin.extend({
             elements = elements.concat([].slice.call(popover.element.querySelectorAll(selector)));
         });
         return elements;
+    },
+    _setOptionalDependencies: function () {
+        var self = this;
+        this.popoverOptions = Object.assign(JSON.parse(JSON.stringify(defaultOptions.popover)), this.options.popover);
+        var dependencies = this.dependencies.slice();
+        Object.keys(this.popoverOptions).forEach(function (checkMethod) {
+            var plugins = self.popoverOptions[checkMethod];
+            if (checkMethod.indexOf('.') !== -1) {
+                dependencies.push(checkMethod.split('.')[0]);
+            }
+            plugins.forEach(function (plugin) {
+            if (dependencies.indexOf(plugin) === -1)
+                dependencies.push(plugin);
+            });
+        });
+        this.dependencies = dependencies;
     },
     _toggleDropDownEnabled: function () {
         this.popovers.forEach(function (popover) {
@@ -378,7 +392,7 @@ var PopoverPlugin = AbstractPlugin.extend({
         }
 
         var position = this.dependencies.Position.getPosition(targetRange.sc, targetRange.so);
-        var pos = this.editor.getBoundingClientRect();
+        var pos = this.editable.parentNode.getBoundingClientRect();
         var newPos = {
             left: position.left - pos.left + this.POPOVER_MARGIN_LEFT,
             top: position.top - pos.top + top,
@@ -459,7 +473,7 @@ var PopoverPlugin = AbstractPlugin.extend({
             return;
         }
         var button = ev.target;
-        while (button !== this.editor && button.tagName !== 'BUTTON') {
+        while (button !== this.editable.parentNode && button.tagName !== 'BUTTON') {
             button = button.parentNode;
         }
 

@@ -70,6 +70,7 @@
 
     <!-- plugins -->
 
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/iframe.js"/>
     <!-- <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/dropzone.js"/> -->
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/keymap.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/history.js"/>

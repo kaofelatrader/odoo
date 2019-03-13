@@ -146,7 +146,7 @@ var LinkCreate = AbstractPlugin.extend({
                 });
             }
         }
-        var anchor = this.document.createElement('a');
+        var anchor = document.createElement('a');
         range.sc.parentNode.insertBefore(anchor, range.sc);
         anchor.appendChild(range.sc);
 

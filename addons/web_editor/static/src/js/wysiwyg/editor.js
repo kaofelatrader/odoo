@@ -32,70 +32,102 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
 
     _templates: {},
 
-    init: function (parent, target, params) {
+    init: function (parent, params) {
+        var self = this;
         this._super();
         if (!params) {
-            params = target;
-            target = parent;
+            params = parent;
             parent = null;
         }
         this.setParent(parent);
         this.id = 'wysiwyg-' + (++id);
 
-        this.target = target;
-        this.document = this.target.ownerDocument;
-        this.window = this.document.defaultView;
-
-        this.editor = this.document.createElement('editor');
-        this.editor.id = this.id;
-        this.editable = this.document.createElement('editable');
+        this.editable = document.createElement('editable');
         this.editable.contentEditable = 'true';
+
+        this.editableContainer = []; 
+        this.beforeContainer = [];
+        this.afterContainer = [];
+        this.beforeEditable = [];
+        this.afterEditable = [];
 
         this._saveEventMethods();
         this._prepareOptions(params);
-    },
-    start: function () {
-        var self = this;
-
-        var instance = $(this.target).data('wysiwyg');
-        if (instance) {
-            if (instance === this) {
-                return this.promise;
-            }
-            $(this.target).data('wysiwyg').destroy();
-        }
-
-        $(this.target).data('wysiwyg', this).attr('data-wysiwyg-id', this.id);
 
         this._pluginsManager = new PluginsManager(this, {
+                id: this.id,
                 plugins: this.plugins,
-                target: this.target,
-                editor: this.editor,
                 editable: this.editable,
+                addEditableContainer: function (node) {
+                    if (self._isInsertEditableInContainers) {
+                        throw new Error("Plugin content allready inserted, you can't change the container");
+                    } else {
+                        self.editableContainer.push(node);
+                    }
+                },
+                insertBeforeContainer: function (node) {
+                    if (self._isInsertEditableContainers) {
+                        self.editor.insertBefore(node, self.editor.firstChild);
+                    } else {
+                        self.beforeContainer.push(node);
+                    }
+                },
+                insertAfterContainer: function (node) {
+                    if (self._isInsertEditableContainers) {
+                        self.editor.appendChild(node);
+                    } else {
+                        self.afterContainer.push(node);
+                    }
+                },
+                insertBeforeEditable: function (node) {
+                    if (self._isInsertEditableInContainers) {
+                        self.editable.parentNode.insertBefore(node, self.editable.parentNode.firstChild);
+                    } else {
+                        self.beforeEditable.push(node);
+                    }
+                },
+                insertAfterEditable: function (node) {
+                    if (self._isInsertEditableInContainers) {
+                        self.editable.parentNode.appendChild(node);
+                    } else {
+                        self.afterEditable.push(node);
+                    }
+                },
             },
             this.options);
+    },
+    start: function (target) {
+        var self = this;
+        if (target.wysiwygEditor) {
+            target.wysiwygEditor.destroy();
+        }
+        this.target = target;
+        this.target.wysiwygEditor = this;
+        this.target.dataset.dataWysiwygId = this.id;
 
-        this.editor.innerHTML = '';
-        this.editor.appendChild(this.editable);
-
-        this.promise = this._pluginsManager.start().then(function () {
+        return this.isInitialized().then(function () {
             if (self._isDestroyed) {
                 return;
             }
-            return self._afterStart();
+            self._insertEditorContainers();
+            self._insertEditableInContainers();
+            return self._pluginsManager.start();
+        }).then(function () {
+            if (self._isDestroyed) {
+                return;
+            }
+            return self._afterStartAllPlugins();
         });
-
-        return this.promise;
     },
     destroy: function () {
         this._isDestroyed = true;
         if (this.editor.parentNode) {
             this.editor.parentNode.removeChild(this.editor);
         }
-        $(this.target).removeData('wysiwyg');
-        $(this.target).show();
-
+        this.target.wysiwygEditor = null;
+        this.target.style.display = '';
         this._destroyEvents();
+        this._super();
     },
 
     //--------------------------------------------------------------------------
@@ -113,6 +145,9 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
             console.warn("not dirty flag ? Please fix it.");
         }
         return isDirty;
+    },
+    isInitialized: function () {
+        return this._pluginsManager.isInitialized();
     },
     /**
      * Cancel the edition and destroy the editor.
@@ -169,10 +204,14 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @returns {String}
      */
     setValue: function (value) {
+        this.reset(value);
         this._dirty = true;
+        this.trigger_up('change');
+    },
+    reset: function (value) {
         this.editable.innerHTML = value || '';
         this.editable.innerHTML = this._pluginsManager.setEditorValue(value || '');
-        this.trigger_up('change');
+        this._dirty = false;
     },
 
     //--------------------------------------------------------------------------
@@ -188,6 +227,43 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         this.editor_events.forEach(function (event) {
             event.target.addEventListener(event.name, event.method, false);
         });
+    },
+    _insertEditorContainers: function () {
+        this._isInsertEditableContainers = true;
+        this.editor = document.createElement('editor');
+        this.editor.style.display = 'none';
+        this.editor.id = this.id;
+        if (this.target.nextSibling) {
+            this.target.parentNode.insertBefore(this.editor, this.target.nextSibling);
+        } else if (this.target.parentNode) {
+            this.target.parentNode.appendChild(this.editor);
+        } else {
+            console.warn("Can't insert this editor on a node without any parent");
+        }
+        var node;
+        var editableContainer = this.editor;
+        while (node = this.beforeContainer.pop()) {
+            this.editor.appendChild(node);
+        }
+        while (node = this.editableContainer.shift()) {
+            editableContainer.appendChild(node);
+            editableContainer = node;
+        }
+        while (node = this.afterContainer.pop()) {
+            this.editor.appendChild(node);
+        }
+        this.editableContainer = editableContainer;
+    },
+    _insertEditableInContainers: function () {
+        this._isInsertEditableInContainers = true;
+        var node;
+        while (node = this.beforeEditable.pop()) {
+            this.editableContainer.appendChild(node);
+        }
+        this.editableContainer.appendChild(this.editable);
+        while (node = this.afterEditable.shift()) {
+            this.editableContainer.appendChild(node);
+        }
     },
     /**
      * Freeze an object and all its properties and return the frozen object.
@@ -241,21 +317,11 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      *
      * @private
      */
-    _afterStart: function () {
-        var self = this;
-        if (this.target && this.target.parentNode) {
-            this.target.parentNode.insertBefore(this.editor, this.target.nextSibling);
-            this.target.style.display = 'none';
-        }
-
-        this.once('change', this, function (ev) {
-            ev.stopPropagation();
-            self._dirty = false;
-        });
-
+    _afterStartAllPlugins: function () {
+        this.target.style.display = 'none';
+        this.editor.style.display = '';
         this._value = this.target[this.target.tagName === "TEXTAREA" ? 'value' : 'innerHtml'];
-        this.setValue(this._value);
-
+        this.reset(this._value);
         this._bindEvents();
     },
     /**

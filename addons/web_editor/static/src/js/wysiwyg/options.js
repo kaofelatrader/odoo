@@ -34,7 +34,8 @@ return {
         // Handle: true,
         KeyMap: true,
         Keyboard: true,
-        Jinja: true,
+        Jinja: false,
+        Iframe: false,
     },
     lang: 'en_US',
     // toolbar
@@ -63,6 +64,7 @@ return {
         'Table.get':  ['Table'],
         // 'Text.get': ['FontStyle', 'FontSize', 'ForeColor', 'BgColor'], // eg for air mode
     },
+    iframeWillCached: true,
     width: null,
     height: null,
     tabSize: 4,

@@ -314,7 +314,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             node = node.parentNode;
         }
         if (!hasSplitBlock && lastChecked.tagName) {
-            $(lastChecked).before(this.document.createElement('br'));
+            $(lastChecked).before(document.createElement('br'));
         }
 
         if (!next.tagName) {
@@ -331,7 +331,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             if (this.utils.isBlankNode(ancestor)) {
                 firstChild = this.utils.isText(firstChild) ? firstChild.parentNode : firstChild;
                 $(firstChild).contents().remove();
-                $(firstChild).append(this.document.createElement('br'));
+                $(firstChild).append(document.createElement('br'));
             }
             if (lastChild.tagName === 'BR' && lastChild.previousSibling) {
                 $(lastChild).after(this.document.createTextNode(this.utils.char('zeroWidth')));
@@ -445,7 +445,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             return true;
         }
 
-        var br = this.document.createElement('br');
+        var br = document.createElement('br');
         $(before).after(br);
         var next = this.getPoint(br, 0);
         var startSpace = this.utils.getRegex('startSpace');
@@ -489,7 +489,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _insertHR: function () {
         var self = this;
-        var hr = this.document.createElement('hr');
+        var hr = document.createElement('hr');
         this.dom.insertBlockNode(hr, this.dependencies.Range.getRange());
         var point = this.getPoint(hr, 0);
         point = point.nextUntil(function (pt) {
@@ -795,7 +795,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         }
         var editableIsEmpty = !this.editable.childNodes.length;
         if (editableIsEmpty) {
-            var p = this.document.createElement('p');
+            var p = document.createElement('p');
             p.innerHTML = '<br>';
             this.editable.appendChild(p);
             range.replace({
@@ -912,8 +912,8 @@ var KeyboardPlugin = AbstractPlugin.extend({
         var node = this.utils.isVoid(range.sc) && range.sc.parentNode ? range.sc.parentNode : range.sc;
         var parentOnlyHasNode = node.parentNode && this.utils.onlyContains(node.parentNode, node);
         if (this.utils.isEmpty(node) && node.tagName !== 'LI' && parentOnlyHasNode) {
-            var emptyP = this.document.createElement('p');
-            var br = this.document.createElement('br');
+            var emptyP = document.createElement('p');
+            var br = document.createElement('br');
             $(emptyP).append(br);
             $(node).before(emptyP).remove();
             range.sc = range.ec = br;
@@ -940,7 +940,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _replaceMediaWithEmptySpan: function (media) {
         var self = this;
-        var span = this.document.createElement('span');
+        var span = document.createElement('span');
         media = this.utils.ancestor(media, function (n) {
             return !n.parentNode || !self.utils.isMedia(n.parentNode);
         });
@@ -1312,7 +1312,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             var parentContenteditable = $parent.attr('contenteditable');
             $parent.attr('contenteditable', false);
 
-            var accentPlaceholder = this.document.createElement('span');
+            var accentPlaceholder = document.createElement('span');
             $(baseRange.sc).after(accentPlaceholder);
             $(accentPlaceholder).attr('contenteditable', true);
 

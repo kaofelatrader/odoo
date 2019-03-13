@@ -63,15 +63,15 @@ var TablePicker = AbstractPlugin.extend({
      * @returns {Node} table
      */
     createTable: function (rowCount, colCount) {
-        var table = this.document.createElement('table');
+        var table = document.createElement('table');
         table.className = this.tableClassName;
         for (var i = 0; i < rowCount; i++) {
-            var tr = this.document.createElement('tr');
+            var tr = document.createElement('tr');
             table.appendChild(tr);
             for (var j = 0; j < colCount; j++) {
-                var td = this.document.createElement('td');
-                var p = this.document.createElement('p');
-                var br = this.document.createElement('br');
+                var td = document.createElement('td');
+                var p = document.createElement('p');
+                var br = document.createElement('br');
                 p.appendChild(br);
                 td.appendChild(p);
                 tr.appendChild(td);
@@ -92,13 +92,13 @@ var TablePicker = AbstractPlugin.extend({
         this.dom.insertBlockNode(table, range);
         var p;
         if (!table.previousElementSibling) {
-            p = this.document.createElement('p');
-            p.appendChild(this.document.createElement('br'));
+            p = document.createElement('p');
+            p.appendChild(document.createElement('br'));
             p.parentNode.insertBefore(table, p);
         }
         if (!table.nextElementSibling) {
-            p = this.document.createElement('p');
-            p.appendChild(this.document.createElement('br'));
+            p = document.createElement('p');
+            p.appendChild(document.createElement('br'));
             if (p.nextSibling) {
                 p.parentNode.appendChild(table);
             } else {
@@ -283,7 +283,7 @@ var Table = AbstractPlugin.extend({
         var cell = range.sc;
         var parentRow = this._currentRow(cell);
         var nCols = parentTR.querySelectorAll('td').length;
-        var tr = this.document.createElement('tr');
+        var tr = document.createElement('tr');
         for (var i = 0; i < nCols; i++) {
             tr.append(this._createCell());
         }

@@ -415,7 +415,9 @@ var ForeColorPlugin = AbstractPlugin.extend({
         this._super.apply(this, arguments);
         this._colors = this.options.colors;
         if (this.options.getColor) {
+                console.log('COLOR to load');
             this._initializePromise = this.options.getColors().then(function (colors) {
+                console.log('COLOR');
                 self._colors = colors;
             });
         }
@@ -690,7 +692,7 @@ var FontStylePlugin = AbstractPlugin.extend({
         }
         var changedNodes = [];
         _.each(nodes, function (node) {
-            var newNode = self.document.createElement(tagName);
+            var newNode = document.createElement(tagName);
             $(newNode).append($(node).contents());
             var attributes = $(node).prop("attributes");
             _.each(attributes, function (attr) {
@@ -856,7 +858,7 @@ var FontStylePlugin = AbstractPlugin.extend({
      */
     _formatTextCollapsed: function (range, tag) {
         range = this._insertFormatPlaceholder(range);
-        var formatNode = this.document.createElement(tag);
+        var formatNode = document.createElement(tag);
         $(range.sc).wrap(formatNode);
         return range.replace({
             sc: range.sc,
@@ -870,7 +872,7 @@ var FontStylePlugin = AbstractPlugin.extend({
      * @param {Boolean} tag eg: 'B', 'I', 'U'
      */
     _formatTextNode: function (node, tag) {
-        var tagNode = this.document.createElement(tag);
+        var tagNode = document.createElement(tag);
         $(node).wrap(tagNode);
     },
     /**
@@ -1411,7 +1413,7 @@ var ParagraphPlugin = AbstractPlugin.extend({
         }
 
         // wrap in li
-        var li = this.document.createElement('li');
+        var li = document.createElement('li');
         li.className = 'o_indent';
         $(ul).before(li);
         li.appendChild(ul);

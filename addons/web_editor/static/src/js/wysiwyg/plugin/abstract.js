@@ -23,24 +23,28 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
     editableDomEvents: null,
     pluginEvents: null,
 
+    promise: null,
+
     /**
      * Use this prop if you want to extend a summernote plugin.
+     *
+     * @params {object} params
+     * @params {int} params.id
+     * @params {array} params.plugins
+     * @params {Node} params.editable
+     * @params {function} params.addEditableContainer
+     * @params {function} params.insertBeforeEditable
+     * @params {function} params.insertAfterEditable
      */
     init: function (parent, params, options) {
         var self = this;
         this._super.apply(this, arguments);
         this.setParent(parent);
-
+        this.editorId = params.id;
+        this.params = params;
         this.options = options;
-
-        this.editor = params.editor;
         this.editable = params.editable;
-        this.document = this.editor.ownerDocument;
-        this.window = this.document.defaultView;
         this.utils = utils;
-
-        this.utils = utils;
-        this.dom = new Dom(this.options);
 
         var editableDomEvents = Object.assign({}, this.editableDomEvents);
         Object.keys(editableDomEvents).forEach(function (key) {
@@ -61,19 +65,13 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
         });
     },
     /**
-     * return a Promise resolved when the plugin is initialized and can be started
-     * This method can't start new call or perform calculations, must just return
-     * the deferreds created in the init method.
-     *
-     * @returns {Promise}
+     * @see Manager.isInitialized
      */
     isInitialized: function () {
         return Promise.resolve();
     },
     /**
-     * Called when all plugins are initialized
-     *
-     * @returns {Promise}
+     * @see Manager.start
      */
     start: function () {
         return Promise.resolve();
@@ -144,29 +142,18 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
     },
 
     //--------------------------------------------------------------------------
-    // Private
+    // Public
     //--------------------------------------------------------------------------
 
     /**
-     * Wraps a given function between common actions required
-     * for history (undo/redo) and the maintenance of the DOM/range.
+     * Used after the start, don't ovewrite it
      *
-     * @param {function} fn
-     * @returns {any} the return of fn
+     * @see Manager.start
      */
-    _wrapCommand: function (fn) {
-        var self = this;
-        return function () {
-            var res;
-            self.trigger_up('command', {
-                method: fn.bind(self),
-                args: arguments,
-                callback: function (result) {
-                    res = result;
-                }
-            });
-            return res;
-        };
+    _afterStartAddDomReferences: function () {
+        this.document = this.editable.ownerDocument;
+        this.window = this.document.defaultView;
+        this.dom = new Dom(this.document, this.options);
     },
 });
 

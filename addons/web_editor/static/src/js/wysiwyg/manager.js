@@ -12,37 +12,35 @@ var _ = require('web_editor._');
 
 var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
     /**
+     * The plugin can call insertBeforeEditable and insertAfterEditable to add content
+     * in the dom.
+     * Before all plugins are started, the plugins can't have access to the DOM.
      *
      */
     init: function (parent, params, options) {
         this._super.apply(this, arguments);
         this.setParent(parent);
-
-        if (typeof params.container === 'string') {
-            params.container = document.querySelector(params.container);
-        } else if (params.target.parentNode) {
-            params.target.parentNode.style.position = 'relative';
-            params.container = params.target.parentNode;
-        } else {
-            params.container = params.target.ownerDocument.body;
-        }
-
-        this._initializePromise = this._loadPlugins(params, options);
+        this._loadPlugins(params, options);
     },
     /**
-     * Start all plugins when all plugins are initialized
+     * return a Promise resolved when the plugin is initialized and can be started
+     * This method can't start new call or perform calculations, must just return
+     * the deferreds created in the init method.
+     *
+     * @returns {Promise}
+     */
+    isInitialized: function () {
+        return this._eachAsyncParallel('isInitialized');
+    },
+    /**
+     * Start all plugins when all plugins are initialized and the editor and plugins
+     * are inserted into the deepest container.
+     * When all plugin are starte, the DOM references are added to all plugins
      *
      * @returns {Promise}
      */
     start: function () {
-        var self = this;
-        return this._initializePromise.then(function () {
-            var startPromises = [];
-            for (var pluginName in self._plugins) {
-                startPromises.push(self._plugins[pluginName].start());
-            }
-            return Promise.all(startPromises);
-        });
+        return this._eachAsyncParallel('start').then(this._each.bind(this, '_afterStartAddDomReferences'));
     },
 
     //--------------------------------------------------------------------------
@@ -152,6 +150,13 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
             promise.then(plugin[methodName].bind(plugin));
         }
         return promise;
+    },
+    _eachAsyncParallel: function (methodName, value) {
+        var promises = [];
+        for (var pluginName in this._plugins) {
+            promises.push(this._plugins[pluginName][methodName](value));
+        }
+        return Promise.all(promises);
     },
     _loadPlugins: function (params, options) {
         this._plugins = this._createPluginInstance(params, options);

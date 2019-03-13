@@ -83,7 +83,7 @@ var ClipboardPlugin = AbstractPlugin.extend({
         var didRemoveNodes = false;
         var whiteList = this._clipboardWhitelist();
         var blackList = this._clipboardBlacklist();
-        var $fakeParent = $(this.document.createElement('div'));
+        var $fakeParent = $(document.createElement('div'));
         _.each($clipboardData, function (node) {
             var isWhitelisted = self.utils.isText(node) || $(node).filter(whiteList.join(',')).length;
             var isBlacklisted = $(node).filter(blackList.join(',')).length;
@@ -140,7 +140,7 @@ var ClipboardPlugin = AbstractPlugin.extend({
         var self = this;
         $els.filter(function (i, n) {
             return self.utils.isNodeBlockType(n) && !n.childNodes;
-        }).append(this.document.createElement('br'));
+        }).append(document.createElement('br'));
     },
     /**
      * Get all non-whitelisted or blacklisted elements from clipboard data.
@@ -180,7 +180,7 @@ var ClipboardPlugin = AbstractPlugin.extend({
      */
     _insertNodesAt: function (nodes, point) {
         var canInsertInline = this.utils.isText(point.node) || point.node.tagName === 'BR' || this.utils.isMedia(point.node);
-        var $fakeParent = $(this.document.createElement('div'));
+        var $fakeParent = $(document.createElement('div'));
         $fakeParent.append(nodes);
         if (this.utils.isInline(nodes[0]) && canInsertInline) {
             point.node = point.node.tagName ? point.node : point.node.splitText(point.offset);
@@ -309,7 +309,7 @@ var ClipboardPlugin = AbstractPlugin.extend({
         _.each($inlinesInTD, function (n) {
             parentsOfInlinesInTD.push(self.utils.firstBlockAncestor(n));
         });
-        $($.unique(parentsOfInlinesInTD)).wrapInner(this.document.createElement('p'));
+        $($.unique(parentsOfInlinesInTD)).wrapInner(document.createElement('p'));
     },
 
     //--------------------------------------------------------------------------

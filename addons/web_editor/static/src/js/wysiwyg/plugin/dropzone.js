@@ -92,7 +92,7 @@ var DropzonePlugin = Plugins.dropzone.extend({
                 reader.addEventListener('load', function (e) {
                     self._uploadImage(e.target.result, file.name).then(function (attachment) {
                         // Make the HTML
-                        var image = self.document.createElement('img');
+                        var image = document.createElement('img');
                         image.setAttribute('style', 'width: 100%;');
                         image.src = '/web/content/' + attachment.id + '/' + attachment.name;
                         image.alt = attachment.name;

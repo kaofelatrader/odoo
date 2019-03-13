@@ -142,13 +142,21 @@ var RangePlugin = AbstractPlugin.extend({
     },
     save: function (range) {
         this.lastRange = range ? this.setRange(range) : this._getRange();
-        var element = this.editable.style.display === 'none' ? this.editor : this.editable;
 
-        if (this.lastRange &&
-            !element.contains(this.lastRange.sc) ||
-            !element.contains(this.lastRange.ec)) {
-            console.warn("Try to save a wrong range.");
-            this.lastRange = null;
+        if (this.lastRange) {
+            if (this.editable.style.display === 'none') {
+                if ((!this.editor.contains(this.lastRange.sc) ||
+                     !this.editor.contains(this.lastRange.ec)) &&
+                    (!this.editable.contains(this.lastRange.sc) ||
+                     !this.editable.contains(this.lastRange.ec))) {
+                    console.warn("Try to save a wrong range.");
+                    this.lastRange = null;
+                }
+            } else if (!this.editable.contains(this.lastRange.sc) ||
+                    !this.editable.contains(this.lastRange.ec)) {
+                console.warn("Try to save a wrong range.");
+                this.lastRange = null;
+            }
         }
 
         var input = this.lastRange && this.lastRange.sc.childNodes[this.lastRange.so];

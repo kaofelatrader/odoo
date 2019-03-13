@@ -71,11 +71,11 @@ var ListPlugin = AbstractPlugin.extend({
         var res = lis;
 
         if (lisBefore.length) {
-            var ulBefore = this.document.createElement(ol.tagName);
+            var ulBefore = document.createElement(ol.tagName);
             ulBefore.className = ol.className;
 
             if (this.utils.isLi(ol.parentNode)) {
-                var li = this.document.createElement('li');
+                var li = document.createElement('li');
                 li.className = ol.parentNode.className;
                 $(li).insertBefore(ol.parentNode);
                 li.appendChild(ulBefore);
@@ -86,11 +86,11 @@ var ListPlugin = AbstractPlugin.extend({
             $(ulBefore).append(lisBefore);
         }
         if (lisAfter.length) {
-            var ulAfter = this.document.createElement(ol.tagName);
+            var ulAfter = document.createElement(ol.tagName);
             ulAfter.className = ol.className;
 
             if (this.utils.isLi(ol.parentNode)) {
-                var li = this.document.createElement('li');
+                var li = document.createElement('li');
                 li.className = ol.parentNode.className;
                 $(li).insertAfter(ol.parentNode);
                 li.appendChild(ulAfter);
@@ -114,7 +114,7 @@ var ListPlugin = AbstractPlugin.extend({
                 ul = ol;
             } else {
                 $(ol).removeClass('o_checklist');
-                ul = this.document.createElement(sorted === "ol" ? "ol" : "ul");
+                ul = document.createElement(sorted === "ol" ? "ol" : "ul");
                 ul.className = ol.className;
                 $(ul).insertBefore(ol).append(lis);
                 parent.removeChild(ol);
@@ -148,7 +148,7 @@ var ListPlugin = AbstractPlugin.extend({
                     return node.tagName && node.tagName !== "BR" && (!self.utils.isMedia || !self.utils.isMedia(node));
                 });
                 if (!hasNode) {
-                    var p = this.document.createElement('p');
+                    var p = document.createElement('p');
                     $(p).insertBefore(ol).append(res);
                     res = [p];
                 }
@@ -253,7 +253,7 @@ var ListPlugin = AbstractPlugin.extend({
      * @returns {Node}
      */
     _createListElement: function (type) {
-        var ul = this.document.createElement(type === "ol" ? "ol" : "ul");
+        var ul = document.createElement(type === "ol" ? "ol" : "ul");
         if (type === 'checklist') {
             ul.className = 'o_checklist';
         }
@@ -278,7 +278,7 @@ var ListPlugin = AbstractPlugin.extend({
     _fillListElementWith: function (ul, nodes) {
         var self = this;
         _.each(nodes, function (node) {
-            var li = self.document.createElement('li');
+            var li = document.createElement('li');
             $(li).append(node);
             ul.appendChild(li);
         });
@@ -297,10 +297,10 @@ var ListPlugin = AbstractPlugin.extend({
             var ancestor = (!node.tagName || node.tagName === 'BR') && self.utils.ancestor(node, self.utils.isCell);
             if (ancestor && self.options.isEditableNode(ancestor)) {
                 if (!ancestor.childNodes.length) {
-                    var br = self.document.createElement('br');
+                    var br = document.createElement('br');
                     ancestor.appendChild(br);
                 }
-                var p = self.document.createElement('p');
+                var p = document.createElement('p');
                 $(p).append(ancestor.childNodes);
                 ancestor.appendChild(p);
                 return p;

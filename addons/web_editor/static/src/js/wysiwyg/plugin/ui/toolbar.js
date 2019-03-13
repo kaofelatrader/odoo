@@ -14,16 +14,6 @@ var ToolbarPlugin = PopoverPlugin.extend({
         'keyup': '_onKeyPress',
     },
 
-    init: function (parent, editor, options) {
-        var dependencies = this.dependencies.slice();
-        this._super.apply(this, arguments);
-        this.options.toolbar.forEach(function (item) {
-            if (dependencies.indexOf(item) === -1) {
-                dependencies.push(item);
-            }
-        });
-        this.dependencies = dependencies;
-    },
     blurEditor: function () {
         var toolbar = this.popovers[0];
         toolbar.element.querySelectorAll('button[name]').forEach(function (button) {
@@ -35,19 +25,26 @@ var ToolbarPlugin = PopoverPlugin.extend({
     // Private
     //--------------------------------------------------------------------------
 
-    _createPopover: function () {
-        var self = this;
-        var toolbarWrap =  this.document.createElement('toolbar');
-        this.options.toolbar.forEach(function (pluginName) {
-            var render = self._renderButtons(pluginName);
-            toolbarWrap.appendChild(render.element);
-        });
-        var buttons = [].slice.call(toolbarWrap.getElementsByTagName('button'));
+    _createPopover: function (insertCallback) {
+        var toolbar = document.createElement('toolbar');
+        insertCallback(toolbar);
         this.popovers = [{
-            element: toolbarWrap,
-            buttons: buttons,
+            pluginNames: this.options.toolbar,
+            element: toolbar,
             display: true,
         }];
+    },
+    _createPopoverCheckMethod: function () {
+        return;
+    },
+    _setOptionalDependencies: function () {
+        var dependencies = this.dependencies.slice();
+        this.options.toolbar.forEach(function (item) {
+            if (dependencies.indexOf(item) === -1) {
+                dependencies.push(item);
+            }
+        });
+        this.dependencies = dependencies;
     },
     _updatePopovers: function () {
         return;

@@ -53,7 +53,7 @@ var PositionPlugin = AbstractPlugin.extend({
             parent.insertBefore(clone, node);
             //parent.removeChild(node);
 
-            var span = this.document.createElement('span');
+            var span = document.createElement('span');
             span.style.position = "absolute";
             var nextClone = clone.splitText(offset);
             parent.insertBefore(span, nextClone);

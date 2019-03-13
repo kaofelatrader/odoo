@@ -27,9 +27,9 @@ var Unbreakable = AbstractPlugin.extend({
     },
 
     start: function () {
-        this._super();
-        this.secureArea();
         this.dependencies.Range.on('range', this, this._onRange.bind(this));
+        this.secureArea();
+        return this._super();
     },
 
     //--------------------------------------------------------------------------
@@ -260,7 +260,7 @@ var Unbreakable = AbstractPlugin.extend({
 
             if (self.utils.isVideo(media) && !media.querySelector('.o_fake_editable')) {
                 // allow char insertion
-                var div = self.document.createElement('div');
+                var div = document.createElement('div');
                 div.className = 'o_fake_editable o_wysiwyg_to_remove';
                 div.style.position = 'absolute';
                 div.contentEditable = true;

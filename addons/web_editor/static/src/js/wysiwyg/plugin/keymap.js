@@ -64,7 +64,7 @@ var keyMapPlugin = AbstractPlugin.extend({
         'RIGHTBRACKET': 221
     },
 
-    init: function (parent, editor, options) {
+    init: function () {
         var self = this;
         this._super.apply(this, arguments);
 
@@ -91,25 +91,16 @@ var keyMapPlugin = AbstractPlugin.extend({
                 pluginName: pluginName,
                 methodName: method[0],
                 value: method[1],
-                description: help[command],
+                description: help[command] && self.options.translate('KeyMap', help[command]),
             };
+            if (!help[command]) {
+                console.info("No description for '" + command + "'");
+            }
             if (dependencies.indexOf(pluginName) === -1) {
                 dependencies.push(pluginName);
             }
         });
         this.dependencies = dependencies;
-    },
-    start: function () {
-        var keyMap = Object.values(this.keyMap);
-        for (var k = 0; k < keyMap.length; k++) {
-            var item = keyMap[k];
-            if (item.description) {
-                item.description = this.options.translate('KeyMap', item.description);
-            } else {
-                console.info("No description for '" + item.command + "'");
-            }
-        }
-        return this._super();
     },
     /**
      * @see Manager.translatePluginTerm

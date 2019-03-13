@@ -20,9 +20,17 @@ var CodeViewPlugin = AbstractPlugin.extend({
     /**
      * @override
      */
+    init: function (parent, params) {
+        this._super.apply(this, arguments);
+        this.codeview = this._createCodable();
+        params.insertBeforeContainer(this.codeview);
+    },
+    /**
+     * @override
+     */
     start: function () {
-        this._insertCodable();
         this._deactivate();
+        return this._super();
     },
     /**
      * @override
@@ -100,6 +108,16 @@ var CodeViewPlugin = AbstractPlugin.extend({
         this.trigger('active');
     },
     /**
+     * create the codable view
+     */
+    _createCodable: function () {
+        var codeview = document.createElement('textarea');
+        codeview.name = 'codeview';
+        codeview.oninput = this._resize.bind(this);
+        codeview.style.display = 'none';
+        return codeview;
+    },
+    /**
      * Return true if the codeview is active
      *
      * @returns {Boolean}
@@ -138,16 +156,6 @@ var CodeViewPlugin = AbstractPlugin.extend({
     _focus: function () {
         this.editable.blur();
         this.codeview.focus();
-    },
-    /**
-     * Insert the codable view into the DOM
-     */
-    _insertCodable: function () {
-        this.codeview = this.document.createElement('textarea');
-        this.codeview.name = 'codeview';
-        this.codeview.oninput = this._resize.bind(this);
-        this.editor.insertBefore(this.codeview, this.editable);
-        this.isActive = true;
     },
     /**
      * Resize the code view textarea to fit its contents
