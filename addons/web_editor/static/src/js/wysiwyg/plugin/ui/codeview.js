@@ -9,11 +9,9 @@ var CodeViewPlugin = AbstractPlugin.extend({
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_codeview.xml'],
     dependencies: ['Range'],
 
-    nameAttr: 'codeview',
-
     buttons: {
         template: 'wysiwyg.buttons.codeview',
-        active: '_active',
+        active: '_isActive',
         enabled: '_enabled',
     },
 
@@ -33,24 +31,17 @@ var CodeViewPlugin = AbstractPlugin.extend({
         this.isBeingDestroyed = true;
         this._super();
     },
-    /**
-     * @overwrite
-     */
-    getEditorValue: function (value) {
-        if (this._active()) {
-            return this.codeview.value.trim();
+    focusEditor: function () {
+        if (this._isActive()) {
+            this._resize();
         }
-        return value;
     },
     /**
      * @overwrite
      */
-    setEditorValue: function (value) {
-        if (this._hasJinja(value)) {
-            this._setCodeViewValue(value);
-            if (!this._active()) {
-                this._activate();
-            }
+    getEditorValue: function (value) {
+        if (this._isActive()) {
+            return this.codeview.value.trim();
         }
         return value;
     },
@@ -59,23 +50,37 @@ var CodeViewPlugin = AbstractPlugin.extend({
     // Public
     //--------------------------------------------------------------------------
 
+    active: function (value) {
+        var self = this;
+        if (!this._isActive()) {
+            if (value) {
+                this._setCodeViewValue(value);
+            } else {
+                this.trigger_up('get_value', {
+                    callback: function (value) {
+                        self._setCodeViewValue(value);
+                    },
+                });
+            }
+            this._activate();
+        }
+    },
+    deactivate: function (value) {
+        if (this._isActive()) {
+            this._deactivate();
+            this.trigger_up('set_value', {
+                value: value || this.codeview.value.trim(),
+            });
+        }
+    },
     /**
      * Toggle the code view
      */
     toggle: function () {
-        var self = this;
-        if (this._active()) {
-            this._deactivate();
-            this.trigger_up('set_value', {
-                value: this.codeview.value.trim(),
-            });
+        if (this._isActive()) {
+            this.deactivate();
         } else {
-            this.trigger_up('get_value', {
-                callback: function (html) {
-                    self._setCodeViewValue(html);
-                },
-            });
-            this._activate();
+            this.active()
         }
     },
 
@@ -92,13 +97,14 @@ var CodeViewPlugin = AbstractPlugin.extend({
         this.editable.style.display = 'none';
         this._resize();
         this._focus();
+        this.trigger('active');
     },
     /**
      * Return true if the codeview is active
      *
      * @returns {Boolean}
      */
-    _active: function () {
+    _isActive: function () {
         return this.isActive;
     },
     /**
@@ -116,6 +122,7 @@ var CodeViewPlugin = AbstractPlugin.extend({
         this.codeview.style.display = 'none';
         this.editable.style.display = '';
         this._blur();
+        this.trigger('deactivate');
     },
     /**
      * Return true if the codeview is active
@@ -133,22 +140,11 @@ var CodeViewPlugin = AbstractPlugin.extend({
         this.codeview.focus();
     },
     /**
-     * Returns true if the value contains jinja logic
-     *
-     * @param {String} value
-     * @returns {Boolean}
-     */
-    _hasJinja: function (value) {
-        var jinjaExp = /(^|\n)\s*%\send|%\sset/;
-        var reHasJinja = this.utils.getRegex('jinja', '', jinjaExp);
-        return reHasJinja.test(value);
-    },
-    /**
      * Insert the codable view into the DOM
      */
     _insertCodable: function () {
         this.codeview = this.document.createElement('textarea');
-        this.codeview.name = this.nameAttr;
+        this.codeview.name = 'codeview';
         this.codeview.oninput = this._resize.bind(this);
         this.editor.insertBefore(this.codeview, this.editable);
         this.isActive = true;

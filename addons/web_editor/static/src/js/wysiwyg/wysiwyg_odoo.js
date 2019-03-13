@@ -12,8 +12,13 @@ Wysiwyg.include({
     _editorOptions: function () {
         var options = this._super();
         options.getColors = this._getColors.bind(this);
-        options.loadTemplates = function (xmlPath) {
-            return ajax.loadXML(xmlPath, QWeb);
+        options.loadTemplates = function (xmlPaths) {
+            var promises = [];
+            var xmlPath;
+            while ((xmlPath = xmlPaths.shift())) {
+                promises.push(ajax.loadXML(xmlPath, QWeb));
+            }
+            return $.when.apply($, promises);
         };
         options.renderTemplate = function (pluginName, template, values) {
             var xml = QWeb.render(template, values);

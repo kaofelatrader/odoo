@@ -66,6 +66,7 @@
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/position.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/ui/toolbar.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/ui/popover.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/ui/codeview.js"/>
 
     <!-- plugins -->
 
@@ -83,7 +84,7 @@
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/transform.js"/>
     <!-- <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/hint.js"/> -->
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/list.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/codeview.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/codeview_jinja.js"/>
 
     <!-- additional plugins -->
 

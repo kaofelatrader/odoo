@@ -9,6 +9,8 @@ var _ = require('web_editor._');
 
 
 var HistoryPlugin = AbstractPlugin.extend({
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg.xml'],
+
     dependencies: ['Range'],
 
     buttons: {

@@ -42,6 +42,8 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         'paste editable': '_onPaste',
     },
 
+    _templates: {},
+
     init: function (parent, target, params) {
         this._super();
         if (!params) {
@@ -60,8 +62,6 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         this.editor.id = this.id;
         this.editable = this.document.createElement('editable');
         this.editable.contentEditable = 'true';
-
-        this._templates = {};
 
         this._saveEventMethods();
         this._prepareOptions(params);
@@ -339,20 +339,23 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @returns {Promise}
      */
     _optionLoadTemplates: function (templatesDependencies) {
-        var defs = [];
+        var promises = [];
         var xmlPath;
         while ((xmlPath = templatesDependencies.shift())) {
-            defs.push($.get(xmlPath, function (html) {
-                var fragment = document.createElement('fragment');
-                fragment.innerHTML = html;
-                fragment.querySelectorAll('[t-name]').forEach(function (template) {
-                    var templateName = template.getAttribute('t-name');
-                    template.removeAttribute('t-name');
-                    this._templates[templateName] = template.outerHTML;
-                });
-            }));
+            var promise = new Promise(function (resolve) {
+                $.get(xmlPath, function (html) {
+                    var fragment = document.createElement('fragment');
+                    fragment.innerHTML = html;
+                    fragment.querySelectorAll('[t-name]').forEach(function (template) {
+                        var templateName = template.getAttribute('t-name');
+                        template.removeAttribute('t-name');
+                        this._templates[templateName] = template.outerHTML;
+                    });
+                }).then(resolve);
+            });
+            promises.push(promise);
         }
-        return $.when.apply($, defs);
+        return Promise.all(promises);
     },
     /**
      * @param {string} pluginName

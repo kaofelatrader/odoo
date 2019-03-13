@@ -161,7 +161,6 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
         for (var i = 0; i < this._pluginNames.length; i++) {
             var pluginName = this._pluginNames[i];
             var pluginInstance = this._plugins[pluginName];
-            pluginInstance.pluginName = pluginName;
             var dependencies = {};
             for (var k = 0; k < pluginInstance.dependencies.length; k++) {
                 var depName = pluginInstance.dependencies[k];
@@ -218,6 +217,7 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
             }
             var Plugin = typeof params.plugins[pluginName] === 'object' ? params.plugins[pluginName] : pluginsRegistry[pluginName];
             var pluginInstance = new Plugin(this, params, options);
+            pluginInstance.pluginName = pluginName;
 
             for (var k = 0; k < pluginInstance.dependencies.length; k++) {
                 var pName = pluginInstance.dependencies[k];
@@ -233,19 +233,14 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
         var templatesDependencies = [];
         for (var i = 0; i < pluginNames.length; i++) {
             var pluginInstance = pluginInstances[pluginNames[i]];
-            for (var k = 0; pluginInstance.templatesDependencies.length < k; k++) {
+            for (var k = 0; k < pluginInstance.templatesDependencies.length; k++) {
                 var src = pluginInstance.templatesDependencies[k];
                 if (templatesDependencies.indexOf(src) === -1) {
                     templatesDependencies.push(src);
                 }
             }
         }
-        var promises = [];
-        var templatesPath;
-        while ((templatesPath = templatesDependencies.shift())) {
-            promises.push(options.loadTemplates(templatesPath));
-        }
-        return Promise.all(promises);
+        return options.loadTemplates(templatesDependencies);
     },
 });
 
