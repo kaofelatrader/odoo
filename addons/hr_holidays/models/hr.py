@@ -63,14 +63,13 @@ class Department(models.Model):
 class Employee(models.Model):
     _inherit = "hr.employee"
 
-    def _group_hr_user_domain(self):
-        group = self.env.ref('hr_holidays.group_hr_holidays_team_leader', raise_if_not_found=False)
-        return [('groups_id', 'in', group.ids)] if group else []
+    def _default_leave_manager_id(self):
+        return self.env.ref('base.user_admin', raise_if_not_found=False)
 
     leave_manager_id = fields.Many2one(
         'res.users', string='Time Off Responsible',
-        domain=_group_hr_user_domain,
-        help="User responsible of leaves approval. Should be Team Leader or Department Manager.")
+        required=True, default=_default_leave_manager_id,
+        help="User responsible of leaves approval.")
     remaining_leaves = fields.Float(
         compute='_compute_remaining_leaves', string='Remaining Paid Time Off',
         help='Total number of paid time off allocated to this employee, change this value to create allocation/time off request. '
@@ -175,7 +174,7 @@ class Employee(models.Model):
         super(Employee, self)._onchange_parent_id()
         previous_manager = self._origin.parent_id.user_id
         manager = self.parent_id.user_id
-        if manager and manager.has_group('hr.group_hr_user') and (self.leave_manager_id == previous_manager or not self.leave_manager_id):
+        if manager and (self.leave_manager_id == previous_manager or not self.leave_manager_id):
             self.leave_manager_id = manager
 
     @api.multi
@@ -197,16 +196,26 @@ class Employee(models.Model):
         ])
         return [('id', 'in', holidays.mapped('employee_id').ids)]
 
+    @api.model
+    def create(self, values):
+        if 'parent_id' in values:
+            manager = self.env['hr.employee'].browse(values['parent_id']).user_id
+            values['leave_manager_id'] = values.get('leave_manager_id', manager.id or self._default_leave_manager_id().id)
+        return super(Employee, self).create(values)
+
     def write(self, values):
+        if 'parent_id' in values:
+            manager = self.env['hr.employee'].browse(values['parent_id']).user_id
+            values['leave_manager_id'] = values.get('leave_manager_id', manager.id or self._default_leave_manager_id().id)
         res = super(Employee, self).write(values)
-        today_date = fields.Datetime.now()
         if 'parent_id' in values or 'department_id' in values:
+            today_date = fields.Datetime.now()
             hr_vals = {}
             if values.get('parent_id') is not None:
                 hr_vals['manager_id'] = values['parent_id']
             if values.get('department_id') is not None:
                 hr_vals['department_id'] = values['department_id']
-            holidays = self.env['hr.leave'].search(['|',('state', 'in', ['draft', 'confirm']),('date_from', '>', today_date), ('employee_id', 'in', self.ids)])
+            holidays = self.env['hr.leave'].search(['|', ('state', 'in', ['draft', 'confirm']), ('date_from', '>', today_date), ('employee_id', 'in', self.ids)])
             holidays.write(hr_vals)
             allocations = self.env['hr.leave.allocation'].search([('state', 'in', ['draft', 'confirm']), ('employee_id', 'in', self.ids)])
             allocations.write(hr_vals)
