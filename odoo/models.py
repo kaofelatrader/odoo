@@ -5182,24 +5182,22 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
 
         result = {}
 
-        # process names in order (or the keys of values if no name given)
-        while todo:
-            name = todo.pop(0)
-            if name in done:
-                continue
-            done.add(name)
-
-            with env.do_in_onchange():
+        # process names in order
+        with env.do_in_onchange():
+            while todo:
                 # apply field-specific onchange methods
-                if field_onchange.get(name):
-                    record._onchange_eval(name, field_onchange[name], result)
+                for name in todo:
+                    if field_onchange.get(name):
+                        record._onchange_eval(name, field_onchange[name], result)
+                    done.add(name)
 
                 # make a snapshot (this forces evaluation of computed fields)
                 snapshot1 = Snapshot(record, nametree)
 
-                # determine which fields have been modified
+                # determine which fields to process for the next pass
+                todo.clear()
                 for name in nametree:
-                    if snapshot1[name] != snapshot0[name]:
+                    if name not in done and snapshot1[name] != snapshot0[name]:
                         todo.append(name)
 
         # determine values that have changed by comparing snapshots
