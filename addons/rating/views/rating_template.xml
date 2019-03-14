@@ -3,7 +3,7 @@
 
         <!-- External page : thanks message -->
         <template id="rating_external_page_view" name="Rating Page Done">
-            <t t-call="web.layout">
+            <t t-call="portal.frontend_layout">
                 <t t-set="head">
                     <link rel='stylesheet' href='/web/static/lib/bootstrap/css/bootstrap.css'/>
                 </t>
@@ -20,7 +20,7 @@
 
         <!-- External page: rate and submit feedback -->
         <template id="rating_external_page_submit" name="Rating Page Submit">
-            <t t-call="web.layout">
+            <t t-call="portal.frontend_layout">
                 <t t-set="head">
                     <link rel='stylesheet' href='/web/static/lib/bootstrap/css/bootstrap.css'/>
                     <script type="text/javascript" src="/rating/static/src/js/rating.js"></script>
