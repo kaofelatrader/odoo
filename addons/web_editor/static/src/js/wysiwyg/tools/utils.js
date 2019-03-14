@@ -272,9 +272,9 @@ return {
         if (!this.isText(node)) {
             return 0;
         }
-        var clone = $(node).clone()[0];
-        var breakableSpace = this.removeExtremeBreakableSpace(clone, 0).start;
-        return breakableSpace === 1 ? 0 : breakableSpace;
+        var startSpace = node.textContent.match(this.getRegex('startNotChar'));
+        var total = !startSpace || !startSpace.length ? 0 : startSpace[0].length;
+        return total === 1 ? 0 : total; // A single leading space is always unbreakable
     },
     /**
      * Return the number of trailing breakable space in the given text node.
@@ -287,9 +287,9 @@ return {
         if (!this.isText(node)) {
             return 0;
         }
-        var clone = $(node).clone()[0];
-        var breakableSpace = this.removeExtremeBreakableSpace(clone, 0).end;
-        return breakableSpace === 1 ? 0 : breakableSpace;
+        var endSpace = node.textContent.match(this.getRegex('endNotChar'));
+        var total = !endSpace || !endSpace.length ? 0 : endSpace[0].length;
+        return total === 1 ? 0 : total; // A single trailing space is always unbreakable
     },
     /**
      * Fill in `object`'s `undefined` writable properties with the value of the

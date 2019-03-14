@@ -40,7 +40,7 @@ BoundaryPoint.prototype = {
             if (newPt === point && (!first || utils.isText(point.node) && !point[method])) {
                 break;
             }
-            point = newPt[prevOrNext + 'Point']();
+            point = newPt[prevOrNext]();
             first = false;
         }
         if (!point) {
