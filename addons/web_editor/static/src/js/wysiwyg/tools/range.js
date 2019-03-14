@@ -418,7 +418,7 @@ var WrappedRange = Class.extend({
 
         // On left edge of non-empty element: move before
         var siblings = this.sc.parentNode && this.sc.parentNode.childNodes;
-        var isInEmptyElem = !siblings || !siblings.length || _.all(siblings, utils.isBlankNode.bind(this));
+        var isInEmptyElem = !siblings || !siblings.length || _.all(siblings, utils.isBlankNode.bind(utils));
         if (
             !this.so && !isInEmptyElem &&
             !(this.sc.previousSibling && this.sc.previousSibling.tagName === "BR") &&

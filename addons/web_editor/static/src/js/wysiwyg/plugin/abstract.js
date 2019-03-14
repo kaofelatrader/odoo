@@ -40,7 +40,7 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
         this.utils = utils;
 
         this.utils = utils;
-        this.dom = new Dom(this.document, this.options);
+        this.dom = new Dom(this.options);
 
         var editableDomEvents = Object.assign({}, this.editableDomEvents);
         Object.keys(editableDomEvents).forEach(function (key) {

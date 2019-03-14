@@ -420,6 +420,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @returns {Function}
      */
     _optionCreateIsUnbreakableNode: function (_isUnbreakableNode) {
+        var self = this;
         return function (node) {
             node = node && (node.tagName ? node : node.parentNode);
             if (!node) {
@@ -427,8 +428,8 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
             }
             return ["TD", "TR", "TBODY", "TFOOT", "THEAD", "TABLE"].indexOf(node.tagName) !== -1 ||
                         $(node).is(self.editable) ||
-                        !this.options.isEditableNode(node.parentNode) ||
-                        !this.options.isEditableNode(node) ||
+                        !self.options.isEditableNode(node.parentNode) ||
+                        !self.options.isEditableNode(node) ||
                         (_isUnbreakableNode && _isUnbreakableNode(node));
         };
     },

@@ -7,12 +7,9 @@ var utils = require('wysiwyg.utils');
 
 var Dom = Class.extend({
     /**
-     * @param {Node} doc the current document being edited
+     * @param {Object} [options]
      */
-    init: function (doc, options) {
-        this.document = doc;
-        this.$editable = $(this.document).find('editable');
-        this.editable = this.$editable[0];
+    init: function (options) {
         this.options = options;
     },
 
@@ -334,7 +331,7 @@ var Dom = Class.extend({
      */
     deleteSelection: function (range) {
         if (range.isCollapsed()) {
-            return null;
+            return range.getStartPoint();
         }
         var point = this.deleteBetween(range.getStartPoint(), range.getEndPoint());
         point = this.fillEmptyNode(point);
@@ -372,7 +369,7 @@ var Dom = Class.extend({
                 nbsp: true,
             }).test(point.node.innerHTML)
         ) {
-            var text = this.document.createTextNode('');
+            var text = document.createTextNode('');
             point.node.innerHTML = '';
             point.node.appendChild(text);
             point.node = text;
@@ -437,7 +434,7 @@ var Dom = Class.extend({
         } else {
             // prevent unwrapped text in unbreakable
             if (utils.isText(unbreakable)) {
-                $(unbreakable).wrap(this.document.createElement('p'));
+                $(unbreakable).wrap(document.createElement('p'));
                 unbreakable.splitText(point.offset);
                 unbreakable = unbreakable.parentNode;
                 point.offset = 1;
@@ -467,13 +464,17 @@ var Dom = Class.extend({
         if (text === " ") {
             text = utils.char('nbsp');
         }
-        this.editable.normalize();
+        var editable = range.sc;
+        while (editable.tagName !== 'EDITABLE' && editable.parentNode) {
+            editable = editable.parentNode;
+        }
+        editable.normalize();
         var point = this.deleteSelection(range);
         range.replace({
             sc: point.node,
             so: point.offset,
         });
-        this.editable.normalize();
+        editable.normalize();
 
         if (!range.sc.tagName && /\S/.test(range.sc.textContent)) {
             var before = range.sc.textContent.slice(0, range.so);
@@ -502,19 +503,18 @@ var Dom = Class.extend({
 
         // if the text node can't be inserted in the dom (not editable area) do nothing
         if (!textNode) {
-            return;
+            return range;
         }
 
         this.secureExtremeSingleSpace(range.sc);
 
-        this._wrapTextWithP(textNode);
-
-        range = range.replace({
-            sc: textNode,
-            so: text.length,
-        }).normalize();
-
-        this.editable.normalize();
+        textNode = this._wrapTextInP(textNode);
+        var p = textNode.parentNode;
+        p.normalize();
+        range.replace({
+            sc: p.lastChild,
+            so: p.lastChild.length,
+        });
 
         // Clean up and make leading/trailing/multiple space visible
         var reStartBlanks = utils.getRegex('startBlanks', '', '^([\\s\\u00A0\\uFEFF]*)');
@@ -651,7 +651,7 @@ var Dom = Class.extend({
             point = startPoint.nextUntil(check);
         }
         if (!point || !point.node) {
-            var invisibleTextNode = this.document.createTextNode(utils.char('zeroWidth'));
+            var invisibleTextNode = document.createTextNode(utils.char('zeroWidth'));
             $(target).before(invisibleTextNode);
             point = startPoint.replace(invisibleTextNode, 1);
         }
@@ -674,7 +674,7 @@ var Dom = Class.extend({
 
         var br;
         if (parent.innerHTML === '') {
-            br = this.document.createElement('br');
+            br = document.createElement('br');
             $(parent).append(br);
             point = startPoint.replace(parent, 0);
         }
@@ -683,9 +683,9 @@ var Dom = Class.extend({
                 space: true,
                 invisible: true,
             }).test(parent.innerHTML)) {
-            br = this.document.createElement('br');
+            br = document.createElement('br');
             if (this.options.isUnbreakableNode(parent) && parent.tagName !== "TD") {
-                var p = this.document.createElement('p');
+                var p = document.createElement('p');
                 $(p).append(br);
                 $(parent).append(p);
             } else {
@@ -1003,7 +1003,7 @@ var Dom = Class.extend({
     },
     _insertTextNodeInEditableArea: function (range, text) {
         // try to insert the text node in editable area
-        var textNode = this.document.createTextNode(text);
+        var textNode = document.createTextNode(text);
         if (this.options.isEditableNode(range.sc) && $(range.sc).closest('[contenteditable]').attr('contenteditable') === 'true') {
             if (utils.isText(range.sc) && utils.isVisibleText(range.sc)) {
                 var invisibleToRemove = /^\uFEFF+$/.test(range.sc.textContent) && range.sc;
@@ -1146,9 +1146,15 @@ var Dom = Class.extend({
         }
         return point.node.splitText(point.offset);
     },
-    _wrapTextWithP: function (textNode) {
+    /**
+     * Wrap a text node in a Paragraph element, then return the text node.
+     *
+     * @param {Node} textNode
+     * @returns {Node}
+     */
+    _wrapTextInP: function (textNode) {
         if (utils.ancestor(textNode, utils.isAnchor)) {
-            return;
+            return textNode;
         }
         var self = this;
         var isFormatNode = utils.ancestor(textNode, function (n) {
@@ -1165,11 +1171,13 @@ var Dom = Class.extend({
                       textNode.nextSibling && utils.isVisibleText(textNode.nextSibling))
                 )
             ) {
-                var blankP = this.document.createElement('p');
+                var blankP = document.createElement('p');
                 $(textNode).after(blankP);
                 $(blankP).prepend(textNode);
+                textNode = blankP.firstChild;
             }
         }
+        return textNode;
     },
 });
 

@@ -1175,7 +1175,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
                 point.node = point.node.childNodes[point.offset];
                 point.offset = this.utils.nodeLength(point.node);
             }
-            if (this.utils.isLeftEdgeOfTag(point, 'TD')) {
+            if (point.isLeftEdgeOfTag('TD')) {
                 return true;
             }
 
