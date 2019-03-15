@@ -17,10 +17,14 @@ if (!config.device.isMobile) {
  */
 Discuss.include({
     contentTemplate: 'mail.discuss_mobile',
+    jsLibs: [],
     events: _.extend(Discuss.prototype.events, {
         'click .o_mail_mobile_tab': '_onMobileTabClicked',
         'click .o_mailbox_inbox_item': '_onMobileInboxButtonClicked',
         'click .o_mail_preview': '_onMobileThreadClicked',
+        'touchmove .o_thread_message, .o_mail_preview.o_preview_unread': '_onMobileMailSwip',
+        'touchstart .o_thread_message, .o_mail_preview.o_preview_unread': '_ontouchstart',
+        'touchend .o_thread_message, .o_mail_preview.o_preview_unread': '_ontouchend',
     }),
 
     /**
@@ -29,6 +33,8 @@ Discuss.include({
     init: function () {
         this._super.apply(this, arguments);
         this._currentState = this._defaultThreadID;
+        this._types = ['dm_chat', 'multi_user_channel'];
+        this.jsLibs.push('/web/static/lib/jquery.touchSwipe/jquery.touchSwipe.js');
     },
     /**
      * @override
@@ -281,6 +287,70 @@ Discuss.include({
     _onMobileThreadClicked: function (ev) {
         var threadID = $(ev.currentTarget).data('preview-id');
         this.call('mail_service', 'openThreadWindow', threadID);
+    },
+    /**
+     * Touch start event on the mail
+     *
+     * @private
+     */
+    _ontouchstart: function (ev) {
+        $('<div class="o_thread_swip_check"><i class="fa fa-check fa-2x"/></div>').prependTo($(ev.currentTarget));
+        var type = $(ev.currentTarget).parent().data('type');
+        if (this._types.indexOf(type) === -1){
+            var messageStar = this.call('mail_service', 'getMessage', $(ev.currentTarget).data('message-id'));
+            if (messageStar.isStarred()){
+                $("<div class='o_thread_swip_star'><i class='fa fa-star-o fa-2x'/></div>").appendTo($(ev.currentTarget));
+            }
+            else {
+                $('<div class="o_thread_swip_star"><i class="fa fa-star fa-2x"/></div>').appendTo($(ev.currentTarget));
+            }
+        }
+    },
+    /**
+     * Touch end event on the mail
+     *
+     * @private
+     */
+    _ontouchend: function (ev) {
+        var $target = $(ev.currentTarget);
+        $target.find("div[class~='o_thread_swip_check']").remove();
+        var type = $target.parent().data('type');
+        if (this._types.indexOf(type) === -1){
+            $target.find("div[class~='o_thread_swip_star']").remove();
+        }
+    },
+
+    /**
+     * swipe event on the mail
+     *
+     * @private
+     */
+    _onMobileMailSwip: function (ev) {
+        var self = this;
+        var $target = $(ev.currentTarget);
+        var messageID = $target.data('message-id');
+        var type = $target.parent().data('type');
+        $(ev.currentTarget).swipe({
+            swipeStatus:function(event, phase, direction, distance, duration, fingers, fingerData, currentDirection) {
+                var swipeDistance = (distance / $(window).width()) * 100;
+                if (direction === 'left' && self._types.indexOf(type) === -1) {
+                    $target.find('> div:first-child')[0].style.marginLeft = (-distance) + "px";
+                    $target.find('> div:last-child')[0].style.minWidth = distance + "px";
+                    if (swipeDistance > 30) {
+                        $target.find("i[class~='o_thread_message_star']").click();
+                    }
+                }
+                else if (direction === 'right') {
+                    $target.find('> div:first-child')[0].style.minWidth = distance + "px";
+                    if (swipeDistance > 20) {
+                        $target.find('> div:first-child')[0].style.backgroundColor='green';
+                        if (swipeDistance > 30) {
+                            $target.find("i[class~='o_thread_message_needaction']").click();
+                        }
+                    }
+                }
+            }
+        });
     },
 });
 

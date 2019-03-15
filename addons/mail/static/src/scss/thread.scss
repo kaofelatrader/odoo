@@ -54,7 +54,6 @@
 
     .o_thread_message {
         display: flex;
-        padding: 4px $o-horizontal-padding;
         margin-bottom: 0px;
 
         &.o_mail_not_discussion {
@@ -64,6 +63,7 @@
 
         .o_thread_message_sidebar {
             flex: 0 0 $o-mail-thread-avatar-size;
+            margin-left: 10px ! important;
             margin-right: 10px;
             margin-top: 2px;
             text-align: center;
@@ -141,7 +141,7 @@
 
         .o_thread_message_core {
             flex: 1 1 auto;
-            min-width: 0;
+            min-width: 80%;
             max-width: 100%;
             word-wrap: break-word;
             > pre {
@@ -217,6 +217,22 @@
             .o_thread_tooltip_container {
                 display: inline;
                 position: relative;
+            }
+        }
+        .o_thread_swip_check {
+            background : grey;
+            max-width: 0px !important;
+            > i.fa-check {
+                color:white;
+                margin: 32px 0 0 32px;
+            }
+        }
+        .o_thread_swip_star {
+            background: rgb(226, 123, 55);
+            max-width: 0px !important;
+            > i.fa {
+                color: white;
+                margin: 32px 0 0 32px;
             }
         }
     }
