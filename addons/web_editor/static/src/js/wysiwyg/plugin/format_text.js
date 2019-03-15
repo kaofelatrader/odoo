@@ -11,6 +11,12 @@ var Manager = require('web_editor.wysiwyg.plugin.manager');
 //--------------------------------------------------------------------------
 
 var TextPlugin = AbstractPlugin.extend({
+    dependencies: ['Range'],
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
     get : function (range) {
         var target = range.sc[range.so] || range.sc;
         if (this.utils.isText(target)) {
@@ -29,219 +35,64 @@ var TextPlugin = AbstractPlugin.extend({
      *
      * @param {string} color (hexadecimal or class name)
      * @param {string} bgcolor (hexadecimal or class name)
-     * @param {integer} fontsize
+     * @param {integer} size
+     * @param {WrappedRange} range
      */
     applyFont: function (color, bgcolor, size, range) {
-        var self = this;
         if (!range || !this.editable.contains(range.sc) || !this.editable.contains(range.ec)) {
             return;
         }
-        var target;
-        var font;
-        if (range.isCollapsed()) {
-            if (this.utils.isIcon && this.utils.isIcon(range.sc)) {
-                target = this.utils.lastAncestor(range.sc, this.utils.isIcon);
-            } else {
-                target = range.sc;
-                if (target && this.utils.isIcon && this.utils.isIcon(target)) {
-                    range = range.replace({
-                        sc: target,
-                        so: 0,
-                    });
-                    this.dependencies.Range.save(range);
-                } else if (this.utils.isText(range.sc)) {
-                    return this._applyFontCollapsed(color, bgcolor, size, range);
-                }
-            }
+        if (range.isCollapsed() && this.utils.isText(range.sc)) {
+            this._applyFontCollapsed(color, bgcolor, size, range);
+        } else {
+            this._applyFontToSelection(color, bgcolor, size, range);
         }
-
-        var startPoint = range.getStartPoint();
-        var endPoint = range.getEndPoint();
-        if (!this.utils.isText(startPoint.node) && startPoint.node.childNodes[startPoint.offset]) {
-            startPoint.node = startPoint.node.childNodes[startPoint.offset];
-            startPoint.offset = 0;
-        }
-        if (!this.utils.isText(endPoint.node) && endPoint.node.childNodes[endPoint.offset]) {
-            endPoint.node = endPoint.node.childNodes[endPoint.offset];
-            endPoint.offset = 0;
-        }
-        // get first and last point
-        var ancestor;
-        var node;
-        if (!range.isCollapsed()) {
-            if (endPoint.offset && endPoint.offset !== this.utils.nodeLength(endPoint.node)) {
-                ancestor = this.utils.lastAncestor(endPoint.node, this.utils.isFont) || endPoint.node;
-                this.dom.splitTree(ancestor, endPoint);
-            }
-            if (startPoint.offset && startPoint.offset !== this.utils.nodeLength(startPoint.node)) {
-                ancestor = this.utils.lastAncestor(startPoint.node, this.utils.isFont) || startPoint.node;
-                node = this.dom.splitTree(ancestor, startPoint);
-                if (endPoint.node === startPoint.node) {
-                    endPoint.node = node;
-                    endPoint.offset = this.utils.nodeLength(node);
-                }
-                startPoint.node = node;
-                startPoint.offset = 0;
-            }
-        }
-        // get list of nodes to change
-        var nodes = [];
-        startPoint.walkTo(endPoint, function (point) {
-            var node = point.node;
-            if (((self.utils.isText(node) && self.utils.isVisibleText(node)) || self.utils.isIcon && self.utils.isIcon(node)) &&
-                (node !== endPoint.node || endPoint.offset)) {
-                nodes.push(point.node);
-            }
-        });
-        nodes = _.unique(nodes);
-        // if fontawesome
-        if (range.isCollapsed()) {
-            nodes.push(startPoint.node);
-        }
-
-        // apply font: foreColor, backColor, size (the color can be use a class text-... or bg-...)
-        var $font;
-        var fonts = [];
-        var style;
-        var className;
-        var i;
-        if (color || bgcolor || size) {
-            for (i = 0; i < nodes.length; i++) {
-                node = nodes[i];
-                font = this.utils.lastAncestor(node, this.utils.isFont);
-                if (!font) {
-                    if (node.textContent.match(this.utils.getRegex('startAndEndSpace'))) {
-                        node.textContent = node.textContent.replace(this.utils.getRegex('startAndEndSpace', 'g'), this.utils.char('nbsp'));
-                    }
-                    font = this.document.createElement("font");
-                    node.parentNode.insertBefore(font, node);
-                    font.appendChild(node);
-                }
-                fonts.push(font);
-                this._applyStylesToFontNode(font, color, bgcolor, size);
-            }
-        }
-        // remove empty values
-        // we must remove the value in 2 steps (applay inherit then remove) because some
-        // browser like chrome have some time an error for the rendering and/or keep inherit
-        for (i = 0; i < fonts.length; i++) {
-            font = fonts[i];
-            if (font.style.color === "inherit") {
-                font.style.color = "";
-            }
-            if (font.style.backgroundColor === "inherit") {
-                font.style.backgroundColor = "";
-            }
-            if (font.style.fontSize === "inherit") {
-                font.style.fontSize = "";
-            }
-            $font = $(font);
-            if (font.style.color === '' && font.style.backgroundColor === '' && font.style.fontSize === '') {
-                $font.removeAttr("style");
-            }
-            if (!font.className.length) {
-                $font.removeAttr("class");
-            }
-        }
-
-        // target the deepest node
-        if (!this.utils.isText(startPoint.node) && !startPoint.offset) {
-            startPoint.node = this.utils.firstLeafUntil(startPoint.node.childNodes[startPoint.offset] || startPoint.node, function (n) {
-                return (!self.utils.isMedia || !self.utils.isMedia(n)) && self.options.isEditableNode(n);
-            });
-            startPoint.offset = 0;
-        }
-        if (!this.utils.isText(endPoint.node) && endPoint.offset === this.utils.nodeLength(endPoint.node)) {
-            endPoint.node = this.utils.firstLeafUntil(endPoint.node.childNodes[endPoint.offset] || endPoint.node, function (n) {
-                return (!self.utils.isMedia || !self.utils.isMedia(n)) && self.options.isEditableNode(n);
-            });
-            endPoint.offset = this.utils.nodeLength(endPoint.node);
-        }
-
-        // select nodes to clean (to remove empty font and merge same nodes)
-        nodes = [];
-        startPoint.walkTo(endPoint, function (point) {
-            nodes.push(point.node);
-        });
-        nodes = _.unique(nodes);
-        // remove node without attributes (move content), and merge the same nodes
-        for (i = 0; i < nodes.length; i++) {
-            node = nodes[i];
-            if (this.utils.isText(node) && !this.utils.isVisibleText(node)) {
-                continue;
-            }
-            font = this.utils.lastAncestor(node, this.utils.isFont);
-            node = font || this.utils.ancestor(node, this.utils.isSpan);
-            if (!node) {
-                continue;
-            }
-            $font = $(node);
-            className = this.utils.orderClass(node);
-            style = this.utils.orderStyle(node);
-            if (!className && !style) {
-                $(node).before($(node).contents());
-                if (endPoint.node === node) {
-                    endPoint = endPoint.prevUntil(function (point) {
-                        return point.node !== node;
-                    });
-                }
-                $(node).remove();
-
-                nodes.splice(i, 1);
-                i--;
-                continue;
-            }
-            var prev = font && font.previousSibling;
-            while (prev && !font.tagName && !this.utils.isVisibleText(prev)) {
-                prev = prev.previousSibling;
-            }
-            if (prev &&
-                font.tagName === prev.tagName &&
-                className === this.utils.orderClass(prev) && style === this.utils.orderStyle(prev)) {
-                $(prev).append($(font).contents());
-                if (endPoint.node === font) {
-                    endPoint = endPoint.prevUntil(function (point) {
-                        return point.node !== font;
-                    });
-                }
-                $(font).remove();
-
-                nodes.splice(i, 1);
-                i--;
-                continue;
-            }
-        }
-
-        // restore selection
-        range = range.replace({
-            sc: startPoint.node,
-            so: startPoint.offset,
-            ec: endPoint.node,
-            eo: endPoint.offset,
-        }).normalize();
         this.dependencies.Range.save(range);
     },
-    _applyFontCollapsed: function (color, bgcolor, size, range) {
-        var font = this.document.createElement("font");
-        font.appendChild(this.document.createTextNode(this.utils.char('zeroWidth')));
 
-        var fontParent = this.utils.ancestor(range.sc, function (n) {
-            return n.tagName === 'FONT';
-        });
-        var right;
-        if (fontParent) {
-            right = this.dom.splitTree(fontParent, range.getStartPoint());
-        } else {
-            right = range.sc.splitText(range.so);
-        }
-        $(right).before(font);
-        font = this._applyStylesToFontNode(font, color, bgcolor, size);
-        range = range.replace({
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * Applies the given styles (fore- or backcolor, font size) at collapsed range.
+     *
+     * @private
+     * @param {String} [color]
+     * @param {String} [bgcolor]
+     * @param {Number} [size]
+     * @param {WrappedRange} range
+     */
+    _applyFontCollapsed: function (color, bgcolor, size, range) {
+        this._splitBeforeApplyFont(range);
+        var zwcNode = this.document.createTextNode(this.utils.char('zeroWidth'));
+        range.sc.parentNode.insertBefore(zwcNode, range.sc);
+        var font = this._applyStylesToNode(zwcNode, color, bgcolor, size);
+        range.replace({
             sc: font,
             so: 1,
         });
-        this.dependencies.Range.save(range);
-        return;
+    },
+    /**
+     * Applies the given styles (fore- or backcolor, font size) to the selection.
+     *
+     * @private
+     * @param {String} [color]
+     * @param {String} [bgcolor]
+     * @param {Number} [size]
+     * @param {WrappedRange} range
+     */
+    _applyFontToSelection: function (color, bgcolor, size, range) {
+        this._splitBeforeApplyFont(range);
+        range.getSelectedNodes().forEach(function (node) {
+            // Can we safely get rid of this ? Why was it there ?
+            //
+            // var reStartAndEndSpaceG = self.utils.getRegex('startAndEndSpace', 'g');
+            // var nbsp = self.utils.char('nbsp');
+            // node.textContent = node.textContent.replace(reStartAndEndSpaceG, nbsp); // TODO: MOVE!
+            this._applyStylesToNode(node, color, bgcolor, size);
+        }, this);
+        this._cleanRangeAfterStyle(range);
     },
     /**
      * Applies the given styles (fore- or backcolor, font size)
@@ -301,6 +152,251 @@ var TextPlugin = AbstractPlugin.extend({
             }
         }
         return node;
+    },
+    /**
+     * Apply the given styles to a node's parent font node or wrap it in a new
+     * font node with the given styles. Return the font node.
+     *
+     * @private
+     * @param {Node} node
+     * @param {String} color
+     * @param {String} bgcolor 
+     * @param {Number} size
+     * @returns {Node}
+     */
+    _applyStylesToNode: function (node, color, bgcolor, size) {
+        var font = this._getFontAncestor(node) || this._wrapInFontNode(node);
+        this._applyStylesToFontNode(font, color, bgcolor, size);
+        this._removeEmptyStyles(font);
+        return font;
+    },
+    /**
+     * Remove node without attributes (move content), and merge the same nodes
+     *
+     * @private
+     * @param {WrappedRange} range
+     */
+    _cleanRangeAfterStyle: function (range) {
+        var self = this;
+        this._moveRangeToDeepUntil(range, function (n) {
+            return self.options.isEditableNode(n) && (!self.utils.isMedia || !self.utils.isMedia(n)); // TODO: move to MEDIA somehow
+        });
+        range.getSelectedNodes().forEach(function (node) {
+            self._cleanNodeAfterStyle(node, range);
+        });
+        range.normalize();
+    },
+    /**
+     * Clean a node after applying styles:
+     * - Remove it if it has no attributes
+     * - Merge adjacent nodes with the same tagName
+     * and adapt the range according to changes.
+     *
+     * @private
+     * @param {Node} node
+     * @param {WrappedRange} range
+     */
+    _cleanNodeAfterStyle: function (node, range) {
+        if (this.utils.isText(node) && !this.utils.isVisibleText(node)) {
+            return;
+        }
+        node = this._getFontAncestor(node) || this.utils.ancestor(node, this.utils.isSpan);
+        return !node || this._moveNodeWithoutAttr(node, range) ||
+            this._mergeFontAncestorsIfSimilar(node, range);
+    },
+    /**
+     * Get the deepest start/end point at range until predicate hit.
+     *
+     * @private
+     * @param {WrappedRange} range
+     * @param {Function (Node) => Boolean} pred
+     * @param {Boolean} isEndPoint
+     * @returns {BoundaryPoint}
+     */
+    _getDeepPointUntil: function (range, pred, isEndPoint) {
+        pred = pred.bind(this);
+        var point = range[isEndPoint ? 'getEndPoint' : 'getStartPoint']().enter();
+        var isOnEdge = isEndPoint ? point.offset === this.utils.nodeLength(point.node) : !point.offset;
+        if (!this.utils.isText(point.node) && isOnEdge) {
+            point.node = this.utils.firstLeafUntil(point.node.childNodes[point.offset] || point.node, pred);
+            point.offset = isEndPoint ? this.utils.nodeLength(point.node) : 0;
+        }
+        return point;
+    },
+    /**
+     * Return the last ancestor that is a FONT node.
+     *
+     * @private
+     * @param {Node} node
+     * @returns {Node}
+     */
+    _getFontAncestor: function (node) {
+        return this.utils.lastAncestor(node, this.utils.isFont);
+    },
+    /**
+     * Get `node`'s previous sibling that is visible text or element, if any.
+     *
+     * @private
+     * @param {Node} node
+     * @returns {Node|undefined}
+     */
+    _getPreviousVisibleNode: function (node) {
+        var prev = node && node.previousSibling;
+        while (prev && this.utils.isText(prev) && !this.utils.isVisibleText(prev)) {
+            prev = prev.previousSibling;
+        }
+        return prev;
+    },
+    /**
+     * Merge `node`'s last <font> ancestor with its sibling
+     * if they have the same classes, styles and tagNames.
+     * Then adapt the range according to changes.
+     * Return true if the nodes were merged.
+     *
+     * @private
+     * @param {Node} node
+     * @param {WrappedRange} range
+     * @returns {Boolean}
+     */
+    _mergeFontAncestorsIfSimilar: function (node, range) {
+        var endPoint = range.getEndPoint();
+        var font = this._getFontAncestor(node);
+        var prev = this._getPreviousVisibleNode(font);
+        var className = this.utils.orderClass(node);
+        var style = this.utils.orderStyle(node);
+        if (!prev ||
+            font.tagName !== prev.tagName ||
+            className !== this.utils.orderClass(prev) ||
+            style !== this.utils.orderStyle(prev)) {
+            return false;
+        }
+        $(prev).append($(font).contents());
+        if (range.ec === font) {
+            endPoint.prevUntil(function (point) {
+                return point.node !== font;
+            });
+            range.ec = endPoint.node;
+            range.eo = endPoint.offset;
+        }
+        $(font).remove();
+        return true;
+    },
+    /**
+     * If `node` has no class or style, move its contents before itself,
+     * then remove the node. Adapt the range accord to changes.
+     * Return true if the node was indeed removed.
+     *
+     * @private
+     * @param {Node} node
+     * @param {WrappedRange} range
+     * @returns {Boolean}
+     */
+    _moveNodeWithoutAttr: function (node, range) {
+        var endPoint = range.getEndPoint();
+        var className = this.utils.orderClass(node);
+        var style = this.utils.orderStyle(node);
+        if (className || style) {
+            return false;
+        }
+        $(node).before($(node).contents());
+        if (range.ec === node) {
+            endPoint.prevUntil(function (point) {
+                return point.node !== node;
+            });
+            range.ec = endPoint.node;
+            range.eo = endPoint.offset;
+        }
+        $(node).remove();
+        return true;
+    },
+    /**
+     * Move the range to its deepest start/end points until predicate hit.
+     *
+     * @private
+     * @param {WrappedRange} range
+     * @param {Function (Node) => Boolean} pred
+     */
+    _moveRangeToDeepUntil: function (range, pred) {
+        var startPoint = this._getDeepPointUntil(range, pred);
+        var endPoint = this._getDeepPointUntil(range, pred, true);
+        range.replace({
+            sc: startPoint.node,
+            so: startPoint.offset,
+            ec: endPoint.node,
+            eo: endPoint.offset,
+        });
+    },
+    /**
+     * Remove a node's empty styles.
+     * Note: We have to remove the value in 2 steps (apply inherit then remove)
+     * because of behavior differences between browsers.
+     *
+     * @private
+     * @param {Node} node
+     */
+    _removeEmptyStyles: function (node) {
+        ['color', 'backgroundColor', 'fontSize'].forEach(function (styleName) {
+            if (node.style[styleName] === 'inherit') {
+                node.style[styleName] = '';
+            }
+        });
+        if (node.style.color === '' && node.style.backgroundColor === '' && node.style.fontSize === '') {
+            node.removeAttribute("style");
+        }
+        if (!node.className.length) {
+            node.removeAttribute("class");
+        }
+    },
+    /**
+     * Split the DOM tree if necessary in order to apply a font on a selection,
+     * then adapt the range.
+     *
+     * @private
+     * @param {WrappedRange} range
+     */
+    _splitBeforeApplyFont: function (range) {
+        var ancestor;
+        var node;
+        if (!range.isCollapsed()) {
+            if (range.eo !== this.utils.nodeLength(range.ec)) {
+                ancestor = this._getFontAncestor(range.ec) || range.ec;
+                this.dom.splitTree(ancestor, range.getEndPoint().enter());
+            }
+            if (range.so) {
+                ancestor = this._getFontAncestor(range.sc) || range.sc;
+                node = this.dom.splitTree(ancestor, range.getStartPoint().enter());
+                if (range.ec === range.sc) {
+                    range.ec = node;
+                    range.eo = this.utils.nodeLength(node);
+                }
+                range.sc = node;
+                range.so = 0;
+            }
+        } else {
+            ancestor = this._getFontAncestor(range.sc);
+            if (ancestor) {
+                node = this.dom.splitTree(ancestor, range.getStartPoint());
+            } else {
+                node = range.sc.splitText(range.so);
+            }
+            range.replace({
+                sc: node,
+                so: 0,
+            });
+        }
+    },
+    /**
+     * Create a FONT node and wrap `node` in it, then return the font node.
+     *
+     * @private
+     * @param {Node} node
+     * @returns {Node}
+     */
+    _wrapInFontNode: function (node) {
+        var font = this.document.createElement('font');
+        node.parentNode.insertBefore(font, node);
+        font.appendChild(node);
+        return font;
     },
 });
 

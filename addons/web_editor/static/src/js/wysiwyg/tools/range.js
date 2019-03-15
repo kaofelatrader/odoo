@@ -196,35 +196,21 @@ var WrappedRange = Class.extend({
      * @returns {Node []}
      */
     getSelectedNodes: function () {
-        var self = this;
-        var res = [this.sc];
-        var prevNode = this.sc;
-        this.getStartPoint().nextUntil(function (pt) {
-            if (!pt.node) {
-                console.warn('wtf'); // todo remove me when test enable (avoid while true)
-                return true;
+        var startPoint = this.getStartPoint().enter();
+        var endPoint = this.getEndPoint().enter();
+        var nodes = [];
+        startPoint.walkTo(endPoint, function (point) {
+            // TODO: move isIcon stuff to media somehow
+            if ((utils.isVisibleText(point.node) || utils.isIcon && utils.isIcon(point.node)) &&
+                (point.node !== endPoint.node || endPoint.offset)) {
+                nodes.push(point.node);
             }
-            if (pt.node !== prevNode) {
-                var ok = true;
-                // Return only the smallest traversed children
-                _.each(res, function (n, i) {
-                    // If pt.node is a child of res[i], replace it
-                    if (utils.listAncestor(pt.node).indexOf(n) !== -1) {
-                        res[i] = pt.node;
-                        ok = false;
-                    } else if (utils.listAncestor(n).indexOf(pt.node) !== -1) {
-                        // Inversely, skip parents of res[i]
-                        ok = false;
-                    }
-                });
-                if (ok) {
-                    res.push(pt.node);
-                }
-            }
-            prevNode = pt.node;
-            return pt.node === self.ec;
         });
-        return _.uniq(res);
+        // if fontawesome -> TODO: move to media somehow
+        if (this.isCollapsed()) {
+            nodes.push(startPoint.node);
+        }
+        return utils.uniq(nodes);
     },
     /**
      * Get the text contents of the current selection

@@ -15,6 +15,18 @@ function BoundaryPoint (node, offset) {
 
 BoundaryPoint.prototype = {
     /**
+     * Move the point to its offset-th child, at offset 0 if possible.
+     * Can be chained.
+     *
+     * @returns {BoundaryPoint}
+     */
+    enter: function () {
+        if (!utils.isText(this.node) && this.node.childNodes[this.offset]) {
+            this.replace(this.node.childNodes[this.offset], 0);
+        }
+        return this;
+    },
+    /**
      * Returns true if the point is on the left/right edge of the first
      * previous/next point with the given tag name (skips insignificant nodes).
      *

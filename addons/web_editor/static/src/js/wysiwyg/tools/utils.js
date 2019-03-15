@@ -872,7 +872,7 @@ return {
      * @returns {Boolean}
      */
     isVisibleText: function (node) {
-        return !node.tagName && this.getRegex('char').test(node.textContent);
+        return this.isText(node) && this.getRegex('char').test(node.textContent);
     },
     /**
      * Return true if the given node is a void element (BR, COL, EMBED, HR, IMG, INPUT, ...).
