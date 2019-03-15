@@ -224,7 +224,7 @@ QUnit.test('Font style', function (assert) {
                     await testUtils.dom.triggerNativeEvents($btnBold[0], ['mousedown', 'click']);
                 },
                 test: {
-                    content: '<p>dom not to edit</p><p><b>dom </b>\u200B<b>to edit</b></p>',
+                    content: '<p>dom not to edit</p><p><b>dom </b>\uFEFF<b>to edit</b></p>',
                     start: 'p:eq(1):contents()[1]->1',
                 },
             },
@@ -3162,7 +3162,7 @@ QUnit.test('Image', function (assert) {
                     await _uploadAndInsertImg('https://www.odoo.com/logo.png');
                 },
                 test: {
-                    content: '<p>\u200B<img class="img-fluid o_we_custom_image" data-src="/web_editor/static/src/img/transparent.png">\u200B</p>',
+                    content: '<p>\uFEFF<img class="img-fluid o_we_custom_image" data-src="/web_editor/static/src/img/transparent.png">\uFEFF</p>',
                     check: async function () {
                         assert.strictEqual($('.note-image-popover').css('display'), 'block', testName + ' (popover)');
                     },
@@ -3272,7 +3272,7 @@ QUnit.test('Image', function (assert) {
                     await _uploadAndInsertImg('https://www.odoo.com/logo.png');
                 },
                 test: {
-                    content: '<p>\u200B<img class="img-fluid o_we_custom_image padding-xl" data-src="/web_editor/static/src/img/transparent.png">\u200B</p>',
+                    content: '<p>\uFEFF<img class="img-fluid o_we_custom_image padding-xl" data-src="/web_editor/static/src/img/transparent.png">\uFEFF</p>',
                     check: async function () {
                         await testUtils.dom.triggerNativeEvents($('.note-image-popover .note-padding .dropdown-toggle')[0], ['mousedown', 'click']);
                         await testUtils.dom.triggerNativeEvents($('.note-image-popover .note-padding .dropdown-item:contains("Xl")')[0], ['mousedown', 'click']);
@@ -3288,7 +3288,7 @@ QUnit.test('Image', function (assert) {
                     await _uploadAndInsertImg('https://www.odoo.com/logo.png');
                 },
                 test: {
-                    content: '<p>\u200B<img class="img-fluid o_we_custom_image" data-src="/web_editor/static/src/img/transparent.png" style="width: 25%;">\u200B</p>',
+                    content: '<p>\uFEFF<img class="img-fluid o_we_custom_image" data-src="/web_editor/static/src/img/transparent.png" style="width: 25%;">\uFEFF</p>',
                     check: async function () {
                         await testUtils.dom.triggerNativeEvents($('.note-image-popover .note-imagesize .note-btn:contains(25%)')[0], ['mousedown', 'click']);
                     },
@@ -3303,7 +3303,7 @@ QUnit.test('Image', function (assert) {
                     await _uploadAndInsertImg('https://www.odoo.com/logo.png');
                 },
                 test: {
-                    content: '<p>\u200B<img class="img-fluid o_we_custom_image pull-right" data-src="/web_editor/static/src/img/transparent.png">\u200B</p>',
+                    content: '<p>\uFEFF<img class="img-fluid o_we_custom_image pull-right" data-src="/web_editor/static/src/img/transparent.png">\uFEFF</p>',
                     check: async function () {
                         await testUtils.dom.triggerNativeEvents($('.note-image-popover .note-float .note-icon-align-right')[0], ['mousedown', 'click']);
                     },
@@ -3318,7 +3318,7 @@ QUnit.test('Image', function (assert) {
                     await _uploadAndInsertImg('https://www.odoo.com/logo.png');
                 },
                 test: {
-                    content: '<p>\u200B<img class="img-fluid o_we_custom_image pull-left" data-src="/web_editor/static/src/img/transparent.png">\u200B</p>',
+                    content: '<p>\uFEFF<img class="img-fluid o_we_custom_image pull-left" data-src="/web_editor/static/src/img/transparent.png">\uFEFF</p>',
                     check: async function () {
                         await testUtils.dom.triggerNativeEvents($('.note-image-popover .note-float .note-icon-align-center')[0], ['mousedown', 'click']);
                         await testUtils.dom.triggerNativeEvents($('.note-image-popover .note-float .note-icon-align-left')[0], ['mousedown', 'click']);
@@ -3334,7 +3334,7 @@ QUnit.test('Image', function (assert) {
                     await _uploadAndInsertImg('https://www.odoo.com/logo.png');
                 },
                 test: {
-                    content: '<p>\u200B<img class="img-fluid o_we_custom_image rounded" data-src="/web_editor/static/src/img/transparent.png">\u200B</p>',
+                    content: '<p>\uFEFF<img class="img-fluid o_we_custom_image rounded" data-src="/web_editor/static/src/img/transparent.png">\uFEFF</p>',
                     check: async function () {
                         await testUtils.dom.triggerNativeEvents($('.note-image-popover .note-imageShape .note-btn:has(.fa-square)')[0], ['mousedown', 'click']);
                     },
@@ -3384,7 +3384,7 @@ QUnit.test('Image', function (assert) {
                         assert.strictEqual(contents.length, 3, "should contain a text node, then an img, then another text node");
                         var firstText = contents.eq(0);
                         assert.notOk(firstText.prop('tagName'), 'should not have a tag name since it is a pure text node');
-                        assert.strictEqual(firstText.text(), "\u200b");
+                        assert.strictEqual(firstText.text(), "\uFEFF");
                         var img = contents.eq(1);
                         assert.strictEqual(img.prop('tagName'), "IMG", "second content should be an img");
                         assert.strictEqual(img.prop('className'), "img-fluid o_we_custom_image", "img should have correct class");
@@ -3393,7 +3393,7 @@ QUnit.test('Image', function (assert) {
                         assert.strictEqual(img.attr('title'), "Title", "img should have correct title");
                         var secondText = contents.eq(2);
                         assert.notOk(secondText.prop('tagName'), 'should not have a tag name since it is a pure text node');
-                        assert.strictEqual(secondText.text(), "\u200b");
+                        assert.strictEqual(secondText.text(), "\uFEFF");
                     },
                 },
             },
@@ -3541,7 +3541,7 @@ QUnit.test('Pictogram (fontawesome)', function (assert) {
                     await _insertPictogram('fa-glass');
                 },
                 test: {
-                    content: '<p>\u200B<span class="fa fa-glass"></span>\u200B</p>',
+                    content: '<p>\uFEFF<span class="fa fa-glass"></span>\uFEFF</p>',
                     check: async function () {
                         assert.strictEqual($('.note-icon-popover').css('display'), 'block', testName + ' (popover)');
                     },
@@ -3573,7 +3573,7 @@ QUnit.test('Pictogram (fontawesome)', function (assert) {
                     await _insertPictogram('fa-glass');
                 },
                 test: {
-                    content: '<p>\u200B<span class="fa fa-glass fa-5x"></span>\u200B</p>',
+                    content: '<p>\uFEFF<span class="fa fa-glass fa-5x"></span>\uFEFF</p>',
                     check: async function () {
                         await testUtils.dom.triggerNativeEvents($('.note-icon-popover .note-faSize .dropdown-toggle')[0], ['mousedown', 'click']);
                         await testUtils.dom.triggerNativeEvents($('.note-icon-popover .note-faSize .dropdown-item:contains("5x")')[0], ['mousedown', 'click']);
@@ -3591,7 +3591,7 @@ QUnit.test('Pictogram (fontawesome)', function (assert) {
                     await _insertPictogram('fa-glass');
                 },
                 test: {
-                    content: '<p>\u200B<span class="fa fa-glass fa-spin"></span>\u200B</p>',
+                    content: '<p>\uFEFF<span class="fa fa-glass fa-spin"></span>\uFEFF</p>',
                     check: async function () {
                         await testUtils.dom.triggerNativeEvents($('.note-icon-popover .note-faSpin .note-btn')[0], ['mousedown', 'click']);
                     },
@@ -3611,7 +3611,7 @@ QUnit.test('Pictogram (fontawesome)', function (assert) {
                         return _clickMedia(wysiwyg, assert, async function () {
                             await _insertPictogram('fa-heart');
                         }, {
-                                content: '<p>\u200B<span class="fa fa-heart"></span>\u200B</p>',
+                                content: '<p>\uFEFF<span class="fa fa-heart"></span>\uFEFF</p>',
                             });
                     },
                 },
@@ -3758,7 +3758,7 @@ QUnit.test('Video', function (assert) {
                 test: {
                     check: async function () {
                         assert.deepEqual(wysiwyg.getValue(),
-                            '<p>\u200B<span class="fa fa-glass"></span>\u200B</p>',
+                            '<p>\uFEFF<span class="fa fa-glass"></span>\uFEFF</p>',
                             testName);
                     },
                 },
