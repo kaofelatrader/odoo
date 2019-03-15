@@ -104,44 +104,84 @@ var KanbanColumn = Widget.extend({
             // deactivate sortable in mobile mode.  It does not work anyway,
             // and it breaks horizontal scrolling in kanban views.  Someday, we
             // should find a way to use the touch events to make sortable work.
-            this.$el.sortable({
-                connectWith: '.o_kanban_group',
-                containment: this.draggable ? false : 'parent',
-                revert: 0,
-                delay: 0,
-                items: '> .o_kanban_record:not(.o_updating)',
-                cursor: 'move',
-                over: function () {
-                    self.$el.addClass('o_kanban_hover');
+            interact('.o_kanban_record').dropzone({
+                accept: '.o_kanban_record',
+                overlap: 0.80,
+                ondragenter: function (event) {
+                    var marginFrom = event.dragEvent.dy < 0 ? 'marginBottom' : 'marginTop';
+                    var marginTo = event.dragEvent.dy > 0 ? 'marginBottom' : 'marginTop';
+                    var draggableHeight = event.relatedTarget.clientHeight;
+                    event.target.style[marginFrom] = -draggableHeight + 'px';
+                    event.target.style[marginTo] = draggableHeight + 'px';
+                    // self.$el.addClass('o_kanban_hover');
                 },
-                out: function () {
-                    self.$el.removeClass('o_kanban_hover');
+                ondragleave: function (event) {
+                    event.target.style.marginTop = '0px';
+                    event.target.style.marginBottom = '0px';
+                    // self.$el.removeClass('o_kanban_hover');
                 },
-                start: function (event, ui) {
-                    ui.item.addClass('o_currently_dragged');
+                ondrop: function (event) {
+                    event.target.parentNode.insertBefore(event.relatedTarget, event.target.nextSibling);
                 },
-                stop: function (event, ui) {
-                    var item = ui.item;
-                    setTimeout(function () {
-                        item.removeClass('o_currently_dragged');
-                    });
-                },
-                update: function (event, ui) {
-                    var record = ui.item.data('record');
-                    var index = self.records.indexOf(record);
-                    record.$el.removeAttr('style');  // jqueryui sortable add display:block inline
-                    if (index >= 0) {
-                        if ($.contains(self.$el[0], record.$el[0])) {
-                            // resequencing records
-                            self.trigger_up('kanban_column_resequence', {ids: self._getIDs()});
-                        }
-                    } else {
-                        // adding record to this column
-                        ui.item.addClass('o_updating');
-                        self.trigger_up('kanban_column_add_record', {record: record, ids: self._getIDs()});
-                    }
+                ondropmove: function(event) {
+                    // debugger;
                 }
-            });
+            })
+            interact('.o_kanban_group > .o_kanban_record:not(.o_updating)').draggable({
+                onmove: function(event) {
+                    var target = event.target,
+                        // keep the dragged position in the data-x/data-y attributes
+                        x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx,
+                        y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+                    // translate the element
+                    target.style.webkitTransform =
+                        target.style.transform =
+                        'translate(' + x + 'px, ' + y + 'px)';
+
+                    // update the posiion attributes
+                    target.setAttribute('data-x', x);
+                    target.setAttribute('data-y', y);
+                }
+            })
+            // this.$el.sortable({
+            //     connectWith: '.o_kanban_group',
+            //     containment: this.draggable ? false : 'parent',
+            //     revert: 0,
+            //     delay: 0,
+            //     items: '> .o_kanban_record:not(.o_updating)',
+            //     cursor: 'move',
+            //     over: function () {
+            //         self.$el.addClass('o_kanban_hover');
+            //     },
+            //     out: function () {
+            //         self.$el.removeClass('o_kanban_hover');
+            //     },
+            //     start: function (event, ui) {
+            //         ui.item.addClass('o_currently_dragged');
+            //     },
+            //     stop: function (event, ui) {
+            //         var item = ui.item;
+            //         setTimeout(function () {
+            //             item.removeClass('o_currently_dragged');
+            //         });
+            //     },
+            //     update: function (event, ui) {
+            //         var record = ui.item.data('record');
+            //         var index = self.records.indexOf(record);
+            //         record.$el.removeAttr('style');  // jqueryui sortable add display:block inline
+            //         if (index >= 0) {
+            //             if ($.contains(self.$el[0], record.$el[0])) {
+            //                 // resequencing records
+            //                 self.trigger_up('kanban_column_resequence', {ids: self._getIDs()});
+            //             }
+            //         } else {
+            //             // adding record to this column
+            //             ui.item.addClass('o_updating');
+            //             self.trigger_up('kanban_column_add_record', {record: record, ids: self._getIDs()});
+            //         }
+            //     }
+            // });
         }
         this.$el.click(function (event) {
             if (self.folded) {
