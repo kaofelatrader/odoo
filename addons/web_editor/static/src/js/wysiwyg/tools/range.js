@@ -363,15 +363,15 @@ var WrappedRange = Class.extend({
     /**
      * Move the range to the given points.
      * It's possible to not pass two complete points:
-     * - If only sc (technically, if no so):
+     * - If only sc (technically, if no so) or if argument[0] is a Node:
      *  the range is a selection of the whole start container
      * - If only sc and so:
      *  the range is collapsed on its start point
      * - If only sc, so and eo (technically, if no so and no eo):
      *  the range is a selection on the start container at given offsets
      *
-     * @param {Object|WrappedRange} range
-     * @param {Node} range.sc
+     * @param {Object|WrappedRange|Node} range
+     * @param {Node} [range.sc]
      * @param {Number} [range.so]
      * @param {Node} [range.ec]
      * @param {Number} [range.eo]
@@ -379,7 +379,8 @@ var WrappedRange = Class.extend({
      */
     replace: function (range) {
         if (!range.so && range.so !== 0) {
-            range = this.getFromNode(range.sc);
+            var node = range.sc || range; // allow passing just a node
+            range = this.getFromNode(node);
         }
         this.sc = range.sc;
         this.so = range.so;

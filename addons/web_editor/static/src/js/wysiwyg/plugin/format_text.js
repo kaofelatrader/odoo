@@ -23,237 +23,6 @@ var TextPlugin = AbstractPlugin.extend({
             return range;
         }
     },
-});
-
-var ForeColorPlugin = AbstractPlugin.extend({
-    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_colorpicker.xml'],
-    dependencies: ['Range', 'FontStyle'],
-
-    buttons: {
-        template: 'wysiwyg.buttons.forecolor',
-        active: '_active',
-        enabled: '_enabled',
-    },
-
-    init: function () {
-        var self = this;
-        this._super.apply(this, arguments);
-        this._colors = this.options.colors;
-        if (this.options.getColor) {
-            this._initializePromise = this.options.getColors().then(function (colors) {
-                self._colors = colors;
-            });
-        }
-    },
-    /**
-     * @returns {Promise}
-     */
-    isInitialized: function () {
-        return $.when(this._super(), this._initializePromise);
-    },
-
-    //--------------------------------------------------------------------------
-    // Public
-    //--------------------------------------------------------------------------
-
-    /**
-     * Method called on custom color button click :
-     * opens the color picker dialog and saves the chosen color on save.
-     */
-    custom: function (value, range) {
-        var self = this;
-        var $button = $(range.sc).next('button');
-        var colorPickerDialog = new ColorpickerDialog(this, {});
-
-        colorPickerDialog.on('colorpicker:saved', this, this._wrapCommand(function (ev) {
-            self.update(ev.data.cssColor);
-
-            $button = $button.clone().appendTo($button.parent());
-            $button.show();
-            $button.css('background-color', ev.data.cssColor);
-            $button.attr('data-value', ev.data.cssColor);
-            $button.data('value', ev.data.cssColor);
-            $button.attr('title', ev.data.cssColor);
-            self.dependencies.Range.restore();
-            $button.mousedown();
-        }));
-        colorPickerDialog.open();
-    },
-    /**
-     * Change the selection's fore color.
-     *
-     * @param {string} color (hexadecimal or class name)
-     */
-    update: function (color, range) {
-        if (!color || color[0] === '#') {
-            color = color || '';
-            $(range.sc).css('color', color);
-        } else {
-            $(range.sc).addClass('text-' + color);
-        }
-        this.dependencies.FontStyle.applyFont(color || 'text-undefined', null, null, range);
-    },
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * @param {String} buttonName
-     * @param {Node} focusNode
-     * @returns {Boolean} true if the given button should be active
-     */
-    _active: function (buttonName, focusNode) {
-        var colorName = buttonName.split('-')[1];
-        if (colorName[0] === '#') {
-            colorName = $('<div>').css('color', colorName).css('color'); // TODO: use a js converter xml => rgb
-            while (this.editable !== focusNode && this.document !== focusNode) {
-                if (focusNode.style && focusNode.style.color !== '') {
-                    break;
-                }
-                focusNode = focusNode.parentNode;
-            }
-            return this.document !== focusNode && colorName === $(focusNode).css('color');
-        } else {
-            return $(focusNode).closest('text-' + colorName).length;
-        }
-    },
-    /**
-     * @param {String} buttonName
-     * @param {Node} focusNode
-     * @returns {Boolean} true if the given button should be enabled
-     */
-    _enabled: function (buttonName, focusNode) {
-        return !!this.utils.ancestor(focusNode, this.utils.isFormatNode.bind(this.utils));
-    },
-});
-
-var BgColorPlugin = ForeColorPlugin.extend({
-    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_colorpicker.xml'],
-    dependencies: ['FontStyle'],
-
-    buttons: {
-        template: 'wysiwyg.buttons.bgcolor',
-        active: '_active',
-        enabled: '_enabled',
-    },
-
-    //--------------------------------------------------------------------------
-    // Public
-    //--------------------------------------------------------------------------
-
-    /**
-     * Change the selection's background color.
-     *
-     * @param {String} color (hexadecimal or class name)
-     * @param {Node} [range]
-     */
-    update: function (color, range) {
-        if (color[0] === '#') {
-            $(range.sc).css('background-color', color);
-        } else {
-            $(range.sc).addClass('bg-' + color);
-        }
-        this.dependencies.FontStyle.applyFont(null, color || 'bg-undefined', null, range);
-    },
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * @param {String} buttonName
-     * @param {WrappedRange} range
-     * @returns {Boolean} true if the given button should be active
-     */
-    _active: function (buttonName, focusNode) {
-        var colorName = buttonName.split('-')[1];
-        if (colorName[0] === '#') {
-            colorName = $('<div>').css('color', colorName).css('color'); // TODO: use a js converter xml => rgb
-            while (this.editable !== focusNode && this.document !== focusNode) {
-                if (focusNode.style && focusNode.style.backgroundColor !== '') {
-                    break;
-                }
-                focusNode = focusNode.parentNode;
-            }
-            return this.document !== focusNode && colorName === $(focusNode).css('background-color');
-        } else {
-            return $(focusNode).closest('bg-' + colorName).length;
-        }
-    },
-    /**
-     * @param {String} buttonName
-     * @param {Node} focusNode
-     * @returns {Boolean} true if the given button should be enabled
-     */
-    _enabled: function (buttonName, focusNode) {
-        return !!this.utils.ancestor(focusNode, this.utils.isFormatNode.bind(this.utils));
-    },
-});
-
-var FontSizePlugin = AbstractPlugin.extend({
-    dependencies: ['FontStyle'],
-    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_format_text.xml'],
-
-    buttons: {
-        template: 'wysiwyg.buttons.fontsize',
-        active: '_active',
-        enabled: '_enabled',
-    },
-
-    //--------------------------------------------------------------------------
-    // Public
-    //--------------------------------------------------------------------------
-
-    /**
-     * Change the selection's font size.
-     *
-     * @param {integer} fontsize
-     */
-    update: function (fontsize, range) {
-        this.dependencies.FontStyle.applyFont(null, null, fontsize || 'inherit', range);
-    },
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * @param {String} buttonName
-     * @param {DOM} focusNode
-     * @returns {Boolean} true if the given button should be active
-     */
-    _active: function (buttonName, focusNode) {
-        focusNode = this.utils.isText(focusNode) ? focusNode.parentNode : focusNode;
-        var cssSize = focusNode.style.fontSize;
-        var size = buttonName.split('-')[1];
-        return size === 'default' && (!cssSize || cssSize === 'inherit') ||
-            parseInt(size) === parseInt(cssSize);
-    },
-    /**
-     * @param {String} buttonName
-     * @param {Node} focusNode
-     * @returns {Boolean} true if the given button should be enabled
-     */
-    _enabled: function (buttonName, focusNode) {
-        return !!this.utils.ancestor(focusNode, this.utils.isFormatNode.bind(this.utils));
-    },
-});
-
-var FontStylePlugin = AbstractPlugin.extend({
-    dependencies: ['Range', 'Media', 'Text'],
-    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_format_text.xml'],
-
-    buttons: {
-        template: 'wysiwyg.buttons.fontstyle',
-        active: '_active',
-        enabled: '_enabled',
-    },
-
-    //--------------------------------------------------------------------------
-    // Public
-    //--------------------------------------------------------------------------
-
     /**
      * Applies the given styles (fore- or backcolor, font size) to the selection.
      * If no text is selected, apply to the current text node, if any.
@@ -281,26 +50,7 @@ var FontStylePlugin = AbstractPlugin.extend({
                     });
                     this.dependencies.Range.save(range);
                 } else if (this.utils.isText(range.sc)) {
-                    font = this.document.createElement("font");
-                    font.appendChild(this.document.createTextNode(this.utils.char('zeroWidth')));
-
-                    var fontParent = this.utils.ancestor(range.sc, function (n) {
-                        return n.tagName === 'FONT';
-                    });
-                    var right;
-                    if (fontParent) {
-                        right = this.dom.splitTree(fontParent, range.getStartPoint());
-                    } else {
-                        right = range.sc.splitText(range.so);
-                    }
-                    $(right).before(font);
-                    font = this._applyStylesToFontNode(font, color, bgcolor, size);
-                    range = range.replace({
-                        sc: font,
-                        so: 1,
-                    });
-                    this.dependencies.Range.save(range);
-                    return;
+                    return this._applyFontCollapsed(color, bgcolor, size, range);
                 }
             }
         }
@@ -471,6 +221,318 @@ var FontStylePlugin = AbstractPlugin.extend({
         }).normalize();
         this.dependencies.Range.save(range);
     },
+    _applyFontCollapsed: function (color, bgcolor, size, range) {
+        var font = this.document.createElement("font");
+        font.appendChild(this.document.createTextNode(this.utils.char('zeroWidth')));
+
+        var fontParent = this.utils.ancestor(range.sc, function (n) {
+            return n.tagName === 'FONT';
+        });
+        var right;
+        if (fontParent) {
+            right = this.dom.splitTree(fontParent, range.getStartPoint());
+        } else {
+            right = range.sc.splitText(range.so);
+        }
+        $(right).before(font);
+        font = this._applyStylesToFontNode(font, color, bgcolor, size);
+        range = range.replace({
+            sc: font,
+            so: 1,
+        });
+        this.dependencies.Range.save(range);
+        return;
+    },
+    /**
+     * Applies the given styles (fore- or backcolor, font size)
+     * to a given <font> node.
+     *
+     * @private
+     * @param {Node} node
+     * @param {string} color (hexadecimal or class name)
+     * @param {string} bgcolor (hexadecimal or class name)
+     * @param {integer} size
+     * @returns {Node} the <font> node
+     */
+    _applyStylesToFontNode: function (node, color, bgcolor, size) {
+        var className = node.className.split(this.utils.getRegex('space'));
+        var k;
+        if (color) {
+            for (k = 0; k < className.length; k++) {
+                if (className[k].length && className[k].slice(0, 5) === "text-") {
+                    className.splice(k, 1);
+                    k--;
+                }
+            }
+            if (color === 'text-undefined') {
+                node.className = className.join(" ");
+                node.style.color = "inherit";
+            } else if (color.indexOf('text-') !== -1) {
+                node.className = className.join(" ") + " " + color;
+                node.style.color = "inherit";
+            } else {
+                node.className = className.join(" ");
+                node.style.color = color;
+            }
+        }
+        if (bgcolor) {
+            for (k = 0; k < className.length; k++) {
+                if (className[k].length && className[k].slice(0, 3) === "bg-") {
+                    className.splice(k, 1);
+                    k--;
+                }
+            }
+
+            if (bgcolor === 'bg-undefined') {
+                node.className = className.join(" ");
+                node.style.backgroundColor = "inherit";
+            } else if (bgcolor.indexOf('bg-') !== -1) {
+                node.className = className.join(" ") + " " + bgcolor;
+                node.style.backgroundColor = "inherit";
+            } else {
+                node.className = className.join(" ");
+                node.style.backgroundColor = bgcolor;
+            }
+        }
+        if (size) {
+            node.style.fontSize = "inherit";
+            if (!isNaN(size) && Math.abs(parseInt(this.window.getComputedStyle(node).fontSize, 10) - size) / size > 0.05) {
+                node.style.fontSize = size + "px";
+            }
+        }
+        return node;
+    },
+});
+
+var ForeColorPlugin = AbstractPlugin.extend({
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_colorpicker.xml'],
+    dependencies: ['Range', 'Text'],
+
+    buttons: {
+        template: 'wysiwyg.buttons.forecolor',
+        active: '_active',
+        enabled: '_enabled',
+    },
+
+    init: function () {
+        var self = this;
+        this._super.apply(this, arguments);
+        this._colors = this.options.colors;
+        if (this.options.getColor) {
+            this._initializePromise = this.options.getColors().then(function (colors) {
+                self._colors = colors;
+            });
+        }
+    },
+    /**
+     * @returns {Promise}
+     */
+    isInitialized: function () {
+        return $.when(this._super(), this._initializePromise);
+    },
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    /**
+     * Method called on custom color button click :
+     * opens the color picker dialog and saves the chosen color on save.
+     */
+    custom: function (value, range) {
+        var self = this;
+        var $button = $(range.sc).next('button');
+        var colorPickerDialog = new ColorpickerDialog(this, {});
+
+        colorPickerDialog.on('colorpicker:saved', this, this._wrapCommand(function (ev) {
+            self.update(ev.data.cssColor);
+
+            $button = $button.clone().appendTo($button.parent());
+            $button.show();
+            $button.css('background-color', ev.data.cssColor);
+            $button.attr('data-value', ev.data.cssColor);
+            $button.data('value', ev.data.cssColor);
+            $button.attr('title', ev.data.cssColor);
+            self.dependencies.Range.restore();
+            $button.mousedown();
+        }));
+        colorPickerDialog.open();
+    },
+    /**
+     * Change the selection's fore color.
+     *
+     * @param {string} color (hexadecimal or class name)
+     */
+    update: function (color, range) {
+        if (!color || color[0] === '#') {
+            color = color || '';
+            $(range.sc).css('color', color);
+        } else {
+            $(range.sc).addClass('text-' + color);
+        }
+        this.dependencies.Text.applyFont(color || 'text-undefined', null, null, range);
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * @param {String} buttonName
+     * @param {Node} focusNode
+     * @returns {Boolean} true if the given button should be active
+     */
+    _active: function (buttonName, focusNode) {
+        var colorName = buttonName.split('-')[1];
+        if (colorName[0] === '#') {
+            colorName = $('<div>').css('color', colorName).css('color'); // TODO: use a js converter xml => rgb
+            while (this.editable !== focusNode && this.document !== focusNode) {
+                if (focusNode.style && focusNode.style.color !== '') {
+                    break;
+                }
+                focusNode = focusNode.parentNode;
+            }
+            return this.document !== focusNode && colorName === $(focusNode).css('color');
+        } else {
+            return $(focusNode).closest('text-' + colorName).length;
+        }
+    },
+    /**
+     * @param {String} buttonName
+     * @param {Node} focusNode
+     * @returns {Boolean} true if the given button should be enabled
+     */
+    _enabled: function (buttonName, focusNode) {
+        return !!this.utils.ancestor(focusNode, this.utils.isFormatNode.bind(this.utils));
+    },
+});
+
+var BgColorPlugin = ForeColorPlugin.extend({
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_colorpicker.xml'],
+    dependencies: ['Text'],
+
+    buttons: {
+        template: 'wysiwyg.buttons.bgcolor',
+        active: '_active',
+        enabled: '_enabled',
+    },
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    /**
+     * Change the selection's background color.
+     *
+     * @param {String} color (hexadecimal or class name)
+     * @param {Node} [range]
+     */
+    update: function (color, range) {
+        if (color[0] === '#') {
+            $(range.sc).css('background-color', color);
+        } else {
+            $(range.sc).addClass('bg-' + color);
+        }
+        this.dependencies.Text.applyFont(null, color || 'bg-undefined', null, range);
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * @param {String} buttonName
+     * @param {WrappedRange} range
+     * @returns {Boolean} true if the given button should be active
+     */
+    _active: function (buttonName, focusNode) {
+        var colorName = buttonName.split('-')[1];
+        if (colorName[0] === '#') {
+            colorName = $('<div>').css('color', colorName).css('color'); // TODO: use a js converter xml => rgb
+            while (this.editable !== focusNode && this.document !== focusNode) {
+                if (focusNode.style && focusNode.style.backgroundColor !== '') {
+                    break;
+                }
+                focusNode = focusNode.parentNode;
+            }
+            return this.document !== focusNode && colorName === $(focusNode).css('background-color');
+        } else {
+            return $(focusNode).closest('bg-' + colorName).length;
+        }
+    },
+    /**
+     * @param {String} buttonName
+     * @param {Node} focusNode
+     * @returns {Boolean} true if the given button should be enabled
+     */
+    _enabled: function (buttonName, focusNode) {
+        return !!this.utils.ancestor(focusNode, this.utils.isFormatNode.bind(this.utils));
+    },
+});
+
+var FontSizePlugin = AbstractPlugin.extend({
+    dependencies: ['Text'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_format_text.xml'],
+
+    buttons: {
+        template: 'wysiwyg.buttons.fontsize',
+        active: '_active',
+        enabled: '_enabled',
+    },
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    /**
+     * Change the selection's font size.
+     *
+     * @param {integer} fontsize
+     */
+    update: function (fontsize, range) {
+        this.dependencies.Text.applyFont(null, null, fontsize || 'inherit', range);
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * @param {String} buttonName
+     * @param {DOM} focusNode
+     * @returns {Boolean} true if the given button should be active
+     */
+    _active: function (buttonName, focusNode) {
+        focusNode = this.utils.isText(focusNode) ? focusNode.parentNode : focusNode;
+        var cssSize = focusNode.style.fontSize;
+        var size = buttonName.split('-')[1];
+        return size === 'default' && (!cssSize || cssSize === 'inherit') ||
+            parseInt(size) === parseInt(cssSize);
+    },
+    /**
+     * @param {String} buttonName
+     * @param {Node} focusNode
+     * @returns {Boolean} true if the given button should be enabled
+     */
+    _enabled: function (buttonName, focusNode) {
+        return !!this.utils.ancestor(focusNode, this.utils.isFormatNode.bind(this.utils));
+    },
+});
+
+var FontStylePlugin = AbstractPlugin.extend({
+    dependencies: ['Range', 'Media', 'Text'],
+    templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_format_text.xml'],
+
+    buttons: {
+        template: 'wysiwyg.buttons.fontstyle',
+        active: '_active',
+        enabled: '_enabled',
+    },
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
     /**
      * Get the "format" ancestors list of nodes.
      * In this context, a "format" node is understood as
@@ -649,65 +711,6 @@ var FontStylePlugin = AbstractPlugin.extend({
         return this.utils.ancestor(node, function (n) {
             return n.tagName === tag;
         });
-    },
-    /**
-     * Applies the given styles (fore- or backcolor, font size)
-     * to a given <font> node.
-     *
-     * @private
-     * @param {Node} node
-     * @param {string} color (hexadecimal or class name)
-     * @param {string} bgcolor (hexadecimal or class name)
-     * @param {integer} size
-     * @returns {Node} the <font> node
-     */
-    _applyStylesToFontNode: function (node, color, bgcolor, size) {
-        var className = node.className.split(this.utils.getRegex('space'));
-        var k;
-        if (color) {
-            for (k = 0; k < className.length; k++) {
-                if (className[k].length && className[k].slice(0, 5) === "text-") {
-                    className.splice(k, 1);
-                    k--;
-                }
-            }
-            if (color === 'text-undefined') {
-                node.className = className.join(" ");
-                node.style.color = "inherit";
-            } else if (color.indexOf('text-') !== -1) {
-                node.className = className.join(" ") + " " + color;
-                node.style.color = "inherit";
-            } else {
-                node.className = className.join(" ");
-                node.style.color = color;
-            }
-        }
-        if (bgcolor) {
-            for (k = 0; k < className.length; k++) {
-                if (className[k].length && className[k].slice(0, 3) === "bg-") {
-                    className.splice(k, 1);
-                    k--;
-                }
-            }
-
-            if (bgcolor === 'bg-undefined') {
-                node.className = className.join(" ");
-                node.style.backgroundColor = "inherit";
-            } else if (bgcolor.indexOf('bg-') !== -1) {
-                node.className = className.join(" ") + " " + bgcolor;
-                node.style.backgroundColor = "inherit";
-            } else {
-                node.className = className.join(" ");
-                node.style.backgroundColor = bgcolor;
-            }
-        }
-        if (size) {
-            node.style.fontSize = "inherit";
-            if (!isNaN(size) && Math.abs(parseInt(this.window.getComputedStyle(node).fontSize, 10) - size) / size > 0.05) {
-                node.style.fontSize = size + "px";
-            }
-        }
-        return node;
     },
     _containsOnlySelectedText: function (node, texts) {
         var self = this;
