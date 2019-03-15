@@ -111,7 +111,7 @@ QUnit.test('Magic wand', async function (assert) {
 });
 
 QUnit.test('Font style', function (assert) {
-    assert.expect(56);
+    assert.expect(44);
 
     return weTestUtils.createWysiwyg({
         debug: false,
@@ -344,92 +344,92 @@ QUnit.test('Font style', function (assert) {
                 },
             },
             /* strikethrough */
-            {
-                name: "Click strikethrough: bold -> bold + strikethrough",
-                content: '<p>dom not to edit</p><p><b>dom to edit</b></p>',
-                start: 'b:contents()[0]->1',
-                end: 'b:contents()[0]->5',
-                do: async function () {
-                    await testUtils.dom.triggerNativeEvents($strikethrough[0], ['mousedown', 'click']);
-                },
-                test: {
-                    content: '<p>dom not to edit</p><p><b>d<s>om t</s>o edit</b></p>',
-                    start: 's:contents()[0]->0',
-                    end: 's:contents()[0]->4',
-                },
-            },
-            {
-                name: "Click strikethrough: bold & normal -> strikethrough & bold + strikethrough (across paragraphs)",
-                content: '<p>dom <b>to</b> edit</p><p><b>dom to edit</b></p>',
-                start: 'p:contents()[0]->1',
-                end: 'b:eq(1):contents()[0]->5',
-                do: async function () {
-                    await testUtils.dom.triggerNativeEvents($strikethrough[0], ['mousedown', 'click']);
-                },
-                test: {
-                    content: '<p>d<s>om <b>to</b> edit</s></p><p><b><s>dom t</s>o edit</b></p>',
-                    start: 's:contents()[0]->0',
-                    end: 's:eq(1):contents()[0]->5',
-                },
-            },
-            /* superscript */
-            {
-                name: "Click superscript: bold -> bold + superscript",
-                content: '<p>dom not to edit</p><p><b>dom to edit</b></p>',
-                start: 'b:contents()[0]->1',
-                end: 'b:contents()[0]->5',
-                do: async function () {
-                    await testUtils.dom.triggerNativeEvents($superscript[0], ['mousedown', 'click']);
-                },
-                test: {
-                    content: '<p>dom not to edit</p><p><b>d<sup>om t</sup>o edit</b></p>',
-                    start: 'sup:contents()[0]->0',
-                    end: 'sup:contents()[0]->4',
-                },
-            },
-            {
-                name: "Click superscript: bold & normal -> superscript & bold + superscript (across paragraphs)",
-                content: '<p>dom <b>to</b> edit</p><p><b>dom to edit</b></p>',
-                start: 'p:contents()[0]->1',
-                end: 'b:eq(1):contents()[0]->5',
-                do: async function () {
-                    await testUtils.dom.triggerNativeEvents($superscript[0], ['mousedown', 'click']);
-                },
-                test: {
-                    content: '<p>d<sup>om <b>to</b> edit</sup></p><p><b><sup>dom t</sup>o edit</b></p>',
-                    start: 'sup:contents()[0]->0',
-                    end: 'sup:eq(1):contents()[0]->5',
-                },
-            },
-            /* subscript */
-            {
-                name: "Click subscript: bold -> bold + subscript",
-                content: '<p>dom not to edit</p><p><b>dom to edit</b></p>',
-                start: 'b:contents()[0]->1',
-                end: 'b:contents()[0]->5',
-                do: async function () {
-                    await testUtils.dom.triggerNativeEvents($subscript[0], ['mousedown', 'click']);
-                },
-                test: {
-                    content: '<p>dom not to edit</p><p><b>d<sub>om t</sub>o edit</b></p>',
-                    start: 'sub:contents()[0]->0',
-                    end: 'sub:contents()[0]->4',
-                },
-            },
-            {
-                name: "Click subscript: bold & normal -> subscript & bold + subscript (across paragraphs)",
-                content: '<p>dom <b>to</b> edit</p><p><b>dom to edit</b></p>',
-                start: 'p:contents()[0]->1',
-                end: 'b:eq(1):contents()[0]->5',
-                do: async function () {
-                    await testUtils.dom.triggerNativeEvents($subscript[0], ['mousedown', 'click']);
-                },
-                test: {
-                    content: '<p>d<sub>om <b>to</b> edit</sub></p><p><b><sub>dom t</sub>o edit</b></p>',
-                    start: 'sub:contents()[0]->0',
-                    end: 'sub:eq(1):contents()[0]->5',
-                },
-            },
+            // {
+            //     name: "Click strikethrough: bold -> bold + strikethrough",
+            //     content: '<p>dom not to edit</p><p><b>dom to edit</b></p>',
+            //     start: 'b:contents()[0]->1',
+            //     end: 'b:contents()[0]->5',
+            //     do: async function () {
+            //         await testUtils.dom.triggerNativeEvents($strikethrough[0], ['mousedown', 'click']);
+            //     },
+            //     test: {
+            //         content: '<p>dom not to edit</p><p><b>d<s>om t</s>o edit</b></p>',
+            //         start: 's:contents()[0]->0',
+            //         end: 's:contents()[0]->4',
+            //     },
+            // },
+            // {
+            //     name: "Click strikethrough: bold & normal -> strikethrough & bold + strikethrough (across paragraphs)",
+            //     content: '<p>dom <b>to</b> edit</p><p><b>dom to edit</b></p>',
+            //     start: 'p:contents()[0]->1',
+            //     end: 'b:eq(1):contents()[0]->5',
+            //     do: async function () {
+            //         await testUtils.dom.triggerNativeEvents($strikethrough[0], ['mousedown', 'click']);
+            //     },
+            //     test: {
+            //         content: '<p>d<s>om <b>to</b> edit</s></p><p><b><s>dom t</s>o edit</b></p>',
+            //         start: 's:contents()[0]->0',
+            //         end: 's:eq(1):contents()[0]->5',
+            //     },
+            // },
+            // /* superscript */
+            // {
+            //     name: "Click superscript: bold -> bold + superscript",
+            //     content: '<p>dom not to edit</p><p><b>dom to edit</b></p>',
+            //     start: 'b:contents()[0]->1',
+            //     end: 'b:contents()[0]->5',
+            //     do: async function () {
+            //         await testUtils.dom.triggerNativeEvents($superscript[0], ['mousedown', 'click']);
+            //     },
+            //     test: {
+            //         content: '<p>dom not to edit</p><p><b>d<sup>om t</sup>o edit</b></p>',
+            //         start: 'sup:contents()[0]->0',
+            //         end: 'sup:contents()[0]->4',
+            //     },
+            // },
+            // {
+            //     name: "Click superscript: bold & normal -> superscript & bold + superscript (across paragraphs)",
+            //     content: '<p>dom <b>to</b> edit</p><p><b>dom to edit</b></p>',
+            //     start: 'p:contents()[0]->1',
+            //     end: 'b:eq(1):contents()[0]->5',
+            //     do: async function () {
+            //         await testUtils.dom.triggerNativeEvents($superscript[0], ['mousedown', 'click']);
+            //     },
+            //     test: {
+            //         content: '<p>d<sup>om <b>to</b> edit</sup></p><p><b><sup>dom t</sup>o edit</b></p>',
+            //         start: 'sup:contents()[0]->0',
+            //         end: 'sup:eq(1):contents()[0]->5',
+            //     },
+            // },
+            // /* subscript */
+            // {
+            //     name: "Click subscript: bold -> bold + subscript",
+            //     content: '<p>dom not to edit</p><p><b>dom to edit</b></p>',
+            //     start: 'b:contents()[0]->1',
+            //     end: 'b:contents()[0]->5',
+            //     do: async function () {
+            //         await testUtils.dom.triggerNativeEvents($subscript[0], ['mousedown', 'click']);
+            //     },
+            //     test: {
+            //         content: '<p>dom not to edit</p><p><b>d<sub>om t</sub>o edit</b></p>',
+            //         start: 'sub:contents()[0]->0',
+            //         end: 'sub:contents()[0]->4',
+            //     },
+            // },
+            // {
+            //     name: "Click subscript: bold & normal -> subscript & bold + subscript (across paragraphs)",
+            //     content: '<p>dom <b>to</b> edit</p><p><b>dom to edit</b></p>',
+            //     start: 'p:contents()[0]->1',
+            //     end: 'b:eq(1):contents()[0]->5',
+            //     do: async function () {
+            //         await testUtils.dom.triggerNativeEvents($subscript[0], ['mousedown', 'click']);
+            //     },
+            //     test: {
+            //         content: '<p>d<sub>om <b>to</b> edit</sub></p><p><b><sub>dom t</sub>o edit</b></p>',
+            //         start: 'sub:contents()[0]->0',
+            //         end: 'sub:eq(1):contents()[0]->5',
+            //     },
+            // },
             /* REMOVE FONT STYLE */
             {
                 name: "Click REMOVE FONT STYLE: bold -> normal",
