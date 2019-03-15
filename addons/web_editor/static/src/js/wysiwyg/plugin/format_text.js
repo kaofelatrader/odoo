@@ -572,6 +572,7 @@ var FontStylePlugin = AbstractPlugin.extend({
             } else {
                 range = this._formatTextCollapsed(range, tag);
             }
+            range.collapse(); // Invisible character doesn't need to be selected
         } else {
             if (this._isAllSelectedInTag(range, tag)) {
                 range = this._splitEndsOfSelection(range);
@@ -760,9 +761,6 @@ var FontStylePlugin = AbstractPlugin.extend({
         $(range.sc).wrap(formatNode);
         return range.replace({
             sc: range.sc,
-            so: 0,
-            ec: range.sc,
-            eo: 1,
         });
     },
     /**
@@ -795,9 +793,6 @@ var FontStylePlugin = AbstractPlugin.extend({
             $(br).remove();
             range = this.dependencies.Range.setRange({
                 sc: emptyText,
-                so: 0,
-                ec: emptyText,
-                eo: 1,
             });
         } else {
             range = this.dom.insertTextInline(this.utils.char('zeroWidth'), range);

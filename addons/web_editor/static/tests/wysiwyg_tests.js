@@ -309,9 +309,9 @@ QUnit.test('Font style', function (assert) {
                     await testUtils.dom.triggerNativeEvents($btnItalic[0], ['mousedown', 'click']);
                 },
                 test: {
-                    content: '<p>d<i>om <b>to</b> edit</i></p><p><b><i>dom t</i>o edit</b></p>',
+                    content: '<p>d<i>om </i><b><i>to</i></b><i> edit</i></p><p><b><i>dom t</i>o edit</b></p>',
                     start: 'i:contents()[0]->0',
-                    end: 'i:eq(1):contents()[0]->5',
+                    end: 'i:eq(3):contents()[0]->5',
                 },
             },
             /* UNDERLINE */
@@ -338,9 +338,9 @@ QUnit.test('Font style', function (assert) {
                     await testUtils.dom.triggerNativeEvents($btnUnderline[0], ['mousedown', 'click']);
                 },
                 test: {
-                    content: '<p>d<u>om <b>to</b> edit</u></p><p><b><u>dom t</u>o edit</b></p>',
+                    content: '<p>d<u>om </u><b><u>to</u></b><u> edit</u></p><p><b><u>dom t</u>o edit</b></p>',
                     start: 'u:contents()[0]->0',
-                    end: 'u:eq(1):contents()[0]->5',
+                    end: 'u:eq(3):contents()[0]->5',
                 },
             },
             /* strikethrough */
