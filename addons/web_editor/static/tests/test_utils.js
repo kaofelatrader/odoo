@@ -149,7 +149,8 @@ var WysiwygTest = Wysiwyg.extend({
     destroy: function () {
         this._super();
         this.$target.remove();
-        this._parentToDestroyForTest.destroy();
+        // /!\ Creates an infinite loop because  widget.destroy destroys all children:
+        // this._parentToDestroyForTest.destroy();
     },
     /**
      * @override
