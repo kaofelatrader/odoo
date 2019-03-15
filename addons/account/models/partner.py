@@ -29,8 +29,8 @@ class AccountFiscalPosition(models.Model):
     country_group_id = fields.Many2one('res.country.group', string='Country Group',
         help="Apply only if delivery or invoicing country match the group.")
     state_ids = fields.Many2many('res.country.state', string='Federal States')
-    zip_from = fields.Integer(string='Zip Range From', default=0)
-    zip_to = fields.Integer(string='Zip Range To', default=0)
+    zip_from = fields.Char(string='Zip Range From')
+    zip_to = fields.Char(string='Zip Range To')
     # To be used in hiding the 'Federal States' field('attrs' in view side) when selected 'Country' has 0 states.
     states_count = fields.Integer(compute='_compute_states_count')
 
@@ -99,14 +99,11 @@ class AccountFiscalPosition(models.Model):
         if self.env.context.get('force_company'):
             base_domain.append(('company_id', '=', self.env.context.get('force_company')))
         null_state_dom = state_domain = [('state_ids', '=', False)]
-        null_zip_dom = zip_domain = [('zip_from', '=', 0), ('zip_to', '=', 0)]
+        null_zip_dom = zip_domain = [('zip_from', '=', False), ('zip_to', '=', False)]
         null_country_dom = [('country_id', '=', False), ('country_group_id', '=', False)]
 
-        if zipcode and zipcode.isdigit():
-            zipcode = int(zipcode)
-            zip_domain = [('zip_from', '<=', zipcode), ('zip_to', '>=', zipcode)]
-        else:
-            zipcode = 0
+        if zipcode:
+            zip_domain = [('zip_from', '<=', zipcode.upper()), ('zip_to', '>=', zipcode.upper())]
 
         if state_id:
             state_domain = [('state_ids', '=', state_id)]
