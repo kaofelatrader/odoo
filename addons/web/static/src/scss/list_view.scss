@@ -20,6 +20,23 @@
                 cursor: default;
             }
         }
+        .o_optional_column {
+            cursor: pointer !important;
+            .dropdown-toggle {
+                padding: 0.3rem;
+                &:after {
+                    content: none;
+                }
+                i {
+                    width: 100%;
+                    padding-right: 5px;
+                }
+            }
+            .o_optional_column_dropdown .dropdown-item label {
+                margin: 0px;
+                padding-left: 10px;
+            }
+        }
     }
     tbody > tr > td:not(.o_list_record_selector) {
         @include o-text-overflow(table-cell);

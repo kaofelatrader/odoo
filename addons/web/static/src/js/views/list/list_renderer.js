@@ -33,6 +33,7 @@ var FIELD_CLASSES = {
 
 var ListRenderer = BasicRenderer.extend({
     events: {
+        "click .o_optional_column_dropdown .dropdown-item input": "_onAddColumn",
         'click tbody tr': '_onRowClicked',
         'click tbody .o_list_record_selector': '_onSelectRecord',
         'click thead th.o_column_sortable': '_onSortColumn',
@@ -166,6 +167,30 @@ var ListRenderer = BasicRenderer.extend({
         }
     },
     /**
+     * This method computes non optional columns i.e. columns which are going to display
+     * in list view
+     *
+     * @private
+     */
+    _computeColumns: function () {
+        var self = this;
+        return _.filter(this.allColumns, function (col) {
+            return !(col.attrs.optional && !!JSON.parse(col.attrs.optional))
+                || _.contains(self.optionalColumnsEnabled, col.attrs.name);
+        });
+    },
+    /**
+     * This method computes optional columns i.e. columns which displayed
+     * inside optional dropdown in list view header
+     *
+     * @private
+     */
+    _computeOptionalColumns: function () {
+        return _.filter(this.allColumns, function (col) {
+            return (col.attrs.optional && !!JSON.parse(col.attrs.optional))
+        });
+    },
+    /**
      *
      * @private
      * @param {jQuery} $cell
@@ -226,6 +251,7 @@ var ListRenderer = BasicRenderer.extend({
      */
     _getNumberOfCols: function () {
         var n = this.columns.length;
+        n = this.optionalColumns ? n + 1 : n;
         return this.hasSelectors ? n + 1 : n;
     },
     /**
@@ -235,8 +261,8 @@ var ListRenderer = BasicRenderer.extend({
      */
     _processColumns: function (columnInvisibleFields) {
         var self = this;
-        this.handleField = null;
-        this.columns = _.reject(this.arch.children, function (c) {
+        self.handleField = null;
+        this.allColumns = _.reject(this.arch.children, function (c) {
             if (c.tag === 'control' || c.tag === 'groupby') {
                 return true;
             }
@@ -251,6 +277,51 @@ var ListRenderer = BasicRenderer.extend({
             }
             return reject;
         });
+        this.columns = this._computeColumns();
+        this.optionalColumns = this._computeOptionalColumns();
+    },
+    /**
+     * Render a single <th> with dropdown menu to display optional columns of view.
+     *
+     * @private
+     * @returns {jQueryElement} a <th> element
+     */
+    _renderAddColumnOption: function () {
+        var self = this;
+        var $th = $('<th>', {
+            class: 'o_optional_column text-center dropdown',
+        });
+        var $a = $("<a>", {
+            class: "dropdown-toggle text-dark",
+            href: "#",
+            role: "button",
+            'data-toggle': "dropdown",
+            'aria-expanded': false,
+        }).append($("<i class='fa fa-ellipsis-v'></i>"));
+        $a.appendTo($th);
+
+        var $dropdown = $("<div>", {
+            class: 'dropdown-menu o_optional_column_dropdown',
+        });
+        _.map(this.optionalColumns, function (col) {
+            var txt = self.state.fields[col.attrs.name].string +
+                (config.debug && " (" + col.attrs.name +")" || '');
+            var $label =$('<label>', {
+                text: txt,
+                for: col.attrs.name,
+            });
+            var $checkBox = $("<input>", {
+                type: "checkbox",
+                name: col.attrs.name,
+                id: col.attrs.name,
+                checked: _.contains(self.optionalColumnsEnabled, col.attrs.name) ? true : false,
+            });
+            $dropdown.append($("<div>", {
+                class: "dropdown-item",
+            }).append($checkBox.add($label)));
+        });
+        $dropdown.appendTo($th);
+        return $th;
     },
     /**
      * Render a list of <td>, with aggregates if available.  It can be displayed
@@ -429,6 +500,9 @@ var ListRenderer = BasicRenderer.extend({
         var $cells = this._renderAggregateCells(aggregates);
         if (this.hasSelectors) {
             $cells.unshift($('<td>'));
+        }
+        if (this.optionalColumns && this.optionalColumns.length) {
+            this._renderOptionalCell($cells);
         }
         return $('<tfoot>').append($('<tr>').append($cells));
     },
@@ -664,6 +738,9 @@ var ListRenderer = BasicRenderer.extend({
     _renderHeader: function () {
         var $tr = $('<tr>')
             .append(_.map(this.columns, this._renderHeaderCell.bind(this)));
+        if (this.optionalColumns && this.optionalColumns.length) {
+            $tr.append(this._renderAddColumnOption());
+        }
         if (this.hasSelectors) {
             $tr.prepend(this._renderSelector('th'));
         }
@@ -725,6 +802,15 @@ var ListRenderer = BasicRenderer.extend({
         return $th;
     },
     /**
+     * Adds cell for optional column, as we have additional cell in header for optional column,
+     * we need to add additional cell in table body, this method can be overridden in editable list
+     *
+     * @private
+     */
+    _renderOptionalCell: function ($cells) {
+        $cells.push($("<td/>"));
+    },
+    /**
      * Render a row, corresponding to a record.
      *
      * @private
@@ -736,6 +822,9 @@ var ListRenderer = BasicRenderer.extend({
         var $cells = this.columns.map(function (node, index) {
             return self._renderBodyCell(record, node, index, { mode: 'readonly' });
         });
+        if (this.optionalColumns && this.optionalColumns.length) {
+            this._renderOptionalCell($cells);
+        }
 
         var $tr = $('<tr/>', { class: 'o_data_row' })
             .attr('data-id', record.id)
@@ -889,6 +978,26 @@ var ListRenderer = BasicRenderer.extend({
     // Handlers
     //--------------------------------------------------------------------------
 
+    /**
+     * When the user clicks on the checkbox in optional fields dropdown that column added
+     * to listview and displayed(not permanentely)
+     *
+     * @private
+     * @param {MouseEvent} ev
+     */
+    _onAddColumn: function (ev) {
+        var currentElement = ev.currentTarget;
+        if (!currentElement.checked) {
+            this.trigger_up('toggle_optional_column', {id: this.state.id, name: currentElement.name});
+            this.optionalColumnsEnabled.splice(this.optionalColumnsEnabled.indexOf(currentElement.name), 1);
+            this.columns = this._computeColumns();
+        } else {
+            this.trigger_up('toggle_optional_column', {id: this.state.id, name: currentElement.name, enable: true});
+            this.optionalColumnsEnabled.push(currentElement.name);
+            this.columns = this._computeColumns();
+        }
+        this._renderView();
+    },
     /**
      * Manages the keyboard events on the list. If the list is not editable, when the user navigates to
      * a cell using the keyboard, if he presses enter, enter the model represented by the line

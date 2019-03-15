@@ -536,6 +536,12 @@ ListRenderer.include({
         if (this.addTrashIcon) {
             n++;
         }
+        // super method will always do n+1 but we do not want to have extra cell when there
+        // is trash icon available, we will have optional dropdown icon on header and all rows
+        // of tbody will have trash icon, so if trash icon and optionalColumns available then n--
+        if (this.addTrashIcon && this.optionalColumns) {
+            n--;
+        }
         return n;
     },
     /**
@@ -793,32 +799,16 @@ ListRenderer.include({
         return $body;
     },
     /**
-     * Override to optionally add a th in the header for the remove icon column.
+     * Override method to render additional optional cell only if trash icon not available
+     * else trash icon will create cell and optional field icon displayed in header
+     * at same index where trash icon displayed
      *
      * @override
-     * @private
      */
-    _renderHeader: function () {
-        var $thead = this._super.apply(this, arguments);
-
-        if (this.editable) {
-            var totalWidth = this.columns.reduce(function (acc, column) {
-                return acc + column.attrs.widthFactor;
-            }, 0);
-            this.columns.forEach(function (column) {
-                var $cell = $thead.find('th[data-name=' + column.attrs.name + ']');
-                if (column.attrs.width) {
-                    $cell.css('width', column.attrs.width);
-                } else if (column.attrs.widthFactor) {
-                    $cell.css('width', (column.attrs.widthFactor / totalWidth * 100) + '%');
-                }
-            });
+    _renderOptionalCell: function ($cells) {
+        if (!this.addTrashIcon) {
+            $cells.push($("<td/>"));
         }
-
-        if (this.addTrashIcon) {
-            $thead.find('tr').append($('<th>', {class: 'o_list_record_remove_header'}));
-        }
-        return $thead;
     },
     /**
      * Editable rows are possibly extended with a trash icon on their right, to
@@ -985,6 +975,19 @@ ListRenderer.include({
     // Handlers
     //--------------------------------------------------------------------------
 
+    /**
+     * override this method to unselect row before optional column added to listview
+     *
+     * @override
+     * @private
+     */
+    _onAddColumn: function (ev) {
+        var self = this;
+        var _super = this._super.bind(this);
+        this.unselectRow().then(function () {
+            _super.apply(self, [ev]);
+        });
+    },
     /**
      * This method is called when we click on the 'Add a line' button in a groupby
      * list view.

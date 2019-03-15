@@ -5458,7 +5458,6 @@ QUnit.module('Views', {
             '/web/dataset/search_read',
             '/web/dataset/search_read',
         ]);
-
         list.destroy();
     });
 
@@ -5893,6 +5892,100 @@ QUnit.module('Views', {
         assert.strictEqual(list.$('tbody:eq(3) .o_data_row:first .o_data_cell:eq(1)').text(), 'Value 2',
             "should have a column name with a value from the groupby");
         assert.verifySteps(['2']);
+
+        list.destroy();
+    });
+
+    QUnit.test('list view with advanced fields rendering', async function (assert) {
+        assert.expect(9);
+
+        var list = await createView({
+            View: ListView,
+            model: 'foo',
+            data: this.data,
+            arch: '<tree>' +
+                    '<field name="foo"/>' +
+                    '<field name="m2o" advanced="hide"/>' +
+                    '<field name="amount"/>' +
+                    '<field name="currency_id"/>' +
+                    '<field name="reference" advanced="hide"/>' +
+                '</tree>',
+        });
+
+        // 5 th (1 for checkbox, 3 for columns, 1 for advanced field dropdown)
+        assert.containsN(list, 'th', 5,
+            "should have 5 th 1 for selector, 3 for columns and 1 for advanced field dropdown");
+
+        assert.hasClass(list.$('thead th:last'), 'o_advanced_column',
+            "should have add column option at last");
+
+        // advanced fields
+        testUtils.dom.click(list.$('th.o_advanced_column > a.dropdown-toggle'));
+        assert.containsN(list, 'div.o_advanced_column_dropdown > div.dropdown-item', 2,
+            "dropdown have 2 advanced fields");
+
+        // enable advanced field
+        await testUtils.dom.click(list.$('div.o_advanced_column_dropdown > div.dropdown-item:first input'));
+        // 6 th (1 for checkbox, 4 for columns, 1 for advanced field dropdown)
+        assert.containsN(list, 'th', 6, "should have 6 th");
+        assert.ok(list.$('th:contains(M2O field):not(.o_advanced_column)').is(':visible'),
+            "should have a visible m2o field"); //m2o field
+
+        // disable advanced field
+        testUtils.dom.click(list.$('th.o_advanced_column > a.dropdown-toggle'));
+        assert.strictEqual(list.$('th.o_advanced_column .dropdown-item input:checked')[0],
+            list.$('th.o_advanced_column .dropdown-item [name="m2o"]')[0],
+            "m2o advanced field check box should be checked in dropdown");
+
+        await testUtils.dom.click(list.$('div.o_advanced_column_dropdown > div.dropdown-item input:checked'));
+        // 5 th (1 for checkbox, 3 for columns, 1 for advanced field dropdown)
+        assert.containsN(list, 'th', 5, "should have 5 th");
+        assert.notOk(list.$('th:contains(M2O field):not(.o_advanced_column)').is(':visible'),
+            "should not have a visible m2o field"); //m2o field not displayed
+
+        testUtils.dom.click(list.$('th.o_advanced_column > a.dropdown-toggle'));
+        assert.notOk(list.$('th.o_advanced_column .dropdown-item [name="m2o"]').is(":checked"));
+
+        list.destroy();
+    });
+
+    QUnit.test('advanced fields not disappear even after listview re-rendering(reload)', async function (assert) {
+        assert.expect(6);
+
+        var list = await createView({
+            View: ListView,
+            model: 'foo',
+            data: this.data,
+            arch: '<tree>' +
+                    '<field name="foo"/>' +
+                    '<field name="m2o" advanced="1"/>' +
+                    '<field name="amount"/>' +
+                    '<field name="currency_id"/>' +
+                    '<field name="reference" advanced="1"/>' +
+                '</tree>',
+        });
+
+        // 5 th (1 for checkbox, 3 for columns, 1 for advanced field dropdown)
+        assert.containsN(list, 'th', 5,
+            "should have 5 th 1 for selector, 3 for columns and 1 for advanced field dropdown");
+
+        // enable advanced field
+        testUtils.dom.click(list.$('th.o_advanced_column > a.dropdown-toggle'));
+        await testUtils.dom.click(list.$('div.o_advanced_column_dropdown > div.dropdown-item:first input'));
+        assert.containsN(list, 'th', 6,
+            "should have 6 th 1 for selector, 4 for columns and 1 for advanced field dropdown");
+        assert.ok(list.$('th:contains(M2O field):not(.o_advanced_column)').is(':visible'),
+            "should have a visible m2o field"); //m2o field
+
+        // reload listview
+        await list.reload();
+        assert.containsN(list, 'th', 6,
+            "should have 6 th 1 for selector, 4 for columns and 1 for advanced field dropdown even after listview reload");
+        assert.ok(list.$('th:contains(M2O field):not(.o_advanced_column)').is(':visible'),
+            "should have a visible m2o field even after listview reload");
+
+        testUtils.dom.click(list.$('th.o_advanced_column > a.dropdown-toggle'));
+        assert.ok(list.$('th.o_advanced_column .dropdown-item [name="m2o"]').is(":checked"));
 
         list.destroy();
     });
