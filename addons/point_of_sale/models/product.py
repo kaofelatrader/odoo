@@ -38,6 +38,15 @@ class ProductProduct(models.Model):
                 raise UserError(_('You cannot delete a product saleable in point of sale while a session is still opened.'))
         return super(ProductProduct, self).unlink()
 
+    @api.multi
+    def get_lots_quantity(self, location_id, lots):
+        production = self.env['stock.production.lot']
+        for lot_line in lots:
+            lot = production.search([('name', '=', lot_line.get('name')), ('product_id', '=', self.id)])
+            lot_line['tracking'] = lot.product_id.tracking
+            lot_line['available_quantity'] = self.with_context(lot_id=lot.id, location=location_id).virtual_available
+        return lots
+
 
 class UomCateg(models.Model):
     _inherit = 'uom.category'

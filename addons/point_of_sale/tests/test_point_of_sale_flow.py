@@ -522,11 +522,11 @@ class TestPointOfSaleFlow(TestPointOfSaleCommon):
           'to_invoice': False}
 
         # I create an order on an open session
-        self.PosOrder.create_from_ui([carrot_order])
+        self.PosOrder.create_from_ui([carrot_order], current_session.id)
         self.assertEqual(num_starting_orders + 1, len(current_session.order_ids), "Submitted order not encoded")
 
         # I resubmit the same order
-        self.PosOrder.create_from_ui([carrot_order])
+        self.PosOrder.create_from_ui([carrot_order], current_session.id)
         self.assertEqual(num_starting_orders + 1, len(current_session.order_ids), "Resubmitted order was not skipped")
 
         # I close the session
@@ -536,7 +536,7 @@ class TestPointOfSaleFlow(TestPointOfSaleCommon):
 
         # I keep selling after the session is closed
         with mute_logger('odoo.addons.point_of_sale.models.pos_order'):
-            self.PosOrder.create_from_ui([zucchini_order, newspaper_rack_order])
+            self.PosOrder.create_from_ui([zucchini_order, newspaper_rack_order], current_session.id)
         rescue_session = self.PosSession.search([
             ('config_id', '=', self.pos_config.id),
             ('state', '=', 'opened'),

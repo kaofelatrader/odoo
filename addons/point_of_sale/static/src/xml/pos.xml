@@ -1132,6 +1132,7 @@
                             <i class="oe_link_icon remove-lot fa fa-trash-o" role="img" aria-label="Remove" title="Remove"></i>
                         </t>
                     </t>
+                    <div class='o-error-message oe_hidden'/>
                 </main>
                 <footer class="footer">
                     <div class="button confirm">

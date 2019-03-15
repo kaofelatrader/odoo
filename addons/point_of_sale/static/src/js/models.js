@@ -947,7 +947,7 @@ exports.PosModel = Backbone.Model.extend({
         var args = [_.map(orders, function (order) {
                 order.to_invoice = options.to_invoice || false;
                 return order;
-            })];
+            }), self.pos_session.id];
         return rpc.query({
                 model: 'pos.order',
                 method: 'create_from_ui',
@@ -1472,11 +1472,21 @@ exports.Orderline = Backbone.Model.extend({
     },
 
     has_valid_product_lot: function(){
-        if(!this.has_product_lot){
-            return true;
+        if (this.has_product_lot) {
+            var lot = this.pack_lot_lines.get_valid_lots();
+            for (var i = 0; i < lot.length; i++) {
+                if (lot[i].order_line.quantity < 0) {
+                    continue;
+                } else if (lot[i].available_quantity === undefined || !lot[i].available_quantity || !lot[i].order_line.quantity) {
+                    return false;
+                } else if (this.product.tracking === "serial" && lot.length != lot[i].order_line.quantity) {
+                    return false;
+                } else if (this.product.tracking === "lot" && lot[i].available_quantity < lot[i].order_line.quantity) {
+                    return false;
+                }
+            }
         }
-        var valid_product_lot = this.pack_lot_lines.get_valid_lots();
-        return this.get_required_number_of_lots() === valid_product_lot.length;
+        return !!lot.length
     },
 
     // return the unit of measure of the product

@@ -736,7 +736,7 @@ class PosOrder(models.Model):
         return self._create_account_move_line()
 
     @api.model
-    def create_from_ui(self, orders):
+    def create_from_ui(self, orders, pos_session_id):
         # Keep only new orders
         submitted_references = [o['data']['name'] for o in orders]
         pos_order = self.search([('pos_reference', 'in', submitted_references)])
@@ -744,6 +744,8 @@ class PosOrder(models.Model):
         existing_references = set([o['pos_reference'] for o in existing_orders])
         orders_to_save = [o for o in orders if o['data']['name'] not in existing_references]
         order_ids = []
+        wrong_stock_pickings = self.env['stock.picking']
+        session = self.env['pos.session'].browse(pos_session_id)
 
         for tmp_order in orders_to_save:
             to_invoice = tmp_order['to_invoice']
@@ -754,7 +756,7 @@ class PosOrder(models.Model):
             order_ids.append(pos_order.id)
 
             try:
-                pos_order.action_pos_order_paid()
+                wrong_stock_pickings += pos_order.action_pos_order_paid()
             except psycopg2.OperationalError:
                 # do not hide transactional errors, the order(s) won't be saved!
                 raise
@@ -765,6 +767,16 @@ class PosOrder(models.Model):
                 pos_order.action_pos_order_invoice()
                 pos_order.invoice_id.sudo().action_invoice_open()
                 pos_order.account_move = pos_order.invoice_id.move_id
+
+        if wrong_stock_pickings:
+            """
+            Next activities
+            """
+            session.activity_schedule_with_view('mail.mail_activity_data_warning',
+                user_id=session.user_id.id,
+                views_or_xmlid='point_of_sale.exception_stock_moves_confirmation',
+                render_context={'stock_pickings': wrong_stock_pickings}
+            )
         return order_ids
 
     def test_paid(self):
@@ -780,9 +792,10 @@ class PosOrder(models.Model):
 
     def create_picking(self):
         """Create a picking for each order and validate it."""
-        Picking = self.env['stock.picking']
+        Picking = wrong_stock_pickings = self.env['stock.picking']
         Move = self.env['stock.move']
         StockWarehouse = self.env['stock.warehouse']
+
         for order in self:
             if not order.lines.filtered(lambda l: l.product_id.type in ['product', 'consu']):
                 continue
@@ -848,23 +861,27 @@ class PosOrder(models.Model):
             order.write({'picking_id': order_picking.id or return_picking.id})
 
             if return_picking:
-                order._force_picking_done(return_picking)
+                wrong_picking = order._force_picking_done(return_picking)
             if order_picking:
-                order._force_picking_done(order_picking)
+                wrong_picking = order._force_picking_done(order_picking)
+            if wrong_picking:
+                wrong_stock_pickings += wrong_picking
 
             # when the pos.config has no picking_type_id set only the moves will be created
             if moves and not return_picking and not order_picking:
                 moves._action_assign()
                 moves.filtered(lambda m: m.product_id.tracking == 'none')._action_done()
 
-        return True
+        return wrong_stock_pickings
 
     def _force_picking_done(self, picking):
         """Force picking in order to be set as done."""
         self.ensure_one()
         picking.action_assign()
         wrong_lots = self.set_pack_operation_lot(picking)
-        if not wrong_lots:
+        if wrong_lots:
+            return picking
+        else:
             picking.action_done()
 
     def set_pack_operation_lot(self, picking=None):

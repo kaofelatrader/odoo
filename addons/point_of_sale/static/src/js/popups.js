@@ -8,6 +8,7 @@ odoo.define('point_of_sale.popups', function (require) {
 
 var PosBaseWidget = require('point_of_sale.BaseWidget');
 var gui = require('point_of_sale.gui');
+var rpc = require('web.rpc');
 var _t  = require('web.core')._t;
 
 
@@ -216,18 +217,71 @@ var PackLotLinePopupWidget = PopupWidget.extend({
     },
 
     click_confirm: function(){
+        var self = this;
+        var lots = [];
         var pack_lot_lines = this.options.pack_lot_lines;
-        this.$('.packlot-line-input').each(function(index, el){
-            var cid = $(el).attr('cid'),
-                lot_name = $(el).val();
+        var $button = this.$el.find(".button.confirm");
+
+        function set_warning(cid, message) {
+            var $input = self.$el.find("input[cid=" + cid + "]");
+
+            if ($button.data('validate') != 'ignore') {
+                $button.data('validate', 'block');
+            }
+            $input.addClass('o-border-danger');
+            $input.on('change paste keyup', function () {
+                $input.removeClass('o-border-danger').unbind('change paste keyup');
+                $button.removeClass('o-button-success').removeData('validate').text('Ok');
+            });
+            self.$el.find(".o-error-message").text(message).removeClass('oe_hidden');
+        }
+
+        function close_popup() {
+            if ($button.data('validate') == 'ignore' || !$button.data('validate')){
+                pack_lot_lines.remove_empty_model();
+                pack_lot_lines.set_quantity_by_lot();
+                self.options.order.save_to_db();
+                self.options.order_line.trigger('change', self.options.order_line);
+                self.gui.close_popup();
+            } else {
+                $button.addClass('o-button-success').data('validate', 'ignore').text("Confirm");
+            }
+        }
+
+        this.$('.packlot-line-input').each(function(index, el) {
+            var cid = $(el).attr('cid'), lot_name = $(el).val();
             var pack_line = pack_lot_lines.get({cid: cid});
             pack_line.set_lot_name(lot_name);
+            if (lots.map(function(e) { return e.name; }).indexOf(lot_name)) {
+                lots.push({'cid': cid, name: lot_name});
+            } else {
+                set_warning(cid, "This Serial number is already taken by this or another open order.");
+            }
+
         });
-        pack_lot_lines.remove_empty_model();
-        pack_lot_lines.set_quantity_by_lot();
-        this.options.order.save_to_db();
-        this.options.order_line.trigger('change', this.options.order_line);
-        this.gui.close_popup();
+
+        if ($button.data('validate') == 'ignore' || !$button.data('validate')) {
+            rpc.query({
+                model: "product.product",
+                method: "get_lots_quantity",
+                args: [pack_lot_lines.order_line.product.id, this.pos.config.stock_location_id[0], lots],
+            }).then(function (result) {
+                result.forEach(function (lot) {
+                    pack_lot_lines.get({cid: lot.cid}).available_quantity = lot.available_quantity;
+
+                    if (lot.tracking == false) {
+                        set_warning(lot.cid, "This serial-/lot-number could not be found.");
+                    } else if (lot.tracking == "lot" && lot.available_quantity < 1) {
+                        set_warning(lot.cid, "This lot has a too low available quantity.");
+                    } else if (lot.tracking == "serial" && lot.available_quantity < 1) {
+                        set_warning(lot.cid, "This Serial number has already been delivered and is not available anymore, are you sure you have encoded the right number ?");
+                    }
+                });
+                close_popup();
+            }).guardedCatch(close_popup);
+        } else {
+            close_popup();
+        }
     },
 
     add_lot: function(ev) {

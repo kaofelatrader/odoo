@@ -2222,6 +2222,16 @@ td {
     -webkit-transition-duration: 0.2s;
     -webkit-transition-timing-function: ease-out;
 }
+.pos .popup .o-button-success {
+    background: #359766;
+    color: white;
+}
+.pos .popup .o-error-message {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    left: 0;
+}
 
 
 .pos .popup .button.big-left{
@@ -2274,6 +2284,10 @@ td {
 .pos .popup-input.active {
     outline: none;
     box-shadow: 0px 0px 0px 3px #6EC89B;
+}
+.pos .popup .o-border-danger {
+    outline: none;
+    box-shadow: 0px 0px 0px 3px #dc3545;
 }
 .pos .popup.popup-error {
     background-color: #F3BBBB;
