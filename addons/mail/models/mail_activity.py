@@ -597,6 +597,16 @@ class MailActivityMixin(models.AbstractModel):
         related='activity_ids.summary', readonly=False,
         search='_search_activity_summary',
         groups="base.group_user",)
+    exception_activity_ids = fields.One2many(
+        'mail.activity', 'res_id', 'Exception Activities',
+        auto_join=True,
+        groups="base.group_user",
+        domain=lambda self: [('res_model', '=', self._name), ('activity_type_id.decoration_type', 'in', ['warning', 'danger'])])
+    exception_activity_type = fields.Char(string=' ', compute='_compute_exception_activity_type')
+
+    def _compute_exception_activity_type(self):
+        for record in self.filtered(lambda x: x.exception_activity_ids):
+            record.exception_activity_type = "pull-right text-%s fa %s" % (record.exception_activity_ids[0].activity_type_id.decoration_type, record.exception_activity_ids[0].activity_type_id.icon)
 
     @api.depends('activity_ids.state')
     def _compute_activity_state(self):

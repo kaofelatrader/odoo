@@ -4,6 +4,7 @@ odoo.define('mail.Activity', function (require) {
 var mailUtils = require('mail.utils');
 
 var AbstractField = require('web.AbstractField');
+var basic_fields = require('web.basic_fields');
 var BasicModel = require('web.BasicModel');
 var core = require('web.core');
 var field_registry = require('web.field_registry');
@@ -740,9 +741,23 @@ var KanbanActivity = BasicActivity.extend({
     },
 });
 
+// -----------------------------------------------------------------------------
+// Activity Exception Widget to display Exception icon ('activity_exception' widget)
+// -----------------------------------------------------------------------------
+var ActivityException = basic_fields.FieldChar.extend({
+
+    _renderReadonly: function () {
+        if (this.value) {
+            this.$el.empty();
+            this.$el.addClass(this.value);
+        }
+    }
+});
+
 field_registry
     .add('mail_activity', Activity)
-    .add('kanban_activity', KanbanActivity);
+    .add('kanban_activity', KanbanActivity)
+    .add('activity_exception', ActivityException);
 
 return Activity;
 
