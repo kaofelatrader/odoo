@@ -805,8 +805,8 @@ var Dom = Class.extend({
         var splitOptions = {
             isSkipPaddingBlankNode: true,
         };
-        this.splitTree(node.parentNode, startPoint, splitOptions);
         this.splitTree(node.parentNode, endPoint, splitOptions);
+        this.splitTree(node.parentNode, startPoint, splitOptions);
         // Splitting at ends may create blank nodes (because of this.splitTree) so let's clean it up:
         this.removeBlankSiblings(node.parentNode);
     },

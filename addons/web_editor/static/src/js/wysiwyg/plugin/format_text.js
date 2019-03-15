@@ -307,11 +307,11 @@ var FontStylePlugin = AbstractPlugin.extend({
 
         var startPoint = range.getStartPoint();
         var endPoint = range.getEndPoint();
-        if (startPoint.node.tagName && startPoint.node.childNodes[startPoint.offset]) {
+        if (!this.utils.isText(startPoint.node) && startPoint.node.childNodes[startPoint.offset]) {
             startPoint.node = startPoint.node.childNodes[startPoint.offset];
             startPoint.offset = 0;
         }
-        if (endPoint.node.tagName && endPoint.node.childNodes[endPoint.offset]) {
+        if (!this.utils.isText(endPoint.node) && endPoint.node.childNodes[endPoint.offset]) {
             endPoint.node = endPoint.node.childNodes[endPoint.offset];
             endPoint.offset = 0;
         }
@@ -395,17 +395,17 @@ var FontStylePlugin = AbstractPlugin.extend({
         }
 
         // target the deepest node
-        if (startPoint.node.tagName && !startPoint.offset) {
+        if (!this.utils.isText(startPoint.node) && !startPoint.offset) {
             startPoint.node = this.utils.firstLeafUntil(startPoint.node.childNodes[startPoint.offset] || startPoint.node, function (n) {
                 return (!self.utils.isMedia || !self.utils.isMedia(n)) && self.options.isEditableNode(n);
             });
             startPoint.offset = 0;
         }
-        if (endPoint.node.tagName && !endPoint.offset) {
+        if (!this.utils.isText(endPoint.node) && endPoint.offset === this.utils.nodeLength(endPoint.node)) {
             endPoint.node = this.utils.firstLeafUntil(endPoint.node.childNodes[endPoint.offset] || endPoint.node, function (n) {
                 return (!self.utils.isMedia || !self.utils.isMedia(n)) && self.options.isEditableNode(n);
             });
-            endPoint.offset = 0;
+            endPoint.offset = this.utils.nodeLength(endPoint.node);
         }
 
         // select nodes to clean (to remove empty font and merge same nodes)
