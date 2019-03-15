@@ -456,7 +456,7 @@ _.each(_.range(40, 127), function (keyCode) {
  * @see wysiwyg_keyboard_tests.js
  * @see wysiwyg_tests.js
  *
- * @param {jQuery} $editable
+ * @param {Wysiwyg} wysiwyg
  * @param {object} assert
  * @param {object[]} keyboardTests
  * @param {string} keyboardTests.name
@@ -472,7 +472,8 @@ _.each(_.range(40, 127), function (keyCode) {
  * @param {function($editable, assert)} [keyboardTests.test.check]
  * @param {Number} addTests
  */
-var testKeyboard = function ($editable, assert, keyboardTests, addTests) {
+var testKeyboard = function (wysiwyg, assert, keyboardTests, addTests) {
+    var $editable = wysiwyg.$('editable');
     var tests = _.compact(_.pluck(keyboardTests, 'test'));
     var testNumber = _.compact(_.pluck(tests, 'start')).length +
         _.compact(_.pluck(tests, 'content')).length +
@@ -559,7 +560,7 @@ var testKeyboard = function ($editable, assert, keyboardTests, addTests) {
 
     function pollTest(test) {
         var def = Promise.resolve();
-        $editable.data('wysiwyg').setValue(test.content);
+        wysiwyg.setValue(test.content);
 
         function poll(step) {
             var def = testUtils.makeTestPromise();
@@ -631,7 +632,7 @@ var testKeyboard = function ($editable, assert, keyboardTests, addTests) {
 
             // test content
             if (test.test.content) {
-                var value = $editable.data('wysiwyg').getValue({
+                var value = wysiwyg.getValue({
                     keepPopover: true,
                 });
                 var allInvisible = /\uFEFF/g;

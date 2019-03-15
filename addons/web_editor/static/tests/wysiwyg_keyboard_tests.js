@@ -243,8 +243,7 @@ QUnit.test('Unbreakable selection and edition', function (assert) {
         data: this.data,
         useOnlyTestUnbreakable: true,
     }).then(function (wysiwyg) {
-        var $editable = wysiwyg.$('.note-editable');
-        weTestUtils.testKeyboard($editable, assert, UnbreakableTests).then(function () {
+        weTestUtils.testKeyboard(wysiwyg, assert, UnbreakableTests).then(function () {
             wysiwyg.destroy();
             done();
         });
@@ -818,8 +817,7 @@ QUnit.test('Char', function (assert) {
     weTestUtils.createWysiwyg({
         data: this.data,
     }).then(function (wysiwyg) {
-        var $editable = wysiwyg.$('.note-editable');
-        weTestUtils.testKeyboard($editable, assert, keyboardTestsChar).then(function () {
+        weTestUtils.testKeyboard(wysiwyg, assert, keyboardTestsChar).then(function () {
             wysiwyg.destroy();
             done();
         });
@@ -1792,8 +1790,7 @@ QUnit.test('Enter', function (assert) {
     weTestUtils.createWysiwyg({
         data: this.data,
     }).then(function (wysiwyg) {
-        var $editable = wysiwyg.$('.note-editable');
-        weTestUtils.testKeyboard($editable, assert, keyboardTestsEnter).then(function () {
+        weTestUtils.testKeyboard(wysiwyg, assert, keyboardTestsEnter).then(function () {
             wysiwyg.destroy();
             done();
         });
@@ -2086,8 +2083,7 @@ QUnit.test('Complex', function (assert) {
     weTestUtils.createWysiwyg({
         data: this.data,
     }).then(function (wysiwyg) {
-        var $editable = wysiwyg.$('.note-editable');
-        weTestUtils.testKeyboard($editable, assert, keyboardTestsComplex).then(function () {
+        weTestUtils.testKeyboard(wysiwyg, assert, keyboardTestsComplex).then(function () {
             wysiwyg.destroy();
             done();
         });
@@ -2228,8 +2224,7 @@ QUnit.test('Tab', function (assert) {
     weTestUtils.createWysiwyg({
         data: this.data,
     }).then(function (wysiwyg) {
-        var $editable = wysiwyg.$('.note-editable');
-        weTestUtils.testKeyboard($editable, assert, keyboardTestsTab).then(function () {
+        weTestUtils.testKeyboard(wysiwyg, assert, keyboardTestsTab).then(function () {
             wysiwyg.destroy();
             done();
         });
@@ -3281,8 +3276,7 @@ QUnit.test('Backspace', function (assert) {
     weTestUtils.createWysiwyg({
         data: this.data,
     }).then(function (wysiwyg) {
-        var $editable = wysiwyg.$('.note-editable');
-        weTestUtils.testKeyboard($editable, assert, keyboardTestsBackspace).then(function () {
+        weTestUtils.testKeyboard(wysiwyg, assert, keyboardTestsBackspace).then(function () {
             wysiwyg.destroy();
             done();
         });
@@ -4198,8 +4192,7 @@ QUnit.test('Delete', function (assert) {
     weTestUtils.createWysiwyg({
         data: this.data,
     }).then(function (wysiwyg) {
-        var $editable = wysiwyg.$('.note-editable');
-        weTestUtils.testKeyboard($editable, assert, keyboardTestsDelete).then(function () {
+        weTestUtils.testKeyboard(wysiwyg, assert, keyboardTestsDelete).then(function () {
             wysiwyg.destroy();
             done();
         });
