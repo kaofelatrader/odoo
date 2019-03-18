@@ -44,6 +44,8 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
         this.options = options;
         this.editable = params.editable;
         this.utils = utils;
+        this.dependencies.push('Common'); // Common is a mandatory plugin
+        this.dependencies = utils.uniq(this.dependencies);
 
         var editableDomEvents = Object.assign({}, this.editableDomEvents);
         Object.keys(editableDomEvents).forEach(function (key) {

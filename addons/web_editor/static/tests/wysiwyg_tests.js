@@ -111,7 +111,7 @@ QUnit.test('Magic wand', async function (assert) {
 });
 
 QUnit.test('Font style', function (assert) {
-    assert.expect(44);
+    assert.expect(42);
 
     return weTestUtils.createWysiwyg({
         debug: false,
@@ -254,21 +254,6 @@ QUnit.test('Font style', function (assert) {
                     content: '<p>a<b>aa<span class="fa fa-heart"></span>bb</b>b</p>',
                     start: 'b:contents()[0]->0',
                     end: 'b:contents()[2]->2',
-                },
-            },
-            {
-                name: "Click BOLD + click BOLD: normal -> bold -> normal (with fontawesome)",
-                content: '<p>aaa<span class="fa fa-heart"></span>bbb</p>',
-                start: 'p:contents()[0]->1',
-                end: 'p:contents()[2]->2',
-                do: async function () {
-                    await testUtils.dom.triggerNativeEvents($btnBold[0], ['mousedown', 'click']);
-                    await testUtils.dom.triggerNativeEvents($btnBold[0], ['mousedown', 'click']);
-                },
-                test: {
-                    content: '<p>aaa<span class="fa fa-heart"></span>bbb</p>',
-                    start: 'p:contents()[0]->1',
-                    end: 'p:contents()[2]->2',
                 },
             },
             {

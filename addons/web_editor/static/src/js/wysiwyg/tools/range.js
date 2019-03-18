@@ -24,6 +24,7 @@ var WrappedRange = Class.extend({
      * @param {Object} options
      * @param {Function (Node) => Boolean} options.isVoidBlock
      * @param {Function (Node) => Boolean} options.isEditableNode
+     * @param {Function (Node) => Boolean} options.isUnbreakableNode
      * 
      */
     init: function (range, ownerDocument, options) {
@@ -200,13 +201,13 @@ var WrappedRange = Class.extend({
      *
      * @returns {Node []}
      */
-    getSelectedNodes: function () {
+    getSelectedNodes: function (pred) {
         var startPoint = this.getStartPoint().enter();
         var endPoint = this.getEndPoint().enter();
         var nodes = [];
         startPoint.walkTo(endPoint, function (point) {
             // TODO: move isIcon stuff to media somehow
-            if ((utils.isVisibleText(point.node) || utils.isIcon && utils.isIcon(point.node)) &&
+            if (((!pred || pred(point.node)) || utils.isVisibleText(point.node)) &&
                 (point.node !== endPoint.node || endPoint.offset)) {
                 nodes.push(point.node);
             }
@@ -241,7 +242,7 @@ var WrappedRange = Class.extend({
                 return false;
             }
             node = utils.firstLeafUntil(node, pred.bind(self));
-            return utils.isVisibleText(node);
+            return pred(node) || utils.isText(node);
         });
         return utils.uniq(selectedText);
     },
@@ -407,7 +408,9 @@ var WrappedRange = Class.extend({
 
         // On left edge of non-empty element: move before
         var siblings = this.sc.parentNode && this.sc.parentNode.childNodes;
-        var isInEmptyElem = !siblings || !siblings.length || _.all(siblings, utils.isBlankNode.bind(utils));
+        var isInEmptyElem = !siblings || !siblings.length || _.all(siblings, function (node) {
+            return utils.isBlankNode(node, self.options.isVoidBlock);
+        });
         if (
             !this.so && !isInEmptyElem &&
             !(this.sc.previousSibling && this.sc.previousSibling.tagName === "BR") &&

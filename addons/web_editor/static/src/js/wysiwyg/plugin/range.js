@@ -9,7 +9,7 @@ var _ = require('web_editor._');
 
 
 var RangePlugin = AbstractPlugin.extend({
-    dependencies: ['Common'],
+    dependencies: [],
 
     editableDomEvents: {
         'mouseup': '_onMouseUp',

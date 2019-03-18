@@ -229,11 +229,14 @@ var ListPlugin = AbstractPlugin.extend({
      * @returns {false|Node} the list, if any
      */
     _createList: function (type) {
+        var self = this;
         var range = this.dependencies.Range.getRange();
         if (!range.isCollapsed()) {
             range.replace(this.dom.splitTextAtSelection(range));
         }
-        var nodes = range.getSelectedNodes();
+        var nodes = range.getSelectedNodes(function (node) {
+            return self.utils.isVisibleText(node) || self.dependencies.Common.isVoidBlock(node);
+        });
         var formatNodes = this._filterEditableFormatNodes(nodes);
         if (!formatNodes.length) {
             return;

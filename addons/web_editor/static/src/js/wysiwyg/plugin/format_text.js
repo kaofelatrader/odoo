@@ -83,8 +83,11 @@ var TextPlugin = AbstractPlugin.extend({
      * @param {WrappedRange} range
      */
     _applyFontToSelection: function (color, bgcolor, size, range) {
+        var self = this;
         this._splitBeforeApplyFont(range);
-        range.getSelectedNodes().forEach(function (node) {
+        range.getSelectedNodes(function (node) {
+            return self.utils.isVisibleText(node) || self.dependencies.Common.isVoidBlock(node);
+        }).forEach(function (node) {
             // Can we safely get rid of this ? Why was it there ?
             //
             // var reStartAndEndSpaceG = self.utils.getRegex('startAndEndSpace', 'g');
@@ -181,7 +184,9 @@ var TextPlugin = AbstractPlugin.extend({
         this._moveRangeToDeepUntil(range, function (n) {
             return self.dependencies.Common.isEditableNode(n) && !self.dependencies.Common.isVoidBlock(n);
         });
-        range.getSelectedNodes().forEach(function (node) {
+        range.getSelectedNodes(function (node) {
+            return self.utils.isVisibleText(node) || self.dependencies.Common.isVoidBlock(node);
+        }).forEach(function (node) {
             self._cleanNodeAfterStyle(node, range);
         });
         range.normalize();
@@ -681,7 +686,9 @@ var FontStylePlugin = AbstractPlugin.extend({
         if (!range.isCollapsed()) {
             range = range.replace(this.dom.splitTextAtSelection(range));
         }
-        var nodes = range.getSelectedNodes();
+        var nodes = range.getSelectedNodes(function (node) {
+            return self.utils.isVisibleText(node) || self.dependencies.Common.isVoidBlock(node);
+        });
         nodes = this.filterFormatAncestors(nodes);
         if (!nodes.length) {
             var node = range.sc;
@@ -752,19 +759,23 @@ var FontStylePlugin = AbstractPlugin.extend({
      */
     removeFormat: function (value, range) {
         var self = this;
+        var Common = this.dependencies.Common;
         this._selectCurrentIfCollapsed(range);
         if (!range.isCollapsed()) {
             range.replace(this.dom.splitTextAtSelection(range));
         }
         var selectedText = range.getSelectedTextNodes(function (node) {
-            return self.dependencies.Common.isEditableNode(node) || self.dependencies.Common.isVoidBlock(node);
+            return Common.isEditableNode(node) && (Common.isVoidBlock(node) || self.utils.isVisibleText(node));
         });
-        var selectedIcons = this.utils.isIcon ? _.filter(range.getSelectedNodes(), this.utils.isIcon) : [];
-        if (!selectedText.length && !selectedIcons.length) {
+        var selectedVoids = range.getSelectedNodes(Common.isVoidBlock.bind(Common)) || [];
+        if (!selectedText.length && !selectedVoids.length) {
             return;
         }
-        _.each(selectedIcons, this._removeIconFormat.bind(this));
-        _.each(selectedText, this._removeTextFormat.bind(this));
+        var selection = this.utils.uniq(selectedText.concat(selectedVoids));
+        _.each(selection, function (node) {
+            self._removeFormatAncestors(node);
+            self._removeNodeStyles(node);
+        });
         var startNode = selectedText[0];
         var endNode = selectedText[selectedText.length - 1];
         range = range.replace({
@@ -837,8 +848,9 @@ var FontStylePlugin = AbstractPlugin.extend({
      */
     _formatTextSelection: function (range, tag) {
         var self = this;
+        var Common = this.dependencies.Common;
         var textNodes = range.getSelectedTextNodes(function (node) {
-            return self.dependencies.Common.isEditableNode(node) || self.dependencies.Common.isVoidBlock(node);
+            return Common.isEditableNode(node) && (Common.isVoidBlock(node) || self.utils.isVisibleText(node));
         });
 
         var textNodesToFormat = this._nonFormattedTextNodes(range, tag);
@@ -916,8 +928,9 @@ var FontStylePlugin = AbstractPlugin.extend({
      */
     _isAllSelectedInTag: function (range, tag) {
         var self = this;
+        var Common = this.dependencies.Common;
         var textNodes = range.getSelectedTextNodes(function (node) {
-            return self.dependencies.Common.isEditableNode(node) || self.dependencies.Common.isVoidBlock(node);
+            return Common.isEditableNode(node) && (Common.isVoidBlock(node) || self.utils.isVisibleText(node));
         });
         return _.all(textNodes, function (textNode) {
             return self.utils.isInTag(textNode, tag);
@@ -996,8 +1009,9 @@ var FontStylePlugin = AbstractPlugin.extend({
      */
     _nonFormattedTextNodes: function (range, tag) {
         var self = this;
+        var Common = this.dependencies.Common;
         var textNodes = range.getSelectedTextNodes(function (node) {
-            return self.dependencies.Common.isEditableNode(node) || self.dependencies.Common.isVoidBlock(node);
+            return Common.isEditableNode(node) && (Common.isVoidBlock(node) || self.utils.isVisibleText(node));
         });
         return _.filter(textNodes, function (textNode) {
             return !self.utils.isInTag(textNode, tag);
@@ -1012,8 +1026,9 @@ var FontStylePlugin = AbstractPlugin.extend({
     _removeBlankSiblings: function (node) {
         var self = this;
         var toRemove = [];
+        var Common = this.dependencies.Common;
         $(node).siblings().each(function () {
-            if (self.utils.isBlankNode(this)) {
+            if (self.utils.isBlankNode(this, Common.isVoidBlock.bind(Common))) {
                 toRemove.push(this);
             }
         });
@@ -1035,17 +1050,30 @@ var FontStylePlugin = AbstractPlugin.extend({
         icon.className = icon.className.replace(reColorClasses, '').trim();
     },
     /**
-     * Remove a text node's format: remove its style parents (b, i, u, ...).
+     * Remove node's format: remove its format ancestors (b, i, u, ...).
      *
+     * @see _isParentRemoveFormatCandidate (the format ancestors)
      * @private
      * @param {Node} textNode
      */
-    _removeTextFormat: function (textNode) {
-        var node = textNode;
-        while (this._isParentRemoveFormatCandidate(node)) {
+    _removeFormatAncestors: function (node) {
+        while (this._isParentRemoveFormatCandidate(node) &&
+            !this.dependencies.Common.isVoidBlock(node)) {
             this.dom.splitAtNodeEnds(node);
             $(node.parentNode).before(node).remove();
         }
+    },
+    _removeNodeStyles: function (node) {
+        if (this.utils.isText(node)) {
+            return;
+        }
+        $(node).css({
+            color: '',
+            backgroundColor: '',
+            fontSize: '',
+        });
+        var reColorClasses = /(^|\s+)(bg|text)-\S*|/g;
+        node.className = node.className.replace(reColorClasses, '').trim();
     },
     /**
      * Select the whole current node if the range is collapsed
@@ -1099,12 +1127,12 @@ var FontStylePlugin = AbstractPlugin.extend({
         var self = this;
         _.each(nodes, function (node, index) {
             var tagParent = self._ancestorWithTag(node, tag);
-            if (self._containsOnlySelectedText(tagParent, nodes)) {
+            if (tagParent && self._containsOnlySelectedText(tagParent, nodes)) {
                 return self._unwrapContents(tagParent);
             }
             self._unformatTextNode(node, tag);
         });
-        range = range.replace({
+        range.replace({
             sc: nodes[0],
             so: 0,
             ec: nodes[nodes.length - 1],
@@ -1145,12 +1173,12 @@ var FontStylePlugin = AbstractPlugin.extend({
             isSkipPaddingBlankNode: true,
             isNotSplitEdgePoint: true,
         };
-        var startPoint = this.getPoint(node, 0);
+        var startPoint = this.utils.isText(node) ? this.getPoint(node, 0) : this.getPoint(node.parentNode, $(node).index());
 
         this.dom.splitTree(root, startPoint, options);
 
         root = this._ancestorWithTag(node, tag);
-        var endPoint = this.getPoint(node, this.utils.nodeLength(node));
+        var endPoint = this.utils.isText(node) ? this.getPoint(node, this.utils.nodeLength(node)) : this.getPoint(node.parentNode, startPoint.offset + 1);
         this.dom.splitTree(root, endPoint, options);
 
         this._unwrapContents(root);
@@ -1164,8 +1192,9 @@ var FontStylePlugin = AbstractPlugin.extend({
      */
     _unformatTextSelection: function (range, tag) {
         var self = this;
+        var Common = this.dependencies.Common;
         var textNodes = range.getSelectedTextNodes(function (node) {
-            return self.dependencies.Common.isEditableNode(node) || self.dependencies.Common.isVoidBlock(node);
+            return Common.isEditableNode(node) && (Common.isVoidBlock(node) || self.utils.isVisibleText(node));
         });
         return this._unformatText(range, textNodes, tag);
     },
@@ -1207,7 +1236,9 @@ var ParagraphPlugin = AbstractPlugin.extend({
         if (!range.isCollapsed()) {
             range.replace(this.dom.splitTextAtSelection(range));
         }
-        var nodes = range.getSelectedNodes();
+        var nodes = range.getSelectedNodes(function (node) {
+            return self.utils.isVisibleText(node) || self.dependencies.Common.isVoidBlock(node);
+        });
         nodes = this.dependencies.FontStyle.filterFormatAncestors(nodes);
         var align = style === 'justifyLeft' ? 'left' :
             style === 'justifyCenter' ? 'center' :

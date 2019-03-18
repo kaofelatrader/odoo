@@ -357,7 +357,7 @@ return {
                 node.tagName === "BR" ||
                 self.isVisibleText(node) ||
                 self.isFont(node) ||
-                self.isImg(node) ||
+                self.isImg(node) || // TODO: MOVE THIS!
                 self.isDocument(node)
             ) {
                 return node;
@@ -584,12 +584,15 @@ return {
      * In this context, a blank node is understood as
      * a node expecting text contents (or with children expecting text contents)
      * but without any.
+     * If a predicate function is included, the node is NOT blank if it matches it.
      *
      * @param {Node} node
+     * @param {Function (Node) => Boolean} [isNotBlank]
      * @returns {Boolean}
      */
-    isBlankNode: function (node) {
-        if (this.isVoid(node) || this.isIcon && this.isIcon(node)) {
+    isBlankNode: function (node, isNotBlank) {
+        var self = this;
+        if (this.isVoid(node) || isNotBlank && isNotBlank(node)) {
             return false;
         }
         if (this.getRegexBlank({
@@ -597,7 +600,9 @@ return {
             }).test(node[this.isText(node) ? 'textContent' : 'innerHTML'])) {
             return true;
         }
-        if (node.childNodes.length && _.all(node.childNodes, this.isBlankNode.bind(this))) {
+        if (node.childNodes.length && _.all(node.childNodes, function (n) {
+            return self.isBlankNode(n, isNotBlank);
+         })) {
             return true;
         }
         return false;
@@ -700,7 +705,7 @@ return {
      * @returns {Boolean}
      */
     isFont: function (node) {
-        return node && node.tagName === "FONT" || this.isIcon && this.isIcon(node);
+        return node && node.tagName === "FONT" || this.isIcon && this.isIcon(node); // TODO: MOVE THIS!
     },
     /**
      * Returns true if the node is a "format" node.

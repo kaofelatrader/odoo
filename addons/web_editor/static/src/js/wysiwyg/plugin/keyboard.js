@@ -330,7 +330,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             var lastChild = this.utils.lastLeafUntil(ancestor, function (n) {
                 return !self.dependencies.Common.isVoidBlock(n) && self.dependencies.Common.isEditableNode(n);
             });
-            if (this.utils.isBlankNode(ancestor)) {
+            if (this.utils.isBlankNode(ancestor, this.dependencies.Common.isVoidBlock)) {
                 firstChild = this.utils.isText(firstChild) ? firstChild.parentNode : firstChild;
                 $(firstChild).contents().remove();
                 $(firstChild).append(document.createElement('br'));
@@ -804,7 +804,8 @@ var KeyboardPlugin = AbstractPlugin.extend({
                 sc: p,
                 so: 0,
             });
-        } else if (this.utils.isBlankNode(this.editable.firstChild) && !range.sc.parentNode) {
+        } else if (this.utils.isBlankNode(this.editable.firstChild, this.dependencies.Common.isVoidBlock) &&
+            !range.sc.parentNode) {
             this.editable.firstChild.innerHTML = '<br/>';
             range.replace({
                 sc: this.editable.firstChild,

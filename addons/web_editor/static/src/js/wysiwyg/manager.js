@@ -142,6 +142,8 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
     _afterStartAddDomTools: function () {
         var options = Object.assign({
             isVoidBlock: this._plugins.Common.isVoidBlock.bind(this._plugins.Common),
+            isEditableNode: this._plugins.Common.isEditableNode.bind(this._plugins.Common),
+            isUnbreakableNode: this._plugins.Common.isUnbreakableNode.bind(this._plugins.Common),
         }, this.options);
         var dom = new Dom(options);
         this._each('_afterStartAddDomReferences', dom);

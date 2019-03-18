@@ -100,7 +100,7 @@ Manager.addPlugin('Padding', Padding);
 
 var MediaPlugin = AbstractPlugin.extend({
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_media.xml'],
-    dependencies: ['Range', 'Common'],
+    dependencies: ['Range'],
 
     buttons: {
         template: 'wysiwyg.buttons.media',
@@ -172,11 +172,7 @@ var MediaPlugin = AbstractPlugin.extend({
     * @returns {Boolean}
     */
     isMedia: function (node) {
-        return node.tagName === 'IMG';
-        return this.isImg(node) ||
-            this.isIcon(node) ||
-            this.isDocument(node) ||
-            this.isVideo(node);
+        return this.isMediaMethod && this[this.isMediaMethod](node);
     },
 
     //--------------------------------------------------------------------------
@@ -500,6 +496,14 @@ var ImagePlugin = AbstractMediaPlugin.extend({
     init: function () {
         this._super.apply(this, arguments);
     },
+    start: function () {
+        var self = this;
+        this._super.apply(this, arguments);
+        this.dependencies.Common.addVoidBlockCheck(function (node) {
+            return self[self.isMediaMethod](node);
+        });
+        return Promise.resolve();
+    },
 
     //--------------------------------------------------------------------------
     // Public
@@ -594,6 +598,14 @@ var VideoPlugin = AbstractMediaPlugin.extend({
     init: function () {
         this._super.apply(this, arguments);
     },
+    start: function () {
+        var self = this;
+        this._super.apply(this, arguments);
+        this.dependencies.Common.addVoidBlockCheck(function (node) {
+            return self[self.isMediaMethod](node);
+        });
+        return Promise.resolve();
+    },
 
     //--------------------------------------------------------------------------
     // Public
@@ -650,6 +662,13 @@ var IconPlugin = AbstractMediaPlugin.extend({
     init: function () {
         this._super.apply(this, arguments);
     },
+    start: function () {
+        var self = this;
+        this.dependencies.Common.addVoidBlockCheck(function (node) {
+            return self[self.isMediaMethod](node);
+        });
+        return this._super.apply(this, arguments);
+    },
 
     //--------------------------------------------------------------------------
     // Public
@@ -681,6 +700,14 @@ var DocumentPlugin = AbstractMediaPlugin.extend({
 
     init: function () {
         this._super.apply(this, arguments);
+    },
+    start: function () {
+        var self = this;
+        this._super.apply(this, arguments);
+        this.dependencies.Common.addVoidBlockCheck(function (node) {
+            return self[self.isMediaMethod](node);
+        });
+        return Promise.resolve();
     },
 
     //--------------------------------------------------------------------------
