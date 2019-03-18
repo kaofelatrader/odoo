@@ -25,11 +25,6 @@
         <link rel="stylesheet" type="text/scss" href="/web_editor/static/src/scss/wysiwyg_variables.scss"/>
     </t>
 
-    <!-- integration -->
-
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/wysiwyg_odoo.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/wysiwyg_iframe.js"/>
-
     <!-- lib -->
 
     <link rel="stylesheet" type="text/scss" href="/web_editor/static/src/scss/wysiwyg.scss"/>
@@ -48,7 +43,7 @@
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/editor.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/manager.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/abstract.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/range.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/common.js"/>
 
     <!-- widgets-->
 
@@ -70,6 +65,7 @@
 
     <!-- plugins -->
 
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/range.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/iframe.js"/>
     <!-- <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/dropzone.js"/> -->
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/keymap.js"/>

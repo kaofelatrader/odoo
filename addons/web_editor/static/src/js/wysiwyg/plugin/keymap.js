@@ -74,9 +74,10 @@ var keyMapPlugin = AbstractPlugin.extend({
         })
 
         var defaults = JSON.parse(JSON.stringify(defaultOptions.keyMap));
-        var help = Object.assign({}, defaults.help, this.options.keyMap.help);
         var keyMap = Object.assign(defaults, this.options.keyMap);
-        keyMap = keyMap[this.options.env.isMac ? 'mac' : 'pc'];
+        var help = Object.assign({}, defaults.help, keyMap.help);
+        var keyboard = this.options.env.isMac ? 'mac' : 'pc';
+        keyMap = Object.assign({}, defaults[keyboard], keyMap[keyboard]);
 
         this.keyMap = {};
         var dependencies = this.dependencies.slice();

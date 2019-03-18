@@ -179,7 +179,7 @@ var ClipboardPlugin = AbstractPlugin.extend({
      * @param {BoundaryPoint} point
      */
     _insertNodesAt: function (nodes, point) {
-        var canInsertInline = this.utils.isText(point.node) || point.node.tagName === 'BR' || this.dependencies.Range.isVoidBlock(point.node);
+        var canInsertInline = this.utils.isText(point.node) || point.node.tagName === 'BR' || this.dependencies.Common.isVoidBlock(point.node);
         var $fakeParent = $(document.createElement('div'));
         $fakeParent.append(nodes);
         if (this.utils.isInline(nodes[0]) && canInsertInline) {
@@ -204,7 +204,7 @@ var ClipboardPlugin = AbstractPlugin.extend({
         if (node.parentNode) {
             isWithinVoid = this.utils.isVoid(node.parentNode) || $(node.parentNode).filter('.fa').length;
         }
-        return !isWithinVoid && !this.options.isUnbreakableNode(point.node);
+        return !isWithinVoid && !this.dependencies.Common.isUnbreakableNode(point.node);
     },
     /**
      * @private

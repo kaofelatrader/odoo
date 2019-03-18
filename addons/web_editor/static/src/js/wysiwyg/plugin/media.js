@@ -100,7 +100,7 @@ Manager.addPlugin('Padding', Padding);
 
 var MediaPlugin = AbstractPlugin.extend({
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_media.xml'],
-    dependencies: ['Range'],
+    dependencies: ['Range', 'Common'],
 
     buttons: {
         template: 'wysiwyg.buttons.media',
@@ -115,7 +115,7 @@ var MediaPlugin = AbstractPlugin.extend({
 
     start: function () {
         var self = this;
-        this.dependencies.Range.addVoidBlockCheck(function (node) {
+        this.dependencies.Common.addVoidBlockCheck(function (node) {
             return self.isMedia(node);
         });
         return Promise.resolve();
@@ -360,7 +360,7 @@ var MediaPlugin = AbstractPlugin.extend({
             target = target.parentNode;
         }
 
-        if (!this.options.isEditableNode(target)) {
+        if (!this.dependencies.Common.isEditableNode(target)) {
             if (!target.parentNode) {
                 target = this.editable;
             }

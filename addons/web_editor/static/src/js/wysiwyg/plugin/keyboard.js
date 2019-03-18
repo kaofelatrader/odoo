@@ -56,7 +56,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         }
         var needReselect = false;
         var fake = range.sc.parentNode;
-        if ((fake.className || '').indexOf('o_fake_editable') !== -1 && this.dependencies.Range.isVoidBlock(fake)) {
+        if ((fake.className || '').indexOf('o_fake_editable') !== -1 && this.dependencies.Common.isVoidBlock(fake)) {
             var $media = $(fake.parentNode);
             $media[fake.previousElementSibling ? 'after' : 'before'](fake.firstChild);
             needReselect = true;
@@ -102,7 +102,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         res.range = this._sliceAndRerangeBeforeDeletion(res.range);
         res.range = direction === 'prev' ? this._moveBeforeInvisibleBR(res.range) : res.range;
 
-        if (this.dependencies.Range.isVoidBlock(res.range.sc)) {
+        if (this.dependencies.Common.isVoidBlock(res.range.sc)) {
             var span = this._replaceMediaWithEmptySpan(res.range.sc);
             res.range.replace({
                 sc: span,
@@ -183,7 +183,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
 
         var pt = range.getStartPoint();
         pt = pt[method](function (point) {
-            var isAtStartOfMedia = !point.offset && self.dependencies.Range.isVoidBlock(point.node);
+            var isAtStartOfMedia = !point.offset && self.dependencies.Common.isVoidBlock(point.node);
             var isBRorHR = point.node.tagName === 'BR' || point.node.tagName === 'HR';
             var isRootBR = wasOnStartOfBR && point.node === range.sc;
             var isOnRange = range.ec === point.node && range.eo === point.offset;
@@ -259,7 +259,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         var range = this.dependencies.Range.getRange();
 
         var ancestor = this.utils.ancestor(range.sc, function (node) {
-            return self.utils.isLi(node) || self.options.isUnbreakableNode(node.parentNode) && node.parentNode !== self.editable ||
+            return self.utils.isLi(node) || self.dependencies.Common.isUnbreakableNode(node.parentNode) && node.parentNode !== self.editable ||
                 self.utils.isNodeBlockType(node) && !self.utils.ancestor(node, self.utils.isLi);
         });
 
@@ -283,7 +283,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
 
         var point = range.getStartPoint();
 
-        if (!point.node.tagName && this.options.isUnbreakableNode(point.node.parentNode)) {
+        if (!point.node.tagName && this.dependencies.Common.isUnbreakableNode(point.node.parentNode)) {
             return this._handleShiftEnter();
         }
 
@@ -325,10 +325,10 @@ var KeyboardPlugin = AbstractPlugin.extend({
         }
         if (ancestor) {
             var firstChild = this.utils.firstLeafUntil(ancestor, function (n) {
-                return !self.dependencies.Range.isVoidBlock(n) && self.options.isEditableNode(n);
+                return !self.dependencies.Common.isVoidBlock(n) && self.dependencies.Common.isEditableNode(n);
             });
             var lastChild = this.utils.lastLeafUntil(ancestor, function (n) {
-                return !self.dependencies.Range.isVoidBlock(n) && self.options.isEditableNode(n);
+                return !self.dependencies.Common.isVoidBlock(n) && self.dependencies.Common.isEditableNode(n);
             });
             if (this.utils.isBlankNode(ancestor)) {
                 firstChild = this.utils.isText(firstChild) ? firstChild.parentNode : firstChild;
@@ -354,7 +354,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
                         pt.node.tagName === "BR" ||
                         self.utils.isVisibleText(pt.node)
                     ) &&
-                    self.options.isEditableNode(pt.node);
+                    self.dependencies.Common.isEditableNode(pt.node);
             });
             point = point || this.getPoint(next, 0);
             if (point.node.tagName === "BR") {
@@ -455,7 +455,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         if (!before.tagName) {
             next = next.next();
             var nextNode = this.utils.firstLeafUntil(next.node.childNodes[next.offset] || next.node, function (n) {
-                return (!self.dependencies.Range.isVoidBlock(n)) && self.options.isEditableNode(n);
+                return (!self.dependencies.Common.isVoidBlock(n)) && self.dependencies.Common.isEditableNode(n);
             });
             if (!nextNode.tagName) {
                 next.node = nextNode;
@@ -495,7 +495,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         this.dom.insertBlockNode(hr, this.dependencies.Range.getRange());
         var point = this.getPoint(hr, 0);
         point = point.nextUntil(function (pt) {
-            return pt.node !== hr && !self.options.isUnbreakableNode(pt.node);
+            return pt.node !== hr && !self.dependencies.Common.isUnbreakableNode(pt.node);
         }) || point;
         this.dependencies.Range.setRange({
             sc: point.node,
@@ -670,9 +670,9 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _isDeletableNode: function (node) {
         var isVisibleText = this.utils.isVisibleText(node);
-        var isVoidBlock = this.dependencies.Range.isVoidBlock(node);
+        var isVoidBlock = this.dependencies.Common.isVoidBlock(node);
         var isBR = node.tagName === 'BR';
-        var isEditable = this.options.isEditableNode(node);
+        var isEditable = this.dependencies.Common.isEditableNode(node);
         return isEditable && (isVisibleText || isVoidBlock || isBR);
     },
     /**
@@ -886,7 +886,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _removeNextEmptyUnbreakable: function (node) {
         var self = this;
-        var unbreakable = this.utils.ancestor(node, this.options.isUnbreakableNode);
+        var unbreakable = this.utils.ancestor(node, this.dependencies.Common.isUnbreakableNode);
         if (unbreakable === this.editable) {
             return;
         }
@@ -944,7 +944,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         var self = this;
         var span = document.createElement('span');
         media = this.utils.ancestor(media, function (n) {
-            return !n.parentNode || !self.dependencies.Range.isVoidBlock(n.parentNode);
+            return !n.parentNode || !self.dependencies.Common.isVoidBlock(n.parentNode);
         });
         $(media).replaceWith(span);
         return span;
@@ -1034,7 +1034,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
     _selectAll: function () {
         var self = this;
         var range = this.dependencies.Range.getRange();
-        var unbreakable = this.utils.ancestor(range.sc, this.options.isUnbreakableNode);
+        var unbreakable = this.utils.ancestor(range.sc, this.dependencies.Common.isUnbreakableNode);
         var $contents = $(unbreakable).contents();
         var startNode = $contents.length ? $contents[0] : unbreakable;
         var pointA = this.getPoint(startNode, 0);

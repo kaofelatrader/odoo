@@ -22,7 +22,7 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
         this._super.apply(this, arguments);
         this.options = options || {};
         this.setParent(parent);
-        params.plugins.Range = true; // `Range` is a mandatory Plugin, used virtually everywhere
+        params.plugins.Common = true; // `Common` is a mandatory Plugin, used virtually everywhere
         this._loadPlugins(params, options);
     },
     /**
@@ -141,7 +141,7 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
 
     _afterStartAddDomTools: function () {
         var options = Object.assign({
-            isVoidBlock: this._plugins.Range.isVoidBlock.bind(this._plugins.Range),
+            isVoidBlock: this._plugins.Common.isVoidBlock.bind(this._plugins.Common),
         }, this.options);
         var dom = new Dom(options);
         this._each('_afterStartAddDomReferences', dom);

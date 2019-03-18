@@ -135,26 +135,18 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     //--------------------------------------------------------------------------
 
     /**
-     * Return true if the content has changed.
-     *
-     * @returns {Boolean}
-     */
-    isDirty: function () {
-        var isDirty = this._value !== this.getValue();
-        if (!this._dirty && isDirty) {
-            console.warn("not dirty flag ? Please fix it.");
-        }
-        return isDirty;
-    },
-    isInitialized: function () {
-        return this._pluginsManager.isInitialized();
-    },
-    /**
      * Cancel the edition and destroy the editor.
      */
     cancel: function () {
         this._pluginsManager.cancelEditor();
         this.destroy();
+    },
+    /**
+     * Set the focus on the element.
+     */
+    focus: function () {
+        $(this.editable).mousedown();
+        this.editable.focus();
     },
     /**
      * Get the value of the editable element.
@@ -178,6 +170,21 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         }).remove();
 
         return this._pluginsManager.getEditorValue($editable.html());
+    },
+    /**
+     * Return true if the content has changed.
+     *
+     * @returns {Boolean}
+     */
+    isDirty: function () {
+        var isDirty = this._value !== this.getValue();
+        if (!this._dirty && isDirty) {
+            console.warn("not dirty flag ? Please fix it.");
+        }
+        return isDirty;
+    },
+    isInitialized: function () {
+        return this._pluginsManager.isInitialized();
     },
     /**
      * Save the content in the target
@@ -238,7 +245,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         } else if (this.target.parentNode) {
             this.target.parentNode.appendChild(this.editor);
         } else {
-            console.warn("Can't insert this editor on a node without any parent");
+            console.info("Can't insert this editor on a node without any parent");
         }
         var node;
         var editableContainer = this.editor;
@@ -380,9 +387,15 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
             translateTemplateNodes: this._optionTranslateTemplateNodes.bind(this),
             translate: this._optionTranslate.bind(this),
         });
+
+        var renderTemplate = params.renderTemplate;
+        params.renderTemplate = function (pluginName, template, values) {
+            var fragment = document.createElement('fragment');
+            fragment.innerHTML = renderTemplate(pluginName, template, values);
+            self.options.translateTemplateNodes(pluginName, fragment);
+            return fragment.innerHTML;
+        },
         params.hasFocus = function () {return self._isFocused;};
-        params.isUnbreakableNode = this._optionCreateIsUnbreakableNode(params.isUnbreakableNode);
-        params.isEditableNode = this._optionCreateIsEditableNode(params.isEditableNode);
 
         this.plugins = params.plugins;
         delete params.plugins;
@@ -418,10 +431,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @returns {string}
      */
     _optionRenderTemplate: function (pluginName, template, values) {
-        var html = this._templates[template];
-        var fragment = document.createElement('fragment');
-        fragment.innerHTML = html;
-        return fragment.innerHTML;
+        return this._templates[template];
     },
     /**
      * @param {string} pluginName
@@ -476,47 +486,6 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         return string;
     },
     /**
-     * Build the isUnbreakableNode method:
-     * Return true if the current node is unbreakable.
-     * An unbreakable node can be removed or added but can't by split into
-     * different nodes (for keypress and selection).
-     * An unbreakable node can contain nodes that can be edited.
-     *
-     * @param {Function} _isUnbreakableNode
-     * @returns {Function}
-     */
-    _optionCreateIsUnbreakableNode: function (_isUnbreakableNode) {
-        var self = this;
-        return function (node) {
-            node = node && (node.tagName ? node : node.parentNode);
-            if (!node) {
-                return true;
-            }
-            return ["TD", "TR", "TBODY", "TFOOT", "THEAD", "TABLE"].indexOf(node.tagName) !== -1 ||
-                        $(node).is(self.editable) ||
-                        !self.options.isEditableNode(node.parentNode) ||
-                        !self.options.isEditableNode(node) ||
-                        (_isUnbreakableNode && _isUnbreakableNode(node));
-        };
-    },
-    /**
-     * Build the isUnbreakableNode method:
-     * Return true if the current node is editable (for keypress and selection).
-     *
-     * @param {Function} _isUnbreakableNode
-     * @returns {Function}
-     */
-    _optionCreateIsEditableNode: function (_isEditableNode) {
-        return function (node) {
-            node = node && (node.tagName ? node : node.parentNode);
-            if (!node) {
-                return false;
-            }
-            return !$(node).is('table, thead, tbody, tfoot, tr')
-                && (!_isEditableNode || _isEditableNode(node));
-        };
-    },
-    /**
      * Save all event methods defined in editor_events for safe destruction.
      *
      * @private
@@ -540,7 +509,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     //--------------------------------------------------------------------------
 
     /**
-     * trigger_up 'wysiwyg_blur'.
+     * trigger_up 'blur'.
      *
      * @private
      * @param {Object} [options]

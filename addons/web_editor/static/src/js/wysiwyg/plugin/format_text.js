@@ -179,7 +179,7 @@ var TextPlugin = AbstractPlugin.extend({
     _cleanRangeAfterStyle: function (range) {
         var self = this;
         this._moveRangeToDeepUntil(range, function (n) {
-            return self.options.isEditableNode(n) && !self.dependencies.Range.isVoidBlock(n);
+            return self.dependencies.Common.isEditableNode(n) && !self.dependencies.Common.isVoidBlock(n);
         });
         range.getSelectedNodes().forEach(function (node) {
             self._cleanNodeAfterStyle(node, range);
@@ -646,7 +646,7 @@ var FontStylePlugin = AbstractPlugin.extend({
         _.each(this.utils.filterLeafChildren(nodes), function (node) {
             var ancestor = self.utils.ancestor(node, function (node) {
                 return self.utils.isCell(node) || (
-                    !self.options.isUnbreakableNode(node) &&
+                    !self.dependencies.Common.isUnbreakableNode(node) &&
                     (self.utils.isFormatNode(node, self.options.styleTags) || self.utils.isNodeBlockType(node))
                 ) && !self.utils.isEditable(node);
             });
@@ -674,7 +674,7 @@ var FontStylePlugin = AbstractPlugin.extend({
             !range ||
             !this.editable.contains(range.sc) ||
             !this.editable.contains(range.ec) ||
-            this.options.isUnbreakableNode(range.sc)
+            this.dependencies.Common.isUnbreakableNode(range.sc)
         ) {
             return;
         }
@@ -757,7 +757,7 @@ var FontStylePlugin = AbstractPlugin.extend({
             range.replace(this.dom.splitTextAtSelection(range));
         }
         var selectedText = range.getSelectedTextNodes(function (node) {
-            return self.options.isEditableNode(node) || self.dependencies.Range.isVoidBlock(node);
+            return self.dependencies.Common.isEditableNode(node) || self.dependencies.Common.isVoidBlock(node);
         });
         var selectedIcons = this.utils.isIcon ? _.filter(range.getSelectedNodes(), this.utils.isIcon) : [];
         if (!selectedText.length && !selectedIcons.length) {
@@ -838,7 +838,7 @@ var FontStylePlugin = AbstractPlugin.extend({
     _formatTextSelection: function (range, tag) {
         var self = this;
         var textNodes = range.getSelectedTextNodes(function (node) {
-            return self.options.isEditableNode(node) || self.dependencies.Range.isVoidBlock(node);
+            return self.dependencies.Common.isEditableNode(node) || self.dependencies.Common.isVoidBlock(node);
         });
 
         var textNodesToFormat = this._nonFormattedTextNodes(range, tag);
@@ -917,7 +917,7 @@ var FontStylePlugin = AbstractPlugin.extend({
     _isAllSelectedInTag: function (range, tag) {
         var self = this;
         var textNodes = range.getSelectedTextNodes(function (node) {
-            return self.options.isEditableNode(node) || self.dependencies.Range.isVoidBlock(node);
+            return self.dependencies.Common.isEditableNode(node) || self.dependencies.Common.isVoidBlock(node);
         });
         return _.all(textNodes, function (textNode) {
             return self.utils.isInTag(textNode, tag);
@@ -940,7 +940,7 @@ var FontStylePlugin = AbstractPlugin.extend({
             return false;
         }
         var isEditableOrAbove = parent && (parent === this.editable || $.contains(parent, this.editable));
-        var isUnbreakable = parent && this.options.isUnbreakableNode(parent);
+        var isUnbreakable = parent && this.dependencies.Common.isUnbreakableNode(parent);
         var isRemoveFormatCandidate = parent && parent.tagName && this.utils.formatTags.indexOf(parent.tagName.toLowerCase()) !== -1;
         return parent && !isEditableOrAbove && !isUnbreakable && isRemoveFormatCandidate;
     },
@@ -997,7 +997,7 @@ var FontStylePlugin = AbstractPlugin.extend({
     _nonFormattedTextNodes: function (range, tag) {
         var self = this;
         var textNodes = range.getSelectedTextNodes(function (node) {
-            return self.options.isEditableNode(node) || self.dependencies.Range.isVoidBlock(node);
+            return self.dependencies.Common.isEditableNode(node) || self.dependencies.Common.isVoidBlock(node);
         });
         return _.filter(textNodes, function (textNode) {
             return !self.utils.isInTag(textNode, tag);
@@ -1165,7 +1165,7 @@ var FontStylePlugin = AbstractPlugin.extend({
     _unformatTextSelection: function (range, tag) {
         var self = this;
         var textNodes = range.getSelectedTextNodes(function (node) {
-            return self.options.isEditableNode(node) || self.dependencies.Range.isVoidBlock(node);
+            return self.dependencies.Common.isEditableNode(node) || self.dependencies.Common.isVoidBlock(node);
         });
         return this._unformatText(range, textNodes, tag);
     },

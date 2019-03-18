@@ -26,6 +26,7 @@ var env = {
 
 return {
     env: env,
+    lang: 'en_US',
     plugins: {
         History: true,
         Toolbar: true,
@@ -37,7 +38,6 @@ return {
         Jinja: false,
         Iframe: false,
     },
-    lang: 'en_US',
     // toolbar
     toolbar: [
         'FontStyle',
@@ -67,24 +67,26 @@ return {
     iframeWillCached: true,
     width: null,
     height: null,
+    minHeight: 180,
     tabSize: 4,
     maxTextLength: 0,
+    disableDragAndDrop: null,
     maximumImageFileSize: null,
     styleTags: [
-        'p',
+        'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
         {
             title: 'Blockquote',
             tag: 'div', // div by default
             className: 'blockquote',
         },
-        'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'
+        'pre'
     ],
     fontNames: [
         'Arial', 'Arial Black', 'Comic Sans MS', 'Courier New',
         'Helvetica Neue', 'Helvetica', 'Impact', 'Lucida Grande',
         'Tahoma', 'Times New Roman', 'Verdana'
     ],
-    fontSizes: ['8', '9', '10', '11', '12', '14', '18', '24', '36'],
+    fontSizes: ['Default', '8', '9', '10', '11', '12', '13', '14', '18', '24', '36', '48', '62'],
     lineHeights: ['1.0', '1.2', '1.4', '1.5', '1.6', '1.8', '2.0', '3.0'],
     // palette colors(n x n)
     colors: [
@@ -201,6 +203,13 @@ return {
             // insertHorizontalRule: 'Insert horizontal rule'),
         }
     },
+
+   // methods
+
+    getColors: null,
+    renderTemplate: null,
+    loadTemplates: null,
+    translate: null,
 };
 
 });

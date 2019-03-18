@@ -2,15 +2,16 @@ odoo.define('web_editor.wysiwyg', function (require) {
 'use strict';
 
 var config = require('web.config');
+var ajax = require('web.ajax');
 var core = require('web.core');
 var session = require('web.session');
-var utils = require('wysiwyg.utils');
 var Widget = require('web.Widget');
 var WrappedRange = require('wysiwyg.WrappedRange');
 var wysiwygOptions = require('wysiwyg.options');
 var Editor = require('wysiwyg.editor');
 
 var _t = core._t;
+var QWeb = core.qweb;
 
 
 var Wysiwyg = Widget.extend({
@@ -20,6 +21,7 @@ var Wysiwyg = Widget.extend({
     custom_events: {
         getRecordInfo: '_onGetRecordInfo',
         change: '_onChange',
+        // imageUpload : '_onImageUpload',
     },
     defaultOptions: {
         codeview: config.debug
@@ -57,9 +59,13 @@ var Wysiwyg = Widget.extend({
      * @override
      **/
     willStart: function () {
+        var self = this;
         this.$target = this.$el;
         this.$el = null; // temporary null to avoid hidden error, setElement when start
-        return this._super().then(this._loadInstance.bind(this));
+        return this._super().then(function () {
+            self.editor = new Editor(self, self._editorOptions());
+            return self.editor.isInitialized();
+        });
     },
     /**
      *
@@ -70,7 +76,6 @@ var Wysiwyg = Widget.extend({
         return this.editor.start(this.$target[0]).then(function () {
             self.setElement(self.editor.editor);
         });
-        return Promise.resolve();
     },
 
     //--------------------------------------------------------------------------
@@ -78,73 +83,10 @@ var Wysiwyg = Widget.extend({
     //--------------------------------------------------------------------------
 
     /**
-     * Add a step (undo) in editor.
-     */
-    addHistoryStep: function () {
-        return;
-        var editor = this._summernote.modules.editor;
-        editor.createRange();
-        editor.history.recordUndo();
-    },
-    /**
-     * Return the editable area.
-     *
-     * @returns {jQuery}
-     */
-    getEditable: function () {
-        return;
-        if (utils.hasJinja(this._summernote.code())) {
-            return this._summernote.layoutInfo.codable;
-        } else if (this._summernote.invoke('codeview.isActivated')) {
-            this._summernote.invoke('codeview.deactivate');
-        }
-        return this._summernote.layoutInfo.editable;
-    },
-    /**
-     * Perform undo or redo in the editor.
-     *
-     * @param {integer} step
-     */
-    history: function (step) {
-        return;
-        if (step < 0) {
-            while (step) {
-                this._summernote.modules.editor.history.rewind();
-                step++;
-            }
-        } else if (step > 0) {
-            while (step) {
-                this._summernote.modules.editor.history.redo();
-                step--;
-            }
-        }
-    },
-    /**
-     * Return true if the current node is unbreakable.
-     * An unbreakable node can be removed or added but can't by split into
-     * different nodes (for keypress and selection).
-     * An unbreakable node can contain nodes that can be edited.
-     *
-     * @param {Node} node
-     * @returns {Boolean}
-     */
-    isUnbreakableNode: function (node) {
-        return $(node).is(this.getEditable());
-    },
-    /**
-     * Return true if the current node is editable (for keypress and selection).
-     *
-     * @param {Node} node
-     * @returns {Boolean}
-     */
-    isEditableNode: function (node) {
-        return $(node).is(':o_editable');
-    },
-    /**
      * Set the focus on the element.
      */
     focus: function () {
-        this.$el.mousedown();
+        this.editor.focus();
     },
     save: function () {
         return this.editor.save();
@@ -168,31 +110,19 @@ var Wysiwyg = Widget.extend({
      * @returns {Object} the summernote configuration
      */
     _editorOptions: function () {
-        var allowAttachment = !this.options.noAttachment;
+        var options = {
+            lang : "odoo",
+            disableDragAndDrop : !!this.options.noAttachment,
+            styleTags: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre'],
 
-        var options = JSON.parse(JSON.stringify(wysiwygOptions));
-
-        options.lang = "odoo";
-
-        options.focus = false;
-        options.disableDragAndDrop = !allowAttachment;
-        options.styleTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre'];
-        options.fontSizes = [_t('Default'), '8', '9', '10', '11', '12', '13', '14', '18', '24', '36', '48', '62'];
-        options.minHeight = 180;
-
-        options.callbacks = {
-            onChange: this._onChange.bind(this),
-            onImageUpload: this._onImageUpload.bind(this),
-            onFocusnode: this._onFocusnode.bind(this),
+            getColors: this._getColors.bind(this),
+            renderTemplate: this._renderTemplate.bind(this),
+            loadTemplates: this._loadTemplates.bind(this),
+            translate: this._translate.bind(this),
         };
-
-        options.isUnbreakableNode = this.isUnbreakableNode.bind(this);
-        options.isEditableNode = this.isEditableNode.bind(this);
-
         if (this.options.generateOptions) {
             this.options.generateOptions(options);
         }
-
         return options;
     },
     /**
@@ -212,38 +142,50 @@ var Wysiwyg = Widget.extend({
         }
         return data;
     },
-    /**
-     * Create an instance with the API lib.
-     *
-     * @private
-     * @returns {$.Promise}
-     */
-    _loadInstance: function () {
+    _getColors: function () {
         var self = this;
-        var defaultOptions = this._editorOptions();
-        var summernoteOptions = _.extend({}, defaultOptions, _.omit(this.options, 'isEditableNode', 'isUnbreakableNode'));
-
-        _.extend(summernoteOptions.callbacks, defaultOptions.callbacks, this.options.callbacks);
-
-        if (this.options.keyMap) {
-            _.defaults(summernoteOptions.keyMap.pc, defaultOptions.keyMap.pc);
-            _.each(summernoteOptions.keyMap.pc, function (v, k, o) {
-                if (!v) {
-                    delete o[k];
-                }
-            });
-            _.defaults(summernoteOptions.keyMap.mac, defaultOptions.keyMap.mac);
-            _.each(summernoteOptions.keyMap.mac, function (v, k, o) {
-                if (!v) {
-                    delete o[k];
-                }
+        var def = $.when();
+        if (!('web_editor.colorpicker' in QWeb.templates)) {
+            var def = this._rpc({
+                model: 'ir.ui.view',
+                method: 'read_template',
+                args: ['web_editor.colorpicker'],
+            }).then(function (template) {
+                QWeb.add_template(template);
             });
         }
 
-        delete summernoteOptions.recordInfo;
-        this.editor = new Editor(this, summernoteOptions);
+        var groupColors = [];
+        var $clpicker = $(QWeb.render('web_editor.colorpicker'));
+        $clpicker.children('.o_colorpicker_section').each(function () {
+            groupColors.push({title: $(this).attr('data-display')});
+            var colors = [];
+            $(this.children).each(function () {
+                if ($(this).hasClass('clearfix')) {
+                    groupColors.push(colors);
+                    colors = [];
+                } else {
+                    colors.push($(this).attr('data-color'));
+                }
+            });
+            groupColors.push(colors);
+        });
 
-        return this.editor.isInitialized();
+        groupColors.push({title: null});
+        groupColors.push.apply(groupColors, JSON.parse(JSON.stringify(this.options.colors)));
+
+        return $.when(groupColors);
+    },
+    _loadTemplates: function (xmlPaths) {
+        var promises = [];
+        var xmlPath;
+        while ((xmlPath = xmlPaths.shift())) {
+            promises.push(ajax.loadXML(xmlPath, QWeb));
+        }
+        return $.when.apply($, promises);
+    },
+    _renderTemplate: function (pluginName, template, values) {
+        return QWeb.render(template, values);
     },
     _select: function (range) {
         var nativeRange = range.toNativeRange();
@@ -255,6 +197,10 @@ var Wysiwyg = Widget.extend({
         var sc = nativeRange.startContainer;
         $(sc.tagName ? sc : sc.parentNode).trigger('wysiwyg.range');
         return range;
+    },
+    _translate: function (pluginName, string) {
+        string = string.replace(/\s\s+/g, ' ');
+        return _t(string);
     },
 
     //--------------------------------------------------------------------------
@@ -278,6 +224,7 @@ var Wysiwyg = Widget.extend({
         //     this.hints = hints;
         // }
 
+        ev.stopPropagation();
         this.trigger_up('wysiwyg_change', {
             html: this.getValue(),
             hints: this.hints,
@@ -313,14 +260,6 @@ var Wysiwyg = Widget.extend({
 
         this.trigger_up.bind(this, 'wysiwyg_attachment', this.attachments);
     },
-    /**
-     * Called when the carret focuses on another node (focus event, mouse event, or key arrow event)
-     * from Unbreakable
-     *
-     * @private
-     * @param {Node} node
-     */
-    _onFocusnode: function (node) {},
     /**
      * Do not override.
      *

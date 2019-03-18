@@ -224,7 +224,7 @@ var DropzonePlugin = Plugins.dropzone.extend({
      */
     _canDropHere: function () {
         var range = this.dependencies.Range.getRange();
-        return this.options.isEditableNode(range.sc);
+        return this.dependencies.Common.isEditableNode(range.sc);
     },
 });
 

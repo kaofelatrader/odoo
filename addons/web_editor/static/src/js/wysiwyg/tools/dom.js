@@ -26,7 +26,7 @@ var Dom = Class.extend({
         var self = this;
         if (pointB.node.childNodes[pointB.offset]) {
             var firstLeaf = utils.firstLeafUntil(pointB.node.childNodes[pointB.offset], function (n) {
-                return (!self.options.isVoidBlock(n)) && self.options.isEditableNode(n);
+                return (!self.options.isVoidBlock(n)) && self.dependencies.Common.isEditableNode(n);
             });
             pointB = new BoundaryPoint(firstLeaf, 0);
         }
@@ -37,14 +37,14 @@ var Dom = Class.extend({
         var commonAncestor = utils.commonAncestor(pointA.node, pointB.node);
 
         var ecAncestor = utils.ancestor(pointB.node, function (node) {
-            return node === commonAncestor || self.options.isUnbreakableNode(node.parentNode);
+            return node === commonAncestor || self.dependencies.Common.isUnbreakableNode(node.parentNode);
         });
         var next = this.splitTree(ecAncestor, pointB, {
             nextText: true,
         });
 
         var scAncestor = utils.ancestor(pointA.node, function (node) {
-            return node === commonAncestor || self.options.isUnbreakableNode(node.parentNode);
+            return node === commonAncestor || self.dependencies.Common.isUnbreakableNode(node.parentNode);
         });
         if (utils.isIcon && utils.isIcon(pointA.node)) {
             pointA = pointA.prev();
@@ -81,7 +81,7 @@ var Dom = Class.extend({
 
 
         var pointNode = utils.firstLeafUntil(next, function (n) {
-            return self.options.isVoidBlock(n) && self.options.isEditableNode(n);
+            return self.options.isVoidBlock(n) && self.dependencies.Common.isEditableNode(n);
         });
         var point = new BoundaryPoint(pointNode, 0);
         if (nodes.length > 1 || nodes.length && !utils.isText(nodes[0])) {
@@ -96,7 +96,7 @@ var Dom = Class.extend({
             var toRemove = next;
             while (
                 toRemove !== ul && toRemove.parentNode &&
-                !this.options.isUnbreakableNode(toRemove.parentNode) &&
+                !this.dependencies.Common.isUnbreakableNode(toRemove.parentNode) &&
                 utils.isBlankNode(toRemove.parentNode)
             ) {
                 toRemove = toRemove.parentNode;
@@ -131,13 +131,13 @@ var Dom = Class.extend({
         if (node.tagName === 'BR' && node.nextSibling && !(utils.isText(node.nextSibling) && !utils.isVisibleText(node.nextSibling))) {
             node = node.nextSibling;
             node = utils.firstLeafUntil(node, function (n) {
-                return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
+                return !self.options.isVoidBlock(n) && self.dependencies.Common.isEditableNode(n);
             });
         }
 
         var nodes = [];
         var next;
-        while (node && !utils.isEditable(node) && !this.options.isUnbreakableNode(node)) {
+        while (node && !utils.isEditable(node) && !this.dependencies.Common.isUnbreakableNode(node)) {
             nodes.push(node);
 
             next = node[prevOrNext];
@@ -209,19 +209,19 @@ var Dom = Class.extend({
                 var deep;
                 if (direction === 'prev') {
                     textNode = utils.firstLeafUntil(node, function (n) {
-                        return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
+                        return !self.options.isVoidBlock(n) && self.dependencies.Common.isEditableNode(n);
                     });
                     if (!textNode.tagName && !utils.ancestor(textNode, utils.isPre)) {
                         this.removeExtremeBreakableSpace(textNode);
                         nextTextNode = utils.lastLeafUntil(next, function (n) {
-                            return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
+                            return !self.options.isVoidBlock(n) && self.dependencies.Common.isEditableNode(n);
                         });
                         if (!nextTextNode.tagName && !utils.ancestor(nextTextNode, utils.isPre)) {
                             this.removeExtremeBreakableSpace(nextTextNode);
                         }
                     }
                     deep = utils.lastLeafUntil(next, function (n) {
-                        return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
+                        return !self.options.isVoidBlock(n) && self.dependencies.Common.isEditableNode(n);
                     });
                     result = new BoundaryPoint(deep, utils.nodeLength(deep));
                     if (
@@ -233,12 +233,12 @@ var Dom = Class.extend({
                     $(node).remove();
                 } else {
                     nextTextNode = utils.firstLeafUntil(next, function (n) {
-                        return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
+                        return !self.options.isVoidBlock(n) && self.dependencies.Common.isEditableNode(n);
                     });
                     if (!nextTextNode.tagName && !utils.ancestor(nextTextNode, utils.isPre)) {
                         this.removeExtremeBreakableSpace(nextTextNode);
                         textNode = utils.lastLeafUntil(node, function (n) {
-                            return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
+                            return !self.options.isVoidBlock(n) && self.dependencies.Common.isEditableNode(n);
                         });
                         if (!textNode.tagName && !utils.ancestor(textNode, utils.isPre)) {
                             this.removeExtremeBreakableSpace(textNode);
@@ -248,7 +248,7 @@ var Dom = Class.extend({
                         $(node).contents().remove();
                     }
                     deep = utils.lastLeafUntil(node, function (n) {
-                        return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
+                        return !self.options.isVoidBlock(n) && self.dependencies.Common.isEditableNode(n);
                     });
                     result = new BoundaryPoint(deep, utils.nodeLength(deep));
                     $(node).append($next.contents());
@@ -302,7 +302,7 @@ var Dom = Class.extend({
 
         node = utils.firstBlockAncestor(node);
 
-        if (this.options.isUnbreakableNode(node)) {
+        if (this.dependencies.Common.isUnbreakableNode(node)) {
             return;
         }
 
@@ -326,7 +326,7 @@ var Dom = Class.extend({
         ) {
             $(blockToMergeInto).remove();
             var pointNode = utils.firstLeafUntil(blockToMergeFrom, function (n) {
-                return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
+                return !self.options.isVoidBlock(n) && self.dependencies.Common.isEditableNode(n);
             });
             return new BoundaryPoint(pointNode, 0);
         }
@@ -411,9 +411,9 @@ var Dom = Class.extend({
         range = range.deleteContents();
         var point = range.getStartPoint();
         var unbreakable = point.node;
-        if (!this.options.isUnbreakableNode(point.node)) {
+        if (!this.dependencies.Common.isUnbreakableNode(point.node)) {
             unbreakable = utils.ancestor(point.node, function (node) {
-                return self.options.isUnbreakableNode(node.parentNode) || utils.isEditable(node);
+                return self.dependencies.Common.isUnbreakableNode(node.parentNode) || utils.isEditable(node);
             }) || point.node;
         }
 
@@ -428,14 +428,14 @@ var Dom = Class.extend({
             }
             return;
         }
-        if (!this.options.isUnbreakableNode(point.node)) {
+        if (!this.dependencies.Common.isUnbreakableNode(point.node)) {
             var tree = this.splitTree(unbreakable, point, {
                 isSkipPaddingBlankNode: true,
                 isNotSplitEdgePoint: true,
             });
             if ((!tree || $.contains(tree, range.sc)) && (point.offset || point.node.tagName)) {
                 tree = tree || utils.ancestor(point.node, function (node) {
-                    return self.options.isUnbreakableNode(node.parentNode);
+                    return self.dependencies.Common.isUnbreakableNode(node.parentNode);
                 });
                 $(tree).after(node);
             } else {
@@ -508,7 +508,7 @@ var Dom = Class.extend({
 
 
         range.deleteContents();
-        range.standardizeRangeOnEdge(this.options.isEditableNode);
+        range.standardizeRangeOnEdge(this.dependencies.Common.isEditableNode);
         var textNode = this._insertTextNodeInEditableArea(range, text);
 
         // if the text node can't be inserted in the dom (not editable area) do nothing
@@ -648,7 +648,7 @@ var Dom = Class.extend({
             if (point.node === target) {
                 return false;
             }
-            return !point.node || this.options.isEditableNode(point.node) &&
+            return !point.node || this.dependencies.Common.isEditableNode(point.node) &&
                 (point.node.tagName === "BR" || utils.isVisibleText(point.node));
         }.bind(this);
         var parent = target.parentNode;
@@ -694,7 +694,7 @@ var Dom = Class.extend({
                 invisible: true,
             }).test(parent.innerHTML)) {
             br = document.createElement('br');
-            if (this.options.isUnbreakableNode(parent) && parent.tagName !== "TD") {
+            if (this.dependencies.Common.isUnbreakableNode(parent) && parent.tagName !== "TD") {
                 var p = document.createElement('p');
                 $(p).append(br);
                 $(parent).append(p);
@@ -731,7 +731,7 @@ var Dom = Class.extend({
             node.tagName !== 'BR' &&
             (node.tagName ? node.innerHTML : node.textContent) === '' &&
             !utils.isNodeBlockType(node) &&
-            this.options.isEditableNode(node.parentNode) &&
+            this.dependencies.Common.isEditableNode(node.parentNode) &&
             (!node.attributes || !node.attributes.contenteditable) &&
             !this.options.isVoidBlock(node)
         ) {
@@ -953,8 +953,8 @@ var Dom = Class.extend({
             return $(n).hasClass('o_ul_folded');
         });
         if (
-            (this.options.isUnbreakableNode(node) && (!ulFoldedSnippetNode || utils.isEditable(ulFoldedSnippetNode))) &&
-            this.options.isUnbreakableNode(startNode) && (!ulFoldedSnippetStartNode || utils.isEditable(ulFoldedSnippetStartNode))
+            (this.dependencies.Common.isUnbreakableNode(node) && (!ulFoldedSnippetNode || utils.isEditable(ulFoldedSnippetNode))) &&
+            this.dependencies.Common.isUnbreakableNode(startNode) && (!ulFoldedSnippetStartNode || utils.isEditable(ulFoldedSnippetStartNode))
         ) {
             return false;
         }
@@ -971,7 +971,7 @@ var Dom = Class.extend({
             node = node[direction === 'next' ? 'firstElementChild' : 'lastElementChild'];
         }
 
-        if (this.options.isUnbreakableNode(node)) {
+        if (this.dependencies.Common.isUnbreakableNode(node)) {
             return false;
         }
 
@@ -1014,7 +1014,7 @@ var Dom = Class.extend({
     _insertTextNodeInEditableArea: function (range, text) {
         // try to insert the text node in editable area
         var textNode = document.createTextNode(text);
-        if (this.options.isEditableNode(range.sc) && $(range.sc).closest('[contenteditable]').attr('contenteditable') === 'true') {
+        if (this.dependencies.Common.isEditableNode(range.sc) && $(range.sc).closest('[contenteditable]').attr('contenteditable') === 'true') {
             if (utils.isText(range.sc) && utils.isVisibleText(range.sc)) {
                 var invisibleToRemove = /^\uFEFF+$/.test(range.sc.textContent) && range.sc;
                 // If range is on visible text: split the text at offset and insert the text node
@@ -1047,11 +1047,11 @@ var Dom = Class.extend({
                 }
             } else if (utils.isText(range.sc)) {
                 $(range.sc).after(textNode);
-            } else if (this.options.isUnbreakableNode(range.sc)) {
+            } else if (this.dependencies.Common.isUnbreakableNode(range.sc)) {
                 $(range.sc).append(textNode);
             }
         }
-        if (!textNode.parentNode && this.options.isEditableNode(range.sc.parentNode)) {
+        if (!textNode.parentNode && this.dependencies.Common.isEditableNode(range.sc.parentNode)) {
             $(range.sc).before(textNode);
         }
 

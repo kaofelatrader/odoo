@@ -51,14 +51,9 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
         }
 
         if (!assetsLoaded) { // avoid flickering when begin to edit
-            assetsLoaded = new Promise(function (resolve) {
-                var wysiwyg = new Wysiwyg(self, {});
-                // don't use the deferred because the iframe to render are never insert in the DOM
-                // use instead the 'isInitialized' to have every assets loaded.
-                wysiwyg.attachTo($('<textarea>')).then(function () {
-                    wysiwyg.destroy();
-                    resolve();
-                });
+            var wysiwyg = new Wysiwyg(self, {});
+            assetsLoaded = wysiwyg.attachTo($('<textarea>')).then(function () {
+                wysiwyg.destroy();
             });
         }
 
@@ -204,13 +199,6 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
             plugins: {
                 ConvertInline: !!this.nodeOptions['style-inline'],
                 Iframe: !!this.nodeOptions.cssEdit,
-            },
-            generateOptions: function (options) {
-                // var para = _.find(options.toolbar, function (item) {
-                //     return item[0] === 'para';
-                // });
-                // para[1].splice(2, 0, 'checklist');
-                // return options;
             },
         };
     },

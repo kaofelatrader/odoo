@@ -145,7 +145,7 @@ var ListPlugin = AbstractPlugin.extend({
                 // wrap in p
 
                 var hasNode = _.find(res, function (node) {
-                    return node.tagName && node.tagName !== "BR" && (!self.dependencies.Range.isVoidBlock(node));
+                    return node.tagName && node.tagName !== "BR" && (!self.dependencies.Common.isVoidBlock(node));
                 });
                 if (!hasNode) {
                     var p = document.createElement('p');
@@ -186,10 +186,10 @@ var ListPlugin = AbstractPlugin.extend({
         }
 
         var startLeaf = this.utils.firstLeafUntil(start.node, function (n) {
-            return (!self.dependencies.Range.isVoidBlock(n)) && self.options.isEditableNode(n);
+            return (!self.dependencies.Common.isVoidBlock(n)) && self.dependencies.Common.isEditableNode(n);
         });
         var endLeaf = this.utils.firstLeafUntil(end.node, function (n) {
-            return (!self.dependencies.Range.isVoidBlock(n)) && self.options.isEditableNode(n);
+            return (!self.dependencies.Common.isVoidBlock(n)) && self.dependencies.Common.isEditableNode(n);
         });
         range = this.dependencies.Range.setRange({
             sc: startLeaf,
@@ -295,7 +295,7 @@ var ListPlugin = AbstractPlugin.extend({
         var formatNodes = this.dependencies.FontStyle.filterFormatAncestors(nodes);
         formatNodes = _.compact(_.map(formatNodes, function (node) {
             var ancestor = (!node.tagName || node.tagName === 'BR') && self.utils.ancestor(node, self.utils.isCell);
-            if (ancestor && self.options.isEditableNode(ancestor)) {
+            if (ancestor && self.dependencies.Common.isEditableNode(ancestor)) {
                 if (!ancestor.childNodes.length) {
                     var br = document.createElement('br');
                     ancestor.appendChild(br);
@@ -305,7 +305,7 @@ var ListPlugin = AbstractPlugin.extend({
                 ancestor.appendChild(p);
                 return p;
             }
-            return self.options.isEditableNode(node) && node || null;
+            return self.dependencies.Common.isEditableNode(node) && node || null;
         }));
         return formatNodes;
     },

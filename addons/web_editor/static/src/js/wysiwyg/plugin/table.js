@@ -359,7 +359,7 @@ var Table = AbstractPlugin.extend({
     deleteTable: function (value, range) {
         var cell = range.sc;
         var point = this.dom.removeBlockNode(this._currentTable(cell));
-        if (this.options.isEditableNode(point.node)) {
+        if (this.dependencies.Common.isEditableNode(point.node)) {
             point.replace(this.utils.firstLeaf(point.node), 0);
         }
         range = range.replace({

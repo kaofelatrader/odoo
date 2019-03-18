@@ -19,6 +19,7 @@ var ToolbarPlugin = PopoverPlugin.extend({
         toolbar.element.querySelectorAll('button[name]').forEach(function (button) {
             button.classList.add('disabled');
         });
+        this._toggleDropDownEnabled();
     },
 
     //--------------------------------------------------------------------------
