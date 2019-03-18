@@ -5105,6 +5105,19 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                         if subnames else record[name]
                     )
 
+            def has_changed(self, name):
+                """ Return whether a field on record has changed. """
+                record = self['<record>']
+                subnames = self['<tree>'][name]
+                if not subnames:
+                    return self[name] != record[name]
+                else:
+                    return len(self[name]) != len(record[name]) or any(
+                        line_snapshot.has_changed(subname)
+                        for line_snapshot in self[name]
+                        for subname in subnames
+                    )
+
             def diff(self, other):
                 """ Return the values in ``self`` that differ from ``other``.
                     Requires record cache invalidation for correct output!
@@ -5191,14 +5204,15 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                         record._onchange_eval(name, field_onchange[name], result)
                     done.add(name)
 
-                # make a snapshot (this forces evaluation of computed fields)
-                snapshot1 = Snapshot(record, nametree)
-
                 # determine which fields to process for the next pass
-                todo.clear()
-                for name in nametree:
-                    if name not in done and snapshot1[name] != snapshot0[name]:
-                        todo.append(name)
+                todo = [
+                    name
+                    for name in nametree
+                    if name not in done and snapshot0.has_changed(name)
+                ]
+
+            # make the snapshot with the final values of record
+            snapshot1 = Snapshot(record, nametree)
 
         # determine values that have changed by comparing snapshots
         self.invalidate_cache()
