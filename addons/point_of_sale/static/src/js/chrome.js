@@ -8,6 +8,7 @@ var models = require('point_of_sale.models');
 var AbstractAction = require('web.AbstractAction');
 var core = require('web.core');
 var ajax = require('web.ajax');
+var rpc = require('web.rpc');
 var CrashManager = require('web.CrashManager');
 var BarcodeEvents = require('barcodes.BarcodeEvents').BarcodeEvents;
 
@@ -366,8 +367,8 @@ var ProxyStatusWidget = StatusWidget.extend({
             }
             if( this.pos.config.iface_print_via_proxy || 
                 this.pos.config.iface_cashdrawer ){
-                var printer = status.drivers.escpos ? status.drivers.escpos.status : false;
-                if( printer != 'connected' && printer != 'connecting'){
+                var printer = status.drivers.printer ? status.drivers.printer.status : false;
+                if( printer != 'connected' && printer != 'connecting' && printer != 'processing' ){
                     warning = true;
                     msg = msg ? msg + ' & ' : msg;
                     msg += _t('Printer');
@@ -414,7 +415,28 @@ var SaleDetailsButton = PosBaseWidget.extend({
     start: function(){
         var self = this;
         this.$el.click(function(){
-            self.pos.proxy.print_sale_details();
+            self.print_sale_details();
+        });
+    },
+
+    print_sale_details: function () {
+        var self = this;
+        rpc.query({
+            model: 'report.point_of_sale.report_saledetails',
+            method: 'get_sale_details',
+        }).then(function (result) {
+            var env = {
+                widget: new PosBaseWidget(self),
+                company: self.pos.company,
+                pos: self.pos,
+                products: result.products,
+                payments: result.payments,
+                taxes: result.taxes,
+                total_paid: result.total_paid,
+                date: (new Date()).toLocaleString(),
+            };
+            var report = QWeb.render('SaleDetailsReport', env);
+            self.pos.proxy.printer.print_receipt(report);
         });
     },
 });
