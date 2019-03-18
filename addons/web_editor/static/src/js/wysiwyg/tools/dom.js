@@ -9,6 +9,7 @@ var Dom = Class.extend({
     /**
      * @param {Object} options
      * @param {Function (Node) => Boolean} options.isVoidBlock
+     * @param {Function (Node) => Boolean} options.isEditableNode
      */
     init: function (options) {
         this.options = options;

@@ -751,11 +751,14 @@ var FontStylePlugin = AbstractPlugin.extend({
      * @see _isParentRemoveFormatCandidate
      */
     removeFormat: function (value, range) {
+        var self = this;
         this._selectCurrentIfCollapsed(range);
         if (!range.isCollapsed()) {
             range.replace(this.dom.splitTextAtSelection(range));
         }
-        var selectedText = range.getSelectedTextNodes(this.options.isEditableNode);
+        var selectedText = range.getSelectedTextNodes(function (node) {
+            return self.options.isEditableNode(node) || self.dependencies.Range.isVoidBlock(node);
+        });
         var selectedIcons = this.utils.isIcon ? _.filter(range.getSelectedNodes(), this.utils.isIcon) : [];
         if (!selectedText.length && !selectedIcons.length) {
             return;
@@ -834,7 +837,9 @@ var FontStylePlugin = AbstractPlugin.extend({
      */
     _formatTextSelection: function (range, tag) {
         var self = this;
-        var textNodes = range.getSelectedTextNodes(this.options.isEditableNode);
+        var textNodes = range.getSelectedTextNodes(function (node) {
+            return self.options.isEditableNode(node) || self.dependencies.Range.isVoidBlock(node);
+        });
 
         var textNodesToFormat = this._nonFormattedTextNodes(range, tag);
         _.each(textNodesToFormat, function (textNode) {
@@ -911,7 +916,9 @@ var FontStylePlugin = AbstractPlugin.extend({
      */
     _isAllSelectedInTag: function (range, tag) {
         var self = this;
-        var textNodes = range.getSelectedTextNodes(this.options.isEditableNode);
+        var textNodes = range.getSelectedTextNodes(function (node) {
+            return self.options.isEditableNode(node) || self.dependencies.Range.isVoidBlock(node);
+        });
         return _.all(textNodes, function (textNode) {
             return self.utils.isInTag(textNode, tag);
         });
@@ -989,7 +996,9 @@ var FontStylePlugin = AbstractPlugin.extend({
      */
     _nonFormattedTextNodes: function (range, tag) {
         var self = this;
-        var textNodes = range.getSelectedTextNodes(this.options.isEditableNode);
+        var textNodes = range.getSelectedTextNodes(function (node) {
+            return self.options.isEditableNode(node) || self.dependencies.Range.isVoidBlock(node);
+        });
         return _.filter(textNodes, function (textNode) {
             return !self.utils.isInTag(textNode, tag);
         });
@@ -1154,7 +1163,10 @@ var FontStylePlugin = AbstractPlugin.extend({
      * @returns {WrappedRange}
      */
     _unformatTextSelection: function (range, tag) {
-        var textNodes = range.getSelectedTextNodes(this.options.isEditableNode);
+        var self = this;
+        var textNodes = range.getSelectedTextNodes(function (node) {
+            return self.options.isEditableNode(node) || self.dependencies.Range.isVoidBlock(node);
+        });
         return this._unformatText(range, textNodes, tag);
     },
     /**

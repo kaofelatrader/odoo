@@ -21,11 +21,16 @@ var WrappedRange = Class.extend({
      * @param {Node} [range.ec]
      * @param {Number} [range.eo]
      * @param {Node} [ownerDocument] the document containing the range
+     * @param {Object} options
+     * @param {Function (Node) => Boolean} options.isVoidBlock
+     * @param {Function (Node) => Boolean} options.isEditableNode
+     * 
      */
-    init: function (range, ownerDocument) {
+    init: function (range, ownerDocument, options) {
         this.document = ownerDocument || range.sc.ownerDocument;
         this.$editable = $(this.document).find('editable');
         this.editable = this.$editable[0];
+        this.options = options || {};
         if (!range || typeof range.so !== 'number') {
             if (range.sc) {
                 this.getFromNode(range.sc);
@@ -67,7 +72,7 @@ var WrappedRange = Class.extend({
         }
     },
     copy: function () {
-        return new WrappedRange(this);
+        return new WrappedRange(this.getPoints(), this.document, this.options);
     },
     /**
      * Get the common ancestor of the start and end
@@ -230,16 +235,15 @@ var WrappedRange = Class.extend({
      * @returns {Node []}
      */
     getSelectedTextNodes: function (pred) {
+        var self = this;
         var selectedText = _.filter(this.getSelectedNodes(), function (node) {
             if (utils.isEditable(node)) {
                 return false;
             }
-            node = utils.firstLeafUntil(node, function (n) {
-                return (!utils.isMedia || !utils.isMedia(n)) && (!pred || pred(n));
-            });
+            node = utils.firstLeafUntil(node, pred.bind(self));
             return utils.isVisibleText(node);
         });
-        return _.uniq(selectedText);
+        return utils.uniq(selectedText);
     },
     /**
      * Get the start point of the current range.
@@ -382,12 +386,10 @@ var WrappedRange = Class.extend({
      */
     standardizeRangeOnEdge: function (isEditableNode) {
         var self = this;
-        var invisible = this.document.createTextNode(utils.char('zeroWidth'));
+        var invisible = document.createTextNode(utils.char('zeroWidth'));
 
         if (utils.isText(this.sc) && !utils.isVisibleText(this.sc) && this.sc.nextSibling) {
-            var firstLeafOfNext = utils.firstLeafUntil(this.sc.nextSibling, function (n) {
-                return (!utils.isMedia || !utils.isMedia(n)) && self.options.isEditableNode(n);
-            });
+            var firstLeafOfNext = utils.firstLeafUntil(this.sc.nextSibling, self.options.isEditableNode.bind(self));
             this.replace({
                 sc: firstLeafOfNext,
                 so: 0,
