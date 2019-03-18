@@ -19,20 +19,14 @@ var RangePlugin = AbstractPlugin.extend({
      * @constructor
      */
     init: function (parent, media, options) {
+        var self = this;
         this._super.apply(this, arguments);
 
-        /**
-        * Return true if the node is a block media to treat like a block where
-        * the cursor can not be placed inside like the void.
-        *
-        * @param {Node} node
-        * @returns {Boolean}
-        */
-        this.utils.isVoidBlock = function (node) {
-            return (!this.isBR(node) && this.isVoid(node)) ||
+        this._isVoidBlock = [function (node) {
+            return (!self.utils.isBR(node) && self.utils.isVoid(node)) ||
                 node.contentEditable === 'false' ||
                 node.classList && node.classList.contains('o_fake_editable');
-        };
+        }];
     },
     blurEditor: function () {
         this._clearFocusedNode();
@@ -43,6 +37,36 @@ var RangePlugin = AbstractPlugin.extend({
     setEditorValue: function (value) {
         this.setRangeOnVoidBlock(this.getFocusedNode());
         return value;
+    },
+    /**
+    * Return true if the node is a block media to treat like a block where
+    * the cursor can not be placed inside like the void.
+    * The conditions can be extended by plugins by adding a method with
+    * `addVoidBlockCheck`. If any of the methods returns true, this will too.
+    *
+    * @see _isVoidBlock
+    * @see addVoidBlockCheck
+    * @param {Node} node
+    * @returns {Boolean}
+    */
+    isVoidBlock: function (node) {
+        for (var i = 0; i < this._isVoidBlock.length; i++) {
+            if (this._isVoidBlock[i](node)) {
+                return true;
+            }
+        }
+        return false;
+    },
+    /**
+     * Add a method to the `_isVoidBlock` array.
+     *
+     * @see isVoidBlock
+     * @see _isVoidBlock
+     * @param {Function (Node)} fn
+     */
+    addVoidBlockCheck: function (fn) {
+        this._isVoidBlock.push(fn);
+        this._isVoidBlock = this.utils.uniq(this._isVoidBlock);
     },
 
     //--------------------------------------------------------------------------
@@ -85,7 +109,7 @@ var RangePlugin = AbstractPlugin.extend({
      * @param {Boolean} left
      */
     setRangeOnVoidBlock: function (target, left) {
-        if (!target || !this.utils.isVoidBlock(target)) {
+        if (!target || !this.isVoidBlock(target)) {
             return;
         }
         var range = this._getRange();
@@ -281,7 +305,7 @@ var RangePlugin = AbstractPlugin.extend({
             var point = this._getRange().getStartPoint();
             point = e.keyCode === 37 ? point.prev() : point.next();
             var node = point.node.childNodes[point.offset] || point.node;
-            if (this.utils.isVoidBlock(node)) {
+            if (this.isVoidBlock(node)) {
                 this.setRangeOnVoidBlock(node, e.keyCode === 37);
             }
         }

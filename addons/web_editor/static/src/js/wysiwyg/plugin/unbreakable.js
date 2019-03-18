@@ -96,7 +96,7 @@ var Unbreakable = AbstractPlugin.extend({
         var prev;
         if (
             isCollapsed && startPoint.node.tagName && startPoint.node.childNodes[startPoint.offset] &&
-            (prev = startPoint.prev()) && this.utils.isMedia(prev.node) &&
+            (prev = startPoint.prev()) && this.dependencies.Range.isVoidBlock(prev.node) &&
             this.options.isEditableNode(prev.node.parentNode)
         ) {
             return range;
@@ -108,7 +108,7 @@ var Unbreakable = AbstractPlugin.extend({
             startPoint.node = this.utils.lastLeaf(startPoint.node);
             startPoint.offset = this.utils.nodeLength(startPoint.node);
         }
-        if (!this.utils.isMedia(target) || !this.options.isEditableNode(target)) {
+        if (!this.dependencies.Range.isVoidBlock(target) || !this.options.isEditableNode(target)) {
             var afterEnd = false;
             startPoint = startPoint.nextUntil(function (point) {
                 if (point.node === endPoint.node && point.offset === endPoint.offset) {
@@ -152,7 +152,7 @@ var Unbreakable = AbstractPlugin.extend({
             if (!toCollapse) {
                 // find the first allowed ancestor
                 var commonUnbreakableParent = this.utils.ancestor(range.sc, function (node) {
-                    return !self.utils.isMedia(node) && self.options.isUnbreakableNode(node);
+                    return !self.dependencies.Range.isVoidBlock(node) && self.options.isUnbreakableNode(node);
                 });
                 if (!commonUnbreakableParent) {
                     commonUnbreakableParent = this.editable;
@@ -182,7 +182,7 @@ var Unbreakable = AbstractPlugin.extend({
                     }
 
                     var unbreakableParent = this.utils.ancestor(pt.node, function (node) {
-                        return !self.utils.isMedia(node) && self.options.isUnbreakableNode(node);
+                        return !self.dependencies.Range.isVoidBlock(node) && self.options.isUnbreakableNode(node);
                     });
                     if (!unbreakableParent) {
                         unbreakableParent = self.editable;
@@ -198,7 +198,7 @@ var Unbreakable = AbstractPlugin.extend({
                     }
                     if (
                         (/\S|\uFEFF|\u00A0/.test(pt.node.textContent) ||
-                            this.utils.isMedia(pt.node)) &&
+                            this.dependencies.Range.isVoidBlock(pt.node)) &&
                         pt.isVisible()
                     ) {
                         return true;
@@ -242,7 +242,7 @@ var Unbreakable = AbstractPlugin.extend({
 
         var medias = (function findMedia(node) {
             var medias = [];
-            if (node.tagName !== 'IMG' && self.utils.isMedia(node)) {
+            if (node.tagName !== 'IMG' && self.dependencies.Range.isVoidBlock(node)) {
                 medias.push(node);
             } else {
                 [].forEach.call(node.childNodes, function (node) {

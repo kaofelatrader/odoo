@@ -145,7 +145,7 @@ var ListPlugin = AbstractPlugin.extend({
                 // wrap in p
 
                 var hasNode = _.find(res, function (node) {
-                    return node.tagName && node.tagName !== "BR" && (!self.utils.isMedia || !self.utils.isMedia(node));
+                    return node.tagName && node.tagName !== "BR" && (!self.dependencies.Range.isVoidBlock(node));
                 });
                 if (!hasNode) {
                     var p = document.createElement('p');
@@ -186,10 +186,10 @@ var ListPlugin = AbstractPlugin.extend({
         }
 
         var startLeaf = this.utils.firstLeafUntil(start.node, function (n) {
-            return (!self.utils.isMedia || !self.utils.isMedia(n)) && self.options.isEditableNode(n);
+            return (!self.dependencies.Range.isVoidBlock(n)) && self.options.isEditableNode(n);
         });
         var endLeaf = this.utils.firstLeafUntil(end.node, function (n) {
-            return (!self.utils.isMedia || !self.utils.isMedia(n)) && self.options.isEditableNode(n);
+            return (!self.dependencies.Range.isVoidBlock(n)) && self.options.isEditableNode(n);
         });
         range = this.dependencies.Range.setRange({
             sc: startLeaf,

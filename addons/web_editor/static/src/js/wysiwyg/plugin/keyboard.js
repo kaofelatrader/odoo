@@ -56,7 +56,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         }
         var needReselect = false;
         var fake = range.sc.parentNode;
-        if (this.utils.isMedia && (fake.className || '').indexOf('o_fake_editable') !== -1 && this.utils.isMedia(fake)) {
+        if ((fake.className || '').indexOf('o_fake_editable') !== -1 && this.dependencies.Range.isVoidBlock(fake)) {
             var $media = $(fake.parentNode);
             $media[fake.previousElementSibling ? 'after' : 'before'](fake.firstChild);
             needReselect = true;
@@ -102,7 +102,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         res.range = this._sliceAndRerangeBeforeDeletion(res.range);
         res.range = direction === 'prev' ? this._moveBeforeInvisibleBR(res.range) : res.range;
 
-        if (this.utils.isMedia && this.utils.isMedia(res.range.sc)) {
+        if (this.dependencies.Range.isVoidBlock(res.range.sc)) {
             var span = this._replaceMediaWithEmptySpan(res.range.sc);
             res.range.replace({
                 sc: span,
@@ -183,7 +183,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
 
         var pt = range.getStartPoint();
         pt = pt[method](function (point) {
-            var isAtStartOfMedia = !point.offset && self.utils.isMedia && self.utils.isMedia(point.node);
+            var isAtStartOfMedia = !point.offset && self.dependencies.Range.isVoidBlock(point.node);
             var isBRorHR = point.node.tagName === 'BR' || point.node.tagName === 'HR';
             var isRootBR = wasOnStartOfBR && point.node === range.sc;
             var isOnRange = range.ec === point.node && range.eo === point.offset;
@@ -325,7 +325,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         }
         if (ancestor) {
             var firstChild = this.utils.firstLeafUntil(ancestor, function (n) {
-                return (!self.utils.isMedia || !self.utils.isMedia(n)) && self.options.isEditableNode(n);
+                return !self.dependencies.Range.isVoidBlock(n) && self.options.isEditableNode(n);
             });
             var lastChild = this.utils.lastLeaf(ancestor);
             if (this.utils.isBlankNode(ancestor)) {
@@ -453,7 +453,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         if (!before.tagName) {
             next = next.next();
             var nextNode = this.utils.firstLeafUntil(next.node.childNodes[next.offset] || next.node, function (n) {
-                return (!self.utils.isMedia || !self.utils.isMedia(n)) && self.options.isEditableNode(n);
+                return (!self.dependencies.Range.isVoidBlock(n)) && self.options.isEditableNode(n);
             });
             if (!nextNode.tagName) {
                 next.node = nextNode;
@@ -668,10 +668,10 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _isDeletableNode: function (node) {
         var isVisibleText = this.utils.isVisibleText(node);
-        var isMedia = this.utils.isMedia && this.utils.isMedia(node);
+        var isVoidBlock = this.dependencies.Range.isVoidBlock(node);
         var isBR = node.tagName === 'BR';
         var isEditable = this.options.isEditableNode(node);
-        return isEditable && (isVisibleText || isMedia || isBR);
+        return isEditable && (isVisibleText || isVoidBlock || isBR);
     },
     /**
      * Return true if the range is positioned on an edge to delete, depending on the given direction.
@@ -942,7 +942,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         var self = this;
         var span = document.createElement('span');
         media = this.utils.ancestor(media, function (n) {
-            return !n.parentNode || !self.utils.isMedia(n.parentNode);
+            return !n.parentNode || !self.dependencies.Range.isVoidBlock(n.parentNode);
         });
         $(media).replaceWith(span);
         return span;

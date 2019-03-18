@@ -124,7 +124,7 @@ var LinkCreate = AbstractPlugin.extend({
     _insertBlankLink: function () {
         var range = this.dependencies.Range.getRange();
         if (range.isCollapsed()) {
-            if (!this.utils.isMedia || !this.utils.isMedia(range.sc)) {
+            if (!this.dependencies.Range.isVoidBlock(range.sc)) {
                 range.replace({
                     sc: this.utils.firstLeaf(range.sc),
                     so: 0,

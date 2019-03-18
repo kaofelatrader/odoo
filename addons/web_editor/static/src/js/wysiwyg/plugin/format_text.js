@@ -179,7 +179,7 @@ var TextPlugin = AbstractPlugin.extend({
     _cleanRangeAfterStyle: function (range) {
         var self = this;
         this._moveRangeToDeepUntil(range, function (n) {
-            return self.options.isEditableNode(n) && (!self.utils.isMedia || !self.utils.isMedia(n)); // TODO: move to MEDIA somehow
+            return self.options.isEditableNode(n) && !self.dependencies.Range.isVoidBlock(n);
         });
         range.getSelectedNodes().forEach(function (node) {
             self._cleanNodeAfterStyle(node, range);

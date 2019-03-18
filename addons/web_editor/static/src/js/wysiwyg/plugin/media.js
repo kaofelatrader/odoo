@@ -111,13 +111,14 @@ var MediaPlugin = AbstractPlugin.extend({
      */
     init: function (parent, media, options) {
         this._super.apply(this, arguments);
+    },
 
-        /* var isVoidBlock = this.utils.isVoidBlock;
-        Utils.include({
-            isVoidBlock: function (node) {
-                return isVoidBlock(node) || this.isMedia(node);
-            },
-        }); */
+    start: function () {
+        var self = this;
+        this.dependencies.Range.addVoidBlockCheck(function (node) {
+            return self.isMedia(node);
+        });
+        return Promise.resolve();
     },
 
     //--------------------------------------------------------------------------
