@@ -896,14 +896,26 @@ return {
         return ancestors[ancestors.length - 1];
     },
     /**
-     * Get the last leaf of a node, that is editable and not a media.
-     * In this context, a leaf node is understood as a childless node.
+     * Synctactic shorthand for `lastLeafUntil` without predicate function.
      *
+     * @see lastLeafUntil
      * @param {Node} node
      * @returns {Node}
      */
     lastLeaf: function (node) {
-        while (node.lastChild && (!this.isMedia || !this.isMedia(node))) {
+        return this.lastLeafUntil(node);
+    },
+    /**
+     * Get the first leaf of a node, that meets the optional conditions
+     * set in predicate function.
+     * In this context, a leaf node is understood as a childless node.
+     *
+     * @param {Node} node
+     * @param {Function (Node) => Boolean} pred
+     * @returns {Node}
+     */
+    lastLeafUntil: function (node, pred) {
+        while (node.lastChild && (!pred || pred(node))) {
             node = node.lastChild;
         }
         return node;

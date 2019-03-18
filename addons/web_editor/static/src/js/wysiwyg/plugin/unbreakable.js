@@ -105,7 +105,9 @@ var Unbreakable = AbstractPlugin.extend({
         // move the start selection to an allowed node
         var target = startPoint.node.childNodes[startPoint.offset] || startPoint.node;
         if (startPoint.offset && startPoint.offset === this.utils.nodeLength(startPoint.node)) {
-            startPoint.node = this.utils.lastLeaf(startPoint.node);
+            startPoint.node = this.utils.lastLeafUntil(startPoint.node, function (n) {
+                return !self.dependencies.Range.isVoidBlock(n) && self.options.isEditableNode(n);
+            });
             startPoint.offset = this.utils.nodeLength(startPoint.node);
         }
         if (!this.dependencies.Range.isVoidBlock(target) || !this.options.isEditableNode(target)) {

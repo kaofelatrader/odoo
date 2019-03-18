@@ -213,7 +213,7 @@ var RangePlugin = AbstractPlugin.extend({
     },
     _getRange: function () {
         var Wysiwyg = odoo.__DEBUG__.services['web_editor.wysiwyg'];
-        return Wysiwyg.getRange(this.document);
+        return Wysiwyg.getRange(this.editable);
     },
     _getTextSelection: function (input) {
         var start = 0;

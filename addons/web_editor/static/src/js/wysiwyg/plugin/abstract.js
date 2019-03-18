@@ -3,7 +3,6 @@ odoo.define('web_editor.wysiwyg.plugin.abstract', function (require) {
 
 var BoundaryPoint = require('wysiwyg.BoundaryPoint');
 var Class = require('web.Class');
-var Dom = require('wysiwyg.Dom');
 var mixins = require('web.mixins');
 var ServicesMixin = require('web.ServicesMixin');
 var utils = require('wysiwyg.utils');
@@ -150,10 +149,10 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
      *
      * @see Manager.start
      */
-    _afterStartAddDomReferences: function () {
+    _afterStartAddDomReferences: function (dom) {
         this.document = this.editable.ownerDocument;
         this.window = this.document.defaultView;
-        this.dom = new Dom(this.document, this.options);
+        this.dom = dom;
     },
 });
 

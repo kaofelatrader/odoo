@@ -2,6 +2,7 @@ odoo.define('web_editor.wysiwyg.plugin.manager', function (require) {
 'use strict';
 
 var Class = require('web.Class');
+var Dom = require('wysiwyg.Dom');
 var mixins = require('web.mixins');
 
 var pluginsRegistry = {};
@@ -19,7 +20,9 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
      */
     init: function (parent, params, options) {
         this._super.apply(this, arguments);
+        this.options = options || {};
         this.setParent(parent);
+        params.plugins.Range = true; // `Range` is a mandatory Plugin, used virtually everywhere
         this._loadPlugins(params, options);
     },
     /**
@@ -40,7 +43,7 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
      * @returns {Promise}
      */
     start: function () {
-        return this._eachAsyncParallel('start').then(this._each.bind(this, '_afterStartAddDomReferences'));
+        return this._eachAsyncParallel('start').then(this._afterStartAddDomTools.bind(this));
     },
 
     //--------------------------------------------------------------------------
@@ -136,6 +139,13 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
     // Private
     //--------------------------------------------------------------------------
 
+    _afterStartAddDomTools: function () {
+        var options = Object.assign({
+            isVoidBlock: this._plugins.Range.isVoidBlock.bind(this._plugins.Range),
+        }, this.options);
+        var dom = new Dom(options);
+        this._each('_afterStartAddDomReferences', dom);
+    },
     _each: function (methodName, value) {
         for (var i = 0; i < this._pluginNames.length; i++) {
             var plugin = this._plugins[this._pluginNames[i]];

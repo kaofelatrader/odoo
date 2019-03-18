@@ -327,7 +327,9 @@ var KeyboardPlugin = AbstractPlugin.extend({
             var firstChild = this.utils.firstLeafUntil(ancestor, function (n) {
                 return !self.dependencies.Range.isVoidBlock(n) && self.options.isEditableNode(n);
             });
-            var lastChild = this.utils.lastLeaf(ancestor);
+            var lastChild = this.utils.lastLeafUntil(ancestor, function (n) {
+                return !self.dependencies.Range.isVoidBlock(n) && self.options.isEditableNode(n);
+            });
             if (this.utils.isBlankNode(ancestor)) {
                 firstChild = this.utils.isText(firstChild) ? firstChild.parentNode : firstChild;
                 $(firstChild).contents().remove();

@@ -7,7 +7,8 @@ var utils = require('wysiwyg.utils');
 
 var Dom = Class.extend({
     /**
-     * @param {Object} [options]
+     * @param {Object} options
+     * @param {Function (Node) => Boolean} options.isVoidBlock
      */
     init: function (options) {
         this.options = options;
@@ -24,7 +25,7 @@ var Dom = Class.extend({
         var self = this;
         if (pointB.node.childNodes[pointB.offset]) {
             var firstLeaf = utils.firstLeafUntil(pointB.node.childNodes[pointB.offset], function (n) {
-                return (!utils.isMedia || !utils.isMedia(n)) && self.options.isEditableNode(n);
+                return (!self.options.isVoidBlock(n)) && self.options.isEditableNode(n);
             });
             pointB = new BoundaryPoint(firstLeaf, 0);
         }
@@ -79,7 +80,7 @@ var Dom = Class.extend({
 
 
         var pointNode = utils.firstLeafUntil(next, function (n) {
-            return (!utils.isMedia || !utils.isMedia(n)) && self.options.isEditableNode(n);
+            return self.options.isVoidBlock(n) && self.options.isEditableNode(n);
         });
         var point = new BoundaryPoint(pointNode, 0);
         if (nodes.length > 1 || nodes.length && !utils.isText(nodes[0])) {
@@ -129,7 +130,7 @@ var Dom = Class.extend({
         if (node.tagName === 'BR' && node.nextSibling && !(utils.isText(node.nextSibling) && !utils.isVisibleText(node.nextSibling))) {
             node = node.nextSibling;
             node = utils.firstLeafUntil(node, function (n) {
-                return (!utils.isMedia || !utils.isMedia(n)) && self.options.isEditableNode(n);
+                return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
             });
         }
 
@@ -207,16 +208,20 @@ var Dom = Class.extend({
                 var deep;
                 if (direction === 'prev') {
                     textNode = utils.firstLeafUntil(node, function (n) {
-                        return (!utils.isMedia || !utils.isMedia(n)) && self.options.isEditableNode(n);
+                        return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
                     });
                     if (!textNode.tagName && !utils.ancestor(textNode, utils.isPre)) {
                         this.removeExtremeBreakableSpace(textNode);
-                        nextTextNode = utils.lastLeaf(next);
+                        nextTextNode = utils.lastLeafUntil(next, function (n) {
+                            return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
+                        });
                         if (!nextTextNode.tagName && !utils.ancestor(nextTextNode, utils.isPre)) {
                             this.removeExtremeBreakableSpace(nextTextNode);
                         }
                     }
-                    deep = utils.lastLeaf(next);
+                    deep = utils.lastLeafUntil(next, function (n) {
+                        return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
+                    });
                     result = new BoundaryPoint(deep, utils.nodeLength(deep));
                     if (
                         utils.getRegex('char').test(node.textContent) || node.childElementCount > 1 ||
@@ -227,11 +232,13 @@ var Dom = Class.extend({
                     $(node).remove();
                 } else {
                     nextTextNode = utils.firstLeafUntil(next, function (n) {
-                        return (!utils.isMedia || !utils.isMedia(n)) && self.options.isEditableNode(n);
+                        return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
                     });
                     if (!nextTextNode.tagName && !utils.ancestor(nextTextNode, utils.isPre)) {
                         this.removeExtremeBreakableSpace(nextTextNode);
-                        textNode = utils.lastLeaf(node);
+                        textNode = utils.lastLeafUntil(node, function (n) {
+                            return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
+                        });
                         if (!textNode.tagName && !utils.ancestor(textNode, utils.isPre)) {
                             this.removeExtremeBreakableSpace(textNode);
                         }
@@ -239,7 +246,9 @@ var Dom = Class.extend({
                     if (node.innerHTML.trim() === '<br>') {
                         $(node).contents().remove();
                     }
-                    deep = utils.lastLeaf(node);
+                    deep = utils.lastLeafUntil(node, function (n) {
+                        return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
+                    });
                     result = new BoundaryPoint(deep, utils.nodeLength(deep));
                     $(node).append($next.contents());
                     $next.remove();
@@ -316,7 +325,7 @@ var Dom = Class.extend({
         ) {
             $(blockToMergeInto).remove();
             var pointNode = utils.firstLeafUntil(blockToMergeFrom, function (n) {
-                return (!utils.isMedia || !utils.isMedia(n)) && self.options.isEditableNode(n);
+                return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
             });
             return new BoundaryPoint(pointNode, 0);
         }
@@ -723,7 +732,7 @@ var Dom = Class.extend({
             !utils.isNodeBlockType(node) &&
             this.options.isEditableNode(node.parentNode) &&
             (!node.attributes || !node.attributes.contenteditable) &&
-            !utils.isMedia(node)
+            !this.options.isVoidBlock(node)
         ) {
             prev = node.previousSibling;
             next = node.nextSibling;
@@ -1071,7 +1080,7 @@ var Dom = Class.extend({
             return range;
         }
         var fake = range.sc.parentNode;
-        if (fake.classList.contains('o_fake_editable') && utils.isMedia(fake)) {
+        if (fake.classList.contains('o_fake_editable') && this.options.isVoidBlock(fake)) {
             var $media = $(fake.parentNode);
             $media[fake.previousElementSibling ? 'after' : 'before'](fake.firstChild);
         }

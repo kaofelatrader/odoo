@@ -65,7 +65,7 @@ var TextPlugin = AbstractPlugin.extend({
      */
     _applyFontCollapsed: function (color, bgcolor, size, range) {
         this._splitBeforeApplyFont(range);
-        var zwcNode = this.document.createTextNode(this.utils.char('zeroWidth'));
+        var zwcNode = document.createTextNode(this.utils.char('zeroWidth'));
         range.sc.parentNode.insertBefore(zwcNode, range.sc);
         var font = this._applyStylesToNode(zwcNode, color, bgcolor, size);
         range.replace({
@@ -393,7 +393,7 @@ var TextPlugin = AbstractPlugin.extend({
      * @returns {Node}
      */
     _wrapInFontNode: function (node) {
-        var font = this.document.createElement('font');
+        var font = document.createElement('font');
         node.parentNode.insertBefore(font, node);
         font.appendChild(node);
         return font;
@@ -484,13 +484,13 @@ var ForeColorPlugin = AbstractPlugin.extend({
         var colorName = buttonName.split('-')[1];
         if (colorName[0] === '#') {
             colorName = $('<div>').css('color', colorName).css('color'); // TODO: use a js converter xml => rgb
-            while (this.editable !== focusNode && this.document !== focusNode) {
+            while (this.editable !== focusNode && document !== focusNode) {
                 if (focusNode.style && focusNode.style.color !== '') {
                     break;
                 }
                 focusNode = focusNode.parentNode;
             }
-            return this.document !== focusNode && colorName === $(focusNode).css('color');
+            return document !== focusNode && colorName === $(focusNode).css('color');
         } else {
             return $(focusNode).closest('text-' + colorName).length;
         }
@@ -547,13 +547,13 @@ var BgColorPlugin = ForeColorPlugin.extend({
         var colorName = buttonName.split('-')[1];
         if (colorName[0] === '#') {
             colorName = $('<div>').css('color', colorName).css('color'); // TODO: use a js converter xml => rgb
-            while (this.editable !== focusNode && this.document !== focusNode) {
+            while (this.editable !== focusNode && document !== focusNode) {
                 if (focusNode.style && focusNode.style.backgroundColor !== '') {
                     break;
                 }
                 focusNode = focusNode.parentNode;
             }
-            return this.document !== focusNode && colorName === $(focusNode).css('background-color');
+            return document !== focusNode && colorName === $(focusNode).css('background-color');
         } else {
             return $(focusNode).closest('bg-' + colorName).length;
         }
@@ -889,7 +889,7 @@ var FontStylePlugin = AbstractPlugin.extend({
             br = range.sc.firstChild;
         }
         if (br || this.utils.isText(range.sc)) {
-            var emptyText = this.document.createTextNode(this.utils.char('zeroWidth'));
+            var emptyText = document.createTextNode(this.utils.char('zeroWidth'));
             $(br || range.sc.splitText(range.so)).before(emptyText);
             $(br).remove();
             range = this.dependencies.Range.setRange({
