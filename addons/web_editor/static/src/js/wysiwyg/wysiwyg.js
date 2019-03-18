@@ -7,7 +7,6 @@ var core = require('web.core');
 var session = require('web.session');
 var Widget = require('web.Widget');
 var WrappedRange = require('wysiwyg.WrappedRange');
-var wysiwygOptions = require('wysiwyg.options');
 var Editor = require('wysiwyg.editor');
 
 var _t = core._t;
