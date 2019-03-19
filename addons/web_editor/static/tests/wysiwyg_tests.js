@@ -1585,7 +1585,7 @@ QUnit.test('Ordered list', function (assert) {
                         '</tbody>' +
                         '</table>' +
                         '</div>',
-                    start: 'td li->1',
+                    start: 'img->0',
                 },
             },
             {

@@ -172,7 +172,7 @@ var ListPlugin = AbstractPlugin.extend({
         var self = this;
         var range = this.dependencies.Range.getRange();
         if (!range) {
-            return;
+            return false;
         }
         var res;
         var start = range.getStartPoint();
@@ -193,9 +193,9 @@ var ListPlugin = AbstractPlugin.extend({
         });
         range = this.dependencies.Range.setRange({
             sc: startLeaf,
-            so: start.offset,
+            so: this.utils.isText(startLeaf) ? start.offset : 0,
             ec: endLeaf,
-            eo: end.offset,
+            eo: this.utils.isText(endLeaf) ? end.offset : this.utils.nodeLength(endLeaf),
         });
         this.dependencies.Range.save(range);
 
