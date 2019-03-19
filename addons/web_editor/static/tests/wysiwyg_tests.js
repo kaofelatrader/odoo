@@ -2125,6 +2125,14 @@ QUnit.test('Checklist', function (assert) {
     }).then(function (wysiwyg) {
         var $editable = wysiwyg.$('editable');
 
+        var triggerMouseEventsWithOffsetX = function (el, offsetX, eventNames) {
+            var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+            var clientX = el.getBoundingClientRect().left + scrollLeft;
+            testUtils.dom.triggerNativeEvents(el, eventNames, {
+                clientX: clientX + offsetX,
+            });
+        };
+
         var checklistTests = [
             {
                 name: "check checkbox in checklist with children",
@@ -2143,9 +2151,7 @@ QUnit.test('Checklist', function (assert) {
                     '<p>y</p>',
                 do: async function () {
                     var $li = $editable.find('li:first');
-                    testUtils.dom.triggerNativeEvents($li[0], ['mousedown', 'click'], {
-                        offsetX: -10,
-                    });
+                    triggerMouseEventsWithOffsetX($li[0], -10, ['mousedown', 'click']);
                 },
                 test: {
                     content: '<p>x</p>' +
@@ -2178,9 +2184,7 @@ QUnit.test('Checklist', function (assert) {
                     '<p>y</p>',
                 do: async function () {
                     var $li = $editable.find('li:first');
-                    testUtils.dom.triggerNativeEvents($li[0], ['mousedown', 'click'], {
-                        offsetX: -10,
-                    });
+                    triggerMouseEventsWithOffsetX($li[0], -10, ['mousedown', 'click']);
                 },
                 test: {
                     content: '<p>x</p>' +
@@ -2213,9 +2217,7 @@ QUnit.test('Checklist', function (assert) {
                     '<p>y</p>',
                 do: async function () {
                     var $li = $editable.find('li:first');
-                    testUtils.dom.triggerNativeEvents($li[0], ['mousedown', 'click'], {
-                        offsetX: -10,
-                    });
+                    triggerMouseEventsWithOffsetX($li[0], -10, ['mousedown', 'click']);
                 },
                 test: {
                     content: '<p>x</p>' +
@@ -2248,9 +2250,7 @@ QUnit.test('Checklist', function (assert) {
                     '<p>y</p>',
                 do: async function () {
                     var $li = $editable.find('li:first');
-                    testUtils.dom.triggerNativeEvents($li[0], ['mousedown', 'click'], {
-                        offsetX: -10,
-                    });
+                    triggerMouseEventsWithOffsetX($li[0], -10, ['mousedown', 'click']);
                 },
                 test: {
                     content: '<p>x</p>' +
@@ -2283,9 +2283,7 @@ QUnit.test('Checklist', function (assert) {
                     '<p>y</p>',
                 do: async function () {
                     var $li = $editable.find('ul ul li:eq(1)');
-                    testUtils.dom.triggerNativeEvents($li[0], ['mousedown', 'click'], {
-                        offsetX: -10,
-                    });
+                    triggerMouseEventsWithOffsetX($li[0], -10, ['mousedown', 'click']);
                 },
                 test: {
                     content: '<p>x</p>' +
@@ -2318,9 +2316,7 @@ QUnit.test('Checklist', function (assert) {
                     '<p>y</p>',
                 do: async function () {
                     var $li = $editable.find('ul ul li:eq(1)');
-                    testUtils.dom.triggerNativeEvents($li[0], ['mousedown', 'click'], {
-                        offsetX: -10,
-                    });
+                    triggerMouseEventsWithOffsetX($li[0], -10, ['mousedown', 'click']);
                 },
                 test: {
                     content: '<p>x</p>' +
@@ -2353,9 +2349,7 @@ QUnit.test('Checklist', function (assert) {
                     '<p>y</p>',
                 do: async function () {
                     var $li = $editable.find('ul ul li:eq(1)');
-                    testUtils.dom.triggerNativeEvents($li[0], ['mousedown', 'click'], {
-                        offsetX: -10,
-                    });
+                    triggerMouseEventsWithOffsetX($li[0], -10, ['mousedown', 'click']);
                 },
                 test: {
                     content: '<p>x</p>' +
@@ -2388,9 +2382,7 @@ QUnit.test('Checklist', function (assert) {
                     '<p>y</p>',
                 do: async function () {
                     var $li = $editable.find('ul ul li:eq(1)');
-                    testUtils.dom.triggerNativeEvents($li[0], ['mousedown', 'click'], {
-                        offsetX: -10,
-                    });
+                    triggerMouseEventsWithOffsetX($li[0], -10, ['mousedown', 'click']);
                 },
                 test: {
                     content: '<p>x</p>' +
@@ -2423,9 +2415,7 @@ QUnit.test('Checklist', function (assert) {
                     '<p>y</p>',
                 do: async function () {
                     var $li = $editable.find('ul ul li:eq(1)');
-                    testUtils.dom.triggerNativeEvents($li[0], ['mousedown', 'click'], {
-                        offsetX: -10,
-                    });
+                    triggerMouseEventsWithOffsetX($li[0], -10, ['mousedown', 'click']);
                 },
                 test: {
                     content: '<p>x</p>' +
@@ -2458,9 +2448,7 @@ QUnit.test('Checklist', function (assert) {
                     '<p>y</p>',
                 do: async function () {
                     var $li = $editable.find('ul ul li:eq(1)');
-                    testUtils.dom.triggerNativeEvents($li[0], ['mousedown', 'click'], {
-                        offsetX: -10,
-                    });
+                    triggerMouseEventsWithOffsetX($li[0], -10, ['mousedown', 'click']);
                 },
                 test: {
                     content: '<p>x</p>' +
@@ -2484,9 +2472,7 @@ QUnit.test('Checklist', function (assert) {
             def = def.then(async function(){
                 testName = test.name;
                 wysiwyg.setValue(test.content);
-                var range = Wysiwyg.getRange($editable[0]);
-                var target = range.sc.tagName ? range.sc : range.sc.parentNode;
-                await testUtils.dom.triggerNativeEvents(target, ['mousedown', 'mouseup']);
+                await testUtils.dom.triggerNativeEvents($editable[0].firstChild, ['mousedown', 'mouseup']);
                 await test.do();
                 assert.deepEqual(wysiwyg.getValue(), test.test.content, testName);
             });

@@ -1,12 +1,9 @@
 odoo.define('web_editor.wysiwyg.plugin.list', function (require) {
 'use strict';
 
-var core = require('web.core');
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var wysiwygOptions = require('wysiwyg.options');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
-
-var _t = core._t;
 
 wysiwygOptions.keyMap.pc['CTRL+SHIFT+NUM9'] = 'List.insertList:checklist';
 wysiwygOptions.keyMap.mac['CMD+SHIFT+NUM9'] = 'List.insertList:checklist';
@@ -19,13 +16,11 @@ var ListPlugin = AbstractPlugin.extend({
 
     buttons: {
         template: 'wysiwyg.buttons.list',
-        active: function (buttonName, range) {
-            return this._active(buttonName, range);
-        },
+        active: '_active',
     },
 
     editableDomEvents: {
-        'summernote.mousedown': '_onMouseDown',
+        'mousedown': '_onMouseDown',
     },
 
     //--------------------------------------------------------------------------
@@ -318,10 +313,9 @@ var ListPlugin = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     /**
-     * @param {SummernoteEvent} se
      * @param {jQueryEvent} e
      */
-    _onMouseDown: function (se, e) {
+    _onMouseDown: function (e) {
         if (!this.utils.isLi(e.target) || !$(e.target).parent('ul.o_checklist').length || e.offsetX > 0) {
             return;
         }
