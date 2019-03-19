@@ -41,9 +41,6 @@
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/wysiwyg.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/options.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/editor.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/manager.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/abstract.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/common.js"/>
 
     <!-- widgets-->
 
@@ -56,32 +53,47 @@
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/widgets/media_dialog.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/widgets/widgets.js"/>
 
-    <!-- ui -->
+    <!-- plugins -->
 
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/position.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/manager.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/abstract.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/common.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/range.js"/>
+
+    <!-- plugins ui -->
+
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/ui/position.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/ui/toolbar.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/ui/popover.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/ui/codeview.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/ui/iframe.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/ui/fullscreen.js"/>
 
-    <!-- plugins -->
+    <!-- plugins insert -->
 
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/range.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/iframe.js"/>
-    <!-- <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/dropzone.js"/> -->
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/keymap.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/history.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/table.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/clipboard.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/fullscreen.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/media.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/link.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/format_text.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/keyboard.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/unbreakable.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/transform.js"/>
-    <!-- <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/hint.js"/> -->
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/list.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/codeview_jinja.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/insert/link.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/insert/media.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/insert/list.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/insert/table.js"/>
+    <!-- <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/insert/hint.js"/> -->
+
+    <!-- plugins text -->
+
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/text/format_text.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/text/keyboard.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/text/unbreakable.js"/>
+
+    <!-- plugins drop -->
+
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/drop/clipboard.js"/>
+    <!-- <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/drop/dropzone.js"/> -->
+
+    <!-- plugins misc -->
+
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/misc/keymap.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/misc/history.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/misc/transform.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/misc/codeview_jinja.js"/>
 
     <!-- additional plugins -->
 
