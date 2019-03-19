@@ -1014,7 +1014,7 @@ QUnit.test('Text forecolor', function (assert) {
 });
 
 QUnit.test('Text bgcolor', function (assert) {
-    assert.expect(5); // 10 when all are enabled
+    assert.expect(4); // 10 when all are enabled
 
     return weTestUtils.createWysiwyg({
         debug: false,

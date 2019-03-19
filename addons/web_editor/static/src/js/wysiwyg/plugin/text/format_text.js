@@ -536,7 +536,8 @@ var BgColorPlugin = ForeColorPlugin.extend({
      * @param {Node} [range]
      */
     update: function (color, range) {
-        if (color[0] === '#') {
+        if (!color || color.startsWith('#')) {
+            color = color || '';
             $(range.sc).css('background-color', color);
         } else {
             $(range.sc).addClass('bg-' + color);
