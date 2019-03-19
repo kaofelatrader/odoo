@@ -1234,10 +1234,10 @@ var ParagraphPlugin = AbstractPlugin.extend({
     /**
      * Change the paragraph alignment of a 'format' block.
      *
-     * @param {string} style
-     *       justifyLeft, justifyCenter, justifyRight, justifyFull
+     * @param {string} align
+     *       left, center, right, justify
      */
-    formatBlockStyle: function (style, range) {
+    align: function (align, range) {
         var self = this;
         if (!range.isCollapsed()) {
             range.replace(this.dom.splitTextAtSelection(range));
@@ -1246,9 +1246,6 @@ var ParagraphPlugin = AbstractPlugin.extend({
             return self.utils.isVisibleText(node) || self.dependencies.Common.isVoidBlock(node);
         });
         nodes = this.dependencies.FontStyle.filterFormatAncestors(nodes);
-        var align = style === 'justifyLeft' ? 'left' :
-            style === 'justifyCenter' ? 'center' :
-            style === 'justifyRight' ? 'right' : 'justify';
         _.each(nodes, function (node) {
             if (self.utils.isText(node)) {
                 return;
@@ -1293,7 +1290,12 @@ var ParagraphPlugin = AbstractPlugin.extend({
     _active: function (buttonName, focusNode) {
         var alignName = buttonName.split('-')[1];
         focusNode = this.utils.isText(focusNode) ? focusNode.parentNode : focusNode;
-        var cssAlign = focusNode.style.textAlign;
+        var alignedAncestor = focusNode;
+        var cssAlign = alignedAncestor.style.textAlign;
+        while (alignedAncestor && alignedAncestor !== this.editable && !cssAlign) {
+            cssAlign = alignedAncestor.style.textAlign;
+            alignedAncestor = alignedAncestor.parentNode;
+        }
         if (alignName == 'left' && !cssAlign) {
             return true;
         }

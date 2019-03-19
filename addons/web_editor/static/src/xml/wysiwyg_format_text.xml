@@ -49,16 +49,16 @@
                 </placeholder>
             </toggler>
             <group>
-                <button name="align-left" data-method="formatBlockStyle" data-value="justifyLeft" title="Float Left">
+                <button name="align-left" data-method="align" data-value="left" title="Float Left">
                     <i class="fa fa-align-left"></i>
                 </button>
-                <button name="align-center" data-method="formatBlockStyle" data-value="justifyCenter" title="Align Center">
+                <button name="align-center" data-method="align" data-value="center" title="Align Center">
                     <i class="fa fa-align-center"></i>
                 </button>
-                <button name="align-right" data-method="formatBlockStyle" data-value="justifyRight" title="Float Right">
+                <button name="align-right" data-method="align" data-value="right" title="Float Right">
                     <i class="fa fa-align-right"></i>
                 </button>
-                <button name="align-justify" data-method="formatBlockStyle" data-value="justifyFull" title="Float Justify">
+                <button name="align-justify" data-method="align" data-value="justify" title="Float Justify">
                     <i class="fa fa-align-justify"></i>
                 </button>
             </group>

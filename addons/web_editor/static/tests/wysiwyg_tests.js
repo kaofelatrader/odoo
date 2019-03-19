@@ -1718,10 +1718,10 @@ QUnit.test('Align', function (assert) {
 
         var $paraDropdown = wysiwyg.$('dropdown[name="Paragraph"]');
         var $paraToggler = $paraDropdown.find('toggler');
-        var $btnAlignLeft = $paraDropdown.find('button[name="align-left"]');
-        var $btnAlignCenter = $paraDropdown.find('button[name="align-center"]');
-        var $btnAlignRight = $paraDropdown.find('button[name="align-right"]');
-        var $btnAlignJustify = $paraDropdown.find('button[name="align-justify"]');
+        var $btnAlignLeft = $paraDropdown.find('group button[name="align-left"]');
+        var $btnAlignCenter = $paraDropdown.find('group button[name="align-center"]');
+        var $btnAlignRight = $paraDropdown.find('group button[name="align-right"]');
+        var $btnAlignJustify = $paraDropdown.find('group button[name="align-justify"]');
 
         var alignTests = [
             /* ALIGN LEFT */
@@ -1739,7 +1739,7 @@ QUnit.test('Align', function (assert) {
                 },
             },
             {
-                name: "Click ALIGN LEFT: p (parent align right) -> p align left (does nothing)",
+                name: "Click ALIGN LEFT: p (parent align right) -> p align left",
                 content: '<div style="text-align: right;"><p>dom not to edit</p><p>dom to edit</p></div>',
                 start: 'p:eq(1):contents()[0]->1',
                 end: 'p:eq(1):contents()[0]->5',
@@ -1769,7 +1769,7 @@ QUnit.test('Align', function (assert) {
                 },
             },
             {
-                name: "Click ALIGN LEFT: p align justify & default -> p align right (across paragraphs)",
+                name: "Click ALIGN RIGHT: p align justify & default -> p align right (across paragraphs)",
                 content: '<p>dom not to edit</p><p style="text-align: justify;">dom to edit</p><p>dom to edit</p>',
                 start: 'p:eq(1):contents()[0]->1',
                 end: 'p:eq(2):contents()[0]->5',
