@@ -6,6 +6,7 @@
     </xpath>
     <xpath expr="link[last()]" position="after">
       <link rel="stylesheet" type="text/scss" href="/hr_holidays/static/scss/hr_leave_mobile.scss"/>
+      <link rel="stylesheet" type="text/scss" href="/hr_holidays/static/src/scss/time_off.scss"/>
     </xpath>
   </template>
 </odoo>
