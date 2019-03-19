@@ -1,3 +1,72 @@
+editor {
+    group[data-plugin="DropBlock"] {
+        width: 210px;
+    }
+    dropblock {
+        display: none;
+        width: 210px;
+        float: left;
+        min-height: 200px;
+        margin: 0 0.2rem;
+        background-image: linear-gradient(180deg, #e6e5e5, #fafafa);
+
+        blocks {
+            display: block;
+
+            > wysiwyg-title {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 3%;
+                color: #212629;
+                margin-bottom: 3%;
+            }
+            wysiwyg-title * {
+                margin-right: 5px;
+            }
+        }
+
+        block {
+            display: block;
+            float: left;
+            width: 45.5%;
+            margin: 0 0 6% 3%;
+            user-select: none;
+            cursor: pointer;
+            cursor: copy;
+            cursor: grab;
+
+            thumbnail {
+                preview {
+                    display: block;
+                    width: 100%;
+                    padding-bottom: 75%;
+                    border: 1px solid #a9a9a9;
+                    background-size: cover;
+                    background-position: center center;
+                }
+                wysiwyg-title {
+
+                }
+            }
+
+            content {
+                display: none;
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 ///
 /// This file contains all variables and mixins that are specific to the editor.
 ///

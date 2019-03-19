@@ -22,7 +22,6 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      */
     editorEvents: {
         'mousedown document': '_onMouseDown',
-        'mouseup document': '_onMouseUp',
         'mouseenter document': '_onMouseEnter',
         'mouseleave document': '_onMouseLeave',
         'mousemove document': '_onMouseMove',
@@ -393,10 +392,10 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         utils.defaults(params.env, defaults.env);
         utils.defaults(params.plugins, defaults.plugins);
         utils.defaults(params, {
-            loadTemplates: this._optionLoadTemplates.bind(this),
-            renderTemplate: this._optionRenderTemplate.bind(this),
-            translateTemplateNodes: this._optionTranslateTemplateNodes.bind(this),
-            translate: this._optionTranslate.bind(this),
+            loadTemplates: this._loadTemplates.bind(this),
+            renderTemplate: this._renderTemplate.bind(this),
+            translateTemplateNodes: this._translateTemplateNodes.bind(this),
+            translate: this._translateString.bind(this),
         });
 
         var renderTemplate = params.renderTemplate;
@@ -416,7 +415,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @param {string[]} templatesDependencies
      * @returns {Promise}
      */
-    _optionLoadTemplates: function (templatesDependencies) {
+    _loadTemplates: function (templatesDependencies) {
         var promises = [];
         var xmlPath;
         while ((xmlPath = templatesDependencies.shift())) {
@@ -441,7 +440,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @param {any} values
      * @returns {string}
      */
-    _optionRenderTemplate: function (pluginName, template, values) {
+    _renderTemplate: function (pluginName, template, values) {
         return this._templates[template];
     },
     /**
@@ -449,7 +448,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @param {element} node
      * @returns {string}
      */
-    _optionTranslateTemplateNodes: function (pluginName, node) {
+    _translateTemplateNodes: function (pluginName, node) {
         var self = this;
         var regExpText = /^([\s\n\r\t]*)(.*?)([\s\n\r\t]*)$/;
         (function translateNodes(elem) {
@@ -457,9 +456,9 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
                 Object.values(elem.attributes).forEach(function (attribute) {
                     if (attribute.name === 'title' || attribute.name === 'alt' || attribute.name === 'help') {
                         var text = attribute.value.match(regExpText);
-                        if (text) {
+                        if (text && text[2].length) {
                             var value = text[1] + self.options.translate(pluginName, text[2]) + text[3];
-                            value = self._pluginsManager.translatePluginValue(pluginName, value, text[2], elem, attribute.name);
+                            value = self._pluginsManager.translatePluginString(pluginName, value, text[2], elem, attribute.name);
                             attribute.value = value;
                         }
                     }
@@ -472,9 +471,9 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
                 var node = nodes[i];
                 if (node.nodeType == 3) {
                     var text = node.nodeValue.match(regExpText);
-                    if (text) {
+                    if (text && text[2].length) {
                         var value = text[1] + self.options.translate(pluginName, text[2]) + text[3];
-                        value = self._pluginsManager.translatePluginValue(pluginName, value, text[2], node, 'nodeValue');
+                        value = self._pluginsManager.translatePluginString(pluginName, value, text[2], node, 'nodeValue');
                         node.nodeValue = value;
                     }
                 } else if (node.nodeType == 1 || node.nodeType == 9 || node.nodeType == 11) {
@@ -488,7 +487,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @param {string} string
      * @returns {string}
      */
-    _optionTranslate: function (pluginName, string) {
+    _translateString: function (pluginName, string) {
         string = string.replace(/\s\s+/g, ' ');
         if (this.options.lang && this.options.lang[string]) {
             return this.options.lang[string];
@@ -643,6 +642,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     _onMouseDown: function (ev) {
         var self = this;
         if (this._isEditorContent(ev.target)) {
+            this._mouseEventFocus();
             this._onMouseDownTime = setTimeout(this._mouseEventFocus.bind(this));
         } else if (this._isFocused) {
             this._isFocused = false;
@@ -674,18 +674,6 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     _onMouseMove: function (ev) {
         if (this._mouseInEditor === null) {
             this._mouseInEditor = !!this._isEditorContent(ev.target);
-        }
-    },
-    /**
-     * do not wait for the setTimeout in the tests
-     *
-     * @private
-     * @param {jQueryEvent} ev
-     */
-    _onMouseUp: function (ev) {
-        if (this._onMouseDownTime) {
-            clearTimeout(this._onMouseDownTime);
-            this._mouseEventFocus();
         }
     },
     /**

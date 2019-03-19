@@ -23,7 +23,7 @@ var CodeViewPlugin = AbstractPlugin.extend({
     init: function (parent, params) {
         this._super.apply(this, arguments);
         this.codeview = this._createCodable();
-        params.insertBeforeContainer(this.codeview);
+        params.insertAfterContainer(this.codeview);
     },
     /**
      * @override

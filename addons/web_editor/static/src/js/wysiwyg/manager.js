@@ -109,18 +109,18 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
     /**
      *
      * @param {string} pluginName
-     * @param {string} value
+     * @param {string} string
      * @param {string} originalValue
      * @param {Node} elem
      * @param {string} attributeName
      * @returns string|null
      */
-    translatePluginValue: function (pluginName, value, originalValue, elem, attributeName) {
+    translatePluginString: function (pluginName, string, originalValue, elem, attributeName) {
         for (var i = 0; i < this._pluginNames.length; i++) {
             var plugin = this._plugins[this._pluginNames[i]];
-            value = plugin.translatePluginTerm(pluginName, value, originalValue, elem, attributeName);
+            string = plugin.translatePluginTerm(pluginName, string, originalValue, elem, attributeName);
         }
-        return value;
+        return string;
     },
     /**
      *

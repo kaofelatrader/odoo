@@ -2,14 +2,13 @@
 
 editor {
     position: relative;
-    display: flex;
-    flex-direction: column;
     min-height: 200px;
 
     editable {
         flex: 1;
         outline: none;
         overflow: auto;
+        display: block;
     }
 
 
@@ -31,6 +30,7 @@ editor {
     }
 
     toolbar {
+        display: flex;
         z-index: 1;
         background-color: #fff;
         position: relative;

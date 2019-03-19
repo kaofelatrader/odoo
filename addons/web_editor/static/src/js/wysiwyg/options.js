@@ -40,6 +40,7 @@ return {
     },
     // toolbar
     toolbar: [
+        'DropBlock',
         'FontStyle',
         'FontSize',
         // 'FontName',
