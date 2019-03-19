@@ -10,6 +10,8 @@ var cache = {};
 
 var IframePlugin = AbstractPlugin.extend({
     loaderKey: 'wysiwygPluginIframeOnLoad',
+    defaultCSS: 'body {background-color: transparent;} editable, editable:focus {outline: none;}',
+
     /**
      * @override
      **/
@@ -43,8 +45,9 @@ var IframePlugin = AbstractPlugin.extend({
      * @override
      **/
     start: function () {
+        var promise = this._loadIframePromise.then(this._moveToIframeFromPreload.bind(this));
         if (this.editable.ownerDocument.contains(this.iframe)) {
-            return this._loadIframePromise.then(this._moveToIframeFromPreload.bind(this));
+            return promise;
         } else {
             return Promise.resolve({fakeLoading: 'target is not in the DOM'});
         }
@@ -72,23 +75,25 @@ var IframePlugin = AbstractPlugin.extend({
         };
 
         this._preloadIframePromise.then(function (iframe) {
-            self._preloadEditorContainer = iframe.contentDocument.getElementById('editor-in-iframe');
-            self._preloadEditorContainer.innerHTML = '';
-            self.params.addEditableContainer(self._preloadEditorContainer);
-            self._preloadIframeStyle = [].slice.call(iframe.contentDocument.head.childNodes);
-            cached.style = self._preloadIframeStyle;
-            cached.node = self._preloadEditorContainer;
+            var node = document.createElement('editor');
+            self.params.addEditableContainer(node);
+
+            cached.node = self._preloadEditorContainer = node;
+            cached.style = self._preloadIframeStyle = [].slice.call(iframe.contentDocument.head.childNodes);
         });
     },
     _initPreloadIframeCached: function () {
+        var self = this;
         var cached = cache[this.options.iframeCssAssets+''];
         if (cached) {
+            cached.promise.then(function () {
+                var node = document.createElement('editor');
+                self.params.addEditableContainer(node);
+
+                self._preloadEditorContainer = node;
+                self._preloadIframeStyle = cached.style;
+            });
             this._preloadIframePromise = cached.promise;
-            this._preloadEditorContainer = cached.node;
-            this._preloadIframeStyle = cached.style;
-            var node = this.editable.ownerDocument.adoptNode(cached.node);
-            node.innerHTML = '';
-            this.params.addEditableContainer(node);
         } else {
             this._initPreloadIframe();
         }
@@ -137,7 +142,6 @@ var IframePlugin = AbstractPlugin.extend({
     },
     _insertAssetInIframe: function (step, iframe, assets) {
         var key = this.loaderKey + '_' + this.editorId + '_' + step;
-
         iframe.name = key;
         iframe.contentDocument
             .open("text/html", "replace")
@@ -146,6 +150,7 @@ var IframePlugin = AbstractPlugin.extend({
                     '<meta charset="utf-8">' +
                     '<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>\n' +
                     '<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>\n' +
+                    '<style type="text/css">' + this.defaultCSS + '</style>\n' +
                     (assets.cssLibs || []).map(function (cssLib) {
                         return '<link type="text/css" rel="stylesheet" href="' + cssLib + '"/>';
                     }).join('\n') + '\n' +
@@ -153,9 +158,7 @@ var IframePlugin = AbstractPlugin.extend({
                         return '<style type="text/css">' + cssContent + '</style>';
                     }).join('\n') + '\n' +
                 '</head>\n' +
-                '<body>\n' +
-                    '<EDITOR id="editor-in-iframe" style="height: calc(100vh - 6px);"></EDITOR>\n' +
-                '</body>');
+                '<body></body>');
 
             var script = document.createElement('script');
             script.type = 'text/javascript';
@@ -178,7 +181,7 @@ var IframePlugin = AbstractPlugin.extend({
             var defaultView = node.ownerDocument.defaultView;
             var parentIframe = defaultView && defaultView.frameElement;
             if (parentIframe && parentIframe.parentNode && parentIframe !== self._preloadIframe) {
-                node = doc.adoptNode(node);
+                node = document.adoptNode(node);
             }
             doc.head.appendChild(node);
         });

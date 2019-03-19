@@ -5,7 +5,7 @@ var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 var KeyboardPlugin = AbstractPlugin.extend({
-    dependencies: ['Range', 'List', 'Link', 'History'], // TODO: Remove dependencies
+    dependencies: ['Common', 'Range', 'List', 'Link', 'History'], // TODO: Remove dependencies
 
     editableDomEvents: {
         'keydown': '_onKeydown',

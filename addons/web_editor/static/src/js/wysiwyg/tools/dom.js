@@ -98,7 +98,7 @@ var Dom = Class.extend({
             while (
                 toRemove !== ul && toRemove.parentNode &&
                 !this.options.isUnbreakableNode(toRemove.parentNode) &&
-                utils.isBlankNode(toRemove.parentNode, this.options.isVoidBlock)
+                utils.isBlankNode(toRemove.parentNode)
             ) {
                 toRemove = toRemove.parentNode;
             }

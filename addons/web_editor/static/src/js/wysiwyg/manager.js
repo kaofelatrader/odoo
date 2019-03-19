@@ -140,11 +140,14 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
     //--------------------------------------------------------------------------
 
     _afterStartAddDomTools: function () {
-        var options = Object.assign({
-            isVoidBlock: this._plugins.Common.isVoidBlock.bind(this._plugins.Common),
-            isEditableNode: this._plugins.Common.isEditableNode.bind(this._plugins.Common),
-            isUnbreakableNode: this._plugins.Common.isUnbreakableNode.bind(this._plugins.Common),
-        }, this.options);
+        var obj = {};
+        var Common = this._plugins.Common;
+        for (var k in Common) {
+            if (k[0] !== '_' && !this[k] && typeof Common[k] === 'function') {
+                obj[k] = Common[k] = Common[k].bind(Common);
+            }
+        }
+        var options = Object.assign(obj, this.options);
         var dom = new Dom(options);
         this._each('_afterStartAddDomReferences', dom);
     },

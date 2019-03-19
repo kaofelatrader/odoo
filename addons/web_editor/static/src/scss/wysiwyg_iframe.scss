@@ -1,4 +1,4 @@
-iframe.wysiwyg_iframe.o_fullscreen {
+editor iframe.o_fullscreen {
     position: fixed !important;
     left: 0 !important;
     right: 0 !important;
@@ -10,21 +10,8 @@ iframe.wysiwyg_iframe.o_fullscreen {
     border: 0;
 }
 
-.wysiwyg_iframe {
+editor iframe {
     margin: 0;
     padding: 0;
     border: 0;
-}
-
-body.o_in_iframe {
-    background-color: $o-view-background-color;
-    overflow: hidden;
-
-    .note-editable {
-        height: calc(100vh - #{$o-wysiwyg-toolbar-height} - 2px);
-    }
-
-    .note-statusbar {
-        display: none;
-    }
 }
