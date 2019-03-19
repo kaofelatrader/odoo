@@ -193,6 +193,7 @@ class StockMoveLine(models.Model):
         for ml in mls:
             if ml.state == 'done':
                 if 'qty_done' in vals:
+                    # VFE FIXME what is the use of this?
                     ml.move_id.product_uom_qty = ml.move_id.quantity_done
                 if ml.product_id.type == 'product':
                     Quant = self.env['stock.quant']
@@ -223,8 +224,8 @@ class StockMoveLine(models.Model):
 
         Quant = self.env['stock.quant']
         precision = self.env['decimal.precision'].precision_get('Product Unit of Measure')
-        # We forbid to change the reserved quantity in the interace, but it is needed in the
-        # case of stock.move's split.
+        # We forbid to change the reserved quantity in the interface,
+        # but it is needed in the case of stock.move's split.
         # TODO Move me in the update
         if 'product_uom_qty' in vals:
             for ml in self.filtered(lambda m: m.state in ('partially_available', 'assigned') and m.product_id.type == 'product'):
@@ -497,7 +498,7 @@ class StockMoveLine(models.Model):
         ml_to_ignore |= self
 
         # Check the available quantity, with the `strict` kw set to `True`. If the available
-        # quantity is greather than the quantity now unavailable, there is nothing to do.
+        # quantity is greater than the quantity now unavailable, there is nothing to do.
         available_quantity = self.env['stock.quant']._get_available_quantity(
             product_id, location_id, lot_id=lot_id, package_id=package_id, owner_id=owner_id, strict=True
         )

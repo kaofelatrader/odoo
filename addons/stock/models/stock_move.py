@@ -827,7 +827,7 @@ class StockMove(models.Model):
                 location_id=reserved_quant.location_id.id,
                 lot_id=reserved_quant.lot_id.id or False,
                 package_id=reserved_quant.package_id.id or False,
-                owner_id =reserved_quant.owner_id.id or False,
+                owner_id=reserved_quant.owner_id.id or False,
             )
         return vals
 
