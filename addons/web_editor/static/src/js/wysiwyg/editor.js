@@ -22,6 +22,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      */
     editorEvents: {
         'mousedown document': '_onMouseDown',
+        'mouseup document': '_onMouseUp',
         'mouseenter document': '_onMouseEnter',
         'mouseleave document': '_onMouseLeave',
         'mousemove document': '_onMouseMove',
@@ -514,6 +515,16 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         });
         this.editorEvents = events;
     },
+    _mouseEventFocus: function () {
+        this._onMouseDownTime = null;
+        if (!this._editableHasFocus && !this._isEditorContent(document.activeElement)) {
+            $(this.editable).focus();
+        }
+        if (!this._isFocused) {
+            this._isFocused = true;
+            this._onFocus();
+        }
+    },
 
     //--------------------------------------------------------------------------
     // Handler
@@ -633,15 +644,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     _onMouseDown: function (ev) {
         var self = this;
         if (this._isEditorContent(ev.target)) {
-            setTimeout(function () {
-                if (!self._editableHasFocus && !self._isEditorContent(document.activeElement)) {
-                    $(self.editable).focus();
-                }
-                if (!self._isFocused) {
-                    self._isFocused = true;
-                    self._onFocus();
-                }
-            });
+            this._onMouseDownTime = setTimeout(this._mouseEventFocus.bind(this));
         } else if (this._isFocused) {
             this._isFocused = false;
             this._onBlur();
@@ -672,6 +675,18 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     _onMouseMove: function (ev) {
         if (this._mouseInEditor === null) {
             this._mouseInEditor = !!this._isEditorContent(ev.target);
+        }
+    },
+    /**
+     * do not wait for the setTimeout in the tests
+     *
+     * @private
+     * @param {jQueryEvent} ev
+     */
+    _onMouseUp: function (ev) {
+        if (this._onMouseDownTime) {
+            clearTimeout(this._onMouseDownTime);
+            this._mouseEventFocus();
         }
     },
     /**
