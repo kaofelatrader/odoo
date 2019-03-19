@@ -1266,7 +1266,7 @@ var ParagraphPlugin = AbstractPlugin.extend({
      *
      * @returns {false|Node[]} contents of list/indented item
      */
-    indent: function (range) {
+    indent: function (value, range) {
         return this._indent(false, range);
     },
     /**
@@ -1274,7 +1274,7 @@ var ParagraphPlugin = AbstractPlugin.extend({
      *
      * @returns {false|Node[]} contents of list/outdented item
      */
-    outdent: function (range) {
+    outdent: function (value, range) {
         return this._indent(true, range);
     },
 
