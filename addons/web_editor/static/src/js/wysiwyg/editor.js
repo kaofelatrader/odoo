@@ -17,10 +17,10 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         set_value: '_onSetValue',
     },
     /**
-     * @property {Object []} editor_events
+     * @property {Object []} editorEvents
      * {target: {String}, name: {String}, method: {String}}
      */
-    editor_events: {
+    editorEvents: {
         'mousedown document': '_onMouseDown',
         'mouseenter document': '_onMouseEnter',
         'mouseleave document': '_onMouseLeave',
@@ -223,13 +223,19 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     //--------------------------------------------------------------------------
 
     /**
-     * Bind the events defined in the editor_events property.
+     * Bind the events defined in the editorEvents property.
      *
      * @private
      */
     _bindEvents: function () {
-        this.editor_events.forEach(function (event) {
-            event.target.addEventListener(event.name, event.method, false);
+        var self = this;
+        this.editorEvents.forEach(function (event) {
+            if (event.target === 'document') {
+                window.top.document.addEventListener(event.name, event.method, true);
+                self.editable.addEventListener(event.name, event.method, false);
+            } else {
+                self[event.target].addEventListener(event.name, event.method, false);
+            }
         });
     },
     _insertEditorContainers: function () {
@@ -294,11 +300,17 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         return Object.freeze(object);
     },
     /**
-     * Destroy all events defined in `editor_events`.
+     * Destroy all events defined in `editorEvents`.
      */
     _destroyEvents: function () {
-        this.editor_events.forEach(function (event) {
-            event.target.removeEventListener(event.name, event.method);
+        var self = this;
+        this.editorEvents.forEach(function (event) {
+            if (event.target === 'document') {
+                window.top.document.removeEventListener(event.name, event.method, true);
+                self.editable.removeEventListener(event.name, event.method, false);
+            } else {
+                self[event.target].removeEventListener(event.name, event.method, false);
+            }
         });
     },
     /**
@@ -345,10 +357,12 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
             return Object.values(obj);
         });
         descendents = utils.uniq(utils.flatten(descendents));
-        var childrenDom = descendents.filter(function (node) {
-            return node && node.DOCUMENT_NODE && node.tagName && node.tagName !== 'BODY' && node.tagName !== 'HTML';
+        var childrenDom = descendents.filter(function (pluginNode) {
+            return pluginNode && pluginNode.DOCUMENT_NODE &&
+                pluginNode.tagName && pluginNode.tagName !== 'BODY' && pluginNode.tagName !== 'HTML' &&
+                utils.isDescendentOf(node, pluginNode);
         });
-        return utils.isDescendentOf(node, childrenDom);
+        return !!childrenDom.length;
     },
     /**
      * Return the last added, non-null element in an array.
@@ -483,22 +497,22 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         return string;
     },
     /**
-     * Save all event methods defined in editor_events for safe destruction.
+     * Save all event methods defined in editorEvents for safe destruction.
      *
      * @private
      */
     _saveEventMethods: function () {
         var self = this;
         var events = [];
-        Object.keys(this.editor_events).forEach(function (key) {
+        Object.keys(this.editorEvents).forEach(function (key) {
             var parts = key.split(' ');
             events.push({
                 name: parts[0],
-                target: parts[1] === 'document' ? document : self[parts[1]],
-                method: self[self.editor_events[key]].bind(self),
+                target: parts[1],
+                method: self[self.editorEvents[key]].bind(self),
             });
         });
-        this.editor_events = events;
+        this.editorEvents = events;
     },
 
     //--------------------------------------------------------------------------

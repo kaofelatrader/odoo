@@ -10,7 +10,9 @@ var cache = {};
 
 var IframePlugin = AbstractPlugin.extend({
     loaderKey: 'wysiwygPluginIframeOnLoad',
-    defaultCSS: 'body {background-color: transparent;} editable, editable:focus {outline: none;}',
+    defaultCSS: 'body {background-color: transparent;}'+
+                'editable {width: 100%; display: block; min-height: 92%;}'+
+                'editable, editable:focus {outline: none;}',
 
     /**
      * @override
