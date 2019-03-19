@@ -97,7 +97,7 @@ var RangePlugin = AbstractPlugin.extend({
         next = next[method](function (point) {
             return point.node !== target && !target.contains(point.node) ||
                 point.node.contentEditable === 'true' ||
-                point.node.classList.contains('o_fake_editable');
+                point.node.classList && point.node.classList.contains('o_fake_editable');
         });
         if (!next || next.node !== target && !target.contains(next.node)) {
             next = this.getPoint(target, 0);

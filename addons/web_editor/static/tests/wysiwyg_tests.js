@@ -924,7 +924,7 @@ QUnit.test('Text forecolor', function (assert) {
             }, */
             {
                 name: "Apply a color on a fontawesome",
-                content: '<p>dom <i class="fa fa-glass"/>not to edit</p>',
+                content: '<p>dom <i class="fa fa-glass"></i>not to edit</p>',
                 start: 'i->0',
                 do: async function () {
                     await testUtils.dom.triggerNativeEvents($foreColorToggler[0], ['mousedown', 'click']);
@@ -937,7 +937,7 @@ QUnit.test('Text forecolor', function (assert) {
             },
             {
                 name: "Apply a color on a font with text",
-                content: '<p>dom <i class="fa fa-glass"/>not to edit</p>',
+                content: '<p>dom <i class="fa fa-glass"></i>not to edit</p>',
                 start: 'p:contents()[0]->1',
                 end: 'p:contents()[2]->6',
                 do: async function () {
@@ -945,7 +945,7 @@ QUnit.test('Text forecolor', function (assert) {
                     await testUtils.dom.triggerNativeEvents($foreColorDropdown.find('button[name="color-#0000FF"]')[0], ['mousedown', 'click']);
                 },
                 test: {
-                    content: '<p>d<font style="color: rgb(0, 0, 255);">om&nbsp;</font><i class="fa fa-glass" style="color: rgb(0, 0, 255);"></i><font style="color: rgb(0, 0, 255);">not to</font> edit</p>',
+                    content: '<p>d<font style="color: rgb(0, 0, 255);">om </font><i class="fa fa-glass" style="color: rgb(0, 0, 255);"></i><font style="color: rgb(0, 0, 255);">not to</font> edit</p>',
                     start: 'font:eq(0):contents()[0]->0',
                     end: 'font:eq(1):contents()[0]->6',
                 },
@@ -976,12 +976,9 @@ QUnit.test('Text forecolor', function (assert) {
                     await testUtils.dom.triggerNativeEvents($foreColorDropdown.find('button[name="color-#0000FF"]')[0], ['mousedown', 'click']);
 
                     var range = weTestUtils.select('p:contents()[5]->3', 'p:contents()[5]->6', $editable);
-                    Wysiwyg.setRange({
-                        sc: range.sc,
-                        so: range.so,
-                        ec: range.ec,
-                        eo: range.eo,
-                    });
+                    Wysiwyg.setRange(range);
+                    var target = range.sc.tagName ? range.sc : range.sc.parentNode;
+                    await testUtils.dom.triggerNativeEvents(target, ['mousedown', 'mouseup']);
 
                     await testUtils.dom.triggerNativeEvents($foreColorToggler[0], ['mousedown', 'click']);
                     await testUtils.dom.triggerNativeEvents($foreColorDropdown.find('button[name="color-#0000FF"]')[0], ['mousedown', 'click']);
@@ -996,17 +993,18 @@ QUnit.test('Text forecolor', function (assert) {
 
         var def = Promise.resolve();
         _.each(forecolorTests, function (test) {
-            def = def.then(function () {
+            def = def.then(async function () {
                 testName = test.name;
                 wysiwyg.setValue(test.content);
                 var range = weTestUtils.select(test.start, test.end, $editable);
                 Wysiwyg.setRange(range);
-                return Promise.resolve(test.do($editable)).then(function () {
-                    if (!test.async) {
-                        assert.deepEqual(wysiwyg.getValue(), test.test.content, testName);
-                        assert.deepEqual(Wysiwyg.getRange($editable[0]).getPoints(), weTestUtils.select(test.test.start, test.test.end, $editable), testName + carretTestSuffix);
-                    }
-                });
+                var target = range.sc.tagName ? range.sc : range.sc.parentNode;
+                await testUtils.dom.triggerNativeEvents(target, ['mousedown', 'mouseup']);
+                await test.do($editable)
+                if (!test.async) {
+                    assert.deepEqual(wysiwyg.getValue(), test.test.content, testName);
+                    assert.deepEqual(Wysiwyg.getRange($editable[0]).getPoints(), weTestUtils.select(test.test.start, test.test.end, $editable), testName + carretTestSuffix);
+                }
             });
         });
         return def.then(function () {

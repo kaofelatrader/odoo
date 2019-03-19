@@ -206,7 +206,6 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     },
     /**
      * @param {String} value
-     * @returns {String}
      */
     setValue: function (value) {
         this.reset(value);

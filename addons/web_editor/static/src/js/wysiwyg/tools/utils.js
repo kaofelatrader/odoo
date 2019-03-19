@@ -356,7 +356,6 @@ return {
             if (
                 node.tagName === "BR" ||
                 self.isVisibleText(node) ||
-                self.isFont(node) ||
                 self.isImg(node) || // TODO: MOVE THIS!
                 self.isDocument(node)
             ) {
@@ -697,15 +696,6 @@ return {
             return true;
         }
         return false;
-    },
-    /**
-     * Return true if the given node is a font (FONT, or this.isIcon if that method exists).
-     *
-     * @param {Node} node
-     * @returns {Boolean}
-     */
-    isFont: function (node) {
-        return node && node.tagName === "FONT" || this.isIcon && this.isIcon(node); // TODO: MOVE THIS!
     },
     /**
      * Returns true if the node is a "format" node.

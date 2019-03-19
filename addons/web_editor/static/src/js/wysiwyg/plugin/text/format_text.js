@@ -168,7 +168,7 @@ var TextPlugin = AbstractPlugin.extend({
      * @returns {Node}
      */
     _applyStylesToNode: function (node, color, bgcolor, size) {
-        var font = this._getFontAncestor(node) || this._wrapInFontNode(node);
+        var font = this._getFormattableAncestor(node) || this._wrapInFontNode(node);
         this._applyStylesToFontNode(font, color, bgcolor, size);
         this._removeEmptyStyles(font);
         return font;
@@ -205,7 +205,7 @@ var TextPlugin = AbstractPlugin.extend({
         if (this.utils.isText(node) && !this.utils.isVisibleText(node)) {
             return;
         }
-        node = this._getFontAncestor(node) || this.utils.ancestor(node, this.utils.isSpan);
+        node = this._getFormattableAncestor(node) || this.utils.ancestor(node, this.utils.isSpan);
         return !node || this._moveNodeWithoutAttr(node, range) ||
             this._mergeFontAncestorsIfSimilar(node, range);
     },
@@ -235,8 +235,11 @@ var TextPlugin = AbstractPlugin.extend({
      * @param {Node} node
      * @returns {Node}
      */
-    _getFontAncestor: function (node) {
-        return this.utils.lastAncestor(node, this.utils.isFont);
+    _getFormattableAncestor: function (node) {
+        var self = this;
+        return this.utils.lastAncestor(node, function (n) {
+            return n.tagName && self.utils.formatTags.indexOf(n.tagName.toLowerCase()) !== -1;
+        });
     },
     /**
      * Get `node`'s previous sibling that is visible text or element, if any.
@@ -265,7 +268,7 @@ var TextPlugin = AbstractPlugin.extend({
      */
     _mergeFontAncestorsIfSimilar: function (node, range) {
         var endPoint = range.getEndPoint();
-        var font = this._getFontAncestor(node);
+        var font = this._getFormattableAncestor(node);
         var prev = this._getPreviousVisibleNode(font);
         var className = this.utils.orderClass(node);
         var style = this.utils.orderStyle(node);
@@ -364,11 +367,11 @@ var TextPlugin = AbstractPlugin.extend({
         var node;
         if (!range.isCollapsed()) {
             if (range.eo !== this.utils.nodeLength(range.ec)) {
-                ancestor = this._getFontAncestor(range.ec) || range.ec;
+                ancestor = this._getFormattableAncestor(range.ec) || range.ec;
                 this.dom.splitTree(ancestor, range.getEndPoint().enter());
             }
             if (range.so) {
-                ancestor = this._getFontAncestor(range.sc) || range.sc;
+                ancestor = this._getFormattableAncestor(range.sc) || range.sc;
                 node = this.dom.splitTree(ancestor, range.getStartPoint().enter());
                 if (range.ec === range.sc) {
                     range.ec = node;
@@ -378,9 +381,11 @@ var TextPlugin = AbstractPlugin.extend({
                 range.so = 0;
             }
         } else {
-            ancestor = this._getFontAncestor(range.sc);
+            ancestor = this._getFormattableAncestor(range.sc);
             if (ancestor) {
-                node = this.dom.splitTree(ancestor, range.getStartPoint());
+                node = this.dom.splitTree(ancestor, range.getStartPoint(), {
+                    isSkipPaddingBlankNode: this.dependencies.Common.isVoidBlock(ancestor),
+                });
             } else {
                 node = range.sc.splitText(range.so);
             }
@@ -467,7 +472,7 @@ var ForeColorPlugin = AbstractPlugin.extend({
      * @param {string} color (hexadecimal or class name)
      */
     update: function (color, range) {
-        if (!color || color[0] === '#') {
+        if (!color || color.startsWith('#')) {
             color = color || '';
             $(range.sc).css('color', color);
         } else {
