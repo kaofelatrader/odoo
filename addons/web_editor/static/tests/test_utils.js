@@ -22,7 +22,7 @@ MockServer.include({
     _performRpc: function (route, args) {
         if (args.model === "ir.ui.view") {
             if (args.method === 'read_template' && args.args[0] === "web_editor.colorpicker") {
-                var template = '<templates><t t-name="web_editor.colorpicker">' +
+                var template = '<t t-name="web_editor.colorpicker">' +
                         '<colorpicker>' +
                         '    <div class="o_colorpicker_section" data-name="theme" data-display="Theme Colors" data-icon-class="fa fa-flask">' +
                         '        <button data-color="alpha"></button>' +
@@ -42,7 +42,7 @@ MockServer.include({
                         '    </div>' +
                         '    <div class="o_colorpicker_section" data-name="common" data-display="Common Colors" data-icon-class="fa fa-paint-brush"></div>' +
                         '</colorpicker>' +
-                        '</t></templates>';
+                        '</t>';
                 return Promise.resolve(template);
             }
             if (args.method === 'render_template' && args.args[0] === "web_editor.snippets") {

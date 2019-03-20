@@ -154,7 +154,7 @@ var Wysiwyg = Widget.extend({
                 method: 'read_template',
                 args: ['web_editor.colorpicker'],
             }).then(function (template) {
-                return QWeb.add_template('<templtes>' + template + '</templtes>');
+                return QWeb.add_template('<templates>' + template + '</templates>');
             });
         }
 
