@@ -42,6 +42,7 @@ var ProductComparison = publicWidget.Widget.extend(ProductConfiguratorMixin, {
         });
         self._updateComparelistView();
 
+        Popover.Default.whiteList.a.push('data-product_product_id');
         $('#comparelist .o_product_panel_header').popover({
             trigger: 'manual',
             animation: true,
