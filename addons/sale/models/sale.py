@@ -198,6 +198,10 @@ class SaleOrder(models.Model):
     authorized_transaction_ids = fields.Many2many('payment.transaction', compute='_compute_authorized_transaction_ids',
                                                   string='Authorized Transactions', copy=False, readonly=True)
 
+    _sql_constraints = [
+        ('confirmation_date_conditional_required', "CHECK( (state IN ('sale', 'done') AND confirmation_date IS NOT NULL) OR state NOT IN ('sale', 'done') )", "A confirmed sales order required a confirmation date."),
+    ]
+
     @api.depends('pricelist_id', 'date_order', 'company_id')
     def _compute_currency_rate(self):
         for order in self:
