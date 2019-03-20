@@ -405,6 +405,7 @@
                                     <field name="name" widget="section_and_note_text"/>
                                     <field
                                         name="analytic_tag_ids"
+                                        advanced="hide"
                                         groups="analytic.group_analytic_tags"
                                         widget="many2many_tags"
                                     />
@@ -463,6 +464,7 @@
                                     <field name="price_total" widget="monetary" groups="account.group_show_line_subtotals_tax_included"/>
                                     <field name="state" invisible="1"/>
                                     <field name="invoice_status" invisible="1"/>
+                                    <field name="customer_lead" optional="1" invisible="1"/>
                                     <field name="currency_id" invisible="1"/>
                                     <field name="price_tax" invisible="1"/>
                                 </tree>

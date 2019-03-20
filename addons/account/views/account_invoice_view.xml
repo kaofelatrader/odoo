@@ -514,7 +514,8 @@
                                     <field name="price_unit" string="Price"/>
                                     <field name="discount" groups="base.group_no_one" string="Disc.%"/>
                                     <field name="invoice_line_tax_ids" widget="many2many_tags" options="{'no_create': True}" context="{'type':parent.type, 'tree_view_ref': 'account.account_tax_view_tree', 'search_view_ref': 'account.account_tax_view_search'}"
-                                        domain="[('type_tax_use','=','sale'),('company_id', '=', parent.company_id)]"/>
+                                        domain="[('type_tax_use','=','sale'),('company_id', '=', parent.company_id)]"
+                                        optional="1"/>
                                     <field name="price_subtotal" string="Subtotal" groups="account.group_show_line_subtotals_tax_excluded"/>
                                     <field name="price_total" string="Total" groups="account.group_show_line_subtotals_tax_included"/>
                                     <field name="currency_id" invisible="1"/>

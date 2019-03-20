@@ -163,8 +163,8 @@
                                 <field name="qty_ordered"/>
                                 <field name="product_uom_id" string="UoM" groups="uom.group_uom"/>
                                 <field name="schedule_date" groups="base.group_no_one"/>
-                                <field name="account_analytic_id" groups="analytic.group_analytic_accounting"/>
-                                <field name="analytic_tag_ids" groups="analytic.group_analytic_tags" widget="many2many_tags"/>
+                                <field name="account_analytic_id" optional="1" groups="analytic.group_analytic_accounting"/>
+                                <field name="analytic_tag_ids" optional="1" groups="analytic.group_analytic_tags" widget="many2many_tags"/>
                                 <field name="price_unit"/>
                             </tree>
                             <form string="Products">
