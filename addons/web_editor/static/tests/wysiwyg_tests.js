@@ -3622,7 +3622,7 @@ QUnit.test('Video', function (assert) {
                     await _insertVideo(wysiwyg, assert, 'https://www.youtube.com/watch?v=xxxxxxxxxxx', true);
                 },
                 test: {
-                    content: '<p><br></p><div class="media_iframe_video" data-oe-expression="about:blank" data-opacity="1" data-background="js-transparent" data-container="fitCont"><div class="css_editable_mode_display">&nbsp;</div><div class="media_iframe_video_size">&nbsp;</div><iframe src="about:blank" frameborder="0"></iframe></div><p><br></p>',
+                    content: '<p><br></p><div class="media_iframe_video" data-oe-expression="about:blank" data-opacity="1"><div class="css_editable_mode_display">&nbsp;</div><div class="media_iframe_video_size">&nbsp;</div><iframe src="about:blank" frameborder="0"></iframe></div><p><br></p>',
                     check: async function () {
                         assert.strictEqual($('.note-video-popover').css('display'), 'block', testName + ' (popover)');
                     },
@@ -3638,7 +3638,7 @@ QUnit.test('Video', function (assert) {
                 },
                 test: {
                     content: '<breakable><unbreakable><breakable><p>tata</p></breakable>' +
-                        '<div class="media_iframe_video" data-oe-expression="about:blank" data-opacity="1" data-background="js-transparent" data-container="fitCont"><div class="css_editable_mode_display">&nbsp;</div><div class="media_iframe_video_size">&nbsp;</div><iframe src="about:blank" frameborder="0"></iframe></div>' +
+                        '<div class="media_iframe_video" data-oe-expression="about:blank" data-opacity="1"><div class="css_editable_mode_display">&nbsp;</div><div class="media_iframe_video_size">&nbsp;</div><iframe src="about:blank" frameborder="0"></iframe></div>' +
                         '<breakable><p> yoyo</p></breakable></unbreakable></breakable>',
                     check: async function () {
                         assert.strictEqual($('.note-video-popover').css('display'), 'block', testName + ' (popover)');
@@ -3672,10 +3672,10 @@ QUnit.test('Video', function (assert) {
                     await _insertVideo(wysiwyg, assert, 'https://www.youtube.com/watch?v=xxxxxxxxxxx');
                 },
                 test: {
-                    content: '<p><br></p><div class="media_iframe_video pull-left" data-oe-expression="about:blank" data-opacity="1" data-background="js-transparent" data-container="fitCont"><div class="css_editable_mode_display">&nbsp;</div><div class="media_iframe_video_size">&nbsp;</div><iframe src="about:blank" frameborder="0"></iframe></div><p><br></p>',
+                    content: '<p><br></p><div class="media_iframe_video pull-left" data-oe-expression="about:blank" data-opacity="1"><div class="css_editable_mode_display">&nbsp;</div><div class="media_iframe_video_size">&nbsp;</div><iframe src="about:blank" frameborder="0"></iframe></div><p><br></p>',
                     check: async function () {
                         await testUtils.dom.triggerEvents($('.note-image-popover .note-float .note-icon-align-center'), ['mousedown', 'click']);
-                        await testUtils.dom.triggerEvents($('.note-image-popover .note-float .note-icon-align-left'), ['mousedown', 'click']);                    
+                        await testUtils.dom.triggerEvents($('.note-image-popover .note-float .note-icon-align-left'), ['mousedown', 'click']);
                     },
                 },
             },
@@ -3691,7 +3691,7 @@ QUnit.test('Video', function (assert) {
                 test: {
                     check: async function () {
                         assert.deepEqual(wysiwyg.getValue(),
-                            '<p><br></p><div class="media_iframe_video" data-oe-expression="about:blank" data-opacity="0.5" data-background="null" data-container="fitCont"><div class="css_editable_mode_display">&nbsp;</div><div class="media_iframe_video_size">&nbsp;</div><iframe src="about:blank" frameborder="0"></iframe></div><p><br></p>',
+                            '<p><br></p><div class="media_iframe_video" data-oe-expression="about:blank" data-opacity="1"><div class="css_editable_mode_display">&nbsp;</div><div class="media_iframe_video_size">&nbsp;</div><iframe src="about:blank" frameborder="0"></iframe></div><p><br></p>',
                             testName);
                     },
                 },

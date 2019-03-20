@@ -498,19 +498,46 @@ registry.slider = publicWidget.Widget.extend({
         this._computeHeights();
     },
 });
-registry.backgroundVideo = Animation.extend({
-    selector : ".oe_video_background",
 
+registry.backgroundVideo = Animation.extend({
+    selector: '.o_video_background',
+    jsLibs: [
+        '/website/static/lib/YTPlayer/jquery.mb.YTPlayer.js',
+    ],
+    disabledInEditableMode: false,
+
+    /**
+     * @override
+     */
     start: function () {
-        this.start_video();
+        this._startVideo();
         return this._super.apply(this, arguments);
     },
-    update_video_type: function () {
-        var regex_url = '((?:https?:)?//([^\\s\'"<>\\\\/]+)/([^\\s\'"<>\\\\]+))';
-        var match = this.src.match(new RegExp('\\ssrc=[\'"]?' + regex_url));
-        match = match || this.src.match(new RegExp('^\\s*' + regex_url));
+
+    /**
+     * @override
+     */
+    destroy: function () {
+        this._stopVideo();
+        this._super.apply(this, arguments);
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * When user provides video this method will update the video type according 
+     * to the input.
+     *
+     * @private
+     */
+    _updateVideoType: function () {
+        var regexUrl = '((?:https?:)?//([^\\s\'"<>\\\\/]+)/([^\\s\'"<>\\\\]+))';
+        var match = this.src.match(new RegExp('\\ssrc=[\'"]?' + regexUrl));
+        match = match || this.src.match(new RegExp('^\\s*' + regexUrl));
         if (!match) {
-            this.video_type = "image";
+            this.videoType = "image";
             this.src = "";
             return;
         }
@@ -521,145 +548,170 @@ registry.backgroundVideo = Animation.extend({
 
         match = undefined;
 
-        var services_prefix = {
+        var servicesPrefix = {
             youtube: 'https://youtu.be/',
             vimeo: 'https://vimeo.com/',
             dailymotion: 'http://dai.ly/',
         };
 
         if (/\.youtube(-nocookie)?\./.test(domain)) {
-            this.video_type = 'youtube';
+            this.videoType = 'Youtube';
             match = path.match(/^(?:embed\/|watch\?v=)?([^\/?&#]+)/i);
         } else if (domain === "youtu.be") {
-            this.video_type = 'youtube';
+            this.videoType = 'Youtube';
             match = path.match(/^([^\/?&#]+)/);
         } else if (_.str.include(domain, "vimeo.")) {
-            this.video_type = 'vimeo';
+            this.videoType = 'vimeo';
             match = path.match(/^(?:video\/)?([^?&#]+)/i);
         } else if (_.str.include(domain, ".dailymotion.")) {
-            this.video_type = "dailymotion";
+            this.videoType = "dailymotion";
             match = path.match(/(?:embed\/)?(?:video\/)?([^\/?&#_]+)/i);
         } else if (domain === "dai.ly") {
-            this.video_type = "dailymotion";
+            this.videoType = "dailymotion";
             match = path.match(/^([^\/?&#]+)/);
         }
 
         if (match) {
-            this.src = services_prefix[this.video_type] + match[1];
+            this.src = servicesPrefix[this.videoType] + match[1];
         } else if (!/\ssrc=/.test(this.src)) {
             this.src = url;
-            this.video_type = 'html5';
+            this.videoType = 'html5';
         } else {
-            this.video_type = 'other';
+            this.videoType = 'other';
         }
 
-        this.$target.data('video-type', this.video_type);
+        this.$target.data('video-type', this.videoType);
     },
-    start_video: function () {
+
+    /**
+     * When user provides video this method will be called first.
+     *
+     * @private
+     */
+    _startVideo: function () {
         var self = this;
-        var video_url;
+        var videoUrl;
 
-        // mobile phones are not supported, just show the background image.
-        if (jQuery.browser.mobile) { return; }
-
-        if (!self.video_type || self.src !== self.$target.attr('src')) {
+        if (!self.videoType || self.src !== self.$target.attr('src')) {
             self.src = self.$target.attr('src');
             if (!self.src) {
                 return;
             }
-            self.update_video_type();
+            self._updateVideoType();
         }
         var params = _.chain(['muted', 'loop', 'autoplay', 'controls']).map(function (attribute) {
             var value = self.$target.attr(attribute);
             return [attribute, value ? 1 : value];
         }).object().value();
-        video_url = self.$target.attr('src');
+        videoUrl = self.$target.attr('src');
 
-        var whenPlayerReady = (self['create_' + self.video_type + '_video'] || self['create_video']).call(self, self.$target, video_url, params);
+        var whenPlayerReady = (self['_create' + self.videoType + 'Video'] || self['_createVideo']).call(self, self.$target, videoUrl, params);
 
         whenPlayerReady.then(function ($player) {
-            $player.fadeTo(0, 0);
-            $player.addClass('o_player').parent().addClass('o_player_wrapper');
-            self.ratio = ($player.width() / $player.height());
-            if (self.$target.attr('iframefit') === 'fitCont') {
-                $player.parentsUntil(self.$target).css({width: '100%', height: 'auto'});
-                if ($player.is('iframe')) {
-                    $player.css('width', '100%');
-                    $player.height($player.width() / self.ratio);
+            $player.parentsUntil(self.$target).css({width: '100%', height: 'auto'});
+            if ($player.is('iframe')) {
+                $player.css({width: '100%', height: '100%'});
+                self.ratio = 16 / 9;
+                if ($player.width() / $player.height() < self.ratio) {
+                    $player.width($player.height() * self.ratio);
+                    $player.height($player.height());
                 } else {
-                    $player.css({width: '100%', height: 'auto'});
+                    $player.width($player.width());
+                    $player.height($player.width() / self.ratio);
                 }
-            } else if (self.$target.attr('iframefit') === 'fitIframe') {
+            } else {
+                $player.css({width: '100%', height: 'auto'});
             }
-            $player.parentsUntil(self.$target).andSelf().css({width: '100%', height: '100%'});
-
-            $player.fadeTo("slow", 1);
-            $player.removeClass('o_media_loading');
             $(window).trigger('resize');
         });
     },
-    destroy: function () {
-        this._super.apply(this, arguments);
-        this.stop_video();
-    },
-    stop_video: function () {
+
+    /**
+     * When user removes snippet or change the video url, the video will
+     * be removed by this method.
+     *
+     * @private
+     */
+    _stopVideo: function () {
         this.$target.find('.yt_video_container').remove();
     },
-    create_youtube_video: function () {
-        return this.YTPlayer_video.apply(this, arguments);
-    },
-    create_video: function ($container, video_url, params) {
-        var def = $.Deferred();
-        var $iframe;
 
-        if (video_url) {
-            $iframe = $('<iframe/>', {
-                frameborder: "0",
-                allowfullscreen: "allowfullscreen",
-                src: video_url,
-            });
-        } else {
-            $iframe = $('<div/>').html(this.src).find('iframe:first').css({
-                height: "100%", width: "100%", top: 0, position: "absolute",
-            });
-            if ($iframe.length) {
-                $container.css('max-height', '');
+    /**
+     * When type of video is not youtube this method will create video
+     * for other supported types.
+     *
+     * @private
+     * @param {object} $container
+     * @param {string} videoUrl
+     * @param {object} params
+     */
+    _createVideo: function ($container, videoUrl, params) {
+        var def = new Promise(function (resolve, reject) {
+            var $iframe;
+            var opacity = $container.attr('opacity');
+            if (videoUrl) {
+                $container.children().first().removeClass('o_video_bg');
+                if ($container.find('iframe').length) {
+                    $container.find('iframe').remove();
+                }
+                $iframe = $('<iframe/>', {
+                    frameborder: "0",
+                    class: "playerBox o_iframe_position",
+                    allowfullscreen: "",
+                    src: 'https:' + videoUrl + '&muted=1&controls=0&title=0&byline=0&portrait=0&badge=0&autopause=0',
+                });
             } else {
-                return def.reject();
+                $iframe = $('<div/>').html(this.src).find('iframe:first').css({
+                    height: "100%", width: "100%", top: 0, position: "absolute",
+                });
+                if ($iframe.length) {
+                    $container.css('max-height', '');
+                } else {
+                    reject();
+                }
             }
-        }
-
-        $iframe.addClass('o_media_loading');
-        $iframe.on('load', function () {
-            def.resolve($iframe);
+            $iframe.fadeTo(0, 0);
+            $iframe.on('load', function () {
+                resolve($iframe);
+            });
+            $iframe.fadeTo(0, opacity);
+            $container.append($iframe);
         });
-        $container.append($iframe);
-
         return def;
     },
-    YTPlayer_video: function ($container, video_url, _params) {
-        var video_id = this.$target.attr('src').split('/')[4].split('?')[0];
+
+    /**
+     * When type of video is youtube this method will be called.
+     *
+     * @private
+     * @param {object} $container
+     * @param {string} videoUrl
+     * @param {object} _params
+     */
+    _ytPlayerVideo: function ($container, videoUrl, _params) {
+        $container.find('iframe.o_iframe_position').remove();
+        var videoId = this.$target.attr('src').split('/')[4].split('?')[0];
         var params = _.mapObject(_params, function (v) { return !!v; });
-        params.autoplay = true;
-        var opacity      = this.$target.attr('opacity');
-        var background   = this.$target.attr('background') || '';
+        var opacity = this.$target.attr('opacity');
 
         var timeStamp = Date.now();
 
-        var $video_container = $('<div/>', {
-            'class': 'yt_video_container '+ background,
-            id: "s_media_block_" + timeStamp,
+        var $videoContainer = $('<div/>', {
+            class: 'yt_video_container ',
+            id: 's_video_block_' + timeStamp,
         });
         var playerParams = {
-            videoURL: video_id, containment: '#s_media_block_' + timeStamp, mute: params['muted'], loop: params['loop'],
-            stopMovieOnBlur: false, autoPlay: true, showYTLogo: false, opacity: opacity, showControls: false,
+            videoURL: videoId, containment: '#s_video_block_' + timeStamp, mute: params['muted'], loop: params['loop'],
+            stopMovieOnBlur: false, autoPlay: params['autoplay'], showYTLogo: false, opacity: opacity, showControls: false,
         };
         var $el = $('<div/>', {'class': 'player', 'data-property': JSON.stringify(playerParams)});
         var $loader = $("<span class='yt-loader'><span/></span>");
-        $video_container.append($el).append($loader);
+        $videoContainer.append($el).append($loader);
 
         var interval = null;
-        if ($("#oe_main_menu_navbar").length > 0) { $loader.css("top", $("#oe_main_menu_navbar").outerHeight()+1); }
+        if ($("#oe_main_menu_navbar").length > 0) {
+            $loader.css("top", $("#oe_main_menu_navbar").outerHeight()+1);
+        }
         $loader.animate({width: "45%"}, 800, function () {
             var el = $loader;
             interval = setInterval(function () { timer(); }, 300);
@@ -672,54 +724,61 @@ registry.backgroundVideo = Animation.extend({
             });
         }
 
-        var def = $.Deferred();
-        $el.on('YTPReady', function () {
-            clearInterval(interval);
-            $loader.css("width", "100%").fadeOut(500);
+        var def = new Promise(function (resolve, reject) {
+            $el.on('YTPReady', function () {
+                clearInterval(interval);
+                $loader.css("width", "100%").fadeOut(500);
 
-            def.resolve($video_container.find('iframe'));
+                resolve($videoContainer.find('iframe'));
 
-            if (!params['controls'] && params['autoplay']) {
-                return;
-            }
-
-            var $controls = $("<span/>", {'class': 'controls'}).appendTo($video_container);
-
-            var $btnplay = $("<span/>", {'class': 'fa fa-fw'}).appendTo($controls);
-            var playing = params['autoplay'];
-            $btnplay.toggleClass("fa-pause", playing).toggleClass("fa-play", !playing);
-            $btnplay.on("click", play_callback);
-            if (!params['controls']) {
-                $btnplay.one('click', function () {
-                    $controls.remove();
-                });
-            }
-
-            if (!params['muted'] && params['controls']) {
-                var $btnMute = $("<span/>", {'class': 'fa fa-fw fa-volume-up'}).appendTo($controls);
-                $btnMute.on("click", mute_callback);
-            }
-
-            function play_callback() {
-                if (playing) {
-                    $el.YTPPause();
-                } else {
-                    $el.YTPPlay();
+                if (!params['controls'] && params['autoplay']) {
+                    return;
                 }
-                playing = !playing;
 
+                var $controls = $("<span/>", {'class': 'controls'}).appendTo($videoContainer);
+
+                var $btnplay = $("<span/>", {'class': 'fa fa-fw'}).appendTo($controls);
+                var playing = params['autoplay'];
                 $btnplay.toggleClass("fa-pause", playing).toggleClass("fa-play", !playing);
-            }
-            function mute_callback() {
-                $el.YTPToggleVolume();
-                $btnMute.toggleClass("fa-volume-up").toggleClass("fa-volume-off");
-            }
+                $btnplay.on("click", playCallback);
+                if (!params['controls']) {
+                    $btnplay.one('click', function () {
+                        $controls.remove();
+                    });
+                }
+
+                if (!params['muted'] && params['controls']) {
+                    var $btnMute = $("<span/>", {'class': 'fa fa-fw fa-volume-up'}).appendTo($controls);
+                    $btnMute.on("click", muteCallback);
+                }
+
+                function playCallback() {
+                    if (playing) {
+                        $el.YTPPause();
+                    } else {
+                        $el.YTPPlay();
+                    }
+                    playing = !playing;
+
+                    $btnplay.toggleClass("fa-pause", playing).toggleClass("fa-play", !playing);
+                }
+                function muteCallback() {
+                    $el.YTPToggleVolume();
+                    $btnMute.toggleClass("fa-volume-up").toggleClass("fa-volume-off");
+                }
+            });
+
+            $container.append($videoContainer);
+            $el.YTPlayer();
         });
-
-        $container.append($video_container);
-        $el.YTPlayer();
-
         return def;
+    },
+
+    /**
+     * @private
+     */
+    _createYoutubeVideo: function () {
+        return this._ytPlayerVideo.apply(this, arguments);
     },
 }),
 

@@ -822,8 +822,9 @@ var VideoWidget = MediaWidget.extend({
     /**
      * @constructor
      */
-    init: function (parent, media) {
+    init: function (parent, media, options) {
         this._super.apply(this, arguments);
+        this.options = options;
         this._onVideoCodeInput = _.debounce(this._onVideoCodeInput, 1000);
     },
     /**
@@ -836,22 +837,20 @@ var VideoWidget = MediaWidget.extend({
             var $media = $(this.media);
             var src = $media.data('oe-expression') || $media.data('src') || '';
             var opacity = $media.data('opacity') || '';
-            var background = $media.data('background') || '';
-            var container = $media.data('container') || '';
             this.$('textarea#o_video_text').val(src);
 
-            this.$('input#o_video_autoplay').prop('checked', src.indexOf('autoplay=1') >= 0);
-            this.$('input#o_video_hide_controls').prop('checked', src.indexOf('controls=0') >= 0);
-            this.$('input#o_video_loop').prop('checked', src.indexOf('loop=1') >= 0);
-            this.$('input#o_video_hide_fullscreen').prop('checked', src.indexOf('fs=0') >= 0);
-            this.$('input#o_video_hide_yt_logo').prop('checked', src.indexOf('modestbranding=1') >= 0);
-            this.$('input#o_video_muted').prop('checked', src.indexOf('mute=1') >=0);
-            this.$('input#o_video_hide_dm_logo').prop('checked', src.indexOf('ui-logo=0') >= 0);
-            this.$('input#o_video_hide_dm_share').prop('checked', src.indexOf('sharing-enable=0') >= 0);
+            if (src) {
+                this.$('input#o_video_autoplay').prop('checked', src.indexOf('autoplay=1') >= 0);
+                this.$('input#o_video_hide_controls').prop('checked', src.indexOf('controls=0') >= 0);
+                this.$('input#o_video_loop').prop('checked', src.indexOf('loop=1') >= 0);
+                this.$('input#o_video_hide_fullscreen').prop('checked', src.indexOf('fs=0') >= 0);
+                this.$('input#o_video_hide_yt_logo').prop('checked', src.indexOf('modestbranding=1') >= 0);
+                this.$('input#o_video_muted').prop('checked', src.indexOf('mute=1') >= 0);
+                this.$('input#o_video_hide_dm_logo').prop('checked', src.indexOf('ui-logo=0') >= 0);
+                this.$('input#o_video_hide_dm_share').prop('checked', src.indexOf('sharing-enable=0') >= 0);
 
-            this.$('input#o_video_opacity').val(opacity);
-            this.$('#o_video_background').val(background);
-            this.$("input[name=iframefit][value='"+container+"']").prop('checked', true);
+                this.$('input#o_video_opacity').val(opacity);
+            }
             this._updateVideo();
         }
 
@@ -869,7 +868,7 @@ var VideoWidget = MediaWidget.extend({
         this._updateVideo();
         if (this.$('.o_video_dialog_iframe').is('iframe')) {
             this.$media = $(
-                '<div class="media_iframe_video" data-oe-expression="' + this.$content.attr('src') + '" data-opacity="' + this.$('input#o_video_opacity').val() + '" data-background="' + this.$('#o_video_background').val() + '" data-container="' + this.$('input[name=iframefit]:checked').val() + '">' +
+                '<div class="media_iframe_video" data-oe-expression="' + this.$content.attr('src') + '" data-opacity="' + this.$('input#o_video_opacity').val() + '">' +
                     '<div class="css_editable_mode_display">&nbsp;</div>' +
                     '<div class="media_iframe_video_size" contenteditable="false">&nbsp;</div>' +
                     '<iframe src="' + this.$content.attr('src') + '" frameborder="0" contenteditable="false"></iframe>' +
@@ -1007,6 +1006,9 @@ var VideoWidget = MediaWidget.extend({
         // Check video code
         var $textarea = this.$('textarea#o_video_text');
         var code = $textarea.val().trim();
+        if (!code && this.options.video) {
+            this.$content.attr('src', code);
+        }
         if (!code) {
             return;
         }
@@ -1028,8 +1030,6 @@ var VideoWidget = MediaWidget.extend({
             hide_dm_logo: this.$('input#o_video_hide_dm_logo').is(':checked'),
             hide_dm_share: this.$('input#o_video_hide_dm_share').is(':checked'),
             opacity: this.$('input#o_video_opacity').val(),
-            background: this.$('#o_video_background').find(":selected").text(),
-            container: this.$('input[name=iframefit]:checked').val(),
         });
 
         var $optBox = this.$('.o_video_dialog_options');

@@ -257,10 +257,18 @@ font[class*='bg-'] {
 }
 
 // Background Videos
-.oe_video_bg {
+.o_video_bg {
     z-index : -1;
 }
-.oe_video {
+.o_iframe_position {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    z-index: -1;
+}
+.o_video {
     position : relative;
     overflow : hidden;
     z-index : 0;
@@ -301,10 +309,6 @@ font[class*='bg-'] {
     }
 }
 
-@-webkit-keyframes o-anim_movingBG  { @include o-anim-movingBG; }
-@-moz-keyframes o-anim_movingBG  { @include o-anim-movingBG; }
-@-ms-keyframes o-anim_movingBG  { @include o-anim-movingBG; }
-@-o-keyframes o-anim_movingBG  { @include o-anim-movingBG; }
 @keyframes o-anim_movingBG  { @include o-anim-movingBG; }
 
 section {
@@ -335,9 +339,6 @@ section {
         &.btnMute { margin-left: 5px; }
         &:hover   { color: $white; cursor: pointer; }
     }
-}
-.o_media_loading {
-    opacity: 0;
 }
 
 // Probably outdated

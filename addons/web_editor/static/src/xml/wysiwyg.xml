@@ -270,40 +270,16 @@
                         <label class="o_switch mb0"><input id="o_video_hide_yt_logo" type="checkbox" checked="checked"/><span/>Hide Youtube logo</label>
                     </div>
                     <div class="o_dm_option">
-                        <label class="o_switch mb0"><input id="o_video_hide_dm_logo" type="checkbox"/><span/>Hide Dailymotion logo</label>
+                        <label class="o_switch mb0"><input id="o_video_hide_dm_logo" type="checkbox" checked="checked"/><span/>Hide Dailymotion logo</label>
                     </div>
                     <div class="o_dm_option">
-                        <label class="o_switch mb0"><input id="o_video_hide_dm_share" type="checkbox"/><span/>Hide sharing button</label>
+                        <label class="o_switch mb0"><input id="o_video_hide_dm_share" type="checkbox" checked="checked"/><span/>Hide sharing button</label>
                     </div>
-                    <div class="row o_yt_option">
-                        <label class="col-md-4 pre_label">Video background</label>
-                        <label class="col-md-7">
-                            <select name="background" id="o_video_background" class="form-control background">
-                                <option value="js-transparent">Transparent</option>
-                                <option value="js-animated-bg">Animated colors</option>
-                                <option value="js-static-black">Static Black</option>
-                            </select>
+                    <div t-attf-class="#{widget.options.background_video_options ? 'o_dm_option o_yt_option o_vim_option' : ''} row mt-2" style="overflow:hidden">
+                        <label class="col-md-2 pre_label col-form-label">Opacity</label>
+                        <label class="col-md-10">
+                            <input class="my-1" name="opacity" id="o_video_opacity" type="range" step="0.1" min="0" max="1" value="1" placeholder="1"/>
                         </label>
-                    </div>
-                    <div class="o_yt_option" style="overflow:hidden">
-                        <label class="col-md-4 pre_label col-form-label" style="padding-left:0px">Opacity</label>
-                        <label class="col-md-7">
-                            <input name="opacity" id="o_video_opacity" type="range" step="0.1" min="0" max="1" value="1" placeholder="1"/>
-                        </label>
-                    </div>
-                    <div class="o_yt_option">
-                        <div class="o_yt_option custom-control custom-radio col-md-6">
-                            <input type="radio" id="fitCont" name="iframefit" class="custom-control-input" value="fitCont" checked="checked"/>
-                            <label for="fitCont" class="custom-control-label">
-                                <small>Fill container with video</small>
-                            </label>
-                        </div>
-                        <div class="o_yt_option custom-control custom-radio col-md-6">
-                            <input type="radio" id="fitIframe" name="iframefit" class="custom-control-input" value="fitIframe"/>
-                            <label for="fitIframe" class="custom-control-label">
-                                <small>Put video in container</small>
-                            </label>
-                        </div>
                     </div>
                 </div>
             </div>
