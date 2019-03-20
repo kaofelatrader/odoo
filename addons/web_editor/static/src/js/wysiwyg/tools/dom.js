@@ -643,72 +643,15 @@ var Dom = Class.extend({
      *
      * @param {Node} target
      * @param {Boolean} doNotInsertP true to NOT fill an empty unbreakable with a p element.
-     * @returns {Object} {node, offset}
+     * @returns {BoundaryPoint}
      */
     removeBlockNode: function (target, doNotInsertP) {
-        var check = function (point) {
-            if (point.node === target) {
-                return false;
-            }
-            return !point.node || this.options.isEditableNode(point.node) &&
-                (point.node.tagName === "BR" || utils.isVisibleText(point.node));
-        }.bind(this);
         var parent = target.parentNode;
         var offset = [].indexOf.call(parent.childNodes, target);
-        var deleteEdge = 'next';
         var startPoint = new BoundaryPoint(target, 0);
-        var point = startPoint.prevUntil(check);
-        if (!point || !point.node) {
-            deleteEdge = 'prev';
-            point = startPoint.nextUntil(check);
-        }
-        if (!point || !point.node) {
-            var invisibleTextNode = document.createTextNode(utils.char('zeroWidth'));
-            $(target).before(invisibleTextNode);
-            point = startPoint.replace(invisibleTextNode, 1);
-        }
-
-        $(target).remove();
-
-        if (
-            point && (deleteEdge === 'prev' && point.offset) ||
-            deleteEdge === 'next' && point.offset === utils.nodeLength(point.node)
-        ) {
-            point = this.deleteEdge(point.node, deleteEdge) || point;
-        }
-
-        $(parent).contents().filter(function () {
-            return utils.isText(this) && utils.getRegexBlank({
-                atLeastOne: true,
-                invisible: true,
-            }).test(this.textContent);
-        }).remove();
-
-        var br;
-        if (parent.innerHTML === '') {
-            br = document.createElement('br');
-            $(parent).append(br);
-            point = startPoint.replace(parent, 0);
-        }
-
-        if (!doNotInsertP && utils.getRegexBlank({
-                space: true,
-                invisible: true,
-            }).test(parent.innerHTML)) {
-            br = document.createElement('br');
-            if (this.options.isUnbreakableNode(parent) && parent.tagName !== "TD") {
-                var p = document.createElement('p');
-                $(p).append(br);
-                $(parent).append(p);
-            } else {
-                $(parent).append(br);
-            }
-            point = startPoint.replace(br.parentNode, 0);
-        }
-
-        if (point && point.node.tagName === "BR" && point.node.parentNode) {
-            point = startPoint.replace(point.node.parentNode, [].indexOf.call(point.node.parentNode.childNodes, point.node));
-        }
+        var point = this._removeBlock(target);
+        this._removeBlankContents(parent);
+        point = this._cleanAfterRemoveBlock(point, doNotInsertP);
 
         return point && point.node && point.offset ? point : startPoint.replace(parent, offset);
     },
@@ -915,6 +858,56 @@ var Dom = Class.extend({
     //--------------------------------------------------------------------------
 
     /**
+     * Clean point after removing a block:
+     * - Pad/fill its node if needed
+     * - Move it if it's in a BR
+     *
+     * @private
+     * @param {BoundaryPoint} point
+     * @param {Boolean} doNotInsertP true to NOT fill an empty unbreakable with a p element.
+     * @returns {BoundaryPoint} point
+     */
+    _cleanAfterRemoveBlock: function (point, doNotInsertP) {
+        var parent = point.node.parentNode;
+        // todo: check if necessary
+        if (parent.innerHTML === '') {
+            this._padBlankNode(node);
+            point.replace(parent, 0);
+        }
+
+        var parentIsBlank = utils.getRegexBlank({
+            space: true,
+            invisible: true,
+        }).test(parent.innerHTML);
+        if (!doNotInsertP && parentIsBlank) {
+            var p = this._fillNode(parent);
+            point.replace(p, 0);
+        }
+
+        if (point && point.node.tagName === "BR" && point.node.parentNode) {
+            point.replace(point.node.parentNode, [].indexOf.call(point.node.parentNode.childNodes, point.node));
+        }
+
+        return point;
+    },
+    /**
+     * Fill a node tu ensure correct DOM and selection.
+     *
+     * @private
+     * @param {Node} node
+     * @returns {Node}
+     */
+    _fillNode: function (node) {
+        if (this.options.isUnbreakableNode(node) && node.tagName !== "TD") {
+            var p = document.createElement('p');
+            this._padBlankNode(p);
+            $(node).append(p);
+        } else {
+            this._padBlankNode(node);
+        }
+        return node;
+    },
+    /**
      * Find the previous/next non-similar block to merge with.
      * "Similar" means that they have the same tag, styles, classes and attributes.
      *
@@ -1060,6 +1053,25 @@ var Dom = Class.extend({
         return textNode.parentNode && textNode;
     },
     /**
+     * Return a function that takes a point and returns true
+     * if that point is different from `startNode` and is on a
+     * node that is visible and editable (or if it has no node at all).
+     *
+     * @private
+     * @param {Node} startNode
+     * @returns {Function (BoundaryPoint) => Boolean}
+     */
+    _isOtherVisiblePoint: function (startNode) {
+        var self = this;
+        return function (point) {
+            if (point.node === startNode) {
+                return false;
+            }
+            return !point.node || self.options.isEditableNode(point.node) &&
+                (point.node.tagName === "BR" || utils.isVisibleText(point.node));
+        };
+    },
+    /**
      * Pad the given node with `utils.blank` if the node is empty (for cursor position).
      *
      * @private
@@ -1069,6 +1081,52 @@ var Dom = Class.extend({
         if (!utils.isVoid(node) && !utils.nodeLength(node)) {
             node.innerHTML = utils.blank;
         }
+    },
+    /**
+     * Remove the text nodes contained within a node,
+     * that are blank or filled with invisible characters.
+     *
+     * @private
+     * @param {Node} node
+     */
+    _removeBlankContents: function (node) {
+        $(node).contents().filter(function () {
+            return utils.isText(this) && utils.getRegexBlank({
+                atLeastOne: true,
+                invisible: true,
+            }).test(this.textContent);
+        }).remove();
+    },
+    /**
+     * Remove a block and return a focusable point where the block used to be.
+     *
+     * @private
+     * @param {Node} block
+     * @returns {BoundaryPoint}
+     */
+    _removeBlock: function (block) {
+        var point = new BoundaryPoint(block, 0).prevUntil(this._isOtherVisiblePoint(block));
+        var deleteEdge = 'next';
+        if (!point || !point.node) {
+            deleteEdge = 'prev';
+            point.nextUntil(this._isOtherVisiblePoint(block));
+        }
+        if (!point || !point.node) {
+            var invisibleTextNode = document.createTextNode(utils.char('zeroWidth'));
+            $(block).before(invisibleTextNode);
+            point.replace(invisibleTextNode, 1);
+        }
+
+        $(block).remove();
+
+        var isPointOnEdge;
+        if (deleteEdge === 'prev') {
+            isPointOnEdge = point && !!point.offset;
+        } else {
+            isPointOnEdge = point && point.offset === utils.nodeLength(point.node);
+        }
+
+        return isPointOnEdge ? this.deleteEdge(point.node, deleteEdge) || point : point;
     },
     /**
      * Perform operations that are necessary after the insertion of a visible character:
