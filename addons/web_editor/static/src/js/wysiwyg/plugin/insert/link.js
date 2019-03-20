@@ -41,9 +41,11 @@ var LinkCreate = AbstractPlugin.extend({
         });
     },
 
-    _applyToAnchor: function (anchor, url, className) {
+    _applyToAnchor: function (anchor, url, className, label) {
         anchor.setAttribute('href', url);
         anchor.className = className;
+        anchor.textContent = label;
+        return anchor;
     },
     _getAnchorAncestor: function (node) {
         return this.utils.ancestor(node, this.utils.isAnchor);
@@ -51,11 +53,15 @@ var LinkCreate = AbstractPlugin.extend({
     _getLinkInfo: function (range) {
         var nodes = this._getNodesToLinkify(range);
         var anchorAncestor = this._getAnchorAncestor(range.commonAncestor());
+        var text = this._getTextToLinkify(nodes);
+        console.warn('TODO: change link needLabel');
 
         var linkInfo = {
             isAnchor: !!anchorAncestor,
-            text: this._getTextToLinkify(nodes),
-            url: anchorAncestor ? anchorAncestor.getAttribute('href') : ''
+            text: text,
+            url: anchorAncestor ? anchorAncestor.getAttribute('href') : '',
+            needLabel: true, // TODO: see what was done before: !text or option ?
+            className: anchorAncestor ? anchorAncestor.className : '',
         };
 
         return linkInfo;
@@ -165,8 +171,9 @@ var LinkCreate = AbstractPlugin.extend({
         } else {
             anchor = this._insertBlankLink();
         }
-        anchor = this._applyToAnchor(anchor, linkInfo.url, linkInfo.className);
+        anchor = this._applyToAnchor(anchor, linkInfo.url, linkInfo.className, linkInfo.text);
         this.trigger_up('focusnode', anchor);
+        return anchor;
     },
     _prepareRange: function (range) {
         if (this.utils.isImg(range.sc) || this.utils.isIcon && this.utils.isIcon(range.sc)) {
@@ -217,7 +224,15 @@ var LinkCreate = AbstractPlugin.extend({
      * @param {Boolean} linkInfo.isNewWindow
      */
     _onSaveDialog: function (linkInfo) {
-        this._insertLink(linkInfo);
+        var anchor = this._insertLink(linkInfo);
+        if (!anchor.nextSibling) {
+            anchor.parentNode.insertBefore(document.createTextNode('\uFEFF'), anchor.nextSibling);
+        }
+        var range = this.dependencies.Range.setRange({
+            sc: anchor.nextSibling,
+            so: 0,
+        });
+        this.dependencies.Range.save(range);
     },
 });
 
@@ -235,7 +250,10 @@ var Link = AbstractPlugin.extend({
     get: function () {
         var range = this.dependencies.Range.getRange();
         var anchor = this.utils.ancestor(range.sc, this.utils.isAnchor);
-        return anchor && range.replace({sc: anchor, so: 0});
+        return anchor && range.replace({
+            sc: anchor,
+            so: 0,
+        });
     },
 
     /**
@@ -249,7 +267,8 @@ var Link = AbstractPlugin.extend({
     /**
      * Remove the current link, keep its contents.
      */
-    unlink: function (value, anchor) {
+    unlink: function (value, range) {
+        var anchor = this.utils.ancestor(range.sc, this.utils.isAnchor);
         var startAndEndInvisible = this.utils.getRegex('startAndEndInvisible', 'g');
         anchor.innerHTML = anchor.innerHTML.replace(startAndEndInvisible, '');
 
@@ -261,7 +280,7 @@ var Link = AbstractPlugin.extend({
 
         var start = contents[0];
         var end = contents[contents.length - 1];
-        var range = this.dependencies.Range.setRange({
+        range = this.dependencies.Range.setRange({
             sc: start,
             so: 0,
             ec: end,

@@ -2527,8 +2527,7 @@ QUnit.test('Link', function (assert) {
                 },
                 test: {
                     content: '<p>d<a href="#">om t</a>o edit</p>',
-                    start: 'a:contents()[0]->0',
-                    end: 'a:contents()[0]->4',
+                    start: 'p:contents()[2]->0', // link not selected, the user can continue to write
                 },
             },
             {
@@ -2542,8 +2541,7 @@ QUnit.test('Link', function (assert) {
                 },
                 test: {
                     content: '<p>d<a href="#">om t</a>o edit</p>',
-                    start: 'p->2', // link not selected, the user can continue to write
-                    end: 'p->2',
+                    start: 'p:contents()[2]->0', // link not selected, the user can continue to write
                 },
             },
             {
@@ -2555,9 +2553,8 @@ QUnit.test('Link', function (assert) {
                     await testUtils.fields.editInput($('.modal-dialog:visible #o_link_dialog_url_input'),'#newlink');
                 },
                 test: {
-                    content: '<div><a href="#newlink" class="btn btn-outline-alpha btn-lg">dom to edit</a></div>',
-                    start: 'a->0',
-                    end: 'a->1',
+                    content: '<div><a href="#newlink" class="btn btn-outline-alpha btn-lg">dom to edit</a>\uFEFF</div>',
+                    start: 'div:contents()[1]->0', // link not selected, the user can continue to write
                 },
             },
             {
@@ -2571,8 +2568,7 @@ QUnit.test('Link', function (assert) {
                 },
                 test: {
                     content: '<p>d<a href="mailto:john.coltrane@example.com">om t</a>o edit</p>',
-                    start: 'a:contents()[0]->0',
-                    end: 'a:contents()[0]->4',
+                    start: 'p:contents()[2]->0', // link not selected, the user can continue to write
                 },
             },
             {
@@ -2587,8 +2583,7 @@ QUnit.test('Link', function (assert) {
                 },
                 test: {
                     content: '<p>d<a href="#" class="btn-lg">om t</a>o edit</p>',
-                    start: 'a:contents()[0]->0',
-                    end: 'a:contents()[0]->4',
+                    start: 'p:contents()[2]->0', // link not selected, the user can continue to write
                 },
             },
             {
@@ -2603,9 +2598,8 @@ QUnit.test('Link', function (assert) {
                     await testUtils.dom.triggerNativeEvents($('.modal-dialog:visible .o_switch [name="is_new_window"]')[0], ['mousedown', 'click']);
                 },
                 test: {
-                    content: '<p><a href="#" target="_blank" class="btn btn-outline-alpha">dom to edit</a></p>',
-                    start: 'a->0',
-                    end: 'a->1',
+                    content: '<p><a href="#" target="_blank" class="btn btn-outline-alpha">dom to edit</a>\uFEFF</p>',
+                    start: 'p:contents()[1]->0', // link not selected, the user can continue to write
                 },
             },
             // POPOVER
@@ -2620,7 +2614,10 @@ QUnit.test('Link', function (assert) {
                 },
                 test: {
                     check: async function () {
-                        await testUtils.dom.triggerNativeEvents($('.note-link-popover .note-btn .note-icon-link')[0], ['mousedown', 'click']);
+                        // Adding a link reranges AFTER the link so we need to
+                        // put the range on the link again for the popover to appear
+                        Wysiwyg.setRange({sc: wysiwyg.$('a[href="/link"]')[0]});
+                        await testUtils.dom.triggerNativeEvents($('popover[name="Link"] button[name="link-add"]')[0], ['mousedown', 'click']);
 
                         assert.strictEqual($('.modal-dialog:visible #o_link_dialog_label_input').val(), 'om t', testName + ' (label)');
                         assert.strictEqual($('.modal-dialog:visible #o_link_dialog_url_input').val(), '/link', testName + ' (url)');
@@ -2642,7 +2639,10 @@ QUnit.test('Link', function (assert) {
                 test: {
                     content: '<p>dom to edit</p>',
                     check: async function () {
-                        await testUtils.dom.triggerNativeEvents($('.note-link-popover .note-btn .note-icon-chain-broken')[0], ['mousedown', 'click']);
+                        // Adding a link reranges AFTER the link so we need to
+                        // put the range on the link again for the popover to appear
+                        Wysiwyg.setRange({sc: wysiwyg.$('a[href="/link"]')[0]});
+                        await testUtils.dom.triggerNativeEvents($('popover[name="Link"] button[name="link-remove"]')[0], ['mousedown', 'click']);
 
                         var range = weTestUtils.select('p:contents()[0]->1', 'p:contents()[0]->5', $editable);
                         assert.deepEqual(Wysiwyg.getRange($editable[0]).getPoints(), range, testName + carretTestSuffix);
@@ -2658,6 +2658,8 @@ QUnit.test('Link', function (assert) {
                 wysiwyg.setValue(test.content);
                 var range = weTestUtils.select(test.start, test.end, $editable);
                 Wysiwyg.setRange(range);
+                var target = range.sc.tagName ? range.sc : range.sc.parentNode;
+                await testUtils.dom.triggerNativeEvents(target, ['mousedown', 'mouseup']);
                 await _clickLink(test.do, test.test);
             });
         });
