@@ -2680,7 +2680,7 @@ QUnit.test('Table', function (assert) {
     }
 
     return weTestUtils.createWysiwyg({
-        debug: true,
+        debug: false,
         wysiwygOptions: {},
     }).then(async function (wysiwyg) {
         var $editable = wysiwyg.$('editable');
