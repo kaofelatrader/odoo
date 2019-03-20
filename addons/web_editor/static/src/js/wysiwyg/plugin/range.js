@@ -44,7 +44,7 @@ var RangePlugin = AbstractPlugin.extend({
         var range = this.lastRange;
         if (!range || !this.editable.contains(range.sc)) {
             range = this._getRange();
-            if (range && !this.editable.contains(range.sc)) {
+            if (range && (!this.editable.contains(range.sc) || range.sc === this.editable || range.ec === this.editable)) {
                 range = null;
             }
         } else {

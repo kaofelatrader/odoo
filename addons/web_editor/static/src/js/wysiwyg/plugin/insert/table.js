@@ -65,9 +65,11 @@ var TablePicker = AbstractPlugin.extend({
     createTable: function (rowCount, colCount) {
         var table = document.createElement('table');
         table.className = this.tableClassName;
+        var tbody = document.createElement('tbody');
+        table.appendChild(tbody);
         for (var i = 0; i < rowCount; i++) {
             var tr = document.createElement('tr');
-            table.appendChild(tr);
+            tbody.appendChild(tr);
             for (var j = 0; j < colCount; j++) {
                 var td = document.createElement('td');
                 var p = document.createElement('p');
@@ -89,20 +91,27 @@ var TablePicker = AbstractPlugin.extend({
     insertTable: function (dim, range) {
         var dimension = dim.split('x');
         var table = this.createTable(dimension[0], dimension[1], this.options);
+        if (range.getStartPoint().isRightEdge()) {
+            var parentBlock = this.utils.firstBlockAncestor(range.sc);
+            range.replace({
+                sc: parentBlock,
+                so: this.utils.nodeLength(parentBlock),
+            });
+        }
         this.dom.insertBlockNode(table, range);
         var p;
         if (!table.previousElementSibling) {
             p = document.createElement('p');
             p.appendChild(document.createElement('br'));
-            p.parentNode.insertBefore(table, p);
+            table.parentNode.insertBefore(p, table);
         }
         if (!table.nextElementSibling) {
             p = document.createElement('p');
             p.appendChild(document.createElement('br'));
             if (p.nextSibling) {
-                p.parentNode.appendChild(table);
+                table.parentNode.appendChild(p);
             } else {
-                p.parentNode.insertBefore(table, p.nextSibling);
+                table.parentNode.insertBefore(p, table.nextSibling);
             }
         }
         var range = range.replace({
@@ -260,16 +269,15 @@ var Table = AbstractPlugin.extend({
      * @param {Node} cell
      */
     addCol: function (position, range) {
+        var self = this;
         var cell = range.sc;
         var cells = this._currentCol(cell);
         cells.forEach(function (cell) {
-            var td = this._createCell();
+            var td = self._createCell();
             if (position === 'left') {
                 cell.parentNode.insertBefore(td, cell);
-            } else if (cell.nextSibling) {
-                cell.parentNode.insertBefore(td, cell.nextSibling);
             } else {
-                cell.parentNode.appendChild(td);
+                cell.parentNode.insertBefore(td, cell.nextSibling);
             }
         });
     },
@@ -282,7 +290,7 @@ var Table = AbstractPlugin.extend({
     addRow: function (position, range) {
         var cell = range.sc;
         var parentRow = this._currentRow(cell);
-        var nCols = parentTR.querySelectorAll('td').length;
+        var nCols = parentRow.querySelectorAll('td').length;
         var tr = document.createElement('tr');
         for (var i = 0; i < nCols; i++) {
             tr.append(this._createCell());
@@ -359,7 +367,7 @@ var Table = AbstractPlugin.extend({
     deleteTable: function (value, range) {
         var cell = range.sc;
         var point = this.dom.removeBlockNode(this._currentTable(cell));
-        if (this.dependencies.Common.isEditableNode(point.node)) {
+        if (this.dependencies.Common.isEditableNode(point.node) && !this.utils.isText(point.node)) {
             point.replace(this.utils.firstLeaf(point.node), 0);
         }
         range = range.replace({
@@ -374,8 +382,11 @@ var Table = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     _createCell: function () {
-        var xmlString = '<td><p><br></p></td>';
-        return new DOMParser().parseFromString(xmlString, "text/xml").firstChild;
+        var td = document.createElement('td');
+        var p = document.createElement('p');
+        p.appendChild(document.createElement('br'));
+        td.appendChild(p);
+        return td;
     },
     /**
      * Get the current column (as an array of cells).

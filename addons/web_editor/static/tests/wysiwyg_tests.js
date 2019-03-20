@@ -2680,7 +2680,7 @@ QUnit.test('Table', function (assert) {
     }
 
     return weTestUtils.createWysiwyg({
-        debug: false,
+        debug: true,
         wysiwygOptions: {},
     }).then(async function (wysiwyg) {
         var $editable = wysiwyg.$('editable');
@@ -2690,6 +2690,8 @@ QUnit.test('Table', function (assert) {
         wysiwyg.setValue('<p><br></p>');
         var range = weTestUtils.select('p->1', 'p->1', $editable);
         Wysiwyg.setRange(range);
+        var target = range.sc.tagName ? range.sc : range.sc.parentNode;
+        await testUtils.dom.triggerNativeEvents(target, ['mousedown', 'mouseup']);
 
         await createTable(wysiwyg, '3x3');
 
@@ -2707,12 +2709,7 @@ QUnit.test('Table', function (assert) {
 
         wysiwyg.setValue('<p>dom to edit</p>');
         range = weTestUtils.select('p:contents()[0]->0', 'p:contents()[0]->0', $editable);
-        Wysiwyg.setRange({
-            sc: range.sc,
-            so: range.so,
-            ec: range.ec,
-            eo: range.eo,
-        });
+        Wysiwyg.setRange(range);
 
         await createTable(wysiwyg, '3x3');
 
@@ -2778,7 +2775,7 @@ QUnit.test('Table', function (assert) {
         $(range.sc).mousedown();
         Wysiwyg.setRange(range);
 
-        var $trash = $('.note-table-popover:visible button:has(.note-icon-trash)');
+        var $trash = $('popover[name="Table"] button[name="delete-table"]');
 
         await testUtils.dom.triggerNativeEvents($trash[0], ['mousedown', 'click']);
 
@@ -2818,7 +2815,7 @@ QUnit.test('Table', function (assert) {
             eo: range.eo,
         });
 
-        $trash = $('.note-table-popover:visible button:has(.note-icon-trash)');
+        $trash = $('popover[name="Table"] button[name="delete-table"]');
         await testUtils.dom.triggerNativeEvents($trash[0], ['mousedown', 'click']);
 
         assert.strictEqual($editable.html().replace(/\s+/g, ' '),
@@ -2851,7 +2848,7 @@ QUnit.test('Table', function (assert) {
             ec: range.ec,
             eo: range.eo,
         });
-        await testUtils.dom.triggerNativeEvents($('.note-table-popover:visible button:has(.note-icon-col-remove)')[0], ['mousedown', 'click']);
+        await testUtils.dom.triggerNativeEvents($('popover[name="Table"] button[name="delete-col"]')[0], ['mousedown', 'click']);
 
         assert.strictEqual($editable.html().replace(/\s+/g, ' '),
             '<p>dom t</p>' +
@@ -2873,7 +2870,7 @@ QUnit.test('Table', function (assert) {
             ec: range.ec,
             eo: range.eo,
         });
-        await testUtils.dom.triggerNativeEvents($('.note-table-popover:visible button:has(.note-icon-row-remove)')[0], ['mousedown', 'click']);
+        await testUtils.dom.triggerNativeEvents($('popover[name="Table"] button[name="delete-row"]')[0], ['mousedown', 'click']);
 
         assert.strictEqual($editable.html().replace(/\s+/g, ' '),
             '<p>dom t</p>' +
@@ -2894,7 +2891,7 @@ QUnit.test('Table', function (assert) {
             ec: range.ec,
             eo: range.eo,
         });
-        await testUtils.dom.triggerNativeEvents($('.note-table-popover:visible button:has(.note-icon-col-after)')[0], ['mousedown', 'click']);
+        await testUtils.dom.triggerNativeEvents($('popover[name="Table"] button[name="add-col-after"]')[0], ['mousedown', 'click']);
 
         assert.strictEqual($editable.html().replace(/\s+/g, ' '),
             '<p>dom t</p>' +
@@ -2905,10 +2902,10 @@ QUnit.test('Table', function (assert) {
             '<p>o edit</p>',
             "should add a row after");
 
-        // add a row before
+        // add a column before
 
         $(range.sc).mousedown();
-        await testUtils.dom.triggerNativeEvents($('.note-table-popover:visible button:has(.note-icon-col-before)')[0], ['mousedown', 'click']);
+        await testUtils.dom.triggerNativeEvents($('popover[name="Table"] button[name="add-col-before"]')[0], ['mousedown', 'click']);
 
         assert.strictEqual($editable.html().replace(/\s+/g, ' '),
             '<p>dom t</p>' +
@@ -2917,12 +2914,12 @@ QUnit.test('Table', function (assert) {
             '<tr><td><p><br></p></td><td><p>2-0</p></td><td><p><br></p></td><td><p>2-2</p></td></tr>' +
             '</tbody></table>' +
             '<p>o edit</p>',
-            "should add a row before");
+            "should add a column before");
 
-        // add a line after
+        // add a row below
 
         $(range.sc).mousedown();
-        await testUtils.dom.triggerNativeEvents($('.note-table-popover:visible button:has(.note-icon-row-below)')[0], ['mousedown', 'click']);
+        await testUtils.dom.triggerNativeEvents($('popover[name="Table"] button[name="add-row-below"]')[0], ['mousedown', 'click']);
 
         assert.strictEqual($editable.html().replace(/\s+/g, ' '),
             '<p>dom t</p>' +
@@ -2932,12 +2929,12 @@ QUnit.test('Table', function (assert) {
             '<tr><td><p><br></p></td><td><p><br></p></td><td><p><br></p></td><td><p><br></p></td></tr>' +
             '</tbody></table>' +
             '<p>o edit</p>',
-            "should add a line after");
+            "should add a row below");
 
-        // add a line before
+        // add a row above
 
         $(range.sc).mousedown();
-        await testUtils.dom.triggerNativeEvents($('.note-table-popover:visible button:has(.note-icon-row-above)')[0], ['mousedown', 'click']);
+        await testUtils.dom.triggerNativeEvents($('popover[name="Table"] button[name="add-row-above"]')[0], ['mousedown', 'click']);
 
         assert.strictEqual($editable.html().replace(/\s+/g, ' '),
             '<p>dom t</p>' +
@@ -2948,7 +2945,7 @@ QUnit.test('Table', function (assert) {
             '<tr><td><p><br></p></td><td><p><br></p></td><td><p><br></p></td><td><p><br></p></td></tr>' +
             '</tbody></table>' +
             '<p>o edit</p>',
-            "should add a line before");
+            "should add a row above");
 
         wysiwyg.destroy();
     });

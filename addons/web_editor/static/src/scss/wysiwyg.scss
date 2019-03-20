@@ -18,6 +18,7 @@ editor {
     popover {
         display: none;
         position: absolute;
+        z-index: 1;
         bottom: -10px;
         background-color: #fff;
         border-radius: 0.2rem;

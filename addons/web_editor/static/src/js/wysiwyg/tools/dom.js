@@ -166,7 +166,7 @@ var Dom = Class.extend({
         var spaceToRemove = [];
         while ((node = nodes.pop())) {
             next = node[prevOrNext];
-            while (next && !next.tagName) {
+            while (next && utils.isText(next)) {
                 if (!utils.getRegex('char').test(next.textContent)) {
                     spaceToRemove.push(next);
                     next = next[prevOrNext];
@@ -204,7 +204,7 @@ var Dom = Class.extend({
             spaceToRemove = [];
             next = node[prevOrNext];
             var $next = $(next);
-            if (next.tagName) {
+            if (!utils.isText(next)) {
                 var textNode;
                 var nextTextNode;
                 var deep;
@@ -236,12 +236,12 @@ var Dom = Class.extend({
                     nextTextNode = utils.firstLeafUntil(next, function (n) {
                         return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
                     });
-                    if (!nextTextNode.tagName && !utils.ancestor(nextTextNode, utils.isPre)) {
+                    if (utils.isText(nextTextNode) && !utils.ancestor(nextTextNode, utils.isPre)) {
                         this.removeExtremeBreakableSpace(nextTextNode);
                         textNode = utils.lastLeafUntil(node, function (n) {
                             return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
                         });
-                        if (!textNode.tagName && !utils.ancestor(textNode, utils.isPre)) {
+                        if (utils.isText(textNode) && !utils.ancestor(textNode, utils.isPre)) {
                             this.removeExtremeBreakableSpace(textNode);
                         }
                     }
@@ -434,7 +434,7 @@ var Dom = Class.extend({
                 isSkipPaddingBlankNode: true,
                 isNotSplitEdgePoint: true,
             });
-            if ((!tree || $.contains(tree, range.sc)) && (point.offset || point.node.tagName)) {
+            if ((!tree || $.contains(tree, range.sc) || tree === range.sc) && (point.offset || point.node.tagName)) {
                 tree = tree || utils.ancestor(point.node, function (node) {
                     return self.options.isUnbreakableNode(node.parentNode);
                 });
@@ -648,12 +648,11 @@ var Dom = Class.extend({
     removeBlockNode: function (target, doNotInsertP) {
         var parent = target.parentNode;
         var offset = [].indexOf.call(parent.childNodes, target);
-        var startPoint = new BoundaryPoint(target, 0);
         var point = this._removeBlock(target);
         this._removeBlankContents(parent);
         point = this._cleanAfterRemoveBlock(point, doNotInsertP);
 
-        return point && point.node && point.offset ? point : startPoint.replace(parent, offset);
+        return point && point.node && point.offset ? point : new BoundaryPoint(parent, offset);
     },
     /**
      * Removes the empty inline nodes around the point, and joins its siblings.
@@ -868,19 +867,12 @@ var Dom = Class.extend({
      * @returns {BoundaryPoint} point
      */
     _cleanAfterRemoveBlock: function (point, doNotInsertP) {
-        var parent = point.node.parentNode;
-        // todo: check if necessary
-        if (parent.innerHTML === '') {
-            this._padBlankNode(node);
-            point.replace(parent, 0);
-        }
-
         var parentIsBlank = utils.getRegexBlank({
             space: true,
             invisible: true,
-        }).test(parent.innerHTML);
+        }).test(point.node.parentNode.innerHTML);
         if (!doNotInsertP && parentIsBlank) {
-            var p = this._fillNode(parent);
+            var p = this._fillNode(point.node.parentNode);
             point.replace(p, 0);
         }
 
