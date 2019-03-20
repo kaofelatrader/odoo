@@ -2967,15 +2967,15 @@ QUnit.test('CodeView', async function (assert) {
         // hide popover in CodeView mode and no range error when edit the content
         var $editable = wysiwyg.$('editable');
         await testUtils.dom.triggerNativeEvents($editable.find('img')[0], ['mousedown', 'click']);
-        assert.strictEqual($('.note-popover.note-image-popover:visible').length, 1, "should display the image popover");
+        assert.strictEqual($('popover[name="Image"]:visible').length, 1, "should display the image popover");
         await testUtils.dom.triggerNativeEvents($buttonCodeView[0], ['mousedown', 'click']);
-        assert.strictEqual($('textarea.note-codable:visible').length, 1, "should show the CodeView textarea");
+        assert.strictEqual($('textarea[name="codeview"]:visible').length, 1, "should show the CodeView textarea");
         assert.strictEqual($editable.is(':visible'), false, "should hide the editable area");
-        assert.strictEqual($('.note-popover:visible').length, 0, "should hide all popovers");
-        assert.strictEqual($('.note-toolbar button:not(.disabled)').length, 1, "should disabled all buttons expect the codeview button");
-        wysiwyg.$('textarea.note-codable').val('<p>dom to edit a <img src="/web_editor/static/src/img/transparent.png"></p>');
+        assert.strictEqual($('popover:visible').length, 0, "should hide all popovers");
+        assert.strictEqual($('toolbar group button:not(.disabled)').length, 4, "should disable all buttons except the codeview, add blocks, fullscreen and help buttons");
+        wysiwyg.$('textarea[name="codeview"]').val('<p>dom to edit a <img src="/web_editor/static/src/img/transparent.png"></p>');
         await testUtils.dom.triggerNativeEvents($buttonCodeView[0], ['mousedown', 'click']);
-        assert.strictEqual($('textarea.note-codable:visible').length, 0, "should hide the CodeView textarea");
+        assert.strictEqual($('textarea[name="codeview"]:visible').length, 0, "should hide the CodeView textarea");
         assert.strictEqual($editable.is(':visible'), true, "should show the editable area");
         assert.strictEqual($editable[0].style.height, '', "should reset the height (not auto or sizing)");
         // end
