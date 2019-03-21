@@ -24,95 +24,10 @@ var Dom = Class.extend({
      * @returns {BoundaryPoint} pointA, updated if necessary
      */
     deleteBetween: function (pointA, pointB) {
-        var self = this;
-        if (pointB.node.childNodes[pointB.offset]) {
-            var firstLeaf = utils.firstLeafUntil(pointB.node.childNodes[pointB.offset], function (n) {
-                return (!self.options.isVoidBlock(n)) && self.options.isEditableNode(n);
-            });
-            pointB = new BoundaryPoint(firstLeaf, 0);
-        }
-        if (pointB.node.tagName && pointB.node.tagName !== 'BR' && pointB.offset >= utils.nodeLength(pointB.node)) {
-            pointB = pointB.next();
-        }
-        var changed;
-        var commonAncestor = utils.commonAncestor(pointA.node, pointB.node);
-
-        var ecAncestor = utils.ancestor(pointB.node, function (node) {
-            return node === commonAncestor || self.options.isUnbreakableNode(node.parentNode);
-        });
-        var next = this.splitTree(ecAncestor, pointB, {
-            nextText: true,
-        });
-
-        var scAncestor = utils.ancestor(pointA.node, function (node) {
-            return node === commonAncestor || self.options.isUnbreakableNode(node.parentNode);
-        });
-        if (utils.isIcon && utils.isIcon(pointA.node)) {
-            pointA = pointA.prev();
-        }
-        this.splitTree(scAncestor, pointA, {
-            nextText: true,
-        });
-        pointA.offset = utils.nodeLength(pointA.node);
-
-        var nodes = [];
-        pointA.nextUntil(function (point) {
-            if (point.node === next || !point.node) {
-                return true;
-            }
-            if (utils.isText(point.node) && point.offset) {
-                return;
-            }
-            var target = point.node.childNodes[point.offset] || point.node;
-            if (target === pointA.node || $.contains(target, pointA.node) || target === next || $.contains(target, next)) {
-                return;
-            }
-            if (
-                nodes.indexOf(target) === -1 && !utils.ancestor(target, function (target) {
-                    return nodes.indexOf(target) !== -1;
-                })
-            ) {
-                nodes.push(target);
-            }
-        });
+        var nextNode = this._prepareDelete(pointA, pointB);
+        var nodes = this._getNodesToDelete(pointA, nextNode);
         $(nodes).remove();
-
-        changed = !!nodes.length;
-        var toMerge = changed && pointA.node.parentNode !== next.parentNode;
-
-
-        var pointNode = utils.firstLeafUntil(next, function (n) {
-            return self.options.isVoidBlock(n) && self.options.isEditableNode(n);
-        });
-        var point = new BoundaryPoint(pointNode, 0);
-        if (nodes.length > 1 || nodes.length && !utils.isText(nodes[0])) {
-            point = this.removeEmptyInlineNodes(point);
-        }
-
-        // Remove whole li/ul/ol if deleted all contents of li/ul/ol
-        var ul = utils.ancestor(next, function (n) {
-            return n.tagName === 'UL' || n.tagName === 'OL';
-        });
-        if (ul && next[utils.isText(next) ? 'textContent' : 'innerHTML'] === '' && pointA.node !== next.previousSibling) {
-            var toRemove = next;
-            while (
-                toRemove !== ul && toRemove.parentNode &&
-                !this.options.isUnbreakableNode(toRemove.parentNode) &&
-                utils.isBlankNode(toRemove.parentNode)
-            ) {
-                toRemove = toRemove.parentNode;
-            }
-            $(toRemove).remove();
-        }
-        if (!utils.editableAncestor(pointA.node)) {
-            pointA = point;
-        }
-
-        if (toMerge) {
-            pointA = this.deleteEdge(pointA.node, 'next') || pointA;
-        }
-
-        return pointA;
+        return pointA.replace(this._cleanAfterDelete(pointA, nextNode, nodes));
     },
     /**
      * Remove the edge between a node and its sibling
@@ -345,7 +260,6 @@ var Dom = Class.extend({
             return range.getStartPoint();
         }
         var point = this.deleteBetween(range.getStartPoint(), range.getEndPoint());
-        point = this.fillEmptyNode(point);
 
         // remove tooltip when remove DOM nodes
         $('body > .tooltip').tooltip('hide');
@@ -857,6 +771,38 @@ var Dom = Class.extend({
     //--------------------------------------------------------------------------
 
     /**
+     * Clean the DOM after deleting a selection:
+     * - remove inline nodes if needed
+     * - clean a list if needed (remove empty li, ul, ol)
+     * - delete edges if needed
+     *
+     * @private
+     * @param {BoundaryPoint} point
+     * @param {Node} nextNode
+     * @param {Node []} removedNodes
+     * @returns {BoundaryPoint}
+     */
+    _cleanAfterDelete: function (point, nextNode, removedNodes) {
+        var newPoint = new BoundaryPoint(nextNode, 0)
+            .enterUntil(utils.and(this.options.isVoidBlock, this.options.isEditableNode));
+
+        if (removedNodes.length > 1 || removedNodes.length && !utils.isText(removedNodes[0])) {
+            newPoint.replace(this.removeEmptyInlineNodes(newPoint));
+        }
+
+        this._cleanListAfterDelete(point, nextNode);
+
+        if (!utils.editableAncestor(point.node)) {
+            point.replace(newPoint);
+        }
+
+        if (removedNodes.length && point.node.parentNode !== nextNode.parentNode) {
+            return this.deleteEdge(point.node, 'next') || point;
+        }
+
+        return point.replace(this.fillEmptyNode(point));
+    },
+    /**
      * Clean point after removing a block:
      * - Pad/fill its node if needed
      * - Move it if it's in a BR
@@ -881,6 +827,31 @@ var Dom = Class.extend({
         }
 
         return point;
+    },
+    /**
+     * Remove whole li/ul/ol if deleted all contents of li/ul/ol.
+     *
+     * @private
+     * @param {BoundaryPoint} point
+     * @param {Node} nextNode
+     */
+    _cleanListAfterDelete: function (point, nextNode) {
+        var self = this;
+        var ul = utils.ancestor(nextNode, utils.isList);
+        var isNextNodeBlank = nextNode[utils.isText(nextNode) ? 'textContent' : 'innerHTML'] === '';
+        if (!ul || !isNextNodeBlank || point.node === nextNode.previousSibling) {
+            return;
+        }
+        var toRemove = nextNode;
+        var isParentBreakableBlank = function (node) {
+            return node.parentNode &&
+                !self.options.isUnbreakableNode(node.parentNode) &&
+                utils.isBlankNode(node.parentNode);
+        };
+        while (toRemove !== ul && isParentBreakableBlank(toRemove)) {
+            toRemove = toRemove.parentNode;
+        }
+        $(toRemove).remove();
     },
     /**
      * Fill a node tu ensure correct DOM and selection.
@@ -980,6 +951,38 @@ var Dom = Class.extend({
         return blockToMerge;
     },
     /**
+     * Return a list of nodes to delete between a starting point
+     * and the node that follows the selection (after tree split).
+     *
+     * @private
+     * @param {BoundaryPoint} startPoint
+     * @param {Node} nextNode
+     * @returns {Node []}
+     */
+    _getNodesToDelete: function (startPoint, nextNode) {
+        var pred = function (pt) {
+            return pt.node === nextNode || !pt.node;
+        };
+        var nodes = [];
+        var handler = function (pt) {
+            if (utils.isText(pt.node) && pt.offset) {
+                return;
+            }
+            var target = pt.node.childNodes[pt.offset] || pt.node;
+            if (target === startPoint.node || $.contains(target, startPoint.node) || target === nextNode || $.contains(target, nextNode)) {
+                return;
+            }
+            var nodesHasTarget = nodes.indexOf(target) !== -1 || utils.ancestor(target, function (targetAncestor) {
+                return nodes.indexOf(targetAncestor) !== -1;
+            });
+            if (!nodesHasTarget) {
+                nodes.push(target);
+            }
+        };
+        startPoint.walkUntil(pred, handler);
+        return nodes;
+    },
+    /**
      * Insert a given node after a given `preceding` node.
      *
      * @private
@@ -1075,6 +1078,26 @@ var Dom = Class.extend({
         }
     },
     /**
+     * Prepare the deletion between two points:
+     * - split the tree at both points
+     * - move the points if needed
+     *
+     * @private
+     * @param {BoundaryPoint} pointA
+     * @param {BoundaryPoint} pointB
+     * @returns {Node} the node after the split point
+     */
+    _prepareDelete: function (pointA, pointB) {
+        pointB.enterUntil(utils.and(utils.not(this.options.isVoidBlock), this.options.isEditableNode))
+            .nextUntilNode(utils.not(utils.isBR.bind(utils)));
+
+        var next = this._splitBeforeDelete(pointA, pointB);
+
+        pointA.prevUntilNode(utils.not(this.options.isVoidBlock));
+        pointA.offset = utils.nodeLength(pointA.node);
+        return next;
+    },
+    /**
      * Remove the text nodes contained within a node,
      * that are blank or filled with invisible characters.
      *
@@ -1147,6 +1170,24 @@ var Dom = Class.extend({
         return range;
     },
     /**
+     * Split the DOM tree before deleting between two points
+     * (split at both points, on the level of their common ancestor).
+     *
+     * @private
+     * @param {BoundaryPoint} pointA
+     * @param {BoundaryPoint} pointB
+     * @returns {Node} the node after the split pointB
+     */
+    _splitBeforeDelete: function (pointA, pointB) {
+        var commonAncestor = utils.commonAncestor(pointA.node, pointB.node);
+        var options = {
+            nextText: true,
+        };
+        var next = this._splitPointAt(commonAncestor, pointB, options);
+        this._splitPointAt(commonAncestor, pointA, options);
+        return next;
+    },
+    /**
      * Split the given point's element node at its offset.
      *
      * @private
@@ -1191,6 +1232,23 @@ var Dom = Class.extend({
         } else {
             return this._splitElement(point, options);
         }
+    },
+    /**
+     * Split the DOM tree at the point, on the level of the point's
+     * first ancestor that is either the root or unbreakable.
+     *
+     * @private
+     * @param {Node} root
+     * @param {BoundaryPoint} point
+     * @returns {Node} the node after the split point
+     */
+    _splitPointAt: function (root, point, options) {
+        var self = this;
+        options = options || {};
+        var ancestor = utils.ancestor(point.node, function (node) {
+            return node === root || self.options.isUnbreakableNode(node.parentNode);
+        });
+        return this.splitTree(ancestor, point, options);
     },
     /**
      * Split the given point's text node at its offset.

@@ -175,6 +175,19 @@ return {
         return null;
     },
     /**
+     * Return a function that returns true if both functions
+     * passed as parameters return true.
+     *
+     * @param {Function (any) => Boolean} fn1
+     * @param {Function (any) => Bolean} fn2
+     * @returns {Function (any) => Boolean}
+     */
+    and: function (fn1, fn2) {
+        return function (arg) {
+            return fn1(arg) && fn2(arg);
+        };
+    },
+    /**
      * Append a given collection of nodes to a given node.
      *
      * @param {Node} node
@@ -674,13 +687,13 @@ return {
         return false;
     },
     /**
-     * Return true if the given node is `note-editable`.
+     * Return true if the given node is the editable node.
      *
      * @param {Node} node
      * @returns {Boolean}
      */
     isEditable: function (node) {
-        return node && $(node).hasClass('note-editable');
+        return node && node.tagName === 'EDITABLE';
     },
     /**
      * Return true if the given node's type is element (1).
@@ -1033,6 +1046,16 @@ return {
         return 0;
     },
     /**
+     * Return a function that returns the opposite of the function in argument.
+     *
+     * @param {Function (any) => Boolean} fn
+     */
+    not: function (fn) {
+        return function (arg) {
+            return !fn(arg);
+        };
+    },
+    /**
      * Return true if the `container` contains the `contained` and only
      * the `contained` (blank text nodes are ignored).
      *
@@ -1053,6 +1076,19 @@ return {
             return true;
         });
         return !otherContents.length;
+    },
+    /**
+     * Return a function that returns true if either function
+     * passed as parameters return true.
+     *
+     * @param {Function (any) => Boolean} fn1
+     * @param {Function (any) => Bolean} fn2
+     * @returns {Function (any) => Boolean}
+     */
+    or: function (fn1, fn2) {
+        return function (arg) {
+            return fn1(arg) || fn2(arg);
+        };
     },
     /**
      * Reorders the classes in the node's class attribute and returns it.

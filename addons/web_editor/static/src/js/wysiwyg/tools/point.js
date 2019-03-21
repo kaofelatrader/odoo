@@ -15,7 +15,7 @@ function BoundaryPoint (node, offset) {
 
 BoundaryPoint.prototype = {
     /**
-     * Move the point to its offset-th child, at offset 0 if possible.
+     * If possible, move the point to its offset-th child, at offset 0.
      * Can be chained.
      *
      * @returns {BoundaryPoint}
@@ -23,6 +23,22 @@ BoundaryPoint.prototype = {
     enter: function () {
         if (!utils.isText(this.node) && this.node.childNodes[this.offset]) {
             this.replace(this.node.childNodes[this.offset], 0);
+        }
+        return this;
+    },
+    /**
+     * If possible, move the point to its first leaf until optional predicate hit, at offset 0.
+     * Can be chained.
+     *
+     * @param {Function (Node) => Boolean} pred
+     * @returns {BoundaryPoint}
+     */
+    enterUntil: function (pred) {
+        if (!utils.isText(this.node) && this.node.childNodes[this.offset]) {
+            var firstLeaf = utils.firstLeafUntil(this.node.childNodes[this.offset], function (node) {
+                return !pred || pred(node);
+            });
+            this.replace(firstLeaf, 0);
         }
         return this;
     },
@@ -255,18 +271,18 @@ BoundaryPoint.prototype = {
      * @returns {BoundaryPoint|null}
      */
     nextUntil: function (pred) {
-        var startPoint = {
-            node: this.node,
-            offset: this.offset,
-        };
-        while (this.node && this.offset >= 0) {
-            if (pred(this)) {
-                return this;
-            }
-            this.next();
-        }
-        this.replace(startPoint.node, startPoint.offset); // Reset
-        return null;
+        return this._moveUntilHelper(pred, false, false);
+
+    },
+    /**
+     * Return the given point's next point until the point's node
+     * matches the predicate function.
+     *
+     * @param {Function} pred
+     * @returns {BoundaryPoint|null}
+     */
+    nextUntilNode: function (pred) {
+        return this._moveUntilHelper(pred, false, true);
     },
     /**
      * Return the given point's previous point.
@@ -299,20 +315,34 @@ BoundaryPoint.prototype = {
      * @returns {BoundaryPoint|null}
      */
     prevUntil: function (pred) {
-        var startPoint = {
-            node: this.node,
-            offset: this.offset,
-        };
-        while (this.node && this.offset >= 0) {
-            if (pred(this)) {
-                return this;
-            }
-            this.prev();
-        }
-        this.replace(startPoint.node, startPoint.offset); // Reset
-        return null;
+        return this._moveUntilHelper(pred, true, false);
     },
-    replace: function (node, offset) {
+    /**
+     * Return the given point's previous point until the point's node
+     * matches the predicate function.
+     *
+     * @param {Function} pred
+     * @returns {BoundaryPoint|null}
+     */
+    prevUntilNode: function (pred) {
+        return this._moveUntilHelper(pred, true, true);
+    },
+    /**
+     * Replace the current point's node and offset with the
+     * given (point's) node and offset.
+     *
+     * @param {BoundaryPoint|Node} pointOrNode
+     * @param {Number} offset
+     * @returns {BoundaryPoint}
+     */
+    replace: function (pointOrNode, offset) {
+        var node;
+        if (pointOrNode instanceof BoundaryPoint) {
+            node = pointOrNode.node;
+            offset = pointOrNode.offset;
+        } else {
+            node = pointOrNode;
+        }
         this.node = node;
         this.offset = offset;
         return this;
@@ -350,10 +380,23 @@ BoundaryPoint.prototype = {
      * @param {Boolean} isSkipInnerOffset true to skip the node's inner offset
      */
     walkTo: function (endPoint, handler, isSkipInnerOffset) {
+        var pred = function (point) {
+            return point.isSameAs(endPoint);
+        };
+        this.walkUntil(pred, handler, isSkipInnerOffset);
+    },
+    /**
+     * Execute a given `handler` function on each point between this and the predicate hit (both included).
+     *
+     * @param {Function (BoundaryPoint) => Boolean} pred
+     * @param {Function (BoundaryPoint) => Void} handler
+     * @param {Boolean} isSkipInnerOffset true to skip the node's inner offset
+     */
+    walkUntil: function (pred, handler, isSkipInnerOffset) {
         var point = new BoundaryPoint(this.node, this.offset);
         while (point && point.node) {
             handler(point);
-            if (point.isSameAs(endPoint)) {
+            if (pred(point)) {
                 break;
             }
             var isSkipOffset = isSkipInnerOffset &&
@@ -361,6 +404,38 @@ BoundaryPoint.prototype = {
                 endPoint.node !== point.node;
             point = point.next(isSkipOffset);
         }
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+    
+    /**
+     * Helper function for methods to move the point until predicate hits
+     *
+     * @see nextUntil
+     * @see nextUntilNode
+     * @see prevUntil
+     * @see prevUntilNode
+     * @private
+     * @param {Function (BoundaryPoint|Node) => Boolean} pred
+     * @param {Boolean} isPrev true to move to previous point until
+     * @param {Boolean} isNode true to apply the predicate function on the point's node
+     * @returns {BoundaryPoint|null}
+     */
+    _moveUntilHelper: function (pred, isPrev, isNode) {
+        var startPoint = {
+            node: this.node,
+            offset: this.offset,
+        };
+        while (this.node && this.offset >= 0) {
+            if (pred(isNode ? this.node : this)) {
+                return this;
+            }
+            this[isPrev ? 'prev' : 'next']();
+        }
+        this.replace(startPoint.node, startPoint.offset); // Reset
+        return null;
     },
 };
 
