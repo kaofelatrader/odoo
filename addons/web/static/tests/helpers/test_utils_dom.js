@@ -283,7 +283,7 @@ function triggerEvents($el, events) {
  * @param {node} el
  * @param {string []} events
  * @param {object} [options]
- * @returns Promise
+ * @returns Promise <Event []>
  */
 function triggerNativeEvents(el, events, options) {
     options = _.defaults(options || {}, {
@@ -294,6 +294,7 @@ function triggerNativeEvents(el, events, options) {
     if (typeof events === 'string') {
         events = [events];
     }
+    var triggeredEvents = []
     events.forEach(function (eventName) {
         var event;
         switch (_eventType(eventName)) {
@@ -308,8 +309,11 @@ function triggerNativeEvents(el, events, options) {
                 break;
         }
         el.dispatchEvent(event);
+        triggeredEvents.push(event);
     });
-    return concurrency.delay(0);
+    return concurrency.delay(0).then(function () {
+        return triggeredEvents;
+    });
 }
 
 /**

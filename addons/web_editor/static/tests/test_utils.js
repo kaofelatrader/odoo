@@ -492,16 +492,17 @@ var testKeyboard = function (wysiwyg, assert, keyboardTests, addTests) {
             keypress.key = keyboardMap[keypress.keyCode] || String.fromCharCode(keypress.keyCode);
         }
         keypress.keyCode = keypress.keyCode;
-        var event = $.Event("keydown", keypress);
-        $target.trigger(event);
-        if (!event.isDefaultPrevented()) {
-            if (keypress.key.length === 1) {
-                document.execCommand("insertText", 0, keypress.key);
-            } else {
-                console.warn('Native "' + keypress.key + '" is not supported in test');
+        testUtils.dom.triggerNativeEvents($target[0], 'keydown', keypress).then(function (events) {
+            var event = events[0]; // (only one event was triggered)
+            if (!event.defaultPrevented) {
+                if (keypress.key.length === 1) {
+                    document.execCommand("insertText", 0, keypress.key);
+                } else {
+                    console.warn('Native "' + keypress.key + '" is not supported in test');
+                }
             }
-        }
-        $target.trigger($.Event("keyup", keypress));
+        });
+        testUtils.dom.triggerNativeEvents($target[0], 'keyup', keypress);
         return $target;
     }
 
