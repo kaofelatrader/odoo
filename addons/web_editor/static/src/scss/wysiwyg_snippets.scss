@@ -1,17 +1,29 @@
+@keyframes dropZoneInsert {
+    to {
+        background-color: rgba(124, 123, 173, 0.2);
+    }
+}
+
+
 editor {
     group[data-plugin="DropBlock"] {
         width: 210px;
     }
     dropblock {
         display: none;
-        width: 210px;
+        z-index: 1;
+        position: relative;
         float: left;
-        min-height: 200px;
+        overflow: auto;
+        width: 210px;
+        min-height: inherit;
+        max-height: inherit;
         margin: 0 0.2rem;
         background-image: linear-gradient(180deg, #e6e5e5, #fafafa);
 
         blocks {
             display: block;
+            float: clear;
 
             > wysiwyg-title {
                 display: flex;
@@ -27,31 +39,85 @@ editor {
         }
 
         block {
-            display: block;
-            float: left;
-            width: 45.5%;
-            margin: 0 0 6% 3%;
             user-select: none;
-            cursor: pointer;
-            cursor: copy;
-            cursor: grab;
-
-            thumbnail {
-                preview {
-                    display: block;
-                    width: 100%;
-                    padding-bottom: 75%;
-                    border: 1px solid #a9a9a9;
-                    background-size: cover;
-                    background-position: center center;
-                }
-                wysiwyg-title {
-
-                }
-            }
 
             content {
                 display: none;
+            }
+        }
+    }
+
+    dropblock-thumbnail {
+        display: block;
+        float: left;
+        width: 45.5%;
+        margin: 0 0 6% 3%;
+        cursor: pointer;
+        cursor: copy;
+        cursor: grab;
+
+        preview {
+            display: block;
+            width: 100%;
+            padding-bottom: 75%;
+            border: 1px solid #a9a9a9;
+            background-size: cover;
+            background-position: center center;
+        }
+        wysiwyg-title {
+
+        }
+    }
+
+    dropblock-handle {
+        position: relative;
+        z-index: 2;
+        overflow: visible;
+        width: 0;
+        height: 0;
+
+        dropblock-thumbnail {
+            position: absolute;
+            opacity: 0.7;
+        }
+    }
+
+    dropblock-dropzone {
+        background-color: rgba(124, 123, 173, 0.05);
+        animation: dropZoneInsert 1s linear 0s infinite alternate;
+        border: 2px dashed #a9a9a9;
+        border-top: none;
+        border-bottom: none;
+
+        display: block;
+        position: relative;
+        width: 100%;
+        height: 40px;
+        margin: -20px 0;
+
+        &:after {
+            content: "";
+            display: block;
+            width: 100%;
+            height: 50%;
+            border-bottom: 2px dashed #a9a9a9;
+            box-sizing: content-box;
+        }
+
+        &[orientation="vertical"] {
+            border: 2px dashed #a9a9a9;
+            border-left: none;
+            border-right: none;
+
+            width: 40px;
+            float: left;
+            margin: 0 -20px;
+
+            &:after {
+                width: 50%;
+                height: 100%;
+                border-bottom: none;
+                border-right: 2px dashed #a9a9a9;
             }
         }
     }

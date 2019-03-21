@@ -121,12 +121,14 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     },
     destroy: function () {
         this._isDestroyed = true;
-        if (this.editor.parentNode) {
+        if (this.editor && this.editor.parentNode) {
             this.editor.parentNode.removeChild(this.editor);
+            this._destroyEvents();
         }
-        this.target.wysiwygEditor = null;
-        this.target.style.display = '';
-        this._destroyEvents();
+        if (this.target) {
+            this.target.wysiwygEditor = null;
+            this.target.style.display = '';
+        }
         this._super();
     },
 
@@ -231,7 +233,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         this.editorEvents.forEach(function (event) {
             if (event.target === 'document') {
                 window.top.document.addEventListener(event.name, event.method, true);
-                self.editable.addEventListener(event.name, event.method, false);
+                self.editable.ownerDocument.addEventListener(event.name, event.method, false);
             } else {
                 self[event.target].addEventListener(event.name, event.method, false);
             }

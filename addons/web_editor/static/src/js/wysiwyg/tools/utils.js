@@ -209,6 +209,21 @@ return {
         };
         return isEscaped ? esc[name] : unicode[name];
     },
+    clone: function (node) {
+        var self = this;
+        var clone = document.importNode(node);
+        node.childNodes.forEach(function (node) {
+            clone.appendChild(self.clone(node));
+        });
+        return clone;
+    },
+    prependChild: function (parent, child) {
+        if (parent.firstChild) {
+            parent.insertBefore(child, parent.firstChild);
+        } else {
+            parent.appendChild(child);
+        }
+    },
     /**
      * Find the nearest common ancestor node between two nodes.
      *

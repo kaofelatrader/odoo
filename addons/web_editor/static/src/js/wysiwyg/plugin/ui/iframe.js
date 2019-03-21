@@ -183,7 +183,7 @@ var IframePlugin = AbstractPlugin.extend({
             var defaultView = node.ownerDocument.defaultView;
             var parentIframe = defaultView && defaultView.frameElement;
             if (parentIframe && parentIframe.parentNode && parentIframe !== self._preloadIframe) {
-                node = document.adoptNode(node);
+                node = self.utils.clone(node);
             }
             doc.head.appendChild(node);
         });

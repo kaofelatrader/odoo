@@ -19,6 +19,7 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
     templatesDependencies: [],
     dependencies: [],
 
+    documentDomEvents: null,
     editableDomEvents: null,
     pluginEvents: null,
 
@@ -47,23 +48,8 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
         this.dependencies.push('Common'); // Common is a mandatory plugin
         this.dependencies = utils.uniq(this.dependencies);
 
-        var editableDomEvents = Object.assign({}, this.editableDomEvents);
-        Object.keys(editableDomEvents).forEach(function (key) {
-            var value = editableDomEvents[key];
-            if (typeof value === 'string') {
-                value = self[value].bind(self);
-            }
-            self.editable.addEventListener(key, value, false);
-        });
-
-        var pluginEvents = Object.assign({}, this.pluginEvents);
-        Object.keys(pluginEvents).forEach(function (key) {
-            var value = pluginEvents[key];
-            if (typeof value === 'string') {
-                value = self[value].bind(self);
-            }
-            self.on(key, self, value);
-        });
+        this._eventToRemoveOnDestroy = [];
+        this._bindSelfEvents(this.pluginEvents);
     },
     /**
      * @see Manager.isInitialized
@@ -75,7 +61,15 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
      * @see Manager.start
      */
     start: function () {
+        this._bindDOMEvents(window.top.document, this.documentDomEvents);
+        this._bindDOMEvents(this.editable, this.editableDomEvents);
         return Promise.resolve();
+    },
+    destroy: function () {
+        this._eventToRemoveOnDestroy.forEach(function (event) {
+            event.target.addEventListener(event.name, event.value, false);
+        });
+        this._super();
     },
 
     //--------------------------------------------------------------------------
@@ -143,7 +137,7 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
     },
 
     //--------------------------------------------------------------------------
-    // Public
+    // Private
     //--------------------------------------------------------------------------
 
     /**
@@ -155,6 +149,56 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
         this.document = this.editable.ownerDocument;
         this.window = this.document.defaultView;
         this.dom = dom;
+    },
+    _bindDOMEvents: function (dom, events) {
+        var self = this;
+        Object.keys(events || {}).forEach(function (event) {
+            var eventName = event.split(' ')[0];
+            var selector = event.split(' ').slice(1).join(' ');
+            var targets = [dom];
+            if (selector) {
+                targets = dom.querySelectorAll(selector);
+            }
+            var value = events[event];
+            if (typeof value === 'string') {
+                value = self[value];
+            }
+            value = value.bind(self);
+            if (eventName === 'mousemove' || eventName === 'scroll') {
+                value = self._throttled(6, value);
+            }
+
+            targets.forEach(function (target) {
+                self._eventToRemoveOnDestroy.push({
+                    target: target,
+                    name: eventName,
+                    value: value,
+                });
+                target.addEventListener(eventName, value, false);
+            });
+        });
+    },
+    _bindSelfEvents: function (events) {
+        var self = this;
+        Object.keys(events || {}).forEach(function (key) {
+            var value = events[key];
+            if (typeof value === 'string') {
+                value = self[value].bind(self);
+            }
+            self.on(key, self, value);
+        });
+    },
+    _throttled: function  (delay, fn) {
+        var  lastCall = 0;
+        return function () {
+            var args = arguments;
+            var now = new Date().getTime();
+            if (now - lastCall < delay) {
+                return;
+            }
+            lastCall = now;
+            return fn.apply(null, args);
+        }
     },
 });
 

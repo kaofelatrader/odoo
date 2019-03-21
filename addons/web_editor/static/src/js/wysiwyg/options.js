@@ -40,7 +40,7 @@ return {
     },
     // toolbar
     toolbar: [
-        'DropBlock',
+        // 'DropBlock',
         'FontStyle',
         'FontSize',
         // 'FontName',
@@ -204,6 +204,20 @@ return {
             // insertHorizontalRule: 'Insert horizontal rule'),
         }
     },
+
+    dropBlockTemplate: 'wysiwyg.dropblock.defaultblocks',
+    // dropblocks: [{
+    //     title: 'Structure',
+    //     blocks: [{
+    //         title: 'Title block',
+    //         thumbnail: '/web_editor/static/src/img/title.png',
+    //         html: '<section style="text-align: center;"><h1>Your Site Title</h1></section>',
+    //     }, {
+    //         title: 'Image block',
+    //         thumbnail: '/web_editor/static/src/img/title.png',
+    //         html: '<section style="text-align: center;"><h1>Your Site Title</h1><img src="/web_editor/static/src/img/picture.png"/></section>',
+    //     }],
+    // }],
 
    // methods
 

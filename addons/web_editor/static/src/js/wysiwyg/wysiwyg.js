@@ -63,7 +63,11 @@ var Wysiwyg = Widget.extend({
         this.$el = null; // temporary null to avoid hidden error, setElement when start
         return this._super()
             .then(function () {
-                return self._getColors();
+                var defs = [self._getColors()];
+                if (true || self.options.snippets) {
+                    defs.push(self._loadDropBlocks());
+                }
+                return $.when.apply($, defs);
             })
             .then(function () {
                 self.editor = new Editor(self, self._editorOptions());
@@ -118,6 +122,7 @@ var Wysiwyg = Widget.extend({
             disableDragAndDrop : !!this.options.noAttachment,
             styleTags: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre'],
             colors: this._groupColors,
+            dropblocks: this._dropblocks,
 
             renderTemplate: this._renderTemplate.bind(this),
             loadTemplates: this._loadTemplates.bind(this),
@@ -189,6 +194,52 @@ var Wysiwyg = Widget.extend({
             ]);
 
             self._groupColors = groupColors;
+        });
+    },
+    /**
+     * Load snippets.
+     */
+    _loadDropBlocks: function () {
+        var self = this;
+        var def = $.when();
+        if (!('web_editor.dropBlockTemplate.custom' in QWeb.templates)) {
+            var def = this._rpc({
+                model: 'ir.ui.view',
+                method: 'render_template',
+                args: [this.options.snippets || 'website.snippets', {}],
+            }).then(function (template) {
+                var t = document.createElement('t');
+                t.setAttribute('t-name', 'web_editor.dropBlockTemplate.custom');
+                t.innerHTML = template;
+                var xml = new XMLSerializer().serializeToString(t).replace(/\s*xmlns="[^"]+"/, '');
+                QWeb.add_template('<templtes>' + xml + '</templtes>');
+            })
+        }
+
+        return def.then(function () {
+            var dropblocks = [];
+            var dropblockSelector = [];
+            var blockCustomisation = [];
+            var $dropBlockTemplate = $(QWeb.render('web_editor.dropBlockTemplate.custom'));
+            var $snippets = $dropBlockTemplate.filter('#o_scroll').find('.o_panel').each(function () {
+                var blocks = [];
+                $(this).find('.o_panel_body').children().each(function () {
+                    blocks.push({
+                        title: (this.getAttribute('name') + '').trim(),
+                        thumbnail: this.dataset.oeThumbnail,
+                        html: this.innerHTML.trim(),
+                    });
+                });
+                dropblocks.push({
+                    title: $(this).find('.o_panel_header').html().trim(),
+                    blocks: blocks,
+                });
+            });
+            var $snippet_options = $dropBlockTemplate.filter('#snippet_options');
+
+            self._dropblocks = dropblocks;
+            self._dropblockSelector = dropblockSelector;
+            self._blockCustomisation = blockCustomisation;
         });
     },
     _loadTemplates: function (xmlPaths) {

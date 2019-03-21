@@ -9,19 +9,19 @@
         <blocks>
             <wysiwyg-title><i class="fa fa-th-large"></i> Structure</wysiwyg-title>
             <block>
-                <thumbnail>
+                <dropblock-thumbnail>
                     <preview style="background-image: url(/web_editor/static/src/img/title.png);"/>
                     <wysiwyg-title>Title</wysiwyg-title>
-                </thumbnail>
+                </dropblock-thumbnail>
                 <content>
                     <section style="text-align: center;"><h1>Your Site Title</h1></section>
                 </content>
             </block>
             <block>
-                <thumbnail>
+                <dropblock-thumbnail>
                     <preview style="background-image: url(/web_editor/static/src/img/picture.png);"/>
                     <wysiwyg-title>Picture</wysiwyg-title>
-                </thumbnail>
+                </dropblock-thumbnail>
                 <content>
                     <section style="text-align: center;">
                         <figure class="figure">
@@ -35,10 +35,10 @@
         <blocks>
             <wysiwyg-title><i class="fa fa-th-large"></i> Structure bis</wysiwyg-title>
             <block>
-                <thumbnail>
+                <dropblock-thumbnail>
                     <preview style="background-image: url(/web_editor/static/src/img/title.png);"/>
                     <wysiwyg-title>Title</wysiwyg-title>
-                </thumbnail>
+                </dropblock-thumbnail>
                 <content>
                     <section style="text-align: center;"><h1>Your Site Title</h1></section>
                 </content>
