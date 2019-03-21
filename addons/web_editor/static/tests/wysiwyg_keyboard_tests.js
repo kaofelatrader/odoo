@@ -4206,6 +4206,427 @@ QUnit.test('Delete', function (assert) {
     });
 });
 
+QUnit.module('virtual & special keys (Adroid, accented...)');
+
+var Wysiwyg = require('web_editor.wysiwyg');
+
+function createKeyEvent (editable, type, key, keyCode, isComposing) {
+    var ev = new KeyboardEvent(type, {
+        altKey: false,
+        bubbles: true,
+        cancelBubble: false,
+        cancelable: true,
+        charCode: 0,
+        code: "",
+        composed: true,
+        ctrlKey: false,
+        defaultPrevented: false,
+        detail: 0,
+        eventPhase: 0,
+        isComposing: !!isComposing,
+        isTrusted: true,
+        key: key,
+        keyCode: 229,
+        location: 0,
+        metaKey: false,
+        repeat: false,
+        returnValue: false,
+        shiftKey: false,
+        type: type,
+        which: 229,
+    });
+    editable.dispatchEvent(ev);
+    return ev;
+}
+function createCompositionEvent (editable, type, data) {
+    var ev = new CompositionEvent("composition" + type, {
+        bubbles: true,
+        cancelBubble: false,
+        cancelable: true,
+        composed: true,
+        currentTarget: null,
+        data: data,
+        defaultPrevented: false,
+        detail: 0,
+        eventPhase: 0,
+        isTrusted: true,
+        returnValue: true,
+        type: "composition" + type,
+        which: 0,
+    });
+    editable.dispatchEvent(ev);
+    return ev;
+}
+function createBeforeInputEvent (editable, data, inputType) {
+    var ev = new CompositionEvent("beforeinput", {
+        bubbles: true,
+        cancelBubble: false,
+        cancelable: false,
+        composed: true,
+        currentTarget: null,
+        data: data,
+        dataTransfer: null,
+        defaultPrevented: false,
+        detail: 0,
+        eventPhase: 0,
+        inputType: inputType || "insertText",
+        isComposing: false,
+        isTrusted: true,
+        returnValue: true,
+        sourceCapabilities: null,
+        type: "beforeinput",
+        view: null,
+        which: 0,
+    });
+    ev.inputType = inputType || "insertText";
+    editable.dispatchEvent(ev);
+    return ev;
+}
+function createTextInputEvent (editable, data) {
+    var ev = new CustomEvent('textInput', {
+        bubbles: true,
+        cancelBubble: false,
+        cancelable: true,
+        composed: true,
+        data: data,
+        defaultPrevented: false,
+        detail: 0,
+        eventPhase: 3,
+        isTrusted: true,
+        returnValue: true,
+        sourceCapabilities: null,
+        type: "textInput",
+        which: 0,
+    });
+    ev.data = data;
+    editable.dispatchEvent(ev);
+    if (!ev.defaultPrevented) {
+        editable.ownerDocument.execCommand("insertText", 0, data === ' ' ? '\u00A0' : data);
+    }
+}
+
+// Events are in function of virtual keyboard
+
+function touchAdroidSwiftKeyChar (editable, char) {
+    createKeyEvent(editable, "keydown", "Unidentified", 229, false);
+    createBeforeInputEvent(editable, char);
+    createTextInputEvent(editable, char);
+    createKeyEvent(editable, "keyup", "Unidentified", 229, false);   
+}
+function touchAdroidSwiftKeyChars (editable, text) {
+    [].slice.call(text).forEach(function (char) {
+        if (char.match(/\s|\u00A0|[:;,.(){}]/)) {
+            var range = Wysiwyg.getRange(editable);
+            var word = range.sc.textContent.split(' ').pop();
+            touchAdroidSwiftKeyCorrector(editable, word);
+        } else {
+            touchAdroidSwiftKeyChar(editable, char);   
+        }
+    });
+}
+function touchAdroidSwiftKeyCorrector (editable, text) {
+    // SwiftKey in the word, cut the word and complete the first part
+    createCompositionEvent(editable, "start", "");
+    createCompositionEvent(editable, "update", "");
+    createKeyEvent(editable, "keydown", "Unidentified", 229, true);
+    createBeforeInputEvent(editable, text);
+    createCompositionEvent(editable, "update", text);
+    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
+    createCompositionEvent(editable, "end", text);
+
+    // auto add a space
+    touchAdroidSwiftKeyChar(editable, ' ');
+}
+
+QUnit.test('Adroid SwiftKey', function (assert) {
+    assert.expect(8);
+
+    return weTestUtils.createWysiwyg({
+        data: this.data,
+    }).then(function (wysiwyg) {
+        var editable = wysiwyg.$('.note-editable')[0];
+
+        editable.innerHTML = '<p><br/></p>';
+        Wysiwyg.setRange(editable.firstChild, 0);
+        touchAdroidSwiftKeyChar(editable, 'C');
+        assert.strictEqual(editable.innerHTML, '<p>C</p>', "Insert char from the virtual keyboard");
+
+        editable.innerHTML = '<p><br/></p>';
+        Wysiwyg.setRange(editable.firstChild, 0);
+        touchAdroidSwiftKeyChars(editable, 'Christ');
+        assert.strictEqual(editable.innerHTML, '<p>Christ</p>', "Insert word from the virtual keyboard");
+
+        editable.innerHTML = '<p><br/></p>';
+        Wysiwyg.setRange(editable.firstChild, 0);
+        touchAdroidSwiftKeyChars(editable, 'Christ');
+        touchAdroidSwiftKeyCorrector(editable, 'Christophe');
+        assert.strictEqual(editable.innerHTML, '<p>Christophe&nbsp;</p>', "Complete a word with the autocompletion");
+
+        editable.innerHTML = '<p><br/></p>';
+        Wysiwyg.setRange(editable.firstChild, 0);
+        touchAdroidSwiftKeyChars(editable, 'Christophe ');
+        assert.strictEqual(editable.innerHTML, '<p>Christophe&nbsp;</p>', "Insert word from the virtual keyboard, then space call autocompletion automatically (T9)");
+
+        editable.innerHTML = '<p><b>Chris</b>top</p>';
+        Wysiwyg.setRange(editable.firstChild.childNodes[1], 3);
+        touchAdroidSwiftKeyCorrector(editable, 'Christophe');
+        assert.strictEqual(editable.innerHTML, '<p><b>Chris</b>tophe&nbsp;</p>', "Complete a word with the autocompletion who contains style tags");
+
+        editable.innerHTML = '<p><br/></p>';
+        Wysiwyg.setRange(editable.firstChild, 0);
+        touchAdroidSwiftKeyChars(editable, 'Chryst');
+        touchAdroidSwiftKeyCorrector(editable, 'Christophe');
+        assert.strictEqual(editable.innerHTML, '<p>Christophe&nbsp;</p>', "Change a word with the corrector");
+
+        editable.innerHTML = '<p><b>Chrys</b>top</p>';
+        Wysiwyg.setRange(editable.firstChild.childNodes[1], 3);
+        touchAdroidSwiftKeyCorrector(editable, 'Christophe');
+        assert.strictEqual(editable.innerHTML, '<p><b>Christophe&nbsp;</b></p>', "Change a word with the corrector who contains style tags");
+
+        editable.innerHTML = '<p><b>Chrys</b>top</p>';
+        Wysiwyg.setRange(editable.firstChild.firstChild.firstChild, 3);
+        touchAdroidSwiftKeyCorrector(editable, 'Christophe');
+        assert.strictEqual(editable.innerHTML, '<p><b>Christophe&nbsp;</b></p>', "Change a word with the corrector who contains style tags after move carret");
+
+        wysiwyg.destroy();
+    });
+});
+
+
+function touchAdroidGoogleKeyborardSpace (editable, char) {
+    var range = Wysiwyg.getRange(editable);
+    var begin = range.sc.textContent.split(' ').pop();
+
+    createKeyEvent(editable, "keydown", "Unidentified", 229, false);
+    createBeforeInputEvent(editable, begin, "insertCompositionText");
+    createCompositionEvent(editable, "update", begin);
+    createTextInputEvent(editable, begin);
+    createCompositionEvent(editable, "end", begin);
+    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
+
+    createKeyEvent(editable, "keydown", "Unidentified", 229, false);
+    createBeforeInputEvent(editable, char);
+    createTextInputEvent(editable, char);
+    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
+}
+function touchAdroidGoogleKeyborardChar (editable, char) {
+    createKeyEvent(editable, "keydown", "Unidentified", 229, false);
+    var range = Wysiwyg.getRange(editable);
+    var begin = range.sc.textContent.split(' ').pop();
+    var word = begin + char;
+    if (!begin.length) {
+        createCompositionEvent(editable, "start", "");
+        createBeforeInputEvent(editable, word);
+    } else {
+        createBeforeInputEvent(editable, word);
+    }
+    createCompositionEvent(editable, "update", word);
+    editable.ownerDocument.execCommand("insertText", 0, char); // without event
+    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
+}
+function touchAdroidGoogleKeyborardChars (editable, text) {
+    [].slice.call(text).forEach(function (char) {
+        if (char.match(/\s|\u00A0|[:;,.(){}]/)) {
+            touchAdroidGoogleKeyborardSpace(editable, char);
+        } else {
+            touchAdroidGoogleKeyborardChar(editable, char);   
+        }
+    });
+}
+function touchAdroidGoogleKeyborardCorrector (editable, text) {
+    var range = Wysiwyg.getRange(editable);
+    var _before = range.sc.textContent.slice(0, range.so);
+    var _after = range.sc.textContent.slice(range.so);
+    range.sc.textContent = _before + "#" + _after;
+    var textContent = editable.textContent.split("#");
+    range.sc.textContent = _before + _after;
+    Wysiwyg.setRange(range.sc, range.so);
+
+    var before = textContent[0].split(' ').pop();
+    var after = textContent[1].split(' ').shift();
+    var word = before + after;
+
+    if (!after.length) {
+        // at the end
+        var beforeWord = text.slice(0, before.length);
+        var endWord = text.slice(before.length);
+        createCompositionEvent(editable, "end", beforeWord);
+        createKeyEvent(editable, "keydown", "Unidentified", 229, false);
+        createBeforeInputEvent(editable, endWord);
+        createTextInputEvent(editable, endWord);
+        createKeyEvent(editable, "keyup", "Unidentified", 229, false);
+    } else {
+        // in the word
+        createCompositionEvent(editable, "end", word);
+        createKeyEvent(editable, "keydown", "Unidentified", 229, false);
+        createBeforeInputEvent(editable, null, "deleteContentBackward");
+        createBeforeInputEvent(editable, null, "deleteContentBackward");
+        createKeyEvent(editable, "keyup", "Unidentified", 229, false);
+
+        createKeyEvent(editable, "keydown", "Unidentified", 229, false);
+        createBeforeInputEvent(editable, text);
+        createTextInputEvent(editable, text);
+        createKeyEvent(editable, "keyup", "Unidentified", 229, false);
+        createKeyEvent(editable, "keydown", "Unidentified", 229, false);
+        createKeyEvent(editable, "keyup", "Unidentified", 229, false);
+    }
+}
+function touchAdroidGoogleKeyborardmMveCarret (editable, range) {
+    var rng = Wysiwyg.getRange(editable);
+    var _before = range.sc.textContent.slice(0, range.so).split(' ').pop();
+    var _after = range.sc.textContent.slice(range.so).split(' ').shift();
+    range.sc.textContent = _before + "#" + _after;
+    var textContent = editable.textContent.split("#");
+    range.sc.textContent = _before + _after;
+    Wysiwyg.setRange(range.sc, range.so);
+
+    var before = textContent[0].split(' ').pop();
+    var after = textContent[1].split(' ').shift();
+    var word = before + after;
+
+    if (!(rng.sc === range.sc && rng.so - before.length <= range.so && rng.so + after.length >= range.so)) {
+        createCompositionEvent(editable, "start", "");
+    }
+    createCompositionEvent(editable, "update", word);
+}
+
+QUnit.test('Adroid GoogleKeyborard', function (assert) {
+    assert.expect(8);
+
+    return weTestUtils.createWysiwyg({
+        data: this.data,
+    }).then(function (wysiwyg) {
+        var editable = wysiwyg.$('.note-editable')[0];
+
+        editable.innerHTML = '<p><br/></p>';
+        Wysiwyg.setRange(editable.firstChild, 0);
+        touchAdroidGoogleKeyborardChar(editable, 'C');
+        assert.strictEqual(editable.innerHTML, '<p>C</p>', "Insert char from the virtual keyboard");
+
+        editable.innerHTML = '<p><br/></p>';
+        Wysiwyg.setRange(editable.firstChild, 0);
+        touchAdroidGoogleKeyborardChars(editable, 'Christ');
+        assert.strictEqual(editable.innerHTML, '<p>Christ</p>', "Insert word from the virtual keyboard");
+
+        editable.innerHTML = '<p><br/></p>';
+        Wysiwyg.setRange(editable.firstChild, 0);
+        touchAdroidGoogleKeyborardChars(editable, 'Christ');
+        touchAdroidGoogleKeyborardCorrector(editable, 'Christophe');
+        assert.strictEqual(editable.innerHTML, '<p>Christophe</p>', "Complete a word with the autocompletion");
+
+        editable.innerHTML = '<p><br/></p>';
+        Wysiwyg.setRange(editable.firstChild, 0);
+        touchAdroidGoogleKeyborardChars(editable, 'Christophe ');
+        assert.strictEqual(editable.innerHTML, '<p>Christophe&nbsp;</p>', "Insert word from the virtual keyboard, then space call autocompletion automatically (T9)");
+
+        editable.innerHTML = '<p><b>Chris</b>top</p>';
+        Wysiwyg.setRange(editable.firstChild.childNodes[1], 3);
+        touchAdroidGoogleKeyborardCorrector(editable, 'Christophe', );
+        assert.strictEqual(editable.innerHTML, '<p><b>Chris</b>tophe</p>', "Complete a word with the autocompletion who contains style tags");
+
+        editable.innerHTML = '<p><br/></p>';
+        Wysiwyg.setRange(editable.firstChild, 0);
+        touchAdroidGoogleKeyborardChars(editable, 'Chryst');
+        touchAdroidGoogleKeyborardCorrector(editable, 'Christophe');
+        assert.strictEqual(editable.innerHTML, '<p>Christophe</p>', "Change a word with the corrector");
+
+        editable.innerHTML = '<p><b>Chrys</b>top</p>';
+        Wysiwyg.setRange(editable.firstChild.childNodes[1], 3);
+        touchAdroidGoogleKeyborardCorrector(editable, 'Christophe');
+        assert.strictEqual(editable.innerHTML, '<p><b>Christophe</b></p>', "Change a word with the corrector who contains style tags");
+
+        editable.innerHTML = '<p><b>Chrys</b>top</p>';
+        touchAdroidGoogleKeyborardmMveCarret(editable, {
+            sc: editable.firstChild.firstChild.firstChild,
+            so: 2,
+        });
+        touchAdroidGoogleKeyborardCorrector(editable, 'Christophe');
+        assert.strictEqual(editable.innerHTML, '<p><b>Christophe</b></p>', "Change a word with the corrector who contains style tags after move carret");
+
+        wysiwyg.destroy();
+    });
+});
+
+
+function insertKey (editable, key) {
+    var accents = {
+        'ê': [219, "e"],
+    };
+    var accentedInsert = accents[key] && accents[key][0];
+    var normalInsert = accents[key] ? accents[key][1] : key;
+
+    var promise;
+    if (accentedInsert) {
+        promise = new Promise(function (resolve) {
+            var ev = createKeyEvent(editable, "keyup", "Dead", accentedInsert, false);
+            editable.dispatchEvent(ev);
+
+            setTimeout(resolve);
+        })
+    } else {
+        promise = Promise.resolve();
+    }
+
+    return new Promise(function (resolve) {
+        return promise.then(function () {
+            var ev = createKeyEvent(editable, "keydown", normalInsert, normalInsert.charCodeAt(0), false);
+            editable.dispatchEvent(ev);
+
+            createTextInputEvent(editable, key);
+
+            setTimeout(function () {
+                var ev = createKeyEvent(editable, "keyup", normalInsert, normalInsert.charCodeAt(0), false);
+                editable.dispatchEvent(ev);
+
+                setTimeout(resolve);
+            });
+        });
+    });
+}
+function keypressInsertText (editable, word) {
+    var offset = 0;
+    var pull = function () {
+        offset++;
+        var promise;
+        if (offset > word.length) {
+            return Promise.resolve();
+        }
+        promise = insertKey(editable, word.slice(offset-1, offset));
+        return new Promise(function (resolve) {
+            setTimeout(function () {
+                pull().then(resolve);
+            });
+        })
+    }
+    return pull();
+}
+
+QUnit.test('accented char', function (assert) {
+    var done = assert.async();
+    assert.expect(1);
+
+    weTestUtils.createWysiwyg({
+        data: this.data,
+    }).then(function (wysiwyg) {
+        var editable = wysiwyg.$('.note-editable')[0];
+
+        var promise = Promise.resolve();
+        promise = promise.then(function () {
+            editable.innerHTML = '<p><br/></p>';
+            Wysiwyg.setRange(editable.firstChild, 0);
+            return keypressInsertText(editable, 'bête').then(function () {
+                assert.strictEqual(editable.innerHTML, '<p>bête</p>', "Insert chars from keyborad with keypress on '^' followed by 'e' to write 'ê'");
+            });
+        });
+
+        promise.then(function () {
+            wysiwyg.destroy();
+            done();
+        });
+    });
+});
+
+
 });
 });
 });

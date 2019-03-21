@@ -9,18 +9,23 @@ dom.isAnchor = function (node) {
     return (node.tagName === 'A' || node.tagName === 'BUTTON' || $(node).hasClass('btn')) &&
         !$(node).hasClass('fa') && !$(node).hasClass('o_image');
 };
+var keycode = ({
+    '8': 'BACKSPACE',
+    '9': 'TAB',
+    '13': 'ENTER',
+    '46': 'DELETE',
+});
 
 var KeyboardPlugin = AbstractPlugin.extend({
     events: {
         'summernote.keydown': '_onKeydown',
         'DOMNodeInserted .note-editable': '_removeGarbageSpans',
+        'textInput .note-editable': '_onTextInput',
+        'beforeinput .note-editable': '_onAndroidBeforeInput',
+        'compositionstart .note-editable': '_onAndroidCompositionStart',
+        'compositionupdate .note-editable': '_onAndroidCompositionUpdate',
+        'compositionend .note-editable': '_onAndroidCompositionEnd',
     },
-
-    //--------------------------------------------------------------------------
-    // Public
-    //--------------------------------------------------------------------------
-
-
 
     //--------------------------------------------------------------------------
     // Private
@@ -1013,76 +1018,40 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * @returns {Boolean} true if case handled
      */
     _onKeydown: function (se, e) {
-        var self = this;
-        var handled = false;
-
         if (e.ctrlKey && e.key === 'a') {
             e.preventDefault();
             this._selectAll();
             return;
         }
-
-        if (e.key &&
-            (e.key.length === 1 || e.key === "Dead" || e.key === "Unidentified") &&
-            !e.ctrlKey && !e.altKey && !e.metaKey) {
-
-            if (e.key === "Dead" || e.key === "Unidentified") {
-                this._accented = true;
-            }
-
-            // Record undo only if either:
-            clearTimeout(this.lastCharIsVisibleTime);
-            // e.key is punctuation or space
-            var stopChars = [' ', ',', ';', ':', '?', '.', '!'];
-            if (stopChars.indexOf(e.key) !== -1) {
-                this.lastCharVisible = false;
-            }
-            // or not on top of history stack (record undo after undo)
-            var history = this.context.invoke('HistoryPlugin.getHistoryStep');
-            if (history && history.stack.length && history.stackOffset < history.stack.length - 1) {
-                this.lastCharVisible = false;
-            }
-            // or no new char for 500ms
-            this.lastCharIsVisibleTime = setTimeout(function () {
-                self.lastCharIsVisible = false;
-            }, 500);
-            if (!this.lastCharIsVisible) {
-                this.lastCharIsVisible = true;
-                this.context.invoke('HistoryPlugin.recordUndo');
-            }
-
-            if (e.key !== "Dead") {
-                this._onVisibleChar(e, this._accented);
-            }
-        } else {
-            this.lastCharIsVisible = false;
-            this.context.invoke('editor.clearTarget');
-            this.context.invoke('MediaPlugin.hidePopovers');
-            this.context.invoke('editor.beforeCommand');
-            switch (e.keyCode) {
-                case 8: // BACKSPACE
-                    handled = this._onBackspace(e);
-                    break;
-                case 9: // TAB
-                    handled = this._onTab(e);
-                    break;
-                case 13: // ENTER
-                    handled = this._onEnter(e);
-                    break;
-                case 46: // DELETE
-                    handled = this._onDelete(e);
-                    break;
-            }
-            if (handled) {
-                this._preventTextInEditableDiv();
-                this.context.invoke('editor.saveRange');
-                e.preventDefault();
-                this.context.invoke('editor.afterCommand');
-            }
+        if (!keycode[e.keyCode]) {
+            return;
         }
-        if (e.key !== "Dead") {
-            this._accented = false;
+
+        this.context.invoke('editor.clearTarget');
+        this.context.invoke('MediaPlugin.hidePopovers');
+        this.context.invoke('editor.beforeCommand');
+        var handled = false;
+        switch (keycode[e.keyCode]) {
+            case 'BACKSPACE':
+                handled = this._onBackspace(e);
+                break;
+            case 'TAB':
+                handled = this._onTab(e);
+                break;
+            case 'ENTER':
+                handled = this._onEnter(e);
+                break;
+            case 'DELETE':
+                handled = this._onDelete(e);
+                break;
         }
+        if (handled) {
+            e.preventDefault();
+            this._preventTextInEditableDiv();
+            this.context.invoke('editor.saveRange');
+            this.context.invoke('editor.afterCommand');
+        }
+        return handled;
     },
     /**
      * Handle BACKSPACE keydown event.
@@ -1221,46 +1190,125 @@ var KeyboardPlugin = AbstractPlugin.extend({
         // In table, on tab switch to next cell
         return false;
     },
-    /**
-     * Handle visible char keydown event.
-     *
-     * @private
-     * @param {jQueryEvent} e
-     * @returns {Boolean} true if case is handled and event default must be prevented
-     */
-    _onVisibleChar: function (e, accented) {
-        var self = this;
+
+    _onTextInput: function (e) {
         e.preventDefault();
-        if (accented) {
-            this.editable.normalize();
-            var baseRange = this.context.invoke('editor.createRange');
-
-            var $parent = $(baseRange.sc.parentNode);
-            var parentContenteditable = $parent.attr('contenteditable');
-            $parent.attr('contenteditable', false);
-
-            var accentPlaceholder = this.document.createElement('span');
-            $(baseRange.sc).after(accentPlaceholder);
-            $(accentPlaceholder).attr('contenteditable', true);
-
-            var range = this.context.invoke('editor.setRange', accentPlaceholder, 0);
-            range.select();
-
-            setTimeout(function () {
-                var accentedChar = accentPlaceholder.innerHTML;
-                $(accentPlaceholder).remove();
-                if (parentContenteditable) {
-                    $parent.attr('contenteditable', parentContenteditable);
-                } else {
-                    $parent.removeAttr('contenteditable');
-                }
-                baseRange.select();
-                self.context.invoke('HelperPlugin.insertTextInline', accentedChar);
-            });
-        } else {
-            this.context.invoke('HelperPlugin.insertTextInline', e.key);
+        if (!this._wordComposition) {
+            // don't insert char on composition because the google virtual key insert char it self, we can't cancel it O.o
+            this.context.invoke('HelperPlugin.insertTextInline', e.originalEvent.data);
         }
-        return true;
+    },
+    _getCompositionWord: function (range) {
+        // get the previous word to complete or correct
+        var previousText = '';
+        var beforePoint = dom.prevPoint(range.getStartPoint());
+        beforePoint = dom.nextPoint(dom.prevPointUntil(beforePoint, function (point) {
+            if (dom.isBlock(point.node.childNodes[point.offset] || point.node)) {
+                return true;
+            }
+            if (dom.isText(point.node)) {
+                var char = point.node.textContent.slice(point.offset, point.offset+1);
+                if (char === ' ' || char === '\u00A0') {
+                    return true;
+                }
+                previousText = char + previousText;
+            }
+        }));
+        var afterText = '';
+        var afterPoint = range.getStartPoint();
+        afterPoint = dom.prevPoint(dom.nextPointUntil(afterPoint, function (point) {
+            if (dom.isBlock(point.node.childNodes[point.offset] || point.node)) {
+                return true;
+            }
+            if (dom.isText(point.node)) {
+                var char = point.node.textContent.slice(point.offset, point.offset+1);
+                if (char === ' ' || char === '\u00A0') {
+                    return true;
+                }
+                afterText += char;
+            }
+        }));
+
+        return {
+            beforePoint: beforePoint,
+            beforeText: previousText,
+            afterPoint: afterPoint,
+            afterText: afterText,
+        };
+    },
+    _setComposition: function (text) {
+        var range = this.context.invoke('editor.createRange');
+        var compo = this._getCompositionWord(range);
+        var length = compo.beforeText.length + compo.afterText.length;
+        var point = compo.beforePoint;
+
+        // complete the word
+        if (!compo.afterText.length && !text.indexOf(compo.beforeText)) {
+            text = text.slice(length);
+            range.select();
+        } else {
+            if (length === (text.length + 1) && !compo.beforeText.indexOf(text)) {
+                // long press delete
+                text = '';
+            }
+
+            // autocorrect the word (change only the updated char, and keep the format for previous chars)
+            var good = point;
+            var remove = false;
+            while (point && point.node && length) {
+                if (dom.isText(point.node)) {
+                    var char = point.node.textContent.slice(point.offset, point.offset + 1);
+                    if (char.length) {
+                        length--;
+                        if (!remove && text[0] === char) {
+                            text = text.slice(1);
+                            good = point;
+                        } else {
+                            point.node.textContent = point.node.textContent.slice(0, point.offset) + point.node.textContent.slice(point.offset + 1);
+                            remove = true;
+                            continue;
+                        }
+                    }
+                }
+                point = dom.nextPoint(point);
+            }
+            point = dom.nextPoint(good);
+
+            range.sc = range.ec = point.node;
+            range.so = range.eo = point.offset;
+            range.select();
+        }
+
+        if (text.length) {
+            this.context.invoke('HelperPlugin.insertTextInline', text);
+            var range = this.context.invoke('editor.createRange');
+            var textContent = range.sc.textContent;
+            function fuckGoogleKeyboardWhichInsertsCharWithoutEvent () {
+                range.sc.textContent = textContent;
+                range.select();
+                clearTimeout(time);
+            }
+            var time = setTimeout(fuckGoogleKeyboardWhichInsertsCharWithoutEvent);
+            $(range.sc.parentNode).one('DOMSubtreeModified', fuckGoogleKeyboardWhichInsertsCharWithoutEvent);
+        }
+    },
+    _onAndroidBeforeInput: function (e) {
+        if (e.originalEvent.inputType === 'deleteContentBackward') {
+            // for virtual keyboard like googleKeyboard when use corrector with carret in the middle of a word
+            this._setComposition('');
+        }
+    },
+    _onAndroidCompositionStart: function (e) {
+        this._wordComposition = true;
+    },
+    _onAndroidCompositionEnd: function (e) {
+        this._setComposition(e.originalEvent.data);
+        this._wordComposition = false;
+    },
+    _onAndroidCompositionUpdate: function (e) {
+        if (!this._wordComposition) {
+            console.error('Call composition update without starting');
+        }
     },
 });
 
