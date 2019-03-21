@@ -2,6 +2,7 @@ odoo.define('web_editor.test_utils', function (require) {
 "use strict";
 
 var ajax = require('web.ajax');
+var BoundaryPoint = require('wysiwyg.BoundaryPoint');
 var MockServer = require('web.MockServer');
 var testUtils = require('web.test_utils');
 var Widget = require('web.Widget');
@@ -511,10 +512,10 @@ var testKeyboard = function (wysiwyg, assert, keyboardTests, addTests) {
         var reDOMSelection = /^(.+?)(:contents(\(\)\[|\()([0-9]+)[\]|\)])?(->([0-9]+))?$/;
         var sel = selector.match(reDOMSelection);
         var $node = $editable.find(sel[1]);
-        var point = {
-            node: sel[3] ? $node.contents()[+sel[4]] : $node[0],
-            offset: sel[5] ? +sel[6] : 0,
-        };
+        var point = new BoundaryPoint(
+            sel[3] ? $node.contents()[+sel[4]] : $node[0],
+            sel[5] ? +sel[6] : 0
+        );
         if (!point.node || point.offset > (point.node.tagName ? point.node.childNodes : point.node.textContent).length) {
             assert.notOk("Node not found: '" + selector + "' " + (point.node ? "(container: '" + (point.node.outerHTML || point.node.textContent) + "')" : ""));
         }
@@ -661,14 +662,8 @@ var testKeyboard = function (wysiwyg, assert, keyboardTests, addTests) {
                 var end = test.test.end ? _select(test.test.end) : start;
                 if (start.node && end.node) {
                     range = Wysiwyg.getRange($editable[0]);
-                    var startPoint = endOfAreaBetweenTwoNodes({
-                        node: range.sc,
-                        offset: range.so,
-                    });
-                    var endPoint = endOfAreaBetweenTwoNodes({
-                        node: range.ec,
-                        offset: range.eo,
-                    });
+                    var startPoint = endOfAreaBetweenTwoNodes(range.getStartPoint());
+                    var endPoint = endOfAreaBetweenTwoNodes(range.getEndPoint());
                     var sameDOM = (startPoint.node.outerHTML || startPoint.node.textContent) === (start.node.outerHTML || start.node.textContent);
                     var stringify = function (obj) {
                         if (!sameDOM) {
@@ -718,10 +713,10 @@ var select = (function () {
     var __select = function (selector, $editable) {
         var sel = selector.match(/^(.+?)(:contents\(\)\[([0-9]+)\]|:contents\(([0-9]+)\))?(->([0-9]+))?$/);
         var $node = $editable.find(sel[1]);
-        return {
-            node: sel[2] ? $node.contents()[sel[3] ? +sel[3] : +sel[4]] : $node[0],
-            offset: sel[5] ? +sel[6] : 0,
-        };
+        return new BoundaryPoint(
+            sel[2] ? $node.contents()[sel[3] ? +sel[3] : +sel[4]] : $node[0],
+            sel[5] ? +sel[6] : 0
+        );
     };
     return function (startSelector, endSelector, $editable) {
         var start = __select(startSelector, $editable);
