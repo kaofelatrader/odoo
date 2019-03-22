@@ -10,7 +10,6 @@ import pytz
 
 from odoo import exceptions, tests
 from odoo.addons.test_mail.tests.common import BaseFunctionalTest
-from odoo.addons.test_mail.tests.common import mail_new_test_user
 from odoo.addons.test_mail.models.test_mail_models import MailTestActivity
 
 
@@ -89,6 +88,11 @@ class TestActivityRights(TestActivityCommon):
 @tests.tagged('mail_activity')
 class TestActivityFlow(TestActivityCommon):
 
+    @classmethod
+    def setUpClass(cls):
+        super(TestActivityFlow, cls).setUpClass()
+        cls._create_portal_user()
+
     def test_activity_flow_employee(self):
         with self.sudoAs('ernest'):
             test_record = self.env['mail.test.activity'].browse(self.test_record.id)
@@ -119,9 +123,7 @@ class TestActivityFlow(TestActivityCommon):
             self.assertEqual(test_record.message_ids[0].subtype_id, self.env.ref('mail.mt_activities'))
 
     def test_activity_flow_portal(self):
-        portal_user = mail_new_test_user(self.env, login='chell', groups='base.group_portal', name='Chell Gladys')
-
-        with self.sudoAs('chell'):
+        with self.sudo('chell'):
             test_record = self.env['mail.test.activity'].browse(self.test_record.id)
             with self.assertRaises(exceptions.AccessError):
                 self.env['mail.activity'].create({

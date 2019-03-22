@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo.addons.test_mail.tests.common import BaseFunctionalTest, TestRecipients, MockEmails
-from odoo.addons.test_mail.tests.common import mail_new_test_user
+from odoo.addons.mail.tests.common import MockEmail
+from odoo.addons.test_mail.tests.common import BaseFunctionalTest, TestRecipients
 
 
 class TestChatterTweaks(BaseFunctionalTest, TestRecipients):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestChatterTweaks, cls).setUpClass()
+        cls.test_record = cls.env['mail.test.simple'].with_context(cls._test_context).create({'name': 'Test', 'email_from': 'ignasse@example.com'})
 
     def test_post_no_subscribe_author(self):
         original = self.test_record.message_follower_ids
@@ -74,24 +79,24 @@ class TestChatterTweaks(BaseFunctionalTest, TestRecipients):
         self.assertEqual(len(rec.sudo().mapped('message_ids.tracking_value_ids')), 1)
 
 
-class TestNotifications(BaseFunctionalTest, MockEmails):
+class TestNotifications(BaseFunctionalTest, TestRecipients, MockEmail):
 
-    def setUp(self):
-        super(TestNotifications, self).setUp()
-        self.partner_1 = self.env['res.partner'].with_context(BaseFunctionalTest._test_context).create({
-            'name': 'Valid Lelitre',
-            'email': 'valid.lelitre@agrolait.com'})
+    @classmethod
+    def setUpClass(cls):
+        super(TestNotifications, cls).setUpClass()
+        cls._create_portal_user()
+        cls.test_record = cls.env['mail.test.simple'].with_context(cls._test_context).create({'name': 'Test', 'email_from': 'ignasse@example.com'})
 
-        (self.user_employee | self.user_admin).write({'notification_type': 'inbox'})
+        (cls.user_employee | cls.user_admin).write({'notification_type': 'inbox'})
 
     def test_needaction(self):
-        with self.assertNotifications(partner_employee=(1, 'inbox', 'unread'), partner_admin=(0, '', '')):
+        with self.mockGateway(), self.assertNotifications(partner_employee=(1, 'inbox', 'unread'), partner_admin=(0, '', '')):
             self.test_record.message_post(
                 body='Test', message_type='comment', subtype='mail.mt_comment',
                 partner_ids=[self.user_employee.partner_id.id])
 
         self.test_record.message_subscribe([self.partner_1.id])
-        with self.assertNotifications(partner_employee=(1, 'inbox', 'unread'), partner_admin=(0, '', ''), partner_1=(1, 'email', 'read')):
+        with self.mockGateway(), self.assertNotifications(partner_employee=(1, 'inbox', 'unread'), partner_admin=(0, '', ''), partner_1=(1, 'email', 'read')):
             self.test_record.message_post(
                 body='Test', message_type='comment', subtype='mail.mt_comment',
                 partner_ids=[self.user_employee.partner_id.id])
@@ -111,21 +116,18 @@ class TestNotifications(BaseFunctionalTest, MockEmails):
                 body='Test', message_type='comment', subtype='mail.mt_comment')
 
     def test_set_message_done_user(self):
-        with self.assertNotifications(partner_employee=(0, '', '')):
+        with self.mockGateway(), self.assertNotifications(partner_employee=(0, '', '')):
             message = self.test_record.message_post(
                 body='Test', message_type='comment', subtype='mail.mt_comment',
                 partner_ids=[self.user_employee.partner_id.id])
             message.sudo(self.user_employee).set_message_done()
 
     def test_set_message_done_portal(self):
-        user_portal = mail_new_test_user(self.env, login='chell', groups='base.group_portal', name='Chell Gladys', notification_type='inbox')
-        self.partner_portal = user_portal.partner_id
-
-        with self.assertNotifications(partner_employee=(1, 'inbox', 'unread'), partner_portal=(1, 'inbox', 'read')):
+        with self.mockGateway(), self.assertNotifications(partner_employee=(1, 'inbox', 'unread'), partner_portal=(1, 'inbox', 'read')):
             message = self.test_record.message_post(
                 body='Test', message_type='comment', subtype='mail.mt_comment',
-                partner_ids=[self.user_employee.partner_id.id, user_portal.partner_id.id])
-            message.sudo(user_portal).set_message_done()
+                partner_ids=[self.user_employee.partner_id.id, self.user_portal.partner_id.id])
+            message.sudo(self.user_portal).set_message_done()
 
     def test_set_star(self):
         msg = self.test_record.sudo(self.user_admin).message_post(body='My Body', subject='1')
