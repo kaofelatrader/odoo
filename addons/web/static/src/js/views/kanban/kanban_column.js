@@ -100,50 +100,124 @@ var KanbanColumn = Widget.extend({
             defs.push(this._addRecord(this.data_records[i]));
         }
 
-        if (!config.device.isMobile) {
-            // deactivate sortable in mobile mode.  It does not work anyway,
-            // and it breaks horizontal scrolling in kanban views.  Someday, we
-            // should find a way to use the touch events to make sortable work.
-            interact('.o_kanban_record').dropzone({
-                accept: '.o_kanban_record',
-                overlap: 0.80,
-                ondragenter: function (event) {
-                    var marginFrom = event.dragEvent.dy < 0 ? 'marginBottom' : 'marginTop';
-                    var marginTo = event.dragEvent.dy > 0 ? 'marginBottom' : 'marginTop';
-                    var draggableHeight = event.relatedTarget.clientHeight;
-                    event.target.style[marginFrom] = -draggableHeight + 'px';
-                    event.target.style[marginTo] = draggableHeight + 'px';
-                    // self.$el.addClass('o_kanban_hover');
-                },
-                ondragleave: function (event) {
-                    event.target.style.marginTop = '0px';
-                    event.target.style.marginBottom = '0px';
-                    // self.$el.removeClass('o_kanban_hover');
-                },
-                ondrop: function (event) {
-                    event.target.parentNode.insertBefore(event.relatedTarget, event.target.nextSibling);
-                },
-                ondropmove: function(event) {
-                    // debugger;
+        var getPlaceholder = function () {
+            return self.$el[0].querySelector('.o_sortable_placeholder');
+        }
+        var insertPlaceholder = function (node, parent, before) {
+            var placeholder = getPlaceholder(node);
+            if (!placeholder) {
+                console.log('creating a new placeholder ...');
+                var computedStyle = window.getComputedStyle(node);
+                placeholder = document.createElement(node.tagName);
+                placeholder.classList.add('o_sortable_placeholder');
+                placeholder.style.width = computedStyle.getPropertyValue('width');
+                placeholder.style.height = computedStyle.getPropertyValue('height');
+                placeholder.style.backgroundColor = 'lightgray';
+            }
+            parent.insertBefore(placeholder, before);
+        }
+        var cleanPlaceholder = function () {
+            var placeholder = getPlaceholder();
+            if (placeholder) {
+                console.log('deleting placeholder');
+                placeholder.remove();
+                placeholder = undefined;
+            }
+        }
+        interact(this.$el[0]).dropzone({
+            accept: '.o_kanban_record',
+            ondragenter: function (event) {
+                console.log('' + self.$el.data('id') + ' enter');
+                if (!getPlaceholder()) {
+                    insertPlaceholder(event.relatedTarget, event.target, null);
                 }
-            })
-            interact('.o_kanban_group > .o_kanban_record:not(.o_updating)').draggable({
-                onmove: function(event) {
-                    var target = event.target,
-                        // keep the dragged position in the data-x/data-y attributes
-                        x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx,
-                        y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+            },
+            ondrop: function (event) {
+                var placeholder = getPlaceholder(event.target);
+                placeholder.parentNode.insertBefore(event.relatedTarget, placeholder);
+                cleanPlaceholder();
 
-                    // translate the element
-                    target.style.webkitTransform =
-                        target.style.transform =
-                        'translate(' + x + 'px, ' + y + 'px)';
-
-                    // update the posiion attributes
-                    target.setAttribute('data-x', x);
-                    target.setAttribute('data-y', y);
+                // update record
+                var record = $(event.relatedTarget).data('record');
+                if (self.records.indexOf(record) >= 0) {
+                    if (self.$el[0].contains(record.$el[0])) {
+                        // resequencing records
+                        self.trigger_up('kanban_column_resequence', { ids: self._getIDs() });
+                    }
+                } else {
+                    // adding record to this column
+                    event.relatedTarget.classList.add('o_updating');
+                    self.trigger_up('kanban_column_add_record', { record: record, ids: self._getIDs() });
                 }
-            })
+            },
+            ondragleave: function (event) {
+                console.log('' + self.$el.data('id') + ' leave');
+                cleanPlaceholder();
+            },
+            ondropactivate: function (event) {
+                console.log('activate');
+            },
+            ondropdeactivate: function (event) {
+                console.log('deactivate');
+                cleanPlaceholder();
+            }
+        })
+        interact('.o_kanban_record:not(.o_sortable_placeholder)').dropzone({
+            accept: '.o_kanban_record',
+            ondragenter: function (event) {
+                var beforeTarget = event.dragEvent.dy > 0 ? event.target.nextSibling : event.target;
+                var parentTarget = beforeTarget ? beforeTarget.parentNode : event.target.parentNode;
+                insertPlaceholder(event.target, parentTarget, beforeTarget);
+            },
+        });
+        interact.dynamicDrop(true);
+        interact('.o_kanban_group > .o_kanban_record:not(.o_updating)').draggable({
+            onstart: function (event) {
+                var target = event.target;
+
+                // Create placeholder
+                insertPlaceholder(target, target.parentNode, target.nextSibling);
+
+                target.setAttribute('data-originalHeight', target.style.height);
+                target.setAttribute('data-originalLeft', target.style.left);
+                target.setAttribute('data-originalPosition', target.style.position);
+                target.setAttribute('data-originalTop', target.style.top);
+                target.setAttribute('data-originalWidth', target.style.width);
+                target.setAttribute('data-originalZIndex', target.style.zIndex);
+
+                var computedStyle = window.getComputedStyle(target);
+                target.style.height = computedStyle.height;
+                target.style.width = computedStyle.width;
+
+                var rect = event.target.getBoundingClientRect();
+                var xPosition = rect.left + window.scrollX;
+                var yPosition = rect.top + window.scrollY - 132;
+                target.style.position = 'absolute';
+                target.style.zIndex = 1000;
+                target.style.left = xPosition + 'px';
+                target.style.top = yPosition + 'px';
+
+                target.setAttribute('data-x', xPosition);
+                target.setAttribute('data-y', yPosition);
+            },
+            onmove: function (event) {
+                var target = event.target;
+                var xPosition = parseFloat(target.getAttribute('data-x')) + event.dx;
+                var yPosition = parseFloat(target.getAttribute('data-y')) + event.dy;
+                target.style.left = xPosition + 'px';
+                target.style.top = yPosition + 'px';
+                target.setAttribute('data-x', xPosition);
+                target.setAttribute('data-y', yPosition);
+            },
+            onend: function (event) {
+                event.target.style.height = event.target.getAttribute('data-originalHeight');
+                event.target.style.left = event.target.getAttribute('data-originalLeft');
+                event.target.style.position = event.target.getAttribute('data-originalPosition');
+                event.target.style.top = event.target.getAttribute('data-originalTop');
+                event.target.style.width = event.target.getAttribute('data-originalWidth');
+                event.target.style.zIndex = event.target.getAttribute('data-originalZIndex');
+            }
+        });
             // this.$el.sortable({
             //     connectWith: '.o_kanban_group',
             //     containment: this.draggable ? false : 'parent',
@@ -182,7 +256,6 @@ var KanbanColumn = Widget.extend({
             //         }
             //     }
             // });
-        }
         this.$el.click(function (event) {
             if (self.folded) {
                 self._onToggleFold(event);

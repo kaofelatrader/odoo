@@ -35,8 +35,8 @@ var NB_KANBAN_RECORD_COLORS = KANBAN_RECORD_COLORS.length;
 
 var KanbanRecord = Widget.extend({
     events: {
-        'click .oe_kanban_action': '_onKanbanActionClicked',
-        'click .o_kanban_manage_toggle_button': '_onManageTogglerClicked',
+        // 'click .oe_kanban_action': '_onKanbanActionClicked',
+        // 'click .o_kanban_manage_toggle_button': '_onManageTogglerClicked',
     },
     /**
      * @override
@@ -347,10 +347,10 @@ var KanbanRecord = Widget.extend({
         this.$el.data('record', this);
         if (this.$el.hasClass('oe_kanban_global_click') ||
             this.$el.hasClass('oe_kanban_global_click_edit')) {
-            this.$el.on('click', this._onGlobalClick.bind(this));
-            this.$el.on('keydown', this._onKeyDownCard.bind(this));
+            // this.$el.on('click', this._onGlobalClick.bind(this));
+            // this.$el.on('keydown', this._onKeyDownCard.bind(this));
         } else {
-            this.$el.on('keydown', this._onKeyDownOpenFirstLink.bind(this));
+            // this.$el.on('keydown', this._onKeyDownOpenFirstLink.bind(this));
         }
         this._processFields();
         this._processWidgets();
