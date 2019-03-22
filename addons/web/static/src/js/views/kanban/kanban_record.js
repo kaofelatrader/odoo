@@ -63,7 +63,53 @@ var KanbanRecord = Widget.extend({
      * @override
      */
     start: function () {
-        return Promise.all([this._super.apply(this, arguments), this._render()]);
+        var self = this;
+        return Promise.all([this._super.apply(this, arguments), this._render()]).then(function() {
+            interact(self.$el[0]).draggable({
+                onstart: function (event) {
+                    var target = event.target;
+
+                    target.setAttribute('data-originalHeight', target.style.height);
+                    target.setAttribute('data-originalLeft', target.style.left);
+                    target.setAttribute('data-originalPosition', target.style.position);
+                    target.setAttribute('data-originalTop', target.style.top);
+                    target.setAttribute('data-originalWidth', target.style.width);
+                    target.setAttribute('data-originalZIndex', target.style.zIndex);
+
+                    var computedStyle = window.getComputedStyle(target);
+                    target.style.height = computedStyle.height;
+                    target.style.width = computedStyle.width;
+
+                    var rect = event.target.getBoundingClientRect();
+                    var xPosition = rect.left; // - window.pageXOffset;
+                    var yPosition = rect.top - 132; // - window.pageYOffset;
+                    target.style.position = 'absolute';
+                    target.style.zIndex = 1000;
+                    target.style.left = xPosition + 'px';
+                    target.style.top = yPosition + 'px';
+
+                    target.setAttribute('data-x', xPosition);
+                    target.setAttribute('data-y', yPosition);
+                },
+                onmove: function (event) {
+                    var target = event.target;
+                    var xPosition = parseFloat(target.getAttribute('data-x')) + event.dx;
+                    var yPosition = parseFloat(target.getAttribute('data-y')) + event.dy;
+                    target.style.left = xPosition + 'px';
+                    target.style.top = yPosition + 'px';
+                    target.setAttribute('data-x', xPosition);
+                    target.setAttribute('data-y', yPosition);
+                },
+                onend: function (event) {
+                    event.target.style.height = event.target.getAttribute('data-originalHeight');
+                    event.target.style.left = event.target.getAttribute('data-originalLeft');
+                    event.target.style.position = event.target.getAttribute('data-originalPosition');
+                    event.target.style.top = event.target.getAttribute('data-originalTop');
+                    event.target.style.width = event.target.getAttribute('data-originalWidth');
+                    event.target.style.zIndex = event.target.getAttribute('data-originalZIndex');
+                }
+            });
+        })
     },
     /**
      * Called each time the record is attached to the DOM.

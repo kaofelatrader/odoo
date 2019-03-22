@@ -100,6 +100,7 @@ var KanbanColumn = Widget.extend({
             defs.push(this._addRecord(this.data_records[i]));
         }
 
+        var connectWith = '.o_kanban_group';
         var getPlaceholder = function () {
             return self.$el[0].querySelector('.o_sortable_placeholder');
         }
@@ -114,6 +115,11 @@ var KanbanColumn = Widget.extend({
                 placeholder.style.height = computedStyle.getPropertyValue('height');
                 placeholder.style.backgroundColor = 'lightgray';
             }
+
+            if (connectWith) {
+                cleanConnectedPlaceholders(event.target);
+            }
+
             parent.insertBefore(placeholder, before);
         }
         var cleanPlaceholder = function () {
@@ -124,8 +130,49 @@ var KanbanColumn = Widget.extend({
                 placeholder = undefined;
             }
         }
+        var cleanConnectedPlaceholders = function(originalSortable) {
+            document.querySelectorAll(connectWith).forEach(function (sortable) {
+                if (sortable !== originalSortable) {
+                    var connectedPlaceholders = sortable.querySelectorAll('.o_sortable_placeholder');
+                    connectedPlaceholders.forEach(function (placeholder) {
+                        console.log('removed connected placeholders')
+                        placeholder.remove();
+                    });
+                }
+            });
+        }
         interact(this.$el[0]).dropzone({
             accept: '.o_kanban_record',
+            checker: function (dragEvent, event, dropped, dropzone, dropElement, draggable, draggableElement) {
+                return dropped && (dropElement.contains(draggableElement) || (connectWith && draggableElement.matches(connectWith + ' .o_kanban_record')));
+            },
+            ondropactivate: function (event) {
+                var draggable = event.relatedTarget;
+                var droppable = event.target;
+                if (droppable.contains(draggable)) {
+                    insertPlaceholder(draggable, droppable, draggable.nextSibling);
+                }
+                if (!self.activated) {
+                    console.log('creating record dropzones...');
+                    self.activated = true;
+                    self.$el[0].querySelectorAll('.o_kanban_record:not(.o_sortable_placeholder)').forEach(function(element) {
+                        if (element !== event.relatedTarget) {
+                            interact(element).dropzone({
+                                accept: '.o_kanban_record',
+                                checker: function (dragEvent, event, dropped, dropzone, dropElement, draggable, draggableElement) {
+                                    return dropped && (dropElement.parentNode.contains(draggableElement) || (connectWith && draggableElement.matches(connectWith + ' .o_kanban_record')));
+                                },
+                                ondragenter: function (event) {
+                                    console.log('entered');
+                                    var beforeTarget = event.dragEvent.dy > 0 ? event.target.nextSibling : event.target;
+                                    var parentTarget = beforeTarget ? beforeTarget.parentNode : event.target.parentNode;
+                                    insertPlaceholder(event.target, parentTarget, beforeTarget);
+                                },
+                            });
+                        }
+                    })
+                }
+            },
             ondragenter: function (event) {
                 console.log('' + self.$el.data('id') + ' enter');
                 if (!getPlaceholder()) {
@@ -154,70 +201,12 @@ var KanbanColumn = Widget.extend({
                 console.log('' + self.$el.data('id') + ' leave');
                 cleanPlaceholder();
             },
-            ondropactivate: function (event) {
-                console.log('activate');
-            },
             ondropdeactivate: function (event) {
                 console.log('deactivate');
                 cleanPlaceholder();
             }
         })
-        interact('.o_kanban_record:not(.o_sortable_placeholder)').dropzone({
-            accept: '.o_kanban_record',
-            ondragenter: function (event) {
-                var beforeTarget = event.dragEvent.dy > 0 ? event.target.nextSibling : event.target;
-                var parentTarget = beforeTarget ? beforeTarget.parentNode : event.target.parentNode;
-                insertPlaceholder(event.target, parentTarget, beforeTarget);
-            },
-        });
         interact.dynamicDrop(true);
-        interact('.o_kanban_group > .o_kanban_record:not(.o_updating)').draggable({
-            onstart: function (event) {
-                var target = event.target;
-
-                // Create placeholder
-                insertPlaceholder(target, target.parentNode, target.nextSibling);
-
-                target.setAttribute('data-originalHeight', target.style.height);
-                target.setAttribute('data-originalLeft', target.style.left);
-                target.setAttribute('data-originalPosition', target.style.position);
-                target.setAttribute('data-originalTop', target.style.top);
-                target.setAttribute('data-originalWidth', target.style.width);
-                target.setAttribute('data-originalZIndex', target.style.zIndex);
-
-                var computedStyle = window.getComputedStyle(target);
-                target.style.height = computedStyle.height;
-                target.style.width = computedStyle.width;
-
-                var rect = event.target.getBoundingClientRect();
-                var xPosition = rect.left + window.scrollX;
-                var yPosition = rect.top + window.scrollY - 132;
-                target.style.position = 'absolute';
-                target.style.zIndex = 1000;
-                target.style.left = xPosition + 'px';
-                target.style.top = yPosition + 'px';
-
-                target.setAttribute('data-x', xPosition);
-                target.setAttribute('data-y', yPosition);
-            },
-            onmove: function (event) {
-                var target = event.target;
-                var xPosition = parseFloat(target.getAttribute('data-x')) + event.dx;
-                var yPosition = parseFloat(target.getAttribute('data-y')) + event.dy;
-                target.style.left = xPosition + 'px';
-                target.style.top = yPosition + 'px';
-                target.setAttribute('data-x', xPosition);
-                target.setAttribute('data-y', yPosition);
-            },
-            onend: function (event) {
-                event.target.style.height = event.target.getAttribute('data-originalHeight');
-                event.target.style.left = event.target.getAttribute('data-originalLeft');
-                event.target.style.position = event.target.getAttribute('data-originalPosition');
-                event.target.style.top = event.target.getAttribute('data-originalTop');
-                event.target.style.width = event.target.getAttribute('data-originalWidth');
-                event.target.style.zIndex = event.target.getAttribute('data-originalZIndex');
-            }
-        });
             // this.$el.sortable({
             //     connectWith: '.o_kanban_group',
             //     containment: this.draggable ? false : 'parent',
