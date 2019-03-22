@@ -296,7 +296,9 @@ var RangePlugin = AbstractPlugin.extend({
         this.setRangeOnVoidBlock(node);
         this._rerange = false;
 
-        console.log('range');
+        var range = this.getRange();
+        console.log('range: ', range ? range.getPoints() : 'null');
+        console.log('dom: ', this.editable.innerHTML);
         this.trigger('range');
     },
 });

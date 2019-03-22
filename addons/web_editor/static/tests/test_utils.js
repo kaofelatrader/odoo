@@ -551,9 +551,9 @@ var testKeyboard = function (wysiwyg, assert, keyboardTests, addTests) {
             point.offset === point.node.textContent.length &&
             !/\S|\u00A0/.test(point.node.textContent)
         ) {
-            point = point.next().next();
+            point.next().next();
             while (point.node.tagName && point.node.textContent.length) {
-                point = point.next();
+                point.next();
             }
         }
         return point;

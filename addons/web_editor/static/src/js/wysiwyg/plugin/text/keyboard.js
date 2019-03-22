@@ -5,7 +5,7 @@ var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 var KeyboardPlugin = AbstractPlugin.extend({
-    dependencies: ['Common', 'Range', 'List', 'Link', 'History'], // TODO: Remove dependencies
+    dependencies: ['Common', 'Range', 'Paragraph', 'Link', 'History'], // TODO: Remove dependencies
 
     editableDomEvents: {
         'keydown': '_onKeydown',
@@ -32,13 +32,16 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * @private
      * @param {WrappedRange} range
      * @param {String('prev'|'next')} direction 'prev' to delete BEFORE the carret
+     * @param {Boolean} doReplaceEmptyParent true to replace empty parent with empty p if any
      * @returns {WrappedRange}
      */
-    _afterDeletion: function (range, direction) {
+    _afterDeletion: function (range, direction, doReplaceEmptyParent) {
         range = direction === 'prev' ? this._insertInvisibleCharAfterSingleBR(range) : range;
         range = this._rerangeOutOfBR(range, direction);
         range = this._cleanRangeAfterDeletion(range);
-        range = this._replaceEmptyParentWithEmptyP(range);
+        if (doReplaceEmptyParent) {
+            range = this._replaceEmptyParentWithEmptyP(range);
+        }
         return range;
     },
     /**
@@ -182,7 +185,10 @@ var KeyboardPlugin = AbstractPlugin.extend({
         var method = direction === 'prev' ? 'prevUntil' : 'nextUntil';
 
         var pt = range.getStartPoint();
-        pt = pt[method](function (point) {
+        pt[method](function (point) {
+            if (!point.node || self.utils.isEditable(point.node)) {
+                return true;
+            }
             var isAtStartOfMedia = !point.offset && self.dependencies.Common.isVoidBlock(point.node);
             var isBRorHR = point.node.tagName === 'BR' || point.node.tagName === 'HR';
             var isRootBR = wasOnStartOfBR && point.node === range.sc;
@@ -208,7 +214,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         });
 
         return {
-            point: pt || false,
+            point: !pt || pt.node === this.editable ? false : pt,
             hasBlock: hasBlock,
             blockToRemove: blockToRemove,
         };
@@ -242,7 +248,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             range = newRange;
         }
 
-        range = this._afterDeletion(range, direction);
+        range = this._afterDeletion(range, direction, !didDeleteNodes);
 
         range = this.dependencies.Range.setRange(range.getPoints()).collapse(direction === 'prev');
         this.editable.normalize();
@@ -273,7 +279,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             !$(ancestor).find('.fa, img').length
         ) {
             // double enter in a list make oudent
-            this.dependencies.List.outdent();
+            this.dependencies.Paragraph.outdent();
             return true;
         }
 
@@ -905,11 +911,11 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * replace it with an empty p, then rerange.
      *
      * @private
-     * @param {Object} range
-     * @returns {Object} range
+     * @param {WrappedRange} range
+     * @returns {WrappedRange}
      */
     _replaceEmptyParentWithEmptyP: function (range) {
-        if (range.sc === this.editable || range.sc.parentNode === this.editable) {
+        if (range.sc === this.editable) {
             return range;
         }
         var node = this.utils.isVoid(range.sc) && range.sc.parentNode ? range.sc.parentNode : range.sc;
@@ -1185,7 +1191,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             });
             if (point.isLeftEdgeOfBlock()) {
                 if (isIndented) {
-                    this.dependencies.List.outdent();
+                    this.dependencies.Paragraph.outdent();
                     return true;
                 }
                 if (this.utils.ancestor(range.sc, this.utils.isLi)) {
@@ -1198,7 +1204,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
 
         if (!flag && needOutdent) {
             this.dependencies.Range.setRange(range.getPoints());
-            this.dependencies.List.outdent();
+            this.dependencies.Paragraph.outdent();
         }
 
         return true;
@@ -1216,7 +1222,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         // Special case
         if (range.isCollapsed()) {
             // Do nothing if on left edge of a table cell
-            if (this.utils.isRightEdgeOfTag(range.getStartPoint(), 'TD')) {
+            if (range.getStartPoint().isRightEdgeOfTag('TD')) {
                 return true;
             }
         }
@@ -1280,9 +1286,9 @@ var KeyboardPlugin = AbstractPlugin.extend({
             }
             if (point.isLeftEdgeOfBlock() || this.utils.isEmpty(point.node)) {
                 if (e.shiftKey) {
-                    this.dependencies.List.outdent();
+                    this.dependencies.Paragraph.outdent();
                 } else {
-                    this.dependencies.List.indent();;
+                    this.dependencies.Paragraph.indent();;
                 }
                 this.dependencies.Range.getRange().normalize();
                 return true;

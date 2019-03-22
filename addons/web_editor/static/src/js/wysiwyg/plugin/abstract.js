@@ -37,7 +37,6 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
      * @params {function} params.insertAfterEditable
      */
     init: function (parent, params, options) {
-        var self = this;
         this._super.apply(this, arguments);
         this.setParent(parent);
         this.editorId = params.id;
