@@ -8,5 +8,10 @@
                 <script type="text/javascript" src="/hr_recruitment/static/src/js/tour.js"></script>
             </xpath>
         </template>
+        <template id="assets_tests" name="HR Recruitment Assets Tests" inherit_id="web.assets_tests">
+            <xpath expr="." position="inside">
+                <script type="text/javascript" src="/hr_recruitment/static/src/js/tours/hr_recruitment.js"></script>
+            </xpath>
+        </template>
     </data>
 </odoo>
