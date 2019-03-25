@@ -668,15 +668,19 @@ class Lead(models.Model):
             :param team : the id of the Sales Team. If not given, will be determined by `_merge_data`.
             :param destination_id : the id of the opportunity to use as head
                                     (into which the other opportunities will be merged with)
+                                    Must be one of the opportunity to merge.
             :return crm.lead record resulting of th merge
         """
         if len(self.ids) <= 1:
             raise UserError(_('Please select at least one lead or opportunity to merge with.'))
 
-        if destination_id in self.ids:
-            opportunities_head = self[self.ids.index(destination_id)]
-            opportunities_tail = self[:self.ids.index(destination_id)] | self[self.ids.index(destination_id)+1:]
-            opportunities = opportunities_head | opportunities_tail
+        if destination_id:
+            if destination_id in self.ids:
+                opportunities_head = self[self.ids.index(destination_id)]
+                opportunities_tail = self[:self.ids.index(destination_id)] | self[self.ids.index(destination_id)+1:]
+                opportunities = opportunities_head | opportunities_tail
+            else:
+                raise UserError(_('The destination opportunity must be one of the opportunity to merge.'))
         else:
             # If destination id is not set :
             # get SORTED recordset of head and tail, and complete list

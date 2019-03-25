@@ -102,7 +102,7 @@
             <field name="res_model">crm.lead2opportunity.partner</field>
             <field name="view_mode">form</field>
             <field name="view_id" ref="view_crm_lead2opportunity_partner"/>
-            <field name="context">{'default_opportunity_ids': [(4, active_id, None)]}</field>
+            <field name="context">{'default_opportunity_ids': [(4, active_id)]}</field>
             <field name="target">new</field>
         </record>
 
