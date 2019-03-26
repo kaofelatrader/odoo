@@ -349,6 +349,9 @@
         <script type="text/javascript" src="/web/static/src/js/public/public_widget.js"/>
     </template>
 
+    <template id="assets_tests" name="Tests Assets">
+    </template>
+
     <template id="web.layout" name="Web layout">&lt;!DOCTYPE html&gt;
         <html t-att="html_data or {}">
             <head>
