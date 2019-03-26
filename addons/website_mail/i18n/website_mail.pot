@@ -150,6 +150,12 @@ msgid "Published"
 msgstr ""
 
 #. module: website_mail
+#: code:addons/website_mail/models/mail_message.py:59
+#, python-format
+msgid "Records: %s, User: %s)"
+msgstr ""
+
+#. module: website_mail
 #: model:ir.ui.view,arch_db:website_mail.follow
 msgid "Subscribe"
 msgstr ""

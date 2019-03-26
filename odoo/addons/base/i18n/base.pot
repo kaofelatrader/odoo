@@ -15904,6 +15904,18 @@ msgid "Record rules"
 msgstr ""
 
 #. module: base
+#: code:addons/models.py:2864
+#, python-format
+msgid "Records: %r, User: %s)"
+msgstr ""
+
+#. module: base
+#: code:addons/models.py:2778
+#, python-format
+msgid "Records: %s, User: %s)"
+msgstr ""
+
+#. module: base
 #: model:ir.module.category,name:base.module_category_hr_recruitment
 msgid "Recruitment"
 msgstr ""

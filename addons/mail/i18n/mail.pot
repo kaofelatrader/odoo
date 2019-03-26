@@ -4048,6 +4048,14 @@ msgid "Record Thread ID"
 msgstr ""
 
 #. module: mail
+#: code:addons/mail/models/mail_activity.py:182
+#: code:addons/mail/models/mail_message.py:599
+#: code:addons/mail/models/mail_message.py:700
+#, python-format
+msgid "Records: %s, User: %s)"
+msgstr ""
+
+#. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_mail_references
 msgid "References"
 msgstr ""
