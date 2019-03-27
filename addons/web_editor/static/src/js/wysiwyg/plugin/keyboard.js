@@ -19,6 +19,7 @@ var keycode = ({
 var KeyboardPlugin = AbstractPlugin.extend({
     events: {
         'summernote.keydown': '_onKeydown',
+        'summernote.keyup': '_onKeyup',
         'DOMNodeInserted .note-editable': '_removeGarbageSpans',
         'textInput .note-editable': '_onTextInput',
         'beforeinput .note-editable': '_onAndroidBeforeInput',
@@ -1053,6 +1054,15 @@ var KeyboardPlugin = AbstractPlugin.extend({
         }
         return handled;
     },
+    _onKeyup: function (se, e) {
+        if (this._deleteContentBackward) {
+            var range = this.context.invoke('editor.createRange');
+            if (dom.nodeLength(range.sc) === this._deleteContentBackward.length && this._deleteContentBackward.offset !== range.so) {
+                this._setComposition('');
+            }
+            this._deleteContentBackward = false;
+        }
+    },
     /**
      * Handle BACKSPACE keydown event.
      *
@@ -1241,17 +1251,13 @@ var KeyboardPlugin = AbstractPlugin.extend({
         var compo = this._getCompositionWord(range);
         var length = compo.beforeText.length + compo.afterText.length;
         var point = compo.beforePoint;
+        text = text === null ? (compo.beforeText + compo.afterText).slice(0, -1) : text;
 
         // complete the word
         if (!compo.afterText.length && !text.indexOf(compo.beforeText)) {
             text = text.slice(length);
             range.select();
         } else {
-            if (length === (text.length + 1) && !compo.beforeText.indexOf(text)) {
-                // long press delete
-                text = '';
-            }
-
             // autocorrect the word (change only the updated char, and keep the format for previous chars)
             var good = point;
             var remove = false;
@@ -1266,6 +1272,9 @@ var KeyboardPlugin = AbstractPlugin.extend({
                         } else {
                             point.node.textContent = point.node.textContent.slice(0, point.offset) + point.node.textContent.slice(point.offset + 1);
                             remove = true;
+                            if (!length && point.node.textContent.slice(-1) === ' ') {
+                                point.node.textContent = point.node.textContent.slice(0, -1) + '\u00A0';
+                            }
                             continue;
                         }
                     }
@@ -1283,19 +1292,37 @@ var KeyboardPlugin = AbstractPlugin.extend({
             this.context.invoke('HelperPlugin.insertTextInline', text);
             var range = this.context.invoke('editor.createRange');
             var textContent = range.sc.textContent;
-            function fuckGoogleKeyboardWhichInsertsCharWithoutEvent () {
+            function fuckGboardWhichInsertsCharWithoutEvent (e) {
                 range.sc.textContent = textContent;
                 range.select();
                 clearTimeout(time);
             }
-            var time = setTimeout(fuckGoogleKeyboardWhichInsertsCharWithoutEvent);
-            $(range.sc.parentNode).one('DOMSubtreeModified', fuckGoogleKeyboardWhichInsertsCharWithoutEvent);
+            var time = setTimeout(fuckGboardWhichInsertsCharWithoutEvent);
+            $(range.sc.parentNode).one('DOMSubtreeModified', fuckGboardWhichInsertsCharWithoutEvent);
         }
     },
     _onAndroidBeforeInput: function (e) {
         if (e.originalEvent.inputType === 'deleteContentBackward') {
-            // for virtual keyboard like googleKeyboard when use corrector with carret in the middle of a word
-            this._setComposition('');
+            // for virtual keyboard backward and long backward
+            e.originalEvent.preventDefault();
+            e.originalEvent.stopImmediatePropagation();
+
+            if (this._deleteContentBackward) {
+                this._deleteContentBackward = false;
+                this._setComposition('');
+            } else {
+                var range = this.context.invoke('editor.createRange');
+                var compo = this._getCompositionWord(range);
+                range.select();
+                this._onBackspace(e);
+                if (compo.beforeText.length) {
+                    var range = this.context.invoke('editor.createRange');
+                    this._deleteContentBackward = {
+                        offset: range.so,
+                        length: dom.nodeLength(range.sc),
+                    };
+                }
+            }
         }
     },
     _onAndroidCompositionStart: function (e) {

@@ -4206,7 +4206,7 @@ QUnit.test('Delete', function (assert) {
     });
 });
 
-QUnit.module('virtual & special keys (Adroid, accented...)');
+QUnit.module('virtual & special keys (Android, accented...)');
 
 var Wysiwyg = require('web_editor.wysiwyg');
 
@@ -4307,24 +4307,24 @@ function createTextInputEvent (editable, data) {
 
 // Events are in function of virtual keyboard
 
-function touchAdroidSwiftKeyChar (editable, char) {
+function touchAndroidSwiftKeyChar (editable, char) {
     createKeyEvent(editable, "keydown", "Unidentified", 229, false);
     createBeforeInputEvent(editable, char);
     createTextInputEvent(editable, char);
     createKeyEvent(editable, "keyup", "Unidentified", 229, false);   
 }
-function touchAdroidSwiftKeyChars (editable, text) {
+function touchAndroidSwiftKeyChars (editable, text) {
     [].slice.call(text).forEach(function (char) {
         if (char.match(/\s|\u00A0|[:;,.(){}]/)) {
             var range = Wysiwyg.getRange(editable);
             var word = range.sc.textContent.split(' ').pop();
-            touchAdroidSwiftKeyCorrector(editable, word);
+            touchAndroidSwiftKeyCorrector(editable, word);
         } else {
-            touchAdroidSwiftKeyChar(editable, char);   
+            touchAndroidSwiftKeyChar(editable, char);
         }
     });
 }
-function touchAdroidSwiftKeyCorrector (editable, text) {
+function touchAndroidSwiftKeyCorrector (editable, text) {
     // SwiftKey in the word, cut the word and complete the first part
     createCompositionEvent(editable, "start", "");
     createCompositionEvent(editable, "update", "");
@@ -4335,11 +4335,24 @@ function touchAdroidSwiftKeyCorrector (editable, text) {
     createCompositionEvent(editable, "end", text);
 
     // auto add a space
-    touchAdroidSwiftKeyChar(editable, ' ');
+    touchAndroidSwiftKeyChar(editable, ' ');
+}
+function touchAndroidSwiftKeyBackspace (editable) {
+    createKeyEvent(editable, "keydown", "Unidentified", 229, true);
+    createBeforeInputEvent(editable, null, "deleteContentBackward");
+    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
+}
+function touchAndroidSwiftKeyLongBackspace (editable) {
+    createKeyEvent(editable, "keydown", "Unidentified", 229, true);
+    createBeforeInputEvent(editable, null, "deleteContentBackward");
+    var range = Wysiwyg.getRange(editable);
+    var so = range.sc.textContent.slice(0, range.so).replace(/[\S]+$/, '').length;
+    Wysiwyg.setRange(range.sc, so);
+    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
 }
 
-QUnit.test('Adroid SwiftKey', function (assert) {
-    assert.expect(8);
+QUnit.test('Android SwiftKey', function (assert) {
+    assert.expect(12);
 
     return weTestUtils.createWysiwyg({
         data: this.data,
@@ -4348,52 +4361,72 @@ QUnit.test('Adroid SwiftKey', function (assert) {
 
         editable.innerHTML = '<p><br/></p>';
         Wysiwyg.setRange(editable.firstChild, 0);
-        touchAdroidSwiftKeyChar(editable, 'C');
+        touchAndroidSwiftKeyChar(editable, 'C');
         assert.strictEqual(editable.innerHTML, '<p>C</p>', "Insert char from the virtual keyboard");
 
         editable.innerHTML = '<p><br/></p>';
         Wysiwyg.setRange(editable.firstChild, 0);
-        touchAdroidSwiftKeyChars(editable, 'Christ');
+        touchAndroidSwiftKeyChars(editable, 'Christ');
         assert.strictEqual(editable.innerHTML, '<p>Christ</p>', "Insert word from the virtual keyboard");
 
         editable.innerHTML = '<p><br/></p>';
         Wysiwyg.setRange(editable.firstChild, 0);
-        touchAdroidSwiftKeyChars(editable, 'Christ');
-        touchAdroidSwiftKeyCorrector(editable, 'Christophe');
+        touchAndroidSwiftKeyChars(editable, 'Christ');
+        touchAndroidSwiftKeyCorrector(editable, 'Christophe');
         assert.strictEqual(editable.innerHTML, '<p>Christophe&nbsp;</p>', "Complete a word with the autocompletion");
 
         editable.innerHTML = '<p><br/></p>';
         Wysiwyg.setRange(editable.firstChild, 0);
-        touchAdroidSwiftKeyChars(editable, 'Christophe ');
+        touchAndroidSwiftKeyChars(editable, 'Christophe ');
         assert.strictEqual(editable.innerHTML, '<p>Christophe&nbsp;</p>', "Insert word from the virtual keyboard, then space call autocompletion automatically (T9)");
 
         editable.innerHTML = '<p><b>Chris</b>top</p>';
         Wysiwyg.setRange(editable.firstChild.childNodes[1], 3);
-        touchAdroidSwiftKeyCorrector(editable, 'Christophe');
+        touchAndroidSwiftKeyCorrector(editable, 'Christophe');
         assert.strictEqual(editable.innerHTML, '<p><b>Chris</b>tophe&nbsp;</p>', "Complete a word with the autocompletion who contains style tags");
 
         editable.innerHTML = '<p><br/></p>';
         Wysiwyg.setRange(editable.firstChild, 0);
-        touchAdroidSwiftKeyChars(editable, 'Chryst');
-        touchAdroidSwiftKeyCorrector(editable, 'Christophe');
+        touchAndroidSwiftKeyChars(editable, 'Chryst');
+        touchAndroidSwiftKeyCorrector(editable, 'Christophe');
         assert.strictEqual(editable.innerHTML, '<p>Christophe&nbsp;</p>', "Change a word with the corrector");
 
         editable.innerHTML = '<p><b>Chrys</b>top</p>';
         Wysiwyg.setRange(editable.firstChild.childNodes[1], 3);
-        touchAdroidSwiftKeyCorrector(editable, 'Christophe');
+        touchAndroidSwiftKeyCorrector(editable, 'Christophe');
         assert.strictEqual(editable.innerHTML, '<p><b>Christophe&nbsp;</b></p>', "Change a word with the corrector who contains style tags");
 
         editable.innerHTML = '<p><b>Chrys</b>top</p>';
         Wysiwyg.setRange(editable.firstChild.firstChild.firstChild, 3);
-        touchAdroidSwiftKeyCorrector(editable, 'Christophe');
+        touchAndroidSwiftKeyCorrector(editable, 'Christophe');
         assert.strictEqual(editable.innerHTML, '<p><b>Christophe&nbsp;</b></p>', "Change a word with the corrector who contains style tags after move carret");
+
+        editable.innerHTML = '<p>titi toto tata</p>';
+        Wysiwyg.setRange(editable.firstChild.childNodes[0], 14);
+        touchAndroidSwiftKeyBackspace(editable);
+        assert.strictEqual(editable.innerHTML, '<p>titi toto tat</p>', "Press backspace shoud remove the last char");
+
+        editable.innerHTML = '<p>titi toto tata</p>';
+        Wysiwyg.setRange(editable.firstChild.childNodes[0], 12);
+        touchAndroidSwiftKeyBackspace(editable);
+        assert.strictEqual(editable.innerHTML, '<p>titi toto tta</p>', "Press backspace shoud remove the previous char");
+
+        editable.innerHTML = '<p>titi toto tata</p>';
+        Wysiwyg.setRange(editable.firstChild.childNodes[0], 14);
+        touchAndroidSwiftKeyLongBackspace(editable);
+        assert.strictEqual(editable.innerHTML, '<p>titi toto&nbsp;</p>', "Long press backspace shoud remove all the last word");
+
+        editable.innerHTML = '<p>titi toto tata</p>';
+        Wysiwyg.setRange(editable.firstChild.childNodes[0], 12);
+        touchAndroidSwiftKeyLongBackspace(editable);
+        assert.strictEqual(editable.innerHTML, '<p>titi toto&nbsp;</p>', "Long press backspace shoud remove all the word");
 
         wysiwyg.destroy();
     });
 });
 
 
-function touchAdroidGoogleKeyborardSpace (editable, char) {
+function touchAndroidGboardSpace (editable, char) {
     var range = Wysiwyg.getRange(editable);
     var begin = range.sc.textContent.split(' ').pop();
 
@@ -4409,7 +4442,7 @@ function touchAdroidGoogleKeyborardSpace (editable, char) {
     createTextInputEvent(editable, char);
     createKeyEvent(editable, "keyup", "Unidentified", 229, false);
 }
-function touchAdroidGoogleKeyborardChar (editable, char) {
+function touchAndroidGboardChar (editable, char) {
     createKeyEvent(editable, "keydown", "Unidentified", 229, false);
     var range = Wysiwyg.getRange(editable);
     var begin = range.sc.textContent.split(' ').pop();
@@ -4424,16 +4457,16 @@ function touchAdroidGoogleKeyborardChar (editable, char) {
     editable.ownerDocument.execCommand("insertText", 0, char); // without event
     createKeyEvent(editable, "keyup", "Unidentified", 229, false);
 }
-function touchAdroidGoogleKeyborardChars (editable, text) {
+function touchAndroidGboardChars (editable, text) {
     [].slice.call(text).forEach(function (char) {
         if (char.match(/\s|\u00A0|[:;,.(){}]/)) {
-            touchAdroidGoogleKeyborardSpace(editable, char);
+            touchAndroidGboardSpace(editable, char);
         } else {
-            touchAdroidGoogleKeyborardChar(editable, char);   
+            touchAndroidGboardChar(editable, char);   
         }
     });
 }
-function touchAdroidGoogleKeyborardCorrector (editable, text) {
+function touchAndroidGboardCorrector (editable, text) {
     var range = Wysiwyg.getRange(editable);
     var _before = range.sc.textContent.slice(0, range.so);
     var _after = range.sc.textContent.slice(range.so);
@@ -4471,7 +4504,7 @@ function touchAdroidGoogleKeyborardCorrector (editable, text) {
         createKeyEvent(editable, "keyup", "Unidentified", 229, false);
     }
 }
-function touchAdroidGoogleKeyborardmMveCarret (editable, range) {
+function touchAndroidGboardmMveCarret (editable, range) {
     var rng = Wysiwyg.getRange(editable);
     var _before = range.sc.textContent.slice(0, range.so).split(' ').pop();
     var _after = range.sc.textContent.slice(range.so).split(' ').shift();
@@ -4490,7 +4523,7 @@ function touchAdroidGoogleKeyborardmMveCarret (editable, range) {
     createCompositionEvent(editable, "update", word);
 }
 
-QUnit.test('Adroid GoogleKeyborard', function (assert) {
+QUnit.test('Android Gboard', function (assert) {
     assert.expect(8);
 
     return weTestUtils.createWysiwyg({
@@ -4500,47 +4533,47 @@ QUnit.test('Adroid GoogleKeyborard', function (assert) {
 
         editable.innerHTML = '<p><br/></p>';
         Wysiwyg.setRange(editable.firstChild, 0);
-        touchAdroidGoogleKeyborardChar(editable, 'C');
+        touchAndroidGboardChar(editable, 'C');
         assert.strictEqual(editable.innerHTML, '<p>C</p>', "Insert char from the virtual keyboard");
 
         editable.innerHTML = '<p><br/></p>';
         Wysiwyg.setRange(editable.firstChild, 0);
-        touchAdroidGoogleKeyborardChars(editable, 'Christ');
+        touchAndroidGboardChars(editable, 'Christ');
         assert.strictEqual(editable.innerHTML, '<p>Christ</p>', "Insert word from the virtual keyboard");
 
         editable.innerHTML = '<p><br/></p>';
         Wysiwyg.setRange(editable.firstChild, 0);
-        touchAdroidGoogleKeyborardChars(editable, 'Christ');
-        touchAdroidGoogleKeyborardCorrector(editable, 'Christophe');
+        touchAndroidGboardChars(editable, 'Christ');
+        touchAndroidGboardCorrector(editable, 'Christophe');
         assert.strictEqual(editable.innerHTML, '<p>Christophe</p>', "Complete a word with the autocompletion");
 
         editable.innerHTML = '<p><br/></p>';
         Wysiwyg.setRange(editable.firstChild, 0);
-        touchAdroidGoogleKeyborardChars(editable, 'Christophe ');
+        touchAndroidGboardChars(editable, 'Christophe ');
         assert.strictEqual(editable.innerHTML, '<p>Christophe&nbsp;</p>', "Insert word from the virtual keyboard, then space call autocompletion automatically (T9)");
 
         editable.innerHTML = '<p><b>Chris</b>top</p>';
         Wysiwyg.setRange(editable.firstChild.childNodes[1], 3);
-        touchAdroidGoogleKeyborardCorrector(editable, 'Christophe', );
+        touchAndroidGboardCorrector(editable, 'Christophe', );
         assert.strictEqual(editable.innerHTML, '<p><b>Chris</b>tophe</p>', "Complete a word with the autocompletion who contains style tags");
 
         editable.innerHTML = '<p><br/></p>';
         Wysiwyg.setRange(editable.firstChild, 0);
-        touchAdroidGoogleKeyborardChars(editable, 'Chryst');
-        touchAdroidGoogleKeyborardCorrector(editable, 'Christophe');
+        touchAndroidGboardChars(editable, 'Chryst');
+        touchAndroidGboardCorrector(editable, 'Christophe');
         assert.strictEqual(editable.innerHTML, '<p>Christophe</p>', "Change a word with the corrector");
 
         editable.innerHTML = '<p><b>Chrys</b>top</p>';
         Wysiwyg.setRange(editable.firstChild.childNodes[1], 3);
-        touchAdroidGoogleKeyborardCorrector(editable, 'Christophe');
+        touchAndroidGboardCorrector(editable, 'Christophe');
         assert.strictEqual(editable.innerHTML, '<p><b>Christophe</b></p>', "Change a word with the corrector who contains style tags");
 
         editable.innerHTML = '<p><b>Chrys</b>top</p>';
-        touchAdroidGoogleKeyborardmMveCarret(editable, {
+        touchAndroidGboardmMveCarret(editable, {
             sc: editable.firstChild.firstChild.firstChild,
             so: 2,
         });
-        touchAdroidGoogleKeyborardCorrector(editable, 'Christophe');
+        touchAndroidGboardCorrector(editable, 'Christophe');
         assert.strictEqual(editable.innerHTML, '<p><b>Christophe</b></p>', "Change a word with the corrector who contains style tags after move carret");
 
         wysiwyg.destroy();
