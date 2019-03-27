@@ -1211,8 +1211,9 @@ var KeyboardPlugin = AbstractPlugin.extend({
     _getCompositionWord: function (range) {
         // get the previous word to complete or correct
         var previousText = '';
-        var beforePoint = dom.prevPoint(range.getStartPoint());
-        beforePoint = dom.nextPoint(dom.prevPointUntil(beforePoint, function (point) {
+        var startPoint = range.getStartPoint();
+        var beforePoint = dom.prevPoint(startPoint) || startPoint;
+        beforePoint =dom.prevPointUntil(beforePoint, function (point) {
             if (dom.isBlock(point.node.childNodes[point.offset] || point.node)) {
                 return true;
             }
@@ -1223,10 +1224,11 @@ var KeyboardPlugin = AbstractPlugin.extend({
                 }
                 previousText = char + previousText;
             }
-        }));
+        });
+        beforePoint = beforePoint ?  dom.nextPoint(beforePoint) : startPoint;
+
         var afterText = '';
-        var afterPoint = range.getStartPoint();
-        afterPoint = dom.prevPoint(dom.nextPointUntil(afterPoint, function (point) {
+        var afterPoint = dom.nextPointUntil(startPoint, function (point) {
             if (dom.isBlock(point.node.childNodes[point.offset] || point.node)) {
                 return true;
             }
@@ -1237,7 +1239,8 @@ var KeyboardPlugin = AbstractPlugin.extend({
                 }
                 afterText += char;
             }
-        }));
+        });
+        afterPoint = afterPoint ?  dom.prevPoint(afterPoint) : startPoint;
 
         return {
             beforePoint: beforePoint,
@@ -1302,11 +1305,17 @@ var KeyboardPlugin = AbstractPlugin.extend({
         }
     },
     _onAndroidBeforeInput: function (e) {
-        if (e.originalEvent.inputType === 'deleteContentBackward') {
-            // for virtual keyboard backward and long backward
-            e.originalEvent.preventDefault();
-            e.originalEvent.stopImmediatePropagation();
+        if (e.originalEvent.inputType === 'insertText') {
+        }
 
+        // for virtual keyboard backward and long backward
+        e.originalEvent.preventDefault();
+        e.originalEvent.stopImmediatePropagation();
+
+        if (e.originalEvent.inputType === 'insertCompositionText') {
+            // Gboard send an 'insertCompositionText' when touch backward and update the composition
+        }
+        if (e.originalEvent.inputType === 'deleteContentBackward') {
             if (this._deleteContentBackward) {
                 this._deleteContentBackward = false;
                 this._setComposition('');

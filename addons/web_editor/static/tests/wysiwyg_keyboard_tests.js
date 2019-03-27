@@ -4504,10 +4504,18 @@ function touchAndroidGboardCorrector (editable, text) {
         createKeyEvent(editable, "keyup", "Unidentified", 229, false);
     }
 }
-function touchAndroidGboardmMveCarret (editable, range) {
+function touchAndroidGboardMoveCarret (editable, range) {
     var rng = Wysiwyg.getRange(editable);
-    var _before = range.sc.textContent.slice(0, range.so).split(' ').pop();
-    var _after = range.sc.textContent.slice(range.so).split(' ').shift();
+    var changeNode = rng.sc.parentNode !== range.parentNode;
+
+    if (rng.sc !== editable && changeNode) {
+        var before = rng.sc.textContent.slice(0, rng.so).split(' ').pop();
+        var after = rng.sc.textContent.slice(rng.so).split(' ').shift();
+        createCompositionEvent(editable, "end", before + after);
+    }
+
+    var _before = range.sc.textContent.slice(0, range.so);
+    var _after = range.sc.textContent.slice(range.so);
     range.sc.textContent = _before + "#" + _after;
     var textContent = editable.textContent.split("#");
     range.sc.textContent = _before + _after;
@@ -4517,14 +4525,33 @@ function touchAndroidGboardmMveCarret (editable, range) {
     var after = textContent[1].split(' ').shift();
     var word = before + after;
 
-    if (!(rng.sc === range.sc && rng.so - before.length <= range.so && rng.so + after.length >= range.so)) {
+    if (changeNode) {
         createCompositionEvent(editable, "start", "");
     }
     createCompositionEvent(editable, "update", word);
 }
+function touchAndroidGboardBackspace (editable) {
+    var range = Wysiwyg.getRange(editable);
+    var before = range.sc.textContent.slice(0, range.so);
+    var after = range.sc.textContent.slice(range.so);
+    var text = before.slice(0, -1) + after;
+
+    createKeyEvent(editable, "keydown", "Unidentified", 229, true);
+    var e = createBeforeInputEvent(editable, text, "insertCompositionText");
+    if (!e.defaultPrevented) {
+        range.sc.textContent = text;
+        Wysiwyg.setRange(range.sc, range.so - 1);
+    }
+    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
+}
+function touchAndroidGboardLongBackspace (editable) {
+    touchAndroidGboardBackspace(editable);
+    touchAndroidGboardBackspace(editable);
+    //...
+}
 
 QUnit.test('Android Gboard', function (assert) {
-    assert.expect(8);
+    assert.expect(11);
 
     return weTestUtils.createWysiwyg({
         data: this.data,
@@ -4569,12 +4596,35 @@ QUnit.test('Android Gboard', function (assert) {
         assert.strictEqual(editable.innerHTML, '<p><b>Christophe</b></p>', "Change a word with the corrector who contains style tags");
 
         editable.innerHTML = '<p><b>Chrys</b>top</p>';
-        touchAndroidGboardmMveCarret(editable, {
-            sc: editable.firstChild.firstChild.firstChild,
-            so: 2,
-        });
+        touchAndroidGboardMoveCarret(editable, {sc: editable.firstChild.firstChild.firstChild, so: 2});
         touchAndroidGboardCorrector(editable, 'Christophe');
         assert.strictEqual(editable.innerHTML, '<p><b>Christophe</b></p>', "Change a word with the corrector who contains style tags after move carret");
+
+        editable.innerHTML = '<p>titi toto tata</p>';
+        touchAndroidGboardMoveCarret(editable, {sc: editable.firstChild.firstChild, so: 14});
+        touchAndroidGboardBackspace(editable);
+        assert.strictEqual(editable.innerHTML, '<p>titi toto tat</p>', "Press backspace shoud remove the last char");
+
+        editable.innerHTML = '<p>titi toto tata</p>';
+        touchAndroidGboardMoveCarret(editable, {sc: editable.firstChild.firstChild, so: 12});
+        touchAndroidGboardBackspace(editable);
+        assert.strictEqual(editable.innerHTML, '<p>titi toto tta</p>', "Press backspace shoud remove the previous char");
+
+        // editable.innerHTML = '<p>titi toto tata</p>';
+        // touchAndroidGboardMoveCarret(editable, {sc: editable.firstChild.firstChild, so: 14});
+        // touchAndroidGboardLongBackspace(editable);
+        // assert.strictEqual(editable.innerHTML, '<p>titi toto&nbsp;</p>', "Long press backspace shoud remove all the last word");
+
+        // editable.innerHTML = '<p>titi toto tata</p>';
+        // touchAndroidGboardMoveCarret(editable, {sc: editable.firstChild.firstChild, so: 12});
+        // touchAndroidGboardLongBackspace(editable);
+        // assert.strictEqual(editable.innerHTML, '<p>titi toto&nbsp;</p>', "Long press backspace shoud remove all the word");
+
+        editable.innerHTML = '<p>titi toto tata</p><p><br/></p>';
+        touchAndroidGboardMoveCarret(editable, {sc: editable.firstChild.firstChild, so: 12});
+        touchAndroidGboardMoveCarret(editable, {sc: editable.lastChild, so: 0});
+        touchAndroidGboardChar(editable, 'C');
+        assert.strictEqual(editable.innerHTML, '<p>titi toto tata</p><p>C</p>', "Just move carret without change then insert a char");
 
         wysiwyg.destroy();
     });
