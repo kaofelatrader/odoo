@@ -1335,13 +1335,22 @@ var KeyboardPlugin = AbstractPlugin.extend({
         }
     },
     _onAndroidCompositionStart: function (e) {
+        this._wordCompositionRange = this.context.invoke('editor.createRange');
         this._wordComposition = true;
     },
     _onAndroidCompositionEnd: function (e) {
-        this._setComposition(e.originalEvent.data);
+        var range = this.context.invoke('editor.createRange');
+        if (this._wordCompositionRange.sc !== range.sc) {
+            this._wordCompositionRange.select();
+            this._setComposition(e.originalEvent.data);
+            range.select();
+        } else {
+            this._setComposition(e.originalEvent.data);
+        }
         this._wordComposition = false;
     },
     _onAndroidCompositionUpdate: function (e) {
+        this._wordCompositionRange = this.context.invoke('editor.createRange');
         if (!this._wordComposition) {
             console.error('Call composition update without starting');
         }

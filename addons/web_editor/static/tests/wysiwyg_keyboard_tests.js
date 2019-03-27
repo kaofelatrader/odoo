@@ -4508,18 +4508,21 @@ function touchAndroidGboardMoveCarret (editable, range) {
     var rng = Wysiwyg.getRange(editable);
     var changeNode = rng.sc.parentNode !== range.parentNode;
 
+    var textContent = ['', ''];
+    if (range.sc.textContent.length) {
+        var _before = range.sc.textContent.slice(0, range.so);
+        var _after = range.sc.textContent.slice(range.so);
+        range.sc.textContent = _before + "#" + _after;
+        textContent = editable.textContent.split("#");
+        range.sc.textContent = _before + _after;
+    }
+    Wysiwyg.setRange(range.sc, range.so);
+
     if (rng.sc !== editable && changeNode) {
         var before = rng.sc.textContent.slice(0, rng.so).split(' ').pop();
         var after = rng.sc.textContent.slice(rng.so).split(' ').shift();
         createCompositionEvent(editable, "end", before + after);
     }
-
-    var _before = range.sc.textContent.slice(0, range.so);
-    var _after = range.sc.textContent.slice(range.so);
-    range.sc.textContent = _before + "#" + _after;
-    var textContent = editable.textContent.split("#");
-    range.sc.textContent = _before + _after;
-    Wysiwyg.setRange(range.sc, range.so);
 
     var before = textContent[0].split(' ').pop();
     var after = textContent[1].split(' ').shift();
@@ -4551,7 +4554,7 @@ function touchAndroidGboardLongBackspace (editable) {
 }
 
 QUnit.test('Android Gboard', function (assert) {
-    assert.expect(11);
+    assert.expect(13);
 
     return weTestUtils.createWysiwyg({
         data: this.data,
@@ -4580,18 +4583,18 @@ QUnit.test('Android Gboard', function (assert) {
         assert.strictEqual(editable.innerHTML, '<p>Christophe&nbsp;</p>', "Insert word from the virtual keyboard, then space call autocompletion automatically (T9)");
 
         editable.innerHTML = '<p><b>Chris</b>top</p>';
-        Wysiwyg.setRange(editable.firstChild.childNodes[1], 3);
-        touchAndroidGboardCorrector(editable, 'Christophe', );
+        touchAndroidGboardMoveCarret(editable, {sc: editable.firstChild.childNodes[1], so: 3});
+        touchAndroidGboardCorrector(editable, 'Christophe');
         assert.strictEqual(editable.innerHTML, '<p><b>Chris</b>tophe</p>', "Complete a word with the autocompletion who contains style tags");
 
         editable.innerHTML = '<p><br/></p>';
-        Wysiwyg.setRange(editable.firstChild, 0);
+        touchAndroidGboardMoveCarret(editable, {sc: editable.firstChild, so: 0});
         touchAndroidGboardChars(editable, 'Chryst');
         touchAndroidGboardCorrector(editable, 'Christophe');
         assert.strictEqual(editable.innerHTML, '<p>Christophe</p>', "Change a word with the corrector");
 
         editable.innerHTML = '<p><b>Chrys</b>top</p>';
-        Wysiwyg.setRange(editable.firstChild.childNodes[1], 3);
+        touchAndroidGboardMoveCarret(editable, {sc: editable.firstChild.childNodes[1], so: 3});
         touchAndroidGboardCorrector(editable, 'Christophe');
         assert.strictEqual(editable.innerHTML, '<p><b>Christophe</b></p>', "Change a word with the corrector who contains style tags");
 
@@ -4610,21 +4613,20 @@ QUnit.test('Android Gboard', function (assert) {
         touchAndroidGboardBackspace(editable);
         assert.strictEqual(editable.innerHTML, '<p>titi toto tta</p>', "Press backspace shoud remove the previous char");
 
-        // editable.innerHTML = '<p>titi toto tata</p>';
-        // touchAndroidGboardMoveCarret(editable, {sc: editable.firstChild.firstChild, so: 14});
-        // touchAndroidGboardLongBackspace(editable);
-        // assert.strictEqual(editable.innerHTML, '<p>titi toto&nbsp;</p>', "Long press backspace shoud remove all the last word");
+        editable.innerHTML = '<p>titi toto tata</p>';
+        touchAndroidGboardMoveCarret(editable, {sc: editable.firstChild.firstChild, so: 14});
+        touchAndroidGboardLongBackspace(editable);
+        assert.strictEqual(editable.innerHTML, '<p>titi toto ta</p>', "Long press backspace shoud remove all the last word");
 
-        // editable.innerHTML = '<p>titi toto tata</p>';
-        // touchAndroidGboardMoveCarret(editable, {sc: editable.firstChild.firstChild, so: 12});
-        // touchAndroidGboardLongBackspace(editable);
-        // assert.strictEqual(editable.innerHTML, '<p>titi toto&nbsp;</p>', "Long press backspace shoud remove all the word");
+        editable.innerHTML = '<p>titi toto tata</p>';
+        touchAndroidGboardMoveCarret(editable, {sc: editable.firstChild.firstChild, so: 12});
+        touchAndroidGboardLongBackspace(editable);
+        assert.strictEqual(editable.innerHTML, '<p>titi toto ta</p>', "Long press backspace shoud remove all the word");
 
         editable.innerHTML = '<p>titi toto tata</p><p><br/></p>';
         touchAndroidGboardMoveCarret(editable, {sc: editable.firstChild.firstChild, so: 12});
         touchAndroidGboardMoveCarret(editable, {sc: editable.lastChild, so: 0});
-        touchAndroidGboardChar(editable, 'C');
-        assert.strictEqual(editable.innerHTML, '<p>titi toto tata</p><p>C</p>', "Just move carret without change then insert a char");
+        assert.strictEqual(editable.innerHTML, '<p>titi toto tata</p><p><br></p>', "Just move carret without changes");
 
         wysiwyg.destroy();
     });
