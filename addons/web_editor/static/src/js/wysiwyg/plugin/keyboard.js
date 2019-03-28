@@ -1312,9 +1312,6 @@ var KeyboardPlugin = AbstractPlugin.extend({
         }
     },
     _onBeforeInput: function (e) {
-        if (e.originalEvent.inputType === 'insertText') {
-        }
-
         // for virtual keyboard backward and long backward
         e.originalEvent.preventDefault();
         e.originalEvent.stopImmediatePropagation();
