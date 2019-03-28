@@ -280,8 +280,8 @@ class IrQWeb(models.AbstractModel, QWeb):
 
     # method called by computing code
 
-    def get_asset_bundle(self, xmlid, files, remains=None, env=None):
-        return AssetsBundle(xmlid, files, remains=remains, env=env)
+    def get_asset_bundle(self, xmlid, files, env=None):
+        return AssetsBundle(xmlid, files, env=env)
 
     @tools.conditional(
         # in non-xml-debug mode we want assets to be cached forever, and the admin can force a cache clear
