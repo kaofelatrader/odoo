@@ -447,23 +447,6 @@ class Lead(models.Model):
         }
         return action
 
-    @api.multi
-    def close_dialog(self):
-        return {'type': 'ir.actions.act_window_close'}
-
-    @api.multi
-    def edit_dialog(self):
-        form_view = self.env.ref('crm.crm_case_form_view_oppor')
-        return {
-            'name': _('Opportunity'),
-            'res_model': 'crm.lead',
-            'res_id': self.id,
-            'views': [(form_view.id, 'form'),],
-            'type': 'ir.actions.act_window',
-            'target': 'inline',
-            'context': {'default_type': 'opportunity'}
-        }
-
     def toggle_active(self):
         """ When re-activating leads and opportunities set their probability
         to the default stage one. """
