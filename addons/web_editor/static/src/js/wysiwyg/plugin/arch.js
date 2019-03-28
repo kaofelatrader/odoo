@@ -7,9 +7,102 @@ var Manager = require('web_editor.wysiwyg.plugin.manager');
 var $ = require('web_editor.jquery');
 var _ = require('web_editor._');
 
+var styleTags = [
+    'td',
+    'th',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'blockquote',
+    'pre'
+    'p',
+];
+var formatTags = [
+    'abbr',
+    'acronym',
+    'b',
+    'bdi',
+    'bdo',
+    'big',
+    'blink',
+    'cite',
+    'code',
+    'dfn',
+    'em',
+    'font',
+    'i',
+    'ins',
+    'kbd',
+    'mark',
+    'nobr',
+    'q',
+    's',
+    'samp',
+    'small',
+    'span',
+    'strike',
+    'strong',
+    'sub',
+    'sup',
+    'tt',
+    'u',
+    'var',
+];
 
 var ArchPlugin = AbstractPlugin.extend({
     dependencies: [],
+
+    // must contains parents without other node between (must match at least with one)
+    structure: [
+        // table > tbody
+        [
+            ['table'],
+            ['tbody', 'thead', 'tfoot'],
+        ],
+        [
+            ['table', 'tbody', 'thead', 'tfoot'],
+            ['tr'],
+        ],
+        [
+            ['tr'],
+            ['td', 'th'],
+        ],
+        [
+            ['ul', 'ol'],
+            ['li'],
+        ],
+        // editable > p
+        [
+            ['div', 'td', 'th', 'li'],
+            styleTags.concat(['ul', 'ol']),
+        ],
+        // H1 > i
+        // b > i
+        [
+            styleTags.concat(formatTags),
+            formatTags.concat(['TEXT']),
+        ],
+        [
+            styleTags.concat(formatTags).concat(['div', 'td', 'th']),
+            ['br'],
+        ],
+
+        // add with jinja plugin
+
+        [
+            [null], // null = no needed parent (allow to have for eg: Table > jinja)
+            formatTags.concat(['Jinja.get']), // jinja node match for TEXT and jinja
+        ]
+
+    ],
+
+    // parents order, can contains itself as parents
+    ordered: [
+        formatTags.concat(['br']),
+    ],
 
     setEditorValue: function (value) {
     },
