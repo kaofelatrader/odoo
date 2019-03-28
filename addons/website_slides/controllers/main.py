@@ -397,7 +397,9 @@ class WebsiteSlides(WebsiteProfile):
         # of them but unreachable ones won't be clickable (+ slide controller will crash anyway)
         # documentation mode may display less slides than content by category but overhead of
         # computation is reasonable
-        values['slide_promoted'] = request.env['slide.slide'].sudo().search(domain, limit=1, order=order)
+        slide_promoted = request.env['slide.slide'].sudo().search(domain, limit=1, order=order)
+        values['slide_promoted'] = slide_promoted
+        category_slides_domain = domain + [('id', '!=', slide_promoted.id)] if slide_promoted else domain
         values['category_data'] = channel._get_categorized_slides(
             domain, order,
             force_void=not category,
