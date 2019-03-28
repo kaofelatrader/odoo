@@ -19,13 +19,8 @@ var keycode = ({
 var KeyboardPlugin = AbstractPlugin.extend({
     events: {
         'summernote.keydown': '_onKeydown',
-        'summernote.keyup': '_onKeyup',
         'DOMNodeInserted .note-editable': '_removeGarbageSpans',
         'textInput .note-editable': '_onTextInput',
-        'beforeinput .note-editable': '_onBeforeInput',
-        'compositionstart .note-editable': '_onAndroidCompositionStart',
-        'compositionupdate .note-editable': '_onAndroidCompositionUpdate',
-        'compositionend .note-editable': '_onAndroidCompositionEnd',
     },
 
     //--------------------------------------------------------------------------
@@ -1054,15 +1049,6 @@ var KeyboardPlugin = AbstractPlugin.extend({
         }
         return handled;
     },
-    _onKeyup: function (se, e) {
-        if (this._deleteContentBackward) {
-            var range = this.context.invoke('editor.createRange');
-            if (dom.nodeLength(range.sc) === this._deleteContentBackward.length && this._deleteContentBackward.offset !== range.so) {
-                this._setComposition('');
-            }
-            this._deleteContentBackward = false;
-        }
-    },
     /**
      * Handle BACKSPACE keydown event.
      *
@@ -1202,165 +1188,13 @@ var KeyboardPlugin = AbstractPlugin.extend({
     },
 
     _onTextInput: function (e) {
-        e.preventDefault();
         e.originalEvent.preventDefault();
 
-        if (!this._wordComposition) {
-            var text = e.originalEvent.data;
-            if ((this._beforeInputEventType === 'insertReplacementText' || (!this._beforeInputEventType && text.length > 1)) && text[0] !== ' ' && text[0] !== '\u00A0') {
-                text = ' ' + text;
-            }
-            // don't insert char on composition because the google virtual key insert char it self, we can't cancel it O.o
-            this.context.invoke('HelperPlugin.insertTextInline', text);
+        var text = e.originalEvent.data;
+        if (text.length > 1 && text[0] !== ' ' && text[0] !== '\u00A0' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+            text = ' ' + text;
         }
-    },
-    _getCompositionWord: function (range) {
-        // get the previous word to complete or correct
-        var previousText = '';
-        var startPoint = range.getStartPoint();
-        var beforePoint = dom.prevPoint(startPoint) || startPoint;
-        beforePoint =dom.prevPointUntil(beforePoint, function (point) {
-            if (dom.isBlock(point.node.childNodes[point.offset] || point.node)) {
-                return true;
-            }
-            if (dom.isText(point.node)) {
-                var char = point.node.textContent.slice(point.offset, point.offset+1);
-                if (char === ' ' || char === '\u00A0') {
-                    return true;
-                }
-                previousText = char + previousText;
-            }
-        });
-        beforePoint = beforePoint ?  dom.nextPoint(beforePoint) : startPoint;
-
-        var afterText = '';
-        var afterPoint = dom.nextPointUntil(startPoint, function (point) {
-            if (dom.isBlock(point.node.childNodes[point.offset] || point.node)) {
-                return true;
-            }
-            if (dom.isText(point.node)) {
-                var char = point.node.textContent.slice(point.offset, point.offset+1);
-                if (char === ' ' || char === '\u00A0') {
-                    return true;
-                }
-                afterText += char;
-            }
-        });
-        afterPoint = afterPoint ?  dom.prevPoint(afterPoint) : startPoint;
-
-        return {
-            beforePoint: beforePoint,
-            beforeText: previousText,
-            afterPoint: afterPoint,
-            afterText: afterText,
-        };
-    },
-    _setComposition: function (text) {
-        var range = this.context.invoke('editor.createRange');
-        var compo = this._getCompositionWord(range);
-        var length = compo.beforeText.length + compo.afterText.length;
-        var point = compo.beforePoint;
-        text = text === null ? (compo.beforeText + compo.afterText).slice(0, -1) : text;
-
-        // complete the word
-        if (!compo.afterText.length && !text.indexOf(compo.beforeText)) {
-            text = text.slice(length);
-            range.select();
-        } else {
-            // autocorrect the word (change only the updated char, and keep the format for previous chars)
-            var good = point;
-            var remove = false;
-            while (point && point.node && length) {
-                if (dom.isText(point.node)) {
-                    var char = point.node.textContent.slice(point.offset, point.offset + 1);
-                    if (char.length) {
-                        length--;
-                        if (!remove && text[0] === char) {
-                            text = text.slice(1);
-                            good = point;
-                        } else {
-                            point.node.textContent = point.node.textContent.slice(0, point.offset) + point.node.textContent.slice(point.offset + 1);
-                            remove = true;
-                            if (!length && point.node.textContent.slice(-1) === ' ') {
-                                point.node.textContent = point.node.textContent.slice(0, -1) + '\u00A0';
-                            }
-                            continue;
-                        }
-                    }
-                }
-                point = dom.nextPoint(point);
-            }
-            point = dom.nextPoint(good);
-
-            range.sc = range.ec = point.node;
-            range.so = range.eo = point.offset;
-            range.select();
-        }
-
-        if (text.length) {
-            this.context.invoke('HelperPlugin.insertTextInline', text);
-            var range = this.context.invoke('editor.createRange');
-            var textContent = range.sc.textContent;
-            function fuckGboardWhichInsertsCharWithoutEvent (e) {
-                range.sc.textContent = textContent;
-                range.select();
-                clearTimeout(time);
-            }
-            var time = setTimeout(fuckGboardWhichInsertsCharWithoutEvent);
-            $(range.sc.parentNode).one('DOMSubtreeModified', fuckGboardWhichInsertsCharWithoutEvent);
-        }
-    },
-    _onBeforeInput: function (e) {
-        e.originalEvent.preventDefault();
-
-        this._beforeInputEventType = e.originalEvent.inputType;
-
-        if (e.originalEvent.inputType === 'insertCompositionText') {
-            // Gboard send an 'insertCompositionText' when touch backward and update the composition
-        }
-        if (e.originalEvent.inputType === 'insertReplacementText') {
-            // click on inline (audio) corrector to replace a part of the content
-        }
-        if (e.originalEvent.inputType === 'deleteContentBackward') {
-            // for virtual keyboard backward and long backward
-            if (this._deleteContentBackward) {
-                this._deleteContentBackward = false;
-                this._setComposition('');
-            } else {
-                var range = this.context.invoke('editor.createRange');
-                var compo = this._getCompositionWord(range);
-                range.select();
-                this._onBackspace(e);
-                if (compo.beforeText.length) {
-                    var range = this.context.invoke('editor.createRange');
-                    this._deleteContentBackward = {
-                        offset: range.so,
-                        length: dom.nodeLength(range.sc),
-                    };
-                }
-            }
-        }
-    },
-    _onAndroidCompositionStart: function (e) {
-        this._wordCompositionRange = this.context.invoke('editor.createRange');
-        this._wordComposition = true;
-    },
-    _onAndroidCompositionEnd: function (e) {
-        var range = this.context.invoke('editor.createRange');
-        if (this._wordCompositionRange.sc !== range.sc && this._wordCompositionRange.sc.parentNode && dom.nodeLength(this._wordCompositionRange.sc) >= this._wordCompositionRange.so) {
-            this._wordCompositionRange.select();
-            this._setComposition(e.originalEvent.data);
-            range.select();
-        } else if (e.originalEvent.data.length) {
-            this._setComposition(e.originalEvent.data);
-        }
-        this._wordComposition = false;
-    },
-    _onAndroidCompositionUpdate: function (e) {
-        this._wordCompositionRange = this.context.invoke('editor.createRange');
-        if (!this._wordComposition) {
-            console.error('Call composition update without starting');
-        }
+        this.context.invoke('HelperPlugin.insertTextInline', text);
     },
 });
 
