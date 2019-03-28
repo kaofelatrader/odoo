@@ -15,6 +15,7 @@ var keycode = ({
     '13': 'ENTER',
     '46': 'DELETE',
 });
+var top = 0;
 
 var KeyboardPlugin = AbstractPlugin.extend({
     events: {
@@ -22,7 +23,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         'summernote.keyup': '_onKeyup',
         'DOMNodeInserted .note-editable': '_removeGarbageSpans',
         'textInput .note-editable': '_onTextInput',
-        'beforeinput .note-editable': '_onAndroidBeforeInput',
+        'beforeinput .note-editable': '_onBeforeInput',
         'compositionstart .note-editable': '_onAndroidCompositionStart',
         'compositionupdate .note-editable': '_onAndroidCompositionUpdate',
         'compositionend .note-editable': '_onAndroidCompositionEnd',
@@ -1203,9 +1204,15 @@ var KeyboardPlugin = AbstractPlugin.extend({
 
     _onTextInput: function (e) {
         e.preventDefault();
+        e.originalEvent.preventDefault();
+        e.originalEvent.stopImmediatePropagation();
         if (!this._wordComposition) {
+            var text = e.originalEvent.data;
+            if (this._beforeInputEventType === 'insertReplacementText' && text[0] !== ' ' && text[0] !== '\u00A0') {
+                text = ' ' + text;
+            }
             // don't insert char on composition because the google virtual key insert char it self, we can't cancel it O.o
-            this.context.invoke('HelperPlugin.insertTextInline', e.originalEvent.data);
+            this.context.invoke('HelperPlugin.insertTextInline', text);
         }
     },
     _getCompositionWord: function (range) {
@@ -1304,13 +1311,15 @@ var KeyboardPlugin = AbstractPlugin.extend({
             $(range.sc.parentNode).one('DOMSubtreeModified', fuckGboardWhichInsertsCharWithoutEvent);
         }
     },
-    _onAndroidBeforeInput: function (e) {
+    _onBeforeInput: function (e) {
         if (e.originalEvent.inputType === 'insertText') {
         }
 
         // for virtual keyboard backward and long backward
         e.originalEvent.preventDefault();
         e.originalEvent.stopImmediatePropagation();
+
+        this._beforeInputEventType = e.originalEvent.inputType;
 
         if (e.originalEvent.inputType === 'insertCompositionText') {
             // Gboard send an 'insertCompositionText' when touch backward and update the composition
@@ -1347,7 +1356,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             this._wordCompositionRange.select();
             this._setComposition(e.originalEvent.data);
             range.select();
-        } else {
+        } else if (e.originalEvent.data.length) {
             this._setComposition(e.originalEvent.data);
         }
         this._wordComposition = false;

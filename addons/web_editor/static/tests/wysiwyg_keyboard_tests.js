@@ -4350,69 +4350,9 @@ function touchAndroidSwiftKeyLongBackspace (editable) {
     Wysiwyg.setRange(range.sc, so);
     createKeyEvent(editable, "keyup", "Unidentified", 229, false);
 }
-function audioAndroidSwiftKey1 (editable) {
-    createKeyEvent(editable, "keydown", "Unidentified", 229, true);
-    Wysiwyg.setRange(editable.firstChild, 0);
-    createCompositionEvent(editable, "start", "");
-    createBeforeInputEvent(editable, "Sangoku", "insertCompositionText");
-    createCompositionEvent(editable, "update", "Sangoku");
-    editable.ownerDocument.execCommand("insertText", 0, "Sangoku"); // without event
-    Wysiwyg.setRange(editable.firstChild.firstChild, 7);
-
-    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
-
-    createKeyEvent(editable, "keydown", "Unidentified", 229, true);
-    Wysiwyg.setRange(editable.firstChild.firstChild, 0, editable.firstChild.firstChild, 7);
-    createBeforeInputEvent(editable, " Sangoku est le", "insertCompositionText");
-    createCompositionEvent(editable, "update", " Sangoku est le");
-    editable.ownerDocument.execCommand("insertText", 0, " Sangoku est le"); // without event
-    Wysiwyg.setRange(editable.firstChild.firstChild, 15);
-    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
-
-    createKeyEvent(editable, "keydown", "Unidentified", 229, true);
-    Wysiwyg.setRange(editable.firstChild.firstChild, 0, editable.firstChild.firstChild, 15);
-    createBeforeInputEvent(editable, " Sangoku est le plus fort", "insertCompositionText");
-    createCompositionEvent(editable, "update", " Sangoku est le plus fort");
-    editable.ownerDocument.execCommand("insertText", 0, " Sangoku est le plus fort"); // without event
-    Wysiwyg.setRange(editable.firstChild.firstChild, 25);
-    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
-
-    createKeyEvent(editable, "keydown", "Unidentified", 229, true);
-    Wysiwyg.setRange(editable.firstChild.firstChild, 0, editable.firstChild.firstChild, 25);
-    createBeforeInputEvent(editable, "", "insertCompositionText");
-    createCompositionEvent(editable, "update", "");
-    createTextInputEvent(editable, "");
-    editable.ownerDocument.execCommand("insertText", 0, ""); // without event take care the prevent default
-    createCompositionEvent(editable, "end", "");
-    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
-
-    createKeyEvent(editable, "keydown", "Unidentified", 229, true);
-    Wysiwyg.setRange(editable.firstChild, 0);
-    createBeforeInputEvent(editable, " ", "insertText");
-    createTextInputEvent(editable, " ");
-    Wysiwyg.setRange(editable.firstChild.firstChild, 1);
-    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
-
-
-    createKeyEvent(editable, "keydown", "Unidentified", 229, true);
-    Wysiwyg.setRange(editable.firstChild.firstChild, 0, editable.firstChild.firstChild, 1);
-    createBeforeInputEvent(editable, "Sangoku est le plus fort", "insertText");
-    createTextInputEvent(editable, "Sangoku est le plus fort");
-    Wysiwyg.setRange(editable.firstChild.firstChild, 25);
-    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
-}
-function audioAndroidSwiftKey2 (editable) {
-    audioAndroidSwiftKey1(editable);
-    // click on inline (audio) corrector to replace a part of the content
-    Wysiwyg.setRange(editable.firstChild.firstChild, 15, editable.firstChild.firstChild, 25);
-    createBeforeInputEvent(editable, null, "insertReplacementText");
-    editable.ownerDocument.execCommand("insertText", 0, 'other string'); // without event
-    Wysiwyg.setRange(editable.firstChild.firstChild, 28);
-}
-
 
 QUnit.test('Android SwiftKey', function (assert) {
-    assert.expect(14);
+    assert.expect(12);
 
     return weTestUtils.createWysiwyg({
         data: this.data,
@@ -4481,14 +4421,90 @@ QUnit.test('Android SwiftKey', function (assert) {
         touchAndroidSwiftKeyLongBackspace(editable);
         assert.strictEqual(editable.innerHTML, '<p>titi toto&nbsp;</p>', "Long press backspace shoud remove all the word");
 
+        wysiwyg.destroy();
+    });
+});
+
+
+function voiceInputAndroidKey1 (editable) {
+    createKeyEvent(editable, "keydown", "Unidentified", 229, true);
+    Wysiwyg.setRange(editable.firstChild, 0);
+    createCompositionEvent(editable, "start", "");
+    createBeforeInputEvent(editable, "Sangoku", "insertCompositionText");
+    createCompositionEvent(editable, "update", "Sangoku");
+    editable.ownerDocument.execCommand("insertText", 0, "Sangoku"); // without event
+    Wysiwyg.setRange(editable.firstChild.firstChild, 7);
+
+    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
+
+    createKeyEvent(editable, "keydown", "Unidentified", 229, true);
+    Wysiwyg.setRange(editable.firstChild.firstChild, 0, editable.firstChild.firstChild, 7);
+    createBeforeInputEvent(editable, " Sangoku est le", "insertCompositionText");
+    createCompositionEvent(editable, "update", " Sangoku est le");
+    editable.ownerDocument.execCommand("insertText", 0, " Sangoku est le"); // without event
+    Wysiwyg.setRange(editable.firstChild.firstChild, 15);
+    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
+
+    createKeyEvent(editable, "keydown", "Unidentified", 229, true);
+    Wysiwyg.setRange(editable.firstChild.firstChild, 0, editable.firstChild.firstChild, 15);
+    createBeforeInputEvent(editable, " Sangoku est le plus fort", "insertCompositionText");
+    createCompositionEvent(editable, "update", " Sangoku est le plus fort");
+    editable.ownerDocument.execCommand("insertText", 0, " Sangoku est le plus fort"); // without event
+    Wysiwyg.setRange(editable.firstChild.firstChild, 25);
+    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
+
+    createKeyEvent(editable, "keydown", "Unidentified", 229, true);
+    Wysiwyg.setRange(editable.firstChild.firstChild, 0, editable.firstChild.firstChild, 25);
+    createBeforeInputEvent(editable, "", "insertCompositionText");
+    createCompositionEvent(editable, "update", "");
+    createTextInputEvent(editable, "");
+    editable.ownerDocument.execCommand("insertText", 0, ""); // without event take care the prevent default
+    var range = Wysiwyg.getRange(editable);
+    var begin = range.sc.textContent.slice(0, range.so).replace(/\s$/, '');
+    range.sc.textContent = begin + range.sc.textContent.slice(range.so);
+    Wysiwyg.setRange(range.sc, begin.length);
+    createCompositionEvent(editable, "end", "");
+    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
+
+    createKeyEvent(editable, "keydown", "Unidentified", 229, true);
+    Wysiwyg.setRange(editable.firstChild, 0);
+    createBeforeInputEvent(editable, " ", "insertText");
+    createTextInputEvent(editable, " ");
+    Wysiwyg.setRange(editable.firstChild.firstChild, 1);
+    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
+
+
+    createKeyEvent(editable, "keydown", "Unidentified", 229, true);
+    Wysiwyg.setRange(editable.firstChild.firstChild, 0, editable.firstChild.firstChild, 1);
+    createBeforeInputEvent(editable, "Sangoku est le plus fort", "insertText");
+    createTextInputEvent(editable, "Sangoku est le plus fort");
+    Wysiwyg.setRange(editable.firstChild.firstChild, 25);
+    createKeyEvent(editable, "keyup", "Unidentified", 229, false);
+}
+function voiceInputAndroidKey2 (editable) {
+    voiceInputAndroidKey1(editable);
+    // click on inline (audio) corrector to replace a part of the content
+    Wysiwyg.setRange(editable.firstChild.firstChild, 15, editable.firstChild.firstChild, 25);
+    createBeforeInputEvent(editable, null, "insertReplacementText");
+    editable.ownerDocument.execCommand("insertText", 0, 'other string'); // without event
+}
+
+QUnit.test('Android voice input', function (assert) {
+    assert.expect(2);
+
+    return weTestUtils.createWysiwyg({
+        data: this.data,
+    }).then(function (wysiwyg) {
+        var editable = wysiwyg.$('.note-editable')[0];
+
         editable.innerHTML = '<p><br/></p>';
         Wysiwyg.setRange(editable.firstChild, 0);
-        audioAndroidSwiftKey1(editable);
+        voiceInputAndroidKey1(editable);
         assert.strictEqual(editable.innerHTML.replace(/\u200B/g, ''), '<p>Sangoku est le plus fort&nbsp;</p>', "Should use the SwiftKey audio feature");
 
         editable.innerHTML = '<p><br/></p>';
         Wysiwyg.setRange(editable.firstChild, 0);
-        audioAndroidSwiftKey2(editable);
+        voiceInputAndroidKey2(editable);
         assert.strictEqual(editable.innerHTML.replace(/\u200B/g, ''), '<p>Sangoku est le other string</p>', "Should use the SwiftKey audio feature");
 
         wysiwyg.destroy();
@@ -4697,6 +4713,42 @@ QUnit.test('Android Gboard', function (assert) {
         touchAndroidGboardMoveCarret(editable, {sc: editable.firstChild.firstChild, so: 12});
         touchAndroidGboardMoveCarret(editable, {sc: editable.lastChild, so: 0});
         assert.strictEqual(editable.innerHTML, '<p>titi toto tata</p><p><br></p>', "Just move carret without changes");
+
+        wysiwyg.destroy();
+    });
+});
+
+
+function touchIphoneCorrector (editable, text) {
+    var range = Wysiwyg.getRange(editable);
+    var before = range.sc.textContent.slice(0, range.so).split(' ');
+    var partBefore = before.pop();
+    before = before.join(' ');
+    var after = range.sc.textContent.slice(range.so).split(' ');
+    var partAfter = after.shift();
+    after = after.join(' ');
+
+    Wysiwyg.setRange(range.sc, range.so - partBefore.length, range.sc, range.so + partAfter.length);
+    createBeforeInputEvent(editable, text, 'insertReplacementText');
+    range.sc.textContent = before + after;
+    Wysiwyg.setRange(range.sc, before.length);
+    createTextInputEvent(editable, text);
+}
+
+QUnit.test('Iphone', function (assert) {
+    assert.expect(1);
+
+    return weTestUtils.createWysiwyg({
+        data: this.data,
+    }).then(function (wysiwyg) {
+        var editable = wysiwyg.$('.note-editable')[0];
+
+        // iphone use normal keydown, beforeInsert, insert and keyup to insert chars
+
+        editable.innerHTML = '<p>titi toto tata</p>';
+        Wysiwyg.setRange(editable.firstChild.firstChild, 14);
+        touchIphoneCorrector(editable, 'tâtâ')
+        assert.strictEqual(editable.innerHTML, '<p>titi toto tâtâ</p>', "Should change the word (without remove the space)");
 
         wysiwyg.destroy();
     });
