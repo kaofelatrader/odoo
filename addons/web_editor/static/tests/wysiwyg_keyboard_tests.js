@@ -4719,6 +4719,18 @@ QUnit.test('Android Gboard', function (assert) {
 });
 
 
+function touchIphoneCompletion (editable, text) {
+    var range = Wysiwyg.getRange(editable);
+    var before = range.sc.textContent.slice(0, range.so).split(' ');
+    var partBefore = before.pop();
+    before = before.join(' ');
+    var after = range.sc.textContent.slice(range.so).split(' ');
+    var partAfter = after.shift();
+    after = after.join(' ');
+    range.sc.textContent = before + after;
+    Wysiwyg.setRange(range.sc, before.length);
+    createTextInputEvent(editable, text);
+}
 function touchIphoneCorrector (editable, text) {
     var range = Wysiwyg.getRange(editable);
     var before = range.sc.textContent.slice(0, range.so).split(' ');
@@ -4736,7 +4748,7 @@ function touchIphoneCorrector (editable, text) {
 }
 
 QUnit.test('Iphone', function (assert) {
-    assert.expect(1);
+    assert.expect(2);
 
     return weTestUtils.createWysiwyg({
         data: this.data,
@@ -4744,6 +4756,11 @@ QUnit.test('Iphone', function (assert) {
         var editable = wysiwyg.$('.note-editable')[0];
 
         // iphone use normal keydown, beforeInsert, insert and keyup to insert chars
+
+        editable.innerHTML = '<p>titi toto t</p>';
+        Wysiwyg.setRange(editable.firstChild.firstChild, 11);
+        touchIphoneCompletion(editable, 'tâtâ')
+        assert.strictEqual(editable.innerHTML, '<p>titi toto tâtâ</p>', "Should change the word (without remove the space)");
 
         editable.innerHTML = '<p>titi toto tata</p>';
         Wysiwyg.setRange(editable.firstChild.firstChild, 14);

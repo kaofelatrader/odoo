@@ -15,7 +15,6 @@ var keycode = ({
     '13': 'ENTER',
     '46': 'DELETE',
 });
-var top = 0;
 
 var KeyboardPlugin = AbstractPlugin.extend({
     events: {
@@ -1205,10 +1204,10 @@ var KeyboardPlugin = AbstractPlugin.extend({
     _onTextInput: function (e) {
         e.preventDefault();
         e.originalEvent.preventDefault();
-        e.originalEvent.stopImmediatePropagation();
+
         if (!this._wordComposition) {
             var text = e.originalEvent.data;
-            if (this._beforeInputEventType === 'insertReplacementText' && text[0] !== ' ' && text[0] !== '\u00A0') {
+            if ((this._beforeInputEventType === 'insertReplacementText' || (!this._beforeInputEventType && text.length > 1)) && text[0] !== ' ' && text[0] !== '\u00A0') {
                 text = ' ' + text;
             }
             // don't insert char on composition because the google virtual key insert char it self, we can't cancel it O.o
@@ -1312,9 +1311,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         }
     },
     _onBeforeInput: function (e) {
-        // for virtual keyboard backward and long backward
         e.originalEvent.preventDefault();
-        e.originalEvent.stopImmediatePropagation();
 
         this._beforeInputEventType = e.originalEvent.inputType;
 
@@ -1325,6 +1322,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             // click on inline (audio) corrector to replace a part of the content
         }
         if (e.originalEvent.inputType === 'deleteContentBackward') {
+            // for virtual keyboard backward and long backward
             if (this._deleteContentBackward) {
                 this._deleteContentBackward = false;
                 this._setComposition('');
@@ -1365,6 +1363,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         }
     },
 });
+
 
 registry.add('KeyboardPlugin', KeyboardPlugin);
 
