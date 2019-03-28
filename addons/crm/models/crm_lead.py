@@ -874,51 +874,18 @@ class Lead(models.Model):
         return True
 
     @api.multi
-    def redirect_opportunity_view(self):
+    def redirect_lead_opportunity_view(self):
         self.ensure_one()
-        # Get opportunity views
-        form_view = self.env.ref('crm.crm_case_form_view_oppor')
-        tree_view = self.env.ref('crm.crm_case_tree_view_oppor')
         return {
-            'name': _('Opportunity'),
+            'name': _('Lead or Opportunity'),
             'view_type': 'form',
-            'view_mode': 'tree, form',
+            'view_mode': 'form',
             'res_model': 'crm.lead',
-            'domain': [('type', '=', 'opportunity')],
+            'domain': [('type', '=', self.type)],
             'res_id': self.id,
             'view_id': False,
-            'views': [
-                (form_view.id, 'form'),
-                (tree_view.id, 'tree'),
-                (False, 'kanban'),
-                (False, 'calendar'),
-                (False, 'graph')
-            ],
             'type': 'ir.actions.act_window',
-            'context': {'default_type': 'opportunity'}
-        }
-
-    @api.multi
-    def redirect_lead_view(self):
-        self.ensure_one()
-        # Get lead views
-        form_view = self.env.ref('crm.crm_case_form_view_leads')
-        tree_view = self.env.ref('crm.crm_case_tree_view_leads')
-        return {
-            'name': _('Lead'),
-            'view_type': 'form',
-            'view_mode': 'tree, form',
-            'res_model': 'crm.lead',
-            'domain': [('type', '=', 'lead')],
-            'res_id': self.id,
-            'view_id': False,
-            'views': [
-                (form_view.id, 'form'),
-                (tree_view.id, 'tree'),
-                (False, 'calendar'),
-                (False, 'graph')
-            ],
-            'type': 'ir.actions.act_window',
+            'context': {'default_type': self.type}
         }
 
     @api.model
@@ -1136,14 +1103,6 @@ class Lead(models.Model):
         if leftover:
             res.update(super(Lead, leftover)._notify_get_reply_to(default=default, records=None, company=company, doc_names=doc_names))
         return res
-
-    @api.multi
-    def get_formview_id(self, access_uid=None):
-        if self.type == 'opportunity':
-            view_id = self.env.ref('crm.crm_case_form_view_oppor').id
-        else:
-            view_id = super(Lead, self).get_formview_id()
-        return view_id
 
     @api.multi
     def message_get_default_recipients(self):
