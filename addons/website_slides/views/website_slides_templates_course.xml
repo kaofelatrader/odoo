@@ -12,8 +12,11 @@
                         <li class="breadcrumb-item">
                             <a href="/slides">Home</a>
                         </li>
-                        <li t-att-class="'breadcrumb-item %s' % ('active' if not search_category and not search_tag and not search_slide_type else '')">
+                        <li t-att-class="'breadcrumb-item %s' % ('active' if not search_category and not search_tag and not search_slide_type and not slide else '')">
                             <a t-att-href="'/slides/%s' % slug(channel)"><span t-esc="channel.name"/></a>
+                        </li>
+                        <li t-att-class="'breadcrumb-item %s' % ('active' if not search_category and not search_tag and not search_slide_type else '')" t-if="slide" >
+                            <a t-att-href="'/slides/%s/%s' % (slug(channel), slug(slide))"><span t-esc="slide.name"/></a>
                         </li>
                         <li class="breadcrumb-item active" t-att-aria-current="'page' and search_category" t-if="search_category">
                             <a t-att-href="'/slides/%s/category/%s' % (slug(channel), slug(search_category))"><span t-esc="search_category.name"/></a>

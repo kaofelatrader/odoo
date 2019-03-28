@@ -9,6 +9,7 @@
             <div class="o_wslides_lesson_header o_wslides_gradient position-relative text-white pb-0 pt-2 pt-md-5">
                 <t t-call="website_slides.course_nav">
                     <t t-set="channel" t-value="slide.channel_id"/>
+                    <t t-set="slide" t-value="slide"/>
                 </t>
                 <div class="container o_wslides_lesson_header_container mt-5 mt-md-3 mt-xl-4">
                     <div class="row align-items-end align-items-md-stretch">
