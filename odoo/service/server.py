@@ -352,6 +352,7 @@ class ThreadedServer(CommonServer):
 
     def http_thread(self):
         def app(e, s):
+            _logger.info("Starting load %s", e['PATH_INFO'])
             return self.app(e, s)
         self.httpd = ThreadedWSGIServerReloadable(self.interface, self.port, app)
         self.httpd.serve_forever()
