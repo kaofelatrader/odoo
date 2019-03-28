@@ -1315,6 +1315,9 @@ var KeyboardPlugin = AbstractPlugin.extend({
         if (e.originalEvent.inputType === 'insertCompositionText') {
             // Gboard send an 'insertCompositionText' when touch backward and update the composition
         }
+        if (e.originalEvent.inputType === 'insertReplacementText') {
+            // click on inline (audio) corrector to replace a part of the content
+        }
         if (e.originalEvent.inputType === 'deleteContentBackward') {
             if (this._deleteContentBackward) {
                 this._deleteContentBackward = false;
@@ -1340,7 +1343,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
     },
     _onAndroidCompositionEnd: function (e) {
         var range = this.context.invoke('editor.createRange');
-        if (this._wordCompositionRange.sc !== range.sc) {
+        if (this._wordCompositionRange.sc !== range.sc && this._wordCompositionRange.sc.parentNode && dom.nodeLength(this._wordCompositionRange.sc) >= this._wordCompositionRange.so) {
             this._wordCompositionRange.select();
             this._setComposition(e.originalEvent.data);
             range.select();
