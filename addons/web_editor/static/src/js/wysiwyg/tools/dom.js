@@ -21,13 +21,14 @@ var Dom = Class.extend({
      *
      * @param {BoundaryPoint} pointA
      * @param {BoundaryPoint} pointB
-     * @returns {BoundaryPoint} pointA, updated if necessary
+     * @returns {BoundaryPoint}
      */
     deleteBetween: function (pointA, pointB) {
         var nextNode = this._prepareDelete(pointA, pointB);
         var nodes = this._getNodesToDelete(pointA, nextNode);
         $(nodes).remove();
-        return pointA.replace(this._cleanAfterDelete(pointA, nextNode, nodes));
+        var newPoint = this._cleanAfterDelete(pointA, nextNode, nodes)
+        return newPoint || pointA;
     },
     /**
      * Remove the edge between a node and its sibling
@@ -249,76 +250,28 @@ var Dom = Class.extend({
         if (text === " ") {
             text = utils.char('nbsp');
         }
-        var editable = range.sc;
-        while (editable.tagName !== 'EDITABLE' && editable.parentNode) {
-            editable = editable.parentNode;
-        }
-        editable.normalize();
         var point = this.deleteSelection(range);
+        while (!point.welcomesText()) {
+            point.enter();
+        }
         range.replace({
             sc: point.node,
             so: point.offset,
         });
-        editable.normalize();
-
-        if (!range.sc.tagName && /\S/.test(range.sc.textContent)) {
-            var before = range.sc.textContent.slice(0, range.so);
-            var after = range.sc.textContent.slice(range.so);
-
-            if (
-                (before.length || after.length) &&
-                (!before.length || before[before.length - 1] === ' ') &&
-                (!after.length || after[0] === ' ')
-            ) {
-                var startSpace = utils.getRegex('startSpace');
-                var endSpace = utils.getRegex('endSpace');
-                before = before.replace(endSpace, utils.char('nbsp'));
-                after = after.replace(startSpace, utils.char('nbsp'));
-                range.sc.textContent = before + after;
-                if (range.so > before.length) {
-                    range.so = range.eo = before.length;
-                }
-            }
-        }
-
-
         range.deleteContents();
         range.standardizeRangeOnEdge(this.options.isEditableNode);
-        var textNode = this._insertTextNodeInEditableArea(range, text);
 
+        var textNode = this._insertTextNodeInEditableArea(range, text);
         // if the text node can't be inserted in the dom (not editable area) do nothing
         if (!textNode) {
             return range;
         }
-
-        this.secureExtremeSingleSpace(range.sc);
-
-        textNode = this._wrapTextInP(textNode);
-        var p = textNode.parentNode;
-        var offset = utils.firstLeaf(range.sc).textContent.length + text.length;
-        p.normalize();
         range.replace({
-            sc: p.lastChild,
-            so: offset,
+            sc: textNode,
+            so: utils.nodeLength(textNode),
         });
 
-        // Clean up and make leading/trailing/multiple space visible
-        var reStartBlanks = utils.getRegex('startBlanks', '', '^([\\s\\u00A0\\uFEFF]*)');
-        var reEndBlanks = utils.getRegex('endBlanks', '', '([\\s\\u00A0\\uFEFF]*)$');
-        var reAllNBSP = /\u00A0/g;
-        var reMultipleSpace = /(\s){2,}/;
-
-        var startBlanks = range.sc.textContent.match(reStartBlanks)[0] || '';
-        var endBlanks = range.sc.textContent.match(reEndBlanks)[0] || '';
-        var trimmed = range.sc.textContent.replace(reStartBlanks, '').replace(reEndBlanks, '');
-        // Remove the single inner nbsp's and replace the multiple inner spaces with nbsp's
-        var cleanContents = trimmed.replace(reAllNBSP, ' ')
-            .replace(reMultipleSpace, function (space) {
-                return Array(space.length + 1).join(utils.char('nbsp'));
-            });
-        // Keep the leading/trailing whitespace, nbsp's and zero-width chars
-        range.sc.textContent = startBlanks + cleanContents + endBlanks;
-
+        this.secureExtremeSingleSpace(range.sc);
         return this._removeInvisibleChar(range);
     },
     /**
@@ -739,7 +692,7 @@ var Dom = Class.extend({
             node = node.parentNode;
         }
         var next = isPrev ? node.previousSibling : node.nextSibling;
-        while (next && utils.isText(next) && !utils.isVisibleText(next)) {
+        while (next && utils.isInvisibleText(next)) {
             next = isPrev ? next.previousSibling : next.nextSibling;
         }
         if (!next || this.options.isUnbreakableNode(next)) {
@@ -935,7 +888,7 @@ var Dom = Class.extend({
     _insertTextNodeInEditableArea: function (range, text) {
         var textNode = document.createTextNode(text);
         if (this.options.isEditableNode(range.sc) && $(range.sc).closest('[contenteditable]').attr('contenteditable') === 'true') {
-            if (utils.isText(range.sc) && utils.isVisibleText(range.sc)) {
+            if (utils.isVisibleText(range.sc)) {
                 var invisibleToRemove = /^\uFEFF+$/.test(range.sc.textContent) && range.sc;
                 // If range is on visible text: split the text at offset and insert the text node
                 if (!invisibleToRemove) {
@@ -1013,7 +966,7 @@ var Dom = Class.extend({
     _mergeNodes: function (node, otherNode, isPrev, isRemoveBlock) {
         var $contents = $(otherNode).contents();
         $contents = $contents.filter(function (index, node) {
-            return !(utils.isText(node) && !utils.isVisibleText(node));
+            return !utils.isInvisibleText(node);
         });
         $(node).append($contents);
         $(otherNode).remove();
@@ -1022,7 +975,7 @@ var Dom = Class.extend({
             isPrev = true;
         } else if (utils.isBlankNode(node)) {
             node = this._replaceEmptyNodeWithEmptyP(node);
-            isPrev = !isPrev;
+            isPrev = false;
         }
         return this._deleteEdgeRec(node, isPrev, true, isRemoveBlock);
     },

@@ -146,6 +146,14 @@ return {
             noflag: /^\s+/,
         },
     },
+    /**
+     * List of tag names that do not allow text nodes as direct children.
+     *
+     * @property {String []} tagsThatForbidText
+     */
+    tagsThatForbidText: [
+        'TD',
+    ],
 
     //--------------------------------------------------------------------------
     // Public
@@ -795,13 +803,22 @@ return {
         return !!this.ancestor(node, this.isList);
     },
     /**
+     * Return true if the given node is a text node that is not visible.
+     *
+     * @param {Node} node
+     * @returns {Boolean}
+     */
+    isInvisibleText: function (node) {
+        return this.isText(node) && !this.isVisibleText(node);
+    },
+    /**
      * Return true if the given node is on a left edge (ignoring invisible text).
      *
      * @param {Node} node
      * @returns {Boolean}
      */
     isLeftEdge: function (node) {
-        while (node.previousSibling && this.isText(node) && !this.isVisibleText(node)) {
+        while (node.previousSibling && this.isInvisibleText(node)) {
             node = node.previousSibling;
         }
         return this.position(node) === 0;
@@ -870,7 +887,7 @@ return {
     * @returns {Boolean}
     */
     isRightEdge: function (node) {
-        while (node.nextSibling && this.isText(node) && !this.isVisibleText(node)) {
+        while (node.nextSibling && this.isInvisibleText(node)) {
             node = node.nextSibling;
         }
         return this.position(node) === this.nodeLength(node.parentNode) - 1;
@@ -1222,6 +1239,15 @@ return {
         return array.filter(function (value, index, self) {
             return self.indexOf(value) === index;
         });
+    },
+    /**
+     * Return true if the node allows text nodes as direct children.
+     *
+     * @param {Node} node
+     * @returns {Boolean}
+     */
+    welcomesText: function (node) {
+        return this.tagsThatForbidText.indexOf(node.tagName) === -1;
     },
 
     //--------------------------------------------------------------------------

@@ -65,7 +65,7 @@ BoundaryPoint.prototype = {
                 point = newPt;
                 break;
             }
-            if (newPt === point && (!first || utils.isText(point.node) && !point[method])) {
+            if (newPt === point && (!first || utils.isText(point.node) && !point[method]())) {
                 break;
             }
             point = newPt[prevOrNext]();
@@ -368,6 +368,7 @@ BoundaryPoint.prototype = {
      * @returns {BoundaryPoint}
      */
     skipNodes: function (isPrev, pred, options) {
+        var startPoint = _.clone(this);
         if (arguments.length === 3 && !_.isFunction(arguments[2])) {
             // allow for passing options and no pred function
             options = _.clone(pred);
@@ -376,7 +377,7 @@ BoundaryPoint.prototype = {
         options = options || {};
         return this[isPrev ? 'prevUntil' : 'nextUntil'](function (pt) {
             return !pt.isSkippable(isPrev, options) || pred && pred(pt);
-        }) || this; // if the last point is skippable, return it
+        }) || this.replace(startPoint); // if the last point is skippable, return it
     },
     /**
      * Execute a given `handler` function on each point between this and the `endPoint` (both included).
@@ -413,6 +414,12 @@ BoundaryPoint.prototype = {
             }
             point.next(typeof isSkipInnerOffset === 'function' ? isSkipInnerOffset(point) : isSkipInnerOffset);
         }
+    },
+    /**
+     * Return true if the point's node allows text nodes as direct children.
+     */
+    welcomesText: function () {
+        return utils.welcomesText(this.node);
     },
 
     //--------------------------------------------------------------------------

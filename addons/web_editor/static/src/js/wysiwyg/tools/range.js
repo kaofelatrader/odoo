@@ -389,8 +389,8 @@ var WrappedRange = Class.extend({
         var self = this;
         var invisible = document.createTextNode(utils.char('zeroWidth'));
 
-        if (utils.isText(this.sc) && !utils.isVisibleText(this.sc) && this.sc.nextSibling) {
-            var firstLeafOfNext = utils.firstLeafUntil(this.sc.nextSibling, self.dependencies.Common.isEditableNode.bind(self));
+        if (utils.isInvisibleText(this.sc) && this.sc.nextSibling) {
+            var firstLeafOfNext = utils.firstLeafUntil(this.sc.nextSibling, isEditableNode.bind(self));
             this.replace({
                 sc: firstLeafOfNext,
                 so: 0,

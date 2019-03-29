@@ -117,13 +117,15 @@ var KeyboardPlugin = AbstractPlugin.extend({
         res.range = isPrev ? this._moveBeforeInvisibleBR(res.range) : res.range;
 
         if (this.dependencies.Common.isVoidBlock(res.range.sc)) {
-            var span = this._replaceMediaWithEmptySpan(res.range.sc);
-            res.range.replace({
-                sc: span,
-                so: 0,
-            });
-            res.didDeleteNodes = true;
-            return res;
+            if (isPrev === (range.offset !== 0)) {
+                var span = this._replaceMediaWithEmptySpan(res.range.sc);
+                res.range.replace({
+                    sc: span,
+                    so: 0,
+                });
+                res.didDeleteNodes = true;
+                return res;
+            }
         }
 
         if (res.didDeleteNodes) {
@@ -901,7 +903,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         var nextUnbreakable = unbreakable && unbreakable.nextElementSibling;
         var isNextEmpty = nextUnbreakable && this.utils.isEmpty(nextUnbreakable) && !this.utils.isVoid(nextUnbreakable);
         var isNextContainsOnlyInvisibleText = nextUnbreakable && _.all($(nextUnbreakable).contents(), function (n) {
-            return self.utils.isText(n) && !self.utils.isVisibleText(n);
+            return self.utils.isInvisibleText(n);
         });
         if (isNextEmpty || isNextContainsOnlyInvisibleText) {
             $(nextUnbreakable).remove();

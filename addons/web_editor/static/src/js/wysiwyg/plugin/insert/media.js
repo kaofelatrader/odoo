@@ -400,7 +400,7 @@ var AbstractMediaPlugin = AbstractPlugin.extend({
     },
     getTargetRange: function (target) {
         if (this.isMediaMethod && this[this.isMediaMethod](target)) {
-            return this.dependencies.getRange().replace({
+            return this.dependencies.Range.getRange().replace({
                 sc: target,
                 so: 0,
             });
@@ -628,9 +628,9 @@ var VideoPlugin = AbstractMediaPlugin.extend({
      */
     isVideo: function (node) {
         node = node && !node.tagName ? node.parentNode : node;
-        return (node.tagName === "IFRAME" || node.tagName === "DIV") &&
-            (node.parentNode.className && node.parentNode.className.indexOf('media_iframe_video') !== -1 ||
-                node.className.indexOf('media_iframe_video') !== -1);
+        return node && ((node.tagName === "IFRAME" || node.tagName === "DIV") &&
+            (node.parentNode && node.parentNode.className && node.parentNode.className.indexOf('media_iframe_video') !== -1 ||
+                node.className.indexOf('media_iframe_video') !== -1));
     },
 
     //--------------------------------------------------------------------------

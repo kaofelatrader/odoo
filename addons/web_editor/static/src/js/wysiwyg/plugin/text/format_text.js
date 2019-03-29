@@ -202,7 +202,7 @@ var TextPlugin = AbstractPlugin.extend({
      * @param {WrappedRange} range
      */
     _cleanNodeAfterStyle: function (node, range) {
-        if (this.utils.isText(node) && !this.utils.isVisibleText(node)) {
+        if (this.utils.isInvisibleText(node)) {
             return;
         }
         node = this._getFormattableAncestor(node) || this.utils.ancestor(node, this.utils.isSpan);
@@ -250,7 +250,7 @@ var TextPlugin = AbstractPlugin.extend({
      */
     _getPreviousVisibleNode: function (node) {
         var prev = node && node.previousSibling;
-        while (prev && this.utils.isText(prev) && !this.utils.isVisibleText(prev)) {
+        while (prev && this.utils.isInvisibleText(prev)) {
             prev = prev.previousSibling;
         }
         return prev;
