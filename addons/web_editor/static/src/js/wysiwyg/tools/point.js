@@ -164,7 +164,7 @@ BoundaryPoint.prototype = {
      * Returns true if point should be ignored.
      * This is generally used for trying to figure out if the point is an edge point.
      *
-     * @param {String} direction ('prev' or 'next')
+     * @param {Boolean} isPrev
      * @param {Object} options
      * @param {Boolean} options.noSkipBlankText true to not skip blank text
      * @param {Boolean} options.noSkipSingleBRs true to not skip single BRs
@@ -173,9 +173,9 @@ BoundaryPoint.prototype = {
      * @param {Boolean} options.noSkipSibling true to not skip if on edge and sibling is skippable
      * @returns {Boolean}
      */
-    isSkippable: function (direction, options) {
+    isSkippable: function (isPrev, options) {
         options = options || {};
-        var isEdge = direction === 'prev' ? this.isLeftEdge() : this.isRightEdge();
+        var isEdge = isPrev ? this.isLeftEdge() : this.isRightEdge();
 
         // skip blank text nodes
         if (
@@ -196,28 +196,28 @@ BoundaryPoint.prototype = {
         // skip leading/trailing breakable space
         if (
             !options.noSkipExtremeBreakableSpace &&
-            (direction === 'prev' && !isEdge && this.offset <= utils.countLeadingBreakableSpace(this.node) ||
-                direction === 'next' && this.offset > utils.nodeLength(this.node) - utils.countTrailingBreakableSpace(this.node))
+            (isPrev && !isEdge && this.offset <= utils.countLeadingBreakableSpace(this.node) ||
+                !isPrev && this.offset > utils.nodeLength(this.node) - utils.countTrailingBreakableSpace(this.node))
         ) {
             return true;
         }
         // skip to leaf node or edge
-        var node = direction === 'prev' ? this.node.childNodes[0] : this.node.childNodes[this.node.childNodes.length - 1];
-        var offset = direction === 'prev' ? 0 : utils.nodeLength(node);
+        var node = isPrev ? this.node.childNodes[0] : this.node.childNodes[this.node.childNodes.length - 1];
+        var offset = isPrev ? 0 : utils.nodeLength(node);
         if (
             !options.noSkipParent &&
             !isEdge && this.node.childNodes.length &&
-            new BoundaryPoint(node, offset).isSkippable(direction, options)
+            new BoundaryPoint(node, offset).isSkippable(isPrev, options)
         ) {
             return true;
         }
         // skip if on edge and sibling is skippable
-        var sibling = direction === 'prev' ? this.node.previousSibling : this.node.nextSibling;
-        offset = direction === 'prev' ? 0 : utils.nodeLength(sibling);
+        var sibling = isPrev ? this.node.previousSibling : this.node.nextSibling;
+        offset = isPrev ? 0 : utils.nodeLength(sibling);
         if (
             !options.noSkipSibling &&
             isEdge && sibling &&
-            new BoundaryPoint(sibling, offset).isSkippable(direction, _.defaults({
+            new BoundaryPoint(sibling, offset).isSkippable(isPrev, _.defaults({
                 noSkipSibling: true,
             }, options))
         ) {
@@ -255,6 +255,9 @@ BoundaryPoint.prototype = {
             }
             node = this.node.parentNode;
             offset = utils.position(this.node) + 1;
+            if (utils.isEditable(node) && offset !== utils.nodeLength(node)) {
+                return this.replace(node, offset).next(isSkipInnerOffset);
+            }
         } else if (utils.hasChildren(this.node)) {
             node = this.node.childNodes[this.offset];
             offset = 0;
@@ -299,6 +302,9 @@ BoundaryPoint.prototype = {
             }
             node = this.node.parentNode;
             offset = utils.position(this.node);
+            if (utils.isEditable(node) && offset) {
+                return this.replace(node, offset).prev(isSkipInnerOffset);
+            }
         } else if (utils.hasChildren(this.node)) {
             node = this.node.childNodes[this.offset - 1];
             offset = utils.nodeLength(node);
@@ -351,7 +357,7 @@ BoundaryPoint.prototype = {
      * Skips points to ignore (generally for trying to figure out if edge point).
      * Returns the resulting point.
      *
-     * @param {String} direction ('prev' or 'next')
+     * @param {Boolean} isPrev
      * @param {function} pred (extra condition to stop at)
      * @param {Object} options
      * @param {Boolean} options.noSkipBlankText true to not skip blank text
@@ -361,16 +367,16 @@ BoundaryPoint.prototype = {
      * @param {Boolean} options.noSkipSibling true to not skip if on edge and sibling is skippable
      * @returns {BoundaryPoint}
      */
-    skipNodes: function (direction, pred, options) {
+    skipNodes: function (isPrev, pred, options) {
         if (arguments.length === 3 && !_.isFunction(arguments[2])) {
             // allow for passing options and no pred function
             options = _.clone(pred);
             pred = null;
         }
         options = options || {};
-        return this[direction + 'Until'](function (pt) {
-            return !pt.isSkippable(direction, options) || pred && pred(pt);
-        });
+        return this[isPrev ? 'prevUntil' : 'nextUntil'](function (pt) {
+            return !pt.isSkippable(isPrev, options) || pred && pred(pt);
+        }) || this; // if the last point is skippable, return it
     },
     /**
      * Execute a given `handler` function on each point between this and the `endPoint` (both included).
@@ -380,17 +386,23 @@ BoundaryPoint.prototype = {
      * @param {Boolean} isSkipInnerOffset true to skip the node's inner offset
      */
     walkTo: function (endPoint, handler, isSkipInnerOffset) {
+        var startPoint = new BoundaryPoint(this.node, this.offset);
         var pred = function (point) {
             return point.isSameAs(endPoint);
         };
-        this.walkUntil(pred, handler, isSkipInnerOffset);
+        var isSkipInnerOffsetFunction = function (point) {
+            return startPoint.node !== point.node &&
+                endPoint.node !== point.node;
+        };
+        this.walkUntil(pred, handler, isSkipInnerOffset || isSkipInnerOffsetFunction);
     },
     /**
      * Execute a given `handler` function on each point between this and the predicate hit (both included).
      *
      * @param {Function (BoundaryPoint) => Boolean} pred
      * @param {Function (BoundaryPoint) => Void} handler
-     * @param {Boolean} isSkipInnerOffset true to skip the node's inner offset
+     * @param {Boolean|Function (BoundaryPoint) => Boolean} isSkipInnerOffset
+     *      (function that returns) true to skip the node's inner offset
      */
     walkUntil: function (pred, handler, isSkipInnerOffset) {
         var point = new BoundaryPoint(this.node, this.offset);
@@ -399,10 +411,7 @@ BoundaryPoint.prototype = {
             if (pred(point)) {
                 break;
             }
-            var isSkipOffset = isSkipInnerOffset &&
-                startPoint.node !== point.node &&
-                endPoint.node !== point.node;
-            point = point.next(isSkipOffset);
+            point.next(typeof isSkipInnerOffset === 'function' ? isSkipInnerOffset(point) : isSkipInnerOffset);
         }
     },
 
@@ -424,17 +433,12 @@ BoundaryPoint.prototype = {
      * @returns {BoundaryPoint|null}
      */
     _moveUntilHelper: function (pred, isPrev, isNode) {
-        var startPoint = {
-            node: this.node,
-            offset: this.offset,
-        };
-        while (this.node && this.offset >= 0) {
+        while (this.node && this.offset >= 0 && !utils.isEditable(this.node)) {
             if (pred(isNode ? this.node : this)) {
                 return this;
             }
             this[isPrev ? 'prev' : 'next']();
         }
-        this.replace(startPoint.node, startPoint.offset); // Reset
         return null;
     },
 };

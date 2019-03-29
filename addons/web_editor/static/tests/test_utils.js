@@ -545,16 +545,16 @@ var testKeyboard = function (wysiwyg, assert, keyboardTests, addTests) {
     }
 
     function endOfAreaBetweenTwoNodes(point) {
-        // move the position because some browser make the caret on the end of the previous area after normalize
+        // move the position because some browsers put the carret at the end of the previous area after normalize
         if (
             !point.node.tagName &&
             point.offset === point.node.textContent.length &&
             !/\S|\u00A0/.test(point.node.textContent)
         ) {
-            point.next().next();
-            while (point.node.tagName && point.node.textContent.length) {
-                point.next();
-            }
+            var startNode = point.node;
+            point = _.clone(point).nextUntilNode(function (node) {
+                return node !== startNode && (!node.tagName || !node.textContent.length);
+            }) || point;
         }
         return point;
     }

@@ -116,16 +116,13 @@ var Unbreakable = AbstractPlugin.extend({
                 if (point.node === endPoint.node && point.offset === endPoint.offset) {
                     afterEnd = true;
                 }
-                return self.dependencies.Common.isEditableNode(point.node) && point.isVisible() || !point.node;
+                return self.dependencies.Common.isEditableNode(point.node) && point.isVisible();
             });
-            if (!startPoint || !startPoint.node) { // no allowed node, search the other way
+            if (!startPoint) { // no allowed node, search the other way
                 afterEnd = false;
                 startPoint = range.getStartPoint().prevUntil(function (point) {
-                    return self.dependencies.Common.isEditableNode(point.node) && point.isVisible() || !point.node;
+                    return self.dependencies.Common.isEditableNode(point.node) && point.isVisible();
                 });
-            }
-            if (startPoint && !startPoint.node) {
-                startPoint = null;
             }
             if (afterEnd) {
                 isCollapsed = true;
@@ -183,7 +180,7 @@ var Unbreakable = AbstractPlugin.extend({
                         return true;
                     }
 
-                    var unbreakableParent = this.utils.ancestor(pt.node, function (node) {
+                    var unbreakableParent = self.utils.ancestor(pt.node, function (node) {
                         return !self.dependencies.Common.isVoidBlock(node) && self.dependencies.Common.isUnbreakableNode(node);
                     });
                     if (!unbreakableParent) {
@@ -200,12 +197,12 @@ var Unbreakable = AbstractPlugin.extend({
                     }
                     if (
                         (/\S|\uFEFF|\u00A0/.test(pt.node.textContent) ||
-                            this.dependencies.Common.isVoidBlock(pt.node)) &&
+                            self.dependencies.Common.isVoidBlock(pt.node)) &&
                         pt.isVisible()
                     ) {
                         return true;
                     }
-                    if (this.utils.isText(pt.node)) {
+                    if (self.utils.isText(pt.node)) {
                         lastCheckedNode = pt.node;
                     }
                     return false;
