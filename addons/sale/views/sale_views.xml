@@ -402,7 +402,7 @@
                                             'default_description_sale': name
                                         }"
                                     />
-                                    <field name="name" widget="section_and_note_text"/>
+                                    <field name="name" widget="section_and_note_text" advanced="show"/>
                                     <field
                                         name="analytic_tag_ids"
                                         advanced="hide"
@@ -426,6 +426,7 @@
                                             'column_invisible': [('parent.state', 'not in', ['sale', 'done'])],
                                             'readonly': [('qty_delivered_method', '!=', 'manual')]
                                         }"
+                                        advanced="show"
                                     />
                                     <field name="qty_delivered_manual" invisible="1"/>
                                     <field name="qty_delivered_method" invisible="1"/>
@@ -433,6 +434,7 @@
                                         name="qty_invoiced"
                                         string="Invoiced"
                                         attrs="{'column_invisible': [('parent.state', 'not in', ['sale', 'done'])]}"
+                                        advanced="show"
                                     />
                                     <field name="qty_to_invoice" invisible="1"/>
                                     <field
@@ -446,8 +448,9 @@
                                         context="{'company_id': parent.company_id}"
                                         groups="uom.group_uom"
                                         options='{"no_open": True}'
+                                        advanced="show"
                                     />
-                                    <field name="customer_lead" />
+                                    <field name="customer_lead" advanced="hide"/>
                                     <field
                                         name="price_unit"
                                         attrs="{'readonly': [('qty_invoiced', '&gt;', 0)]}"
@@ -458,13 +461,13 @@
                                         options="{'no_create': True}"
                                         domain="[('type_tax_use','=','sale'),('company_id','=',parent.company_id)]"
                                         attrs="{'readonly': [('qty_invoiced', '&gt;', 0)]}"
+                                        advanced="show"
                                     />
-                                    <field name="discount" string="Disc.%" groups="sale.group_discount_per_so_line"/>
+                                    <field name="discount" string="Disc.%" groups="sale.group_discount_per_so_line" advanced="show"/>
                                     <field name="price_subtotal" widget="monetary" groups="account.group_show_line_subtotals_tax_excluded"/>
                                     <field name="price_total" widget="monetary" groups="account.group_show_line_subtotals_tax_included"/>
                                     <field name="state" invisible="1"/>
                                     <field name="invoice_status" invisible="1"/>
-                                    <field name="customer_lead" optional="1" invisible="1"/>
                                     <field name="currency_id" invisible="1"/>
                                     <field name="price_tax" invisible="1"/>
                                 </tree>

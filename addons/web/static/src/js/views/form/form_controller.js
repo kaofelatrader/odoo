@@ -19,7 +19,6 @@ var FormController = BasicController.extend({
         open_one2many_record: '_onOpenOne2ManyRecord',
         open_record: '_onOpenRecord',
         toggle_column_order: '_onToggleColumnOrder',
-        toggle_optional_column: '_onToggleOptionalColumn',
         focus_control_button: '_onFocusControlButton',
         form_dialog_discarded: '_onFormDialogDiscarded',
         swipe_left: '_onSwipeLeft',
@@ -730,15 +729,6 @@ var FormController = BasicController.extend({
             var state = self.model.get(self.handle);
             self.renderer.confirmChange(state, state.id, [field]);
         });
-    },
-    /**
-     * This method is called when someone enable/disable optional column in
-     * x2many list view
-     *
-     * @private
-     */
-    _onToggleOptionalColumn: function (ev) {
-        this.model.setOptionalColumns(ev.data.id, ev.data.name, ev.data.enable);
     },
 });
 

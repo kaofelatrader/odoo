@@ -537,9 +537,9 @@ ListRenderer.include({
             n++;
         }
         // super method will always do n+1 but we do not want to have extra cell when there
-        // is trash icon available, we will have optional dropdown icon on header and all rows
-        // of tbody will have trash icon, so if trash icon and optionalColumns available then n--
-        if (this.addTrashIcon && this.optionalColumns) {
+        // is trash icon available, we will have advanced dropdown icon on header and all rows
+        // of tbody will have trash icon, so if trash icon and advancedColumns available then n--
+        if (this.addTrashIcon && this.advancedColumns) {
             n--;
         }
         return n;
@@ -799,13 +799,41 @@ ListRenderer.include({
         return $body;
     },
     /**
-     * Override method to render additional optional cell only if trash icon not available
-     * else trash icon will create cell and optional field icon displayed in header
+     * Override to optionally add a th in the header for the remove icon column.
+     *
+     * @override
+     * @private
+     */
+    _renderHeader: function () {
+        var $thead = this._super.apply(this, arguments);
+
+        if (this.editable) {
+            var totalWidth = this.columns.reduce(function (acc, column) {
+                return acc + column.attrs.widthFactor;
+            }, 0);
+            this.columns.forEach(function (column) {
+                var $cell = $thead.find('th[data-name=' + column.attrs.name + ']');
+                if (column.attrs.width) {
+                    $cell.css('width', column.attrs.width);
+                } else if (column.attrs.widthFactor) {
+                    $cell.css('width', (column.attrs.widthFactor / totalWidth * 100) + '%');
+                }
+            });
+        }
+
+        if (this.addTrashIcon && !this.advancedColumns.length) {
+            $thead.find('tr').append($('<th>', {class: 'o_list_record_remove_header'}));
+        }
+        return $thead;
+    },
+    /**
+     * Override method to render additional advanced cell only if trash icon not available,
+     * trash icon will create cell and advanced field icon displayed in header
      * at same index where trash icon displayed
      *
      * @override
      */
-    _renderOptionalCell: function ($cells) {
+    _renderAdvancedCell: function ($cells) {
         if (!this.addTrashIcon) {
             $cells.push($("<td/>"));
         }
@@ -976,12 +1004,12 @@ ListRenderer.include({
     //--------------------------------------------------------------------------
 
     /**
-     * override this method to unselect row before optional column added to listview
+     * override this method to unselect row before advanced column added to listview
      *
      * @override
      * @private
      */
-    _onAddColumn: function (ev) {
+    _onToggleAdvanceColumn: function (ev) {
         var self = this;
         var _super = this._super.bind(this);
         this.unselectRow().then(function () {

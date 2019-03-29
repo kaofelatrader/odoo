@@ -647,7 +647,6 @@ var BasicModel = AbstractModel.extend({
             limit: element.limit,
             model: element.model,
             offset: element.offset,
-            optionalColumnsEnabled: element.optionalColumnsEnabled,
             orderedBy: element.orderedBy,
             res_id: element.res_id,
             res_ids: element.res_ids.slice(0),
@@ -1124,29 +1123,6 @@ var BasicModel = AbstractModel.extend({
      */
     setDirty: function (id) {
         this.localData[id]._isDirty = true;
-    },
-    /**
-     * For list resources, this changes the optionalColumnsEnabled key.
-     * This method is called when optional columns are enabled/disabled,
-     * most likely from x2many list view, we need to maintain state of
-     * optional columns enabled so when x2many list view re-render
-     * we display optional columns based optionalColumnsEnabled
-     *
-     */
-    setOptionalColumns: function (list_id, fieldName, enable) {
-        var list = this.localData[list_id];
-        if (list.type === 'record') {
-            return;
-        } else if (list._changes) {
-            _.each(list._changes, function (change) {
-                delete change.isNew;
-            });
-        }
-        if (enable) {
-            list.optionalColumnsEnabled.push(fieldName);
-        } else {
-            list.optionalColumnsEnabled.splice(list.optionalColumnsEnabled.indexOf(fieldName), 1);
-        }
     },
     /**
      * For list resources, this changes the orderedBy key.
@@ -3767,7 +3743,6 @@ var BasicModel = AbstractModel.extend({
             loadMoreOffset: 0,
             model: params.modelName,
             offset: params.offset || (type === 'record' ? _.indexOf(res_ids, res_id) : 0),
-            optionalColumnsEnabled: params.optionalColumnsEnabled || [],
             openGroupByDefault: params.openGroupByDefault,
             orderedBy: params.orderedBy || [],
             orderedResIDs: params.orderedResIDs,

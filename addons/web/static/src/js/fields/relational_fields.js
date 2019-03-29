@@ -831,6 +831,7 @@ var KanbanFieldMany2One = AbstractField.extend({
 var FieldX2Many = AbstractField.extend({
     tagName: 'div',
     custom_events: _.extend({}, AbstractField.prototype.custom_events, {
+        get_advanced_columns: '_getAdvancedColumns',
         add_record: '_onAddRecord',
         discard_changes: '_onDiscardChanges',
         edit_line: '_onEditLine',
@@ -843,6 +844,7 @@ var FieldX2Many = AbstractField.extend({
         toggle_column_order: '_onToggleColumnOrder',
         activate_next_widget: '_onActiveNextWidget',
         navigation_move: '_onNavigationMove',
+        set_advanced_columns: '_setAdvancedColumns',
     }),
 
     // We need to trigger the reset on every changes to be aware of the parent changes
@@ -1005,6 +1007,25 @@ var FieldX2Many = AbstractField.extend({
                 column_invisible: domains,
              }).column_invisible;
         });
+    },
+    /**
+     * Create key from the view architecture and fetches advanced enabled columns
+     * i.e. advanced=show from localstorage
+     *
+     * @private
+     */
+    _getAdvancedColumns: function (ev) {
+        var self = this;
+        ev.stopPropagation();
+        var fields = [];
+        var fieldsInfo = this.view && this.view.fieldsInfo[this.view.type];
+        _.each(fieldsInfo, function (field, name) {
+            fields.push(name + ":" + self.view.fields[name].type);
+        });
+        fields.sort();
+        var storageKey = this.field.relation + "," + fields.join(',');
+        var advancedColumnsEnabled = this.call('local_storage', 'getItem', storageKey);
+        ev.data.callback(advancedColumnsEnabled);
     },
     /**
      * Computes the default renderer to use depending on the view type.
@@ -1187,6 +1208,24 @@ var FieldX2Many = AbstractField.extend({
                 });
             }
         });
+    },
+    /**
+     * Create key from the view architecture and store advanced enabled columns
+     * i.e. advanced=show to localstorage
+     *
+     * @private
+     */
+    _setAdvancedColumns: function (ev) {
+        var self = this;
+        ev.stopPropagation();
+        var fields = [];
+        var fieldsInfo = this.view && this.view.fieldsInfo[this.view.type];
+        _.each(fieldsInfo, function (field, name) {
+            fields.push(name + ":" + self.view.fields[name].type);
+        });
+        fields.sort();
+        var storageKey = this.field.relation + "," + fields.join(',');
+        this.call('local_storage', 'setItem', storageKey, ev.data.advancedColumnsEnabled || '');
     },
     /**
      * Parses the 'columnInvisibleFields' attribute to search for the domains

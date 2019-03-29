@@ -2888,54 +2888,64 @@ QUnit.module('relational_fields', {
         form.destroy();
     });
 
-    QUnit.test('one2many field in edit mode with optional fields and tash icon', async function (assert) {
-        assert.expect(8);
+    QUnit.test('one2many field in edit mode with advanced fields and trash icon', async function (assert) {
+        assert.expect(10);
 
         this.data.partner.records[0].p = [2];
         var form = await createView({
             View: FormView,
             model: 'partner',
             data: this.data,
-            arch:'<form string="Partners">' +
+            arch: '<form string="Partners">' +
                     '<field name="p"/>' +
                 '</form>',
             res_id: 1,
             archs: {
                 'partner,false,list': '<tree editable="top">' +
-                    '<field name="foo"/>' +
-                    '<field name="bar" optional="1"/>' +
+                    '<field name="foo" advanced="show"/>' +
+                    '<field name="bar" advanced="hide"/>' +
                 '</tree>',
             },
         });
-        // should have 2 columns 1 for foo and 1 for optional dropdown
+        // should have 2 columns 1 for foo and 1 for advanced dropdown
         assert.containsN(form.$('.o_field_one2many'), 'th', 2,
             "should be 2 th in the one2many in readonly mode");
         await testUtils.form.clickEdit(form);
         // should have 2 columns 1 for foo and 1 for trash icon, dropdown is displayed
-        // on trash icon cell, no separate cell created for trash icon and optional field dropdown
+        // on trash icon cell, no separate cell created for trash icon and advanced field dropdown
         assert.containsN(form.$('.o_field_one2many'), 'th', 2,
             "should be 2 th in the one2many edit mode");
         assert.containsN(form.$('.o_field_one2many'), '.o_data_row:first > td', 2,
             "should be 2 cells in the one2many in edit mode");
-        assert.hasClass(form.$('.o_field_one2many thead th:last'), 'o_optional_column',
+        assert.hasClass(form.$('.o_field_one2many thead th:last'), 'o_advanced_column',
             "should have add column option at last");
 
-        testUtils.dom.click(form.$('.o_field_one2many th.o_optional_column > a.dropdown-toggle'));
-        assert.containsN(form.$('.o_field_one2many'), 'div.o_optional_column_dropdown > div.dropdown-item', 1,
-            "dropdown have 1 optional field");
-        await testUtils.dom.click(form.$('div.o_optional_column_dropdown > div.dropdown-item:first input'));
+        testUtils.dom.click(form.$('.o_field_one2many th.o_advanced_column > a.dropdown-toggle'));
+        assert.containsN(form.$('.o_field_one2many'), 'div.o_advanced_column_dropdown > div.dropdown-item', 2,
+            "dropdown have 2 advanced field foo with checked and bar with unchecked");
+        await testUtils.dom.click(form.$('div.o_advanced_column_dropdown > div.dropdown-item:eq(1) input'));
         assert.containsN(form.$('.o_field_one2many'), 'th', 3,
-            "should be 3 th in the one2many after enabling bar column from optional dropdown");
+            "should be 3 th in the one2many after enabling bar column from advanced dropdown");
+
+        testUtils.dom.click(form.$('.o_field_one2many th.o_advanced_column > a.dropdown-toggle'));
+        await testUtils.dom.click(form.$('div.o_advanced_column_dropdown > div.dropdown-item:first input'));
+        assert.containsN(form.$('.o_field_one2many'), 'th', 2,
+            "should be 2 th in the one2many after disabling foo column from advanced dropdown");
 
         await testUtils.dom.click(form.$('.o_field_x2many_list_row_add a'));
         var $selectedRow = form.$('.o_field_one2many tr.o_selected_row');
         assert.strictEqual($selectedRow.length, 1, "should have selected row i.e. edition mode");
 
-        testUtils.dom.click(form.$('.o_field_one2many th.o_optional_column > a.dropdown-toggle'));
-        await testUtils.dom.click(form.$('div.o_optional_column_dropdown > div.dropdown-item:first input'));
+        testUtils.dom.click(form.$('.o_field_one2many th.o_advanced_column > a.dropdown-toggle'));
+        await testUtils.dom.click(form.$('div.o_advanced_column_dropdown > div.dropdown-item:first input'));
         $selectedRow = form.$('.o_field_one2many tr.o_selected_row');
         assert.strictEqual($selectedRow.length, 0,
-            "current edition mode discarded when selecting optional field");
+            "current edition mode discarded when selecting advanced field");
+
+        // check after form reload advanced column hidden or shown are still preserved
+        await form.reload();
+        assert.containsN(form.$('.o_field_one2many .o_list_view'), 'th', 2,
+            "should still have 2 th in the one2many after reloading whole form view");
 
         form.destroy();
     });

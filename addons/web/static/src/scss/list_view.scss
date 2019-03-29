@@ -15,12 +15,14 @@
         border-bottom: 1px solid #cacaca;
         > tr > th:not(.o_list_record_selector) {
             border-left: 1px solid #dfdfdf;
-            @include o-text-overflow(table-cell);
+            &:not(.o_advanced_column) {
+                @include o-text-overflow(table-cell);
+            }
             &:not(.o_column_sortable):hover {
                 cursor: default;
             }
         }
-        .o_optional_column {
+        .o_advanced_column {
             cursor: pointer !important;
             .dropdown-toggle {
                 padding: 0.3rem;
@@ -32,8 +34,7 @@
                     padding-right: 5px;
                 }
             }
-            .o_optional_column_dropdown .dropdown-item label {
-                margin: 0px;
+            .o_advanced_column_dropdown .dropdown-item label {
                 padding-left: 10px;
             }
         }

@@ -23,6 +23,7 @@ var ListController = BasicController.extend({
      */
     buttons_template: 'ListView.buttons',
     custom_events: _.extend({}, BasicController.prototype.custom_events, {
+        get_advanced_columns: '_getAdvancedColumns',
         activate_next_widget: '_onActivateNextWidget',
         add_record: '_onAddRecord',
         button_clicked: '_onButtonClicked',
@@ -33,6 +34,7 @@ var ListController = BasicController.extend({
         toggle_column_order: '_onToggleColumnOrder',
         toggle_group: '_onToggleGroup',
         navigation_move: '_onNavigationMove',
+        set_advanced_columns: '_setAdvancedColumns',
     }),
     /**
      * @constructor
@@ -333,6 +335,23 @@ var ListController = BasicController.extend({
         });
     },
     /**
+     * Create key from the view architecture and fetches advanced enabled columns
+     * i.e. advanced=show from localstorage
+     *
+     * @private
+     */
+    _getAdvancedColumns: function (ev) {
+        var state = this.model.get(this.handle);
+        var fields = [];
+        _.each(state.fieldsInfo[this.viewType], function (field, name) {
+            fields.push(name + ":" + state.fields[name].type);
+        });
+        fields.sort();
+        var storageKey = this.modelName + "," + fields.join(',');
+        var advancedColumnsEnabled = this.call('local_storage', 'getItem', storageKey);
+        ev.data.callback(advancedColumnsEnabled);
+    },
+    /**
      * @override
      * @private
      */
@@ -340,6 +359,22 @@ var ListController = BasicController.extend({
         var env = this._super.apply(this, arguments);
         var record = this.model.get(this.handle);
         return _.extend(env, {domain: record.getDomain()});
+    },
+    /**
+     * Create key from the view architecture and store advanced enabled columns
+     * i.e. advanced=show to localstorage
+     *
+     * @private
+     */
+    _setAdvancedColumns: function (ev) {
+        var state = this.model.get(this.handle);
+        var fields = [];
+        _.each(state.fieldsInfo[this.viewType], function (field, name) {
+            fields.push(name + ":" + state.fields[name].type);
+        });
+        fields.sort();
+        var storageKey = this.modelName + "," + fields.join(',');
+        this.call('local_storage', 'setItem', storageKey, ev.data.advancedColumnsEnabled || '');
     },
     /**
      * @private

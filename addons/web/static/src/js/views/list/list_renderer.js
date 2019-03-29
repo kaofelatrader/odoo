@@ -33,7 +33,7 @@ var FIELD_CLASSES = {
 
 var ListRenderer = BasicRenderer.extend({
     events: {
-        "click .o_optional_column_dropdown .dropdown-item input": "_onAddColumn",
+        "click .o_advanced_column_dropdown .dropdown-item input": "_onToggleAdvanceColumn",
         'click tbody tr': '_onRowClicked',
         'click tbody .o_list_record_selector': '_onSelectRecord',
         'click thead th.o_column_sortable': '_onSortColumn',
@@ -52,6 +52,8 @@ var ListRenderer = BasicRenderer.extend({
      */
     init: function (parent, state, params) {
         this._super.apply(this, arguments);
+        this.advancedColumnsEnabled = [];
+        this.columnInvisibleFields = params.columnInvisibleFields;
         this.rowDecorations = _.chain(this.arch.attrs)
             .pick(function (value, key) {
                 return DECORATIONS.indexOf(key) >= 0;
@@ -65,6 +67,25 @@ var ListRenderer = BasicRenderer.extend({
         this.isGrouped = this.state.groupedBy.length > 0;
         this.groupbys = params.groupbys;
         this._processColumns(params.columnInvisibleFields || {});
+    },
+    start: function () {
+        // Need to override start and call _processColumns from here as 
+        // we want to trigger_up event to get advance columns enabled from localstorage
+        // in init parent will be action manager for renderer,
+        // controller as a parent is set later once instance of renderer is created
+        var advancedColumnsEnabled = [];
+        this.trigger_up('get_advanced_columns', {
+            callback: function (columns) { advancedColumnsEnabled = columns;}
+        });
+        this.advancedColumnsEnabled = advancedColumnsEnabled || [];
+        // if advance column enabled are not found from localstorage then
+        // compute it based view architcture attribute advanced=hide/show
+        if (!this.advancedColumnsEnabled.length) {
+            this._computeAdvancedEnabled();
+
+        }
+        this._processColumns(this.columnInvisibleFields || {});
+        return this._super.apply(this, arguments);
     },
 
     //--------------------------------------------------------------------------
@@ -167,7 +188,33 @@ var ListRenderer = BasicRenderer.extend({
         }
     },
     /**
-     * This method computes non optional columns i.e. columns which are going to display
+     * This method computes advanced columns i.e. columns which displayed
+     * inside advanced dropdown in list view header
+     *
+     * @private
+     */
+    _computeAdvancedColumns: function () {
+        return _.filter(this.allColumns, function (col) {
+            return col.attrs.advanced;
+        });
+    },
+    /**
+     * This method computes default enabled advanced fields
+     * i.e. advance=show will be displayed by default in columns of listview
+     * as well as it will be available in advance column dropdown
+     *
+     * @private
+     */
+    _computeAdvancedEnabled: function () {
+        var self = this;
+        _.each(this.allColumns, function (col) {
+            if (col.attrs.advanced && col.attrs.advanced === 'show') {
+                self.advancedColumnsEnabled.push(col.attrs.name);
+            }
+        });
+    },
+    /**
+     * This method computes non advanced columns i.e. columns which are going to display
      * in list view
      *
      * @private
@@ -175,19 +222,7 @@ var ListRenderer = BasicRenderer.extend({
     _computeColumns: function () {
         var self = this;
         return _.filter(this.allColumns, function (col) {
-            return !(col.attrs.optional && !!JSON.parse(col.attrs.optional))
-                || _.contains(self.optionalColumnsEnabled, col.attrs.name);
-        });
-    },
-    /**
-     * This method computes optional columns i.e. columns which displayed
-     * inside optional dropdown in list view header
-     *
-     * @private
-     */
-    _computeOptionalColumns: function () {
-        return _.filter(this.allColumns, function (col) {
-            return (col.attrs.optional && !!JSON.parse(col.attrs.optional))
+            return !(col.attrs.advanced) || _.contains(self.advancedColumnsEnabled, col.attrs.name);
         });
     },
     /**
@@ -251,7 +286,7 @@ var ListRenderer = BasicRenderer.extend({
      */
     _getNumberOfCols: function () {
         var n = this.columns.length;
-        n = this.optionalColumns ? n + 1 : n;
+        n = this.advancedColumns ? n + 1 : n;
         return this.hasSelectors ? n + 1 : n;
     },
     /**
@@ -261,7 +296,7 @@ var ListRenderer = BasicRenderer.extend({
      */
     _processColumns: function (columnInvisibleFields) {
         var self = this;
-        self.handleField = null;
+        this.handleField = null;
         this.allColumns = _.reject(this.arch.children, function (c) {
             if (c.tag === 'control' || c.tag === 'groupby') {
                 return true;
@@ -278,18 +313,18 @@ var ListRenderer = BasicRenderer.extend({
             return reject;
         });
         this.columns = this._computeColumns();
-        this.optionalColumns = this._computeOptionalColumns();
+        this.advancedColumns = this._computeAdvancedColumns();
     },
     /**
-     * Render a single <th> with dropdown menu to display optional columns of view.
+     * Render a single <th> with dropdown menu to display advanced columns of view.
      *
      * @private
      * @returns {jQueryElement} a <th> element
      */
-    _renderAddColumnOption: function () {
+    _renderAdvancedColumnsOption: function () {
         var self = this;
         var $th = $('<th>', {
-            class: 'o_optional_column text-center dropdown',
+            class: 'o_advanced_column text-center dropdown',
         });
         var $a = $("<a>", {
             class: "dropdown-toggle text-dark",
@@ -301,12 +336,12 @@ var ListRenderer = BasicRenderer.extend({
         $a.appendTo($th);
 
         var $dropdown = $("<div>", {
-            class: 'dropdown-menu o_optional_column_dropdown',
+            class: 'dropdown-menu dropdown-menu-right o_advanced_column_dropdown',
         });
-        _.map(this.optionalColumns, function (col) {
+        _.map(this.advancedColumns, function (col) {
             var txt = self.state.fields[col.attrs.name].string +
-                (config.debug && " (" + col.attrs.name +")" || '');
-            var $label =$('<label>', {
+                (config.debug && " (" + col.attrs.name + ")" || '');
+            var $label = $('<label>', {
                 text: txt,
                 for: col.attrs.name,
             });
@@ -314,13 +349,21 @@ var ListRenderer = BasicRenderer.extend({
                 type: "checkbox",
                 name: col.attrs.name,
                 id: col.attrs.name,
-                checked: _.contains(self.optionalColumnsEnabled, col.attrs.name) ? true : false,
+                checked: _.contains(self.advancedColumnsEnabled, col.attrs.name) ? true : false,
             });
             $dropdown.append($("<div>", {
                 class: "dropdown-item",
             }).append($checkBox.add($label)));
         });
         $dropdown.appendTo($th);
+        // temporary set overflow-x of table-responsive to inherit to show whole dropdown
+        // otherwise dropdown will be hidden behind table
+        this.$el.on('shown.bs.dropdown', function (e) {
+            $(this).css("overflow-x", "inherit");
+        });
+        this.$el.on('hide.bs.dropdown', function (e) {
+            $(this).css("overflow-x", "auto");
+        });
         return $th;
     },
     /**
@@ -501,8 +544,8 @@ var ListRenderer = BasicRenderer.extend({
         if (this.hasSelectors) {
             $cells.unshift($('<td>'));
         }
-        if (this.optionalColumns && this.optionalColumns.length) {
-            this._renderOptionalCell($cells);
+        if (this.advancedColumns && this.advancedColumns.length) {
+            this._renderAdvancedCell($cells);
         }
         return $('<tfoot>').append($('<tr>').append($cells));
     },
@@ -738,8 +781,8 @@ var ListRenderer = BasicRenderer.extend({
     _renderHeader: function () {
         var $tr = $('<tr>')
             .append(_.map(this.columns, this._renderHeaderCell.bind(this)));
-        if (this.optionalColumns && this.optionalColumns.length) {
-            $tr.append(this._renderAddColumnOption());
+        if (this.advancedColumns && this.advancedColumns.length) {
+            $tr.append(this._renderAdvancedColumnsOption());
         }
         if (this.hasSelectors) {
             $tr.prepend(this._renderSelector('th'));
@@ -802,12 +845,12 @@ var ListRenderer = BasicRenderer.extend({
         return $th;
     },
     /**
-     * Adds cell for optional column, as we have additional cell in header for optional column,
+     * Adds cell for advanced column, as we have additional cell in header for advanced column,
      * we need to add additional cell in table body, this method can be overridden in editable list
      *
      * @private
      */
-    _renderOptionalCell: function ($cells) {
+    _renderAdvancedCell: function ($cells) {
         $cells.push($("<td/>"));
     },
     /**
@@ -822,8 +865,8 @@ var ListRenderer = BasicRenderer.extend({
         var $cells = this.columns.map(function (node, index) {
             return self._renderBodyCell(record, node, index, { mode: 'readonly' });
         });
-        if (this.optionalColumns && this.optionalColumns.length) {
-            this._renderOptionalCell($cells);
+        if (this.advancedColumns && this.advancedColumns.length) {
+            this._renderAdvancedCell($cells);
         }
 
         var $tr = $('<tr/>', { class: 'o_data_row' })
@@ -979,23 +1022,22 @@ var ListRenderer = BasicRenderer.extend({
     //--------------------------------------------------------------------------
 
     /**
-     * When the user clicks on the checkbox in optional fields dropdown that column added
+     * When the user clicks on the checkbox in advanced fields dropdown that column added
      * to listview and displayed(not permanentely)
      *
      * @private
      * @param {MouseEvent} ev
      */
-    _onAddColumn: function (ev) {
+    _onToggleAdvanceColumn: function (ev) {
         var currentElement = ev.currentTarget;
         if (!currentElement.checked) {
-            this.trigger_up('toggle_optional_column', {id: this.state.id, name: currentElement.name});
-            this.optionalColumnsEnabled.splice(this.optionalColumnsEnabled.indexOf(currentElement.name), 1);
+            this.advancedColumnsEnabled.splice(this.advancedColumnsEnabled.indexOf(currentElement.name), 1);
             this.columns = this._computeColumns();
         } else {
-            this.trigger_up('toggle_optional_column', {id: this.state.id, name: currentElement.name, enable: true});
-            this.optionalColumnsEnabled.push(currentElement.name);
+            this.advancedColumnsEnabled.push(currentElement.name);
             this.columns = this._computeColumns();
         }
+        this.trigger_up('set_advanced_columns', {advancedColumnsEnabled: this.advancedColumnsEnabled});
         this._renderView();
     },
     /**

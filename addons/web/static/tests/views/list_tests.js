@@ -5458,6 +5458,7 @@ QUnit.module('Views', {
             '/web/dataset/search_read',
             '/web/dataset/search_read',
         ]);
+
         list.destroy();
     });
 
@@ -5949,7 +5950,7 @@ QUnit.module('Views', {
         list.destroy();
     });
 
-    QUnit.test('advanced fields not disappear even after listview re-rendering(reload)', async function (assert) {
+    QUnit.test('advanced fields not disappear even after listview reload', async function (assert) {
         assert.expect(6);
 
         var list = await createView({
