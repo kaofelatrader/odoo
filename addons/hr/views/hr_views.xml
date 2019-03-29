@@ -691,26 +691,9 @@
              </field>
         </record>
 
-        <record id="hr_department_view_kanban_mobile" model="ir.ui.view" >
-            <field name="name">hr.department.kanban</field>
-            <field name="model">hr.department</field>
-            <field name="arch" type="xml">
-                <kanban>
-                    <templates>
-                        <t t-name="kanban-box">
-                            <div class="oe_kanban_global_click">
-                                <field name="name"/>
-                            </div>
-                        </t>
-                    </templates>
-                </kanban>
-            </field>
-        </record>
-
         <record id="hr_department_view_kanban" model="ir.ui.view" >
             <field name="name">hr.department.kanban</field>
             <field name="model">hr.department</field>
-            <field name="priority">20</field>
             <field name="arch" type="xml">
                 <kanban class="oe_background_grey o_kanban_dashboard o_hr_kanban">
                     <field name="name"/>
@@ -725,11 +708,11 @@
                                         <div class="o_primary"><field name="name"/></div>
                                         <div class="o_secondary"><field name="company_id" groups="base.group_multi_company"/></div>
                                     </div>
-                                    <div class="o_kanban_manage_button_section">
+                                    <div class="o_kanban_manage_button_section o_m2o_hidden">
                                         <a class="o_kanban_manage_toggle_button" href="#"><i class="fa fa-ellipsis-v" role="img" aria-label="Manage" title="Manage"/></a>
                                     </div>
                                 </div>
-                                <div class="container o_kanban_card_content">
+                                <div class="container o_kanban_card_content o_m2o_hidden">
                                     <div class="row">
                                         <div class="col-6 o_kanban_primary_left">
                                             <button class="btn btn-primary" name="%(act_employee_from_department)d" type="action">Employees</button>
@@ -779,8 +762,6 @@
             <field name="view_type">form</field>
             <field name="view_mode">kanban,tree,form</field>
             <field name="search_view_id" ref="view_department_filter"/>
-            <field name="view_ids" eval="[(5, 0, 0),
-                    (0, 0, {'view_mode': 'kanban', 'view_id': ref('hr_department_view_kanban')})]"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
                 Create a new department

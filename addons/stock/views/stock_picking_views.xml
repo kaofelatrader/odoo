@@ -71,6 +71,24 @@
             </field>
         </record>
 
+        <record id="stock_picking_type_action" model="ir.actions.act_window">
+            <field name="name">Inventory Overview</field>
+            <field name="res_model">stock.picking.type</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">kanban,form</field>
+            <field name="help" type="html">
+              <p class="o_view_nocontent_smiling_face">
+                Create a new operation type
+              </p><p>
+                The operation type system allows you to assign each stock
+                operation a specific type which will alter its views accordingly.
+                On the operation type you could e.g. specify if packing is needed by default,
+                if it should show the customer.
+              </p>
+            </field>
+        </record>
+
         <record model="ir.ui.view" id="view_picking_type_list">
             <field name="name">stock.picking.type.list</field>
             <field name="model">stock.picking.type</field>
@@ -100,6 +118,12 @@
             </field>
 
         </record>
+
+        <menuitem
+            action="stock_picking_type_action"
+            id="stock_picking_type_menu"
+            parent="menu_stock_root" sequence="0"
+            name="Overview"/>
 
         <menuitem id="menu_pickingtype" name="Operations Types" parent="stock.menu_warehouse_config" action="action_picking_type_list" sequence="4"/>
 
@@ -616,30 +640,6 @@ action = action_values
             <field name="domain">[('group_id','=',active_id)]</field>
         </record>
 
-        <record id="stock_picking_type_kanban_m2o" model="ir.ui.view">
-            <field name="name">stock.picking.type.kanban.m2o</field>
-            <field name="model">stock.picking.type</field>
-            <field name="priority">8</field>
-            <field name="arch" type="xml">
-                <kanban>
-                    <templates>
-                        <t t-name="kanban-box">
-                            <div class="oe_kanban_global_click">
-                                <div class="o_kanban_card_content">
-                                    <div>
-                                        <strong><field name="name"/></strong>
-                                    </div>
-                                    <div>
-                                        <field name="warehouse_id"/>
-                                    </div>
-                                </div>
-                            </div>
-                        </t>
-                    </templates>
-                </kanban>
-            </field>
-        </record>
-
         <record id="stock_picking_type_kanban" model="ir.ui.view">
             <field name="name">stock.picking.type.kanban</field>
             <field name="model">stock.picking.type</field>
@@ -665,11 +665,11 @@ action = action_values
                                             </div>
                                             <div class="o_secondary"><field class="o_secondary"  name="warehouse_id"/></div>
                                         </div>
-                                        <div class="o_kanban_manage_button_section">
+                                        <div class="o_kanban_manage_button_section o_m2o_hidden">
                                             <a class="o_kanban_manage_toggle_button" href="#"><i class="fa fa-ellipsis-v" role="img" aria-label="Manage" title="Manage"/></a>
                                         </div>
                                     </div>
-                                    <div class="container o_kanban_card_content">
+                                    <div class="container o_kanban_card_content o_m2o_hidden">
                                         <div class="row">
                                             <div class="col-6 o_kanban_primary_left">
                                                 <button class="btn btn-primary" name="get_action_picking_tree_ready" type="object">
@@ -762,30 +762,4 @@ action = action_values
                 </kanban>
             </field>
         </record>
-
-        <record id="stock_picking_type_action" model="ir.actions.act_window">
-            <field name="name">Inventory Overview</field>
-            <field name="res_model">stock.picking.type</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="view_type">form</field>
-            <field name="view_mode">kanban,form</field>
-            <field name="view_ids" eval="[(5, 0, 0),
-                (0, 0, {'view_mode': 'kanban', 'view_id': ref('stock_picking_type_kanban')})]"/>
-            <field name="help" type="html">
-              <p class="o_view_nocontent_smiling_face">
-                Create a new operation type
-              </p><p>
-                The operation type system allows you to assign each stock
-                operation a specific type which will alter its views accordingly.
-                On the operation type you could e.g. specify if packing is needed by default,
-                if it should show the customer.
-              </p>
-            </field>
-        </record>
-
-        <menuitem
-            action="stock_picking_type_action"
-            id="stock_picking_type_menu"
-            parent="menu_stock_root" sequence="0"
-            name="Overview"/>
 </odoo>
