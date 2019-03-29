@@ -5,7 +5,6 @@ import logging
 import re
 
 from operator import itemgetter
-from email.utils import formataddr
 from openerp.http import request
 
 from odoo import _, api, fields, models, modules, SUPERUSER_ID, tools
@@ -28,14 +27,19 @@ class Message(models.Model):
     _message_read_limit = 30
 
     @api.model
-    def _get_default_from(self):
-        if self.env.user.email:
-            return formataddr((self.env.user.name, self.env.user.email))
-        raise UserError(_("Unable to post message, please configure the sender's email address."))
-
-    @api.model
-    def _get_default_author(self):
-        return self.env.user.partner_id
+    def default_get(self, fields):
+        res = super(Message, self).default_get(fields)
+        if (not fields or 'email_from' in fields) and 'email_from' not in res:
+            author = False
+            if 'author_id' not in res:
+                author = self.env.user.partner_id
+            elif res['author_id']:
+                author = self.env['res.partner'].browse(res['author_id'])
+            if author:
+                res['email_from'] = author.email_formatted
+        if (not fields or 'author_id' in fields) and 'author_id' not in res:
+            res['author_id'] = self.env.user.partner_id.id
+        return res
 
     # content
     subject = fields.Char('Subject')
@@ -69,12 +73,9 @@ class Message(models.Model):
         'mail.activity.type', 'Mail Activity Type',
         index=True, ondelete='set null')
     # origin
-    email_from = fields.Char(
-        'From', default=_get_default_from,
-        help="Email address of the sender. This field is set when no matching partner is found and replaces the author_id field in the chatter.")
+    email_from = fields.Char('From', help="Email address of the sender. This field is set when no matching partner is found and replaces the author_id field in the chatter.")
     author_id = fields.Many2one(
-        'res.partner', 'Author', index=True,
-        ondelete='set null', default=_get_default_author,
+        'res.partner', 'Author', index=True, ondelete='set null',
         help="Author of the message. If not set, email_from may hold an email address that did not match any partner.")
     author_avatar = fields.Binary("Author's avatar", related='author_id.image_small', readonly=False)
     # recipients: include inactive partners (they may have been archived after
@@ -949,7 +950,13 @@ class Message(models.Model):
             self = self.with_context({'default_starred_partner_ids': [(4, self.env.user.partner_id.id)]})
 
         if 'email_from' not in values:  # needed to compute reply_to
-            values['email_from'] = self._get_default_from()
+            if values.get('author_id'):
+                values['email_from'] = self.env['res.partner'].browse(values['author_id']).email_formatted
+            else:
+                values['email_from'] = self.default_get(['author_id', 'email_from'])['email_from']
+        if not values['email_from']:
+            raise UserError(_("Unable to post message, please configure the sender's email address."))
+
         if not values.get('message_id'):
             values['message_id'] = self._get_message_id(values)
         if 'reply_to' not in values:
@@ -1223,7 +1230,7 @@ class Message(models.Model):
             if not msg.email_from:
                 continue
             if self.env.user.partner_id.email:
-                email_from = formataddr((self.env.user.partner_id.name, self.env.user.partner_id.email))
+                email_from = self.env.user.email_formatted
             else:
                 email_from = self.env.user.company_id.catchall
 

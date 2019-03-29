@@ -1977,7 +1977,7 @@ class MailThread(models.AbstractModel):
         # 0: Find the message's author, because we need it for private discussion
         author_id = kwargs.get('author_id')
         if author_id is None:  # keep False values
-            author_id = self.env['mail.message']._get_default_author().id
+            author_id = self.env.user.partner_id.id
 
         # 2: Private message: add recipients (recipients and author of parent message) - current author
         #   + legacy-code management (! we manage only 4 and 6 commands)
