@@ -2243,54 +2243,54 @@ var keyboardTestsBackspace = [{
             start: "p:contents()[0]->3",
         },
     },
-//     {
-//         name: "in empty-p (no br): BACKSPACE (must insert br)",
-//         content: "<p></p>",
-//         steps: [{
-//             start: "p->0",
-//             key: 'BACKSPACE',
-//         }],
-//         test: {
-//             content: "<p><br></p>", // The br is there to ensure the carret can enter the p tag
-//             start: "br->0",
-//         },
-//     },
-//     {
-//         name: "in empty-p: BACKSPACE (must leave it unchanged)",
-//         content: "<p><br></p>",
-//         steps: [{
-//             start: "p->1",
-//             key: 'BACKSPACE',
-//         }],
-//         test: {
-//             content: "<p><br></p>", // The br is there to ensure the carret can enter the p tag
-//             start: "br->0",
-//         },
-//     },
-//     {
-//         name: "in p (empty-p before): BACKSPACE",
-//         content: "<p><br></p><p>dom to edit</p>",
-//         steps: [{
-//             start: "p:eq(1):contents()[0]->0",
-//             key: 'BACKSPACE',
-//         }],
-//         test: {
-//             content: "<p>dom to edit</p>",
-//             start: "p:contents()[0]->0",
-//         },
-//     },
-//     {
-//         name: "in p (empty-p.a before): BACKSPACE",
-//         content: "<p class=\"a\"><br></p><p>dom to edit</p>",
-//         steps: [{
-//             start: "p:eq(1):contents()[0]->0",
-//             key: 'BACKSPACE',
-//         }],
-//         test: {
-//             content: "<p>dom to edit</p>",
-//             start: "p:contents()[0]->0",
-//         },
-//     },
+    {
+        name: "in empty-p (no br): BACKSPACE (must insert br)",
+        content: "<p></p>",
+        steps: [{
+            start: "p->0",
+            key: 'BACKSPACE',
+        }],
+        test: {
+            content: "<p><br></p>", // The br is there to ensure the carret can enter the p tag
+            start: "br->0",
+        },
+    },
+    {
+        name: "in empty-p: BACKSPACE (must leave it unchanged)",
+        content: "<p><br></p>",
+        steps: [{
+            start: "p->1",
+            key: 'BACKSPACE',
+        }],
+        test: {
+            content: "<p><br></p>", // The br is there to ensure the carret can enter the p tag
+            start: "br->0",
+        },
+    },
+    {
+        name: "in p (empty-p before): BACKSPACE",
+        content: "<p><br></p><p>dom to edit</p>",
+        steps: [{
+            start: "p:eq(1):contents()[0]->0",
+            key: 'BACKSPACE',
+        }],
+        test: {
+            content: "<p>dom to edit</p>",
+            start: "p:contents()[0]->0",
+        },
+    },
+    {
+        name: "in p (empty-p.a before): BACKSPACE",
+        content: "<p class=\"a\"><br></p><p>dom to edit</p>",
+        steps: [{
+            start: "p:eq(1):contents()[0]->0",
+            key: 'BACKSPACE',
+        }],
+        test: {
+            content: "<p>dom to edit</p>",
+            start: "p:contents()[0]->0",
+        },
+    },
     {
         name: "in p: BACKSPACE within text",
         content: "<p>dom to edit</p>",
@@ -2326,12 +2326,12 @@ var keyboardTestsBackspace = [{
         }],
         test: {
             content: "<p><span class=\"a\">dom to</span><span class=\"b\">edit</span></p>",
-            start: "span:eq(0):contents()[0]->6",
+            start: "span:eq(1):contents()[0]->0",
         },
     },
     {
         name: "in p (p > span.a before - span.a after): BACKSPACE (must merge them)",
-        content: "<p><span class=\"a\">dom to&nbsp;</span></p><p><span class=\"a\">edit</span></p>",
+        content: "<p><span class=\"a\">dom to </span></p><p><span class=\"a\">edit</span></p>",
         steps: [{
             start: "p:eq(1):contents()[0]->0",
             key: 'BACKSPACE',
@@ -2463,18 +2463,18 @@ var keyboardTestsBackspace = [{
             start: "p:contents()[0]->5",
         },
     },
-//     {
-//         name: "in p: BACKSPACE after \\w<br>\\w",
-//         content: "<p>dom to edi<br>t</p>",
-//         steps: [{
-//             start: "p:contents()[2]->1",
-//             key: 'BACKSPACE',
-//         }],
-//         test: {
-//             content: "<p>dom to edi<br>&#65279;</p>",
-//             start: "p:contents()[2]->1",
-//         },
-//     },
+    {
+        name: "in p: BACKSPACE after \\w<br>\\w",
+        content: "<p>dom to edi<br>t</p>",
+        steps: [{
+            start: "p:contents()[2]->1",
+            key: 'BACKSPACE',
+        }],
+        test: {
+            content: "<p>dom to edi<br>&#65279;</p>",
+            start: "p:contents()[2]->1",
+        },
+    },
     {
         name: "in p: BACKSPACE -> 'a' within text, after \\s\\w",
         content: "<p>dom t</p>",
@@ -2589,18 +2589,18 @@ var keyboardTestsBackspace = [{
             start: "p:eq(1):contents()[0]->3",
         },
     },
-    // {
-    //     name: "in ul > second-li > empty-p: BACKSPACE at beginning",
-    //     content: "<ul><li><p><br></p></li><li><p><br></p></li></ul>",
-    //     steps: [{
-    //         start: "p:eq(1)->1",
-    //         key: 'BACKSPACE',
-    //     }],
-    //     test: {
-    //         content: "<ul><li><p><br></p></li></ul>",
-    //         start: "p:first:contents()[0]->0",
-    //     },
-    // },
+    {
+        name: "in ul > second-li > empty-p: BACKSPACE at beginning",
+        content: "<ul><li><p><br></p></li><li><p><br></p></li></ul>",
+        steps: [{
+            start: "p:eq(1)->1",
+            key: 'BACKSPACE',
+        }],
+        test: {
+            content: "<ul><li><p><br></p></li></ul>",
+            start: "p->0",
+        },
+    },
     {
         name: "in ul > indented-li (no other li - p before): BACKSPACE at beginning",
         content: "<p>dom to</p><ul><ul><li>edit</li></ul></ul>",
@@ -2627,18 +2627,18 @@ var keyboardTestsBackspace = [{
             start: "li:contents()[0]->1",
         },
     },
-    // {
-    //     name: "in ul > indented-li (no other li - none before): BACKSPACE at beginning",
-    //     content: "<ul><ul><li>dom to edit</li></ul></ul>",
-    //     steps: [{
-    //         start: "li:contents()[0]->0",
-    //         key: 'BACKSPACE',
-    //     }],
-    //     test: {
-    //         content: "<ul><li>dom to edit</li></ul>",
-    //         start: "li:contents()[0]->0",
-    //     },
-    // },
+    {
+        name: "in ul > indented-li (no other li - none before): BACKSPACE at beginning",
+        content: "<ul><ul><li>dom to edit</li></ul></ul>",
+        steps: [{
+            start: "li:contents()[0]->0",
+            key: 'BACKSPACE',
+        }],
+        test: {
+            content: "<ul><li>dom to edit</li></ul>",
+            start: "li:contents()[0]->0",
+        },
+    },
     {
         name: "in li: BACKSPACE on partial selection",
         content: "<ul><li>dom to edit</li></ul>",
@@ -2678,47 +2678,47 @@ var keyboardTestsBackspace = [{
             start: "li->0",
         },
     },
-    {
-        name: "in li (no other li): BACKSPACE -> 'a' on selection of all contents",
-        content: "<ul><li>dom to edit</li></ul>",
-        steps: [{
-            start: "li:contents()[0]->0",
-            end: "li:contents()[0]->11",
-            key: 'BACKSPACE',
-        }, {
-            key: 'a',
-        }],
-        test: {
-            content: "<ul><li><p>a</p></li></ul>",
-            start: "p:contents()[0]->1",
-        },
-    },
     // {
-    //     name: "in empty-li: BACKSPACE (must remove list)",
-    //     content: "<ul><li><br></li></ul>",
+    //     name: "in li (no other li): BACKSPACE -> 'a' on selection of all contents",
+    //     content: "<ul><li>dom to edit</li></ul>",
     //     steps: [{
     //         start: "li:contents()[0]->0",
+    //         end: "li:contents()[0]->11",
     //         key: 'BACKSPACE',
+    //     }, {
+    //         key: 'a',
     //     }],
     //     test: {
-    //         content: "<p><br></p>",
-    //         start: "br->0",
+    //         content: "<ul><li><p>a</p></li></ul>",
+    //         start: "p:contents()[0]->1",
     //     },
     // },
     {
-        name: "in empty-li (no other li - empty-p before): BACKSPACE -> 'a'",
-        content: "<p><br></p><ul><li><br></li></ul>",
+        name: "in empty-li: BACKSPACE (must remove list)",
+        content: "<ul><li><br></li></ul>",
         steps: [{
             start: "li:contents()[0]->0",
             key: 'BACKSPACE',
-        }, {
-            key: 'a',
         }],
         test: {
-            content: "<p><br></p><p>a</p>",
-            start: "p:eq(1):contents()[0]->1",
+            content: "<p><br></p>",
+            start: "p->1",
         },
     },
+    // {
+    //     name: "in empty-li (no other li - empty-p before): BACKSPACE -> 'a'",
+    //     content: "<p><br></p><ul><li><br></li></ul>",
+    //     steps: [{
+    //         start: "li:contents()[0]->0",
+    //         key: 'BACKSPACE',
+    //     }, {
+    //         key: 'a',
+    //     }],
+    //     test: {
+    //         content: "<p><br></p><p>a</p>",
+    //         start: "p:eq(1):contents()[0]->1",
+    //     },
+    // },
     {
         name: "in empty-li (no other li - p before): BACKSPACE",
         content: "<p>toto</p><ul><li><br></li></ul>",
@@ -2728,7 +2728,7 @@ var keyboardTestsBackspace = [{
         }],
         test: {
             content: "<p>toto</p><p><br></p>",
-            start: "br->0",
+            start: "p:eq(1)->1",
         },
     },
     {
@@ -2752,7 +2752,7 @@ var keyboardTestsBackspace = [{
         }],
         test: {
             content: "<ul><li><p>toto</p></li><li><br></li><li><p>tutu</p></li></ul>",
-            start: "li:eq(1) br->0",
+            start: "li:eq(1)->1",
         },
     },
     {
@@ -2764,21 +2764,21 @@ var keyboardTestsBackspace = [{
         }],
         test: {
             content: "<ul><li><p>toto</p></li><li><br></li><ul><li><br></li></ul><li><p>tutu</p></li></ul>",
-            start: "li:eq(1) br->0",
+            start: "li:eq(1)->1",
         },
     },
-    // {
-    //     name: "in empty-indented-li (no other li, no other indented-li): BACKSPACE",
-    //     content: "<ul><ul><li><br></li></ul></ul>",
-    //     steps: [{
-    //         start: "li:contents()[0]->0",
-    //         key: 'BACKSPACE',
-    //     }],
-    //     test: {
-    //         content: "<ul><li><br></li></ul>",
-    //         start: "br->0",
-    //     },
-    // },
+    {
+        name: "in empty-indented-li (no other li, no other indented-li): BACKSPACE",
+        content: "<ul><ul><li><br></li></ul></ul>",
+        steps: [{
+            start: "li:contents()[0]->0",
+            key: 'BACKSPACE',
+        }],
+        test: {
+            content: "<ul><li><br></li></ul>",
+            start: "li->1",
+        },
+    },
     {
         name: "in indented-li (other li, other indented-li): BACKSPACE at start",
         content: "<ul><li><p>toto</p></li><ul><li><p>xxx</p></li><li><p>yyy</p></li></ul><li><p>tutu</p></li></ul>",
@@ -2791,18 +2791,18 @@ var keyboardTestsBackspace = [{
             start: "p:eq(1):contents()[0]->0",
         },
     },
-    // {
-    //     name: "in li > second-p: BACKSPACE at start",
-    //     content: "<ul><li><p>toto</p></li><li><p>xxx</p><p>yyy</p></li><li><p>tutu</p></li></ul>",
-    //     steps: [{
-    //         start: "li:eq(1) p:eq(1):contents()[0]->0",
-    //         key: 'BACKSPACE',
-    //     }],
-    //     test: {
-    //         content: "<ul><li><p>toto</p></li><li><p>xxxyyy</p></li><li><p>tutu</p></li></ul>",
-    //         start: "li:eq(1) p:contents()[0]->3",
-    //     },
-    // },
+    {
+        name: "in li > second-p: BACKSPACE at start",
+        content: "<ul><li><p>toto</p></li><li><p>xxx</p><p>yyy</p></li><li><p>tutu</p></li></ul>",
+        steps: [{
+            start: "li:eq(1) p:eq(1):contents()[0]->0",
+            key: 'BACKSPACE',
+        }],
+        test: {
+            content: "<ul><li><p>toto</p></li><li><p>xxxyyy</p></li><li><p>tutu</p></li></ul>",
+            start: "li:eq(1) p:contents()[0]->3",
+        },
+    },
     {
         name: "in li (li after): BACKSPACE at start, with spaces",
         content: "<p>dom to edit&nbsp;    </p><ul><li><p>    &nbsp; dom to edit</p></li><li><p>dom not to edit</p></li></ul>",
@@ -2817,7 +2817,7 @@ var keyboardTestsBackspace = [{
             key: 'BACKSPACE',
         }],
         test: {
-            content: "<p>dom to edit&nbsp;dom to edit</p><ul><li><p>dom not to edit</p></li></ul>",
+            content: "<p>dom to edit dom to edit</p><ul><li><p>dom not to edit</p></li></ul>",
             start: "p:contents()[0]->12",
         },
     },
@@ -2863,21 +2863,21 @@ var keyboardTestsBackspace = [{
             start: "p->0",
         },
     },
-    {
-        name: "in p: BACKSPACE -> 'a' on selection of all contents",
-        content: "<p>dom to edit</p>",
-        steps: [{
-            start: "p:contents()[0]->0",
-            end: "p:contents()[0]->11",
-            key: 'BACKSPACE',
-        }, {
-            key: 'a',
-        }],
-        test: {
-            content: "<p>a</p>",
-            start: "p:contents()[0]->1",
-        },
-    },
+    // {
+    //     name: "in p: BACKSPACE -> 'a' on selection of all contents",
+    //     content: "<p>dom to edit</p>",
+    //     steps: [{
+    //         start: "p:contents()[0]->0",
+    //         end: "p:contents()[0]->11",
+    //         key: 'BACKSPACE',
+    //     }, {
+    //         key: 'a',
+    //     }],
+    //     test: {
+    //         content: "<p>a</p>",
+    //         start: "p:contents()[0]->1",
+    //     },
+    // },
     {
         name: "in complex-dom: BACKSPACE on selection of most contents",
         content: "<p><b>dom</b></p><p><b>to<br>partially</b>re<i>m</i>ove</p>",
@@ -2888,7 +2888,7 @@ var keyboardTestsBackspace = [{
         }],
         test: {
             content: "<p><b>do</b>ove</p>",
-            start: "b:contents()[0]->2",
+            start: "p:contents()[1]->0",
         },
     },
     {
@@ -2901,7 +2901,7 @@ var keyboardTestsBackspace = [{
         }],
         test: {
             content: "<p><br></p>",
-            start: "br->0",
+            start: "p->0",
         },
     },
     {
@@ -2925,7 +2925,7 @@ var keyboardTestsBackspace = [{
         }],
         test: {
             content: "<span><b>dom<br>&nbsp;to edit</b></span>",
-            start: "b->2",
+            start: "b:contents()[2]->0",
         },
     },
     {
@@ -2939,7 +2939,7 @@ var keyboardTestsBackspace = [{
         }],
         test: {
             content: "<span><b>dom<br>&nbsp;to edit</b></span>",
-            start: "b->2",
+            start: "b:contents()[2]->0",
         },
     },
     {
@@ -3045,36 +3045,36 @@ var keyboardTestsBackspace = [{
 
     // table
 
-    {
-        name: "in empty-td (td before): BACKSPACE -> 'a' at start",
-        content: '<table class="table table-bordered"><tbody><tr><td><p><br></p></td><td><p><br></p></td></tr></tbody></table>',
-        steps: [{
-            start: "p:eq(1)->1",
-            key: 'BACKSPACE',
-        }, {
-            key: 'a',
-        }],
-        test: {
-            content: '<table class="table table-bordered"><tbody><tr><td><p><br></p></td><td><p>a</p></td></tr></tbody></table>',
-            start: "p:eq(1):contents()[0]->1",
-        },
-    },
-    {
-        name: "in td (td before): 2x BACKSPACE -> 'a' after first character",
-        content: '<table class="table table-bordered"><tbody><tr><td><p>dom not to edit</p></td><td><p>dom to edit</p></td></tr></tbody></table>',
-        steps: [{
-            start: "p:eq(1):contents()[0]->1",
-            key: 'BACKSPACE',
-        }, {
-            key: 'BACKSPACE',
-        }, {
-            key: 'a',
-        }],
-        test: {
-            content: '<table class="table table-bordered"><tbody><tr><td><p>dom not to edit</p></td><td><p>aom to edit</p></td></tr></tbody></table>',
-            start: "p:eq(1):contents()[0]->1",
-        },
-    },
+    // {
+    //     name: "in empty-td (td before): BACKSPACE -> 'a' at start",
+    //     content: '<table class="table table-bordered"><tbody><tr><td><p><br></p></td><td><p><br></p></td></tr></tbody></table>',
+    //     steps: [{
+    //         start: "p:eq(1)->1",
+    //         key: 'BACKSPACE',
+    //     }, {
+    //         key: 'a',
+    //     }],
+    //     test: {
+    //         content: '<table class="table table-bordered"><tbody><tr><td><p><br></p></td><td><p>a</p></td></tr></tbody></table>',
+    //         start: "p:eq(1):contents()[0]->1",
+    //     },
+    // },
+    // {
+    //     name: "in td (td before): 2x BACKSPACE -> 'a' after first character",
+    //     content: '<table class="table table-bordered"><tbody><tr><td><p>dom not to edit</p></td><td><p>dom to edit</p></td></tr></tbody></table>',
+    //     steps: [{
+    //         start: "p:eq(1):contents()[0]->1",
+    //         key: 'BACKSPACE',
+    //     }, {
+    //         key: 'BACKSPACE',
+    //     }, {
+    //         key: 'a',
+    //     }],
+    //     test: {
+    //         content: '<table class="table table-bordered"><tbody><tr><td><p>dom not to edit</p></td><td><p>aom to edit</p></td></tr></tbody></table>',
+    //         start: "p:eq(1):contents()[0]->1",
+    //     },
+    // },
     {
         name: "in td (no other td): BACKSPACE within text",
         content: '<table class="table table-bordered"><tbody><tr><td><p>dom to edit</p></td></tr></tbody></table>',
@@ -3087,39 +3087,39 @@ var keyboardTestsBackspace = [{
             start: "p:contents()[0]->4",
         },
     },
-    {
-        name: "in complex-dom (empty-td (td before) -> 2x SHIFT-ENTER): 3x BACKSPACE -> 'a'",
-        content: '<table class="table table-bordered"><tbody><tr><td><p>dom not to edit</p></td><td><p><br><br><br></p></td></tr></tbody></table>',
-        steps: [{
-            start: 'p:eq(1)->3',
-            key: 'BACKSPACE',
-        }, {
-            key: 'BACKSPACE',
-        }, {
-            key: 'BACKSPACE',
-        }, {
-            key: 'a',
-        }],
-        test: {
-            content: '<table class="table table-bordered"><tbody><tr><td><p>dom not to edit</p></td><td><p>a</p></td></tr></tbody></table>',
-            start: "p:eq(1):contents()[0]->1",
-        },
-    },
-    {
-        name: "in h1: BACKSPACE on full selection -> 'a'",
-        content: '<h1>dom to delete</h1>',
-        steps: [{
-            start: 'h1:contents()[0]->0',
-            end: 'h1:contents()[0]->13',
-            key: 'BACKSPACE',
-        }, {
-            key: 'a',
-        }],
-        test: {
-            content: '<h1>a</h1>',
-            start: "h1:contents()[0]->1",
-        },
-    },
+    // {
+    //     name: "in complex-dom (empty-td (td before) -> 2x SHIFT-ENTER): 3x BACKSPACE -> 'a'",
+    //     content: '<table class="table table-bordered"><tbody><tr><td><p>dom not to edit</p></td><td><p><br><br><br></p></td></tr></tbody></table>',
+    //     steps: [{
+    //         start: 'p:eq(1)->3',
+    //         key: 'BACKSPACE',
+    //     }, {
+    //         key: 'BACKSPACE',
+    //     }, {
+    //         key: 'BACKSPACE',
+    //     }, {
+    //         key: 'a',
+    //     }],
+    //     test: {
+    //         content: '<table class="table table-bordered"><tbody><tr><td><p>dom not to edit</p></td><td><p>a</p></td></tr></tbody></table>',
+    //         start: "p:eq(1):contents()[0]->1",
+    //     },
+    // },
+    // {
+    //     name: "in h1: BACKSPACE on full selection -> 'a'",
+    //     content: '<h1>dom to delete</h1>',
+    //     steps: [{
+    //         start: 'h1:contents()[0]->0',
+    //         end: 'h1:contents()[0]->13',
+    //         key: 'BACKSPACE',
+    //     }, {
+    //         key: 'a',
+    //     }],
+    //     test: {
+    //         content: '<h1>a</h1>',
+    //         start: "h1:contents()[0]->1",
+    //     },
+    // },
     {
         name: "in h1: BACKSPACE on full selection -> BACKSPACE -> 'a'",
         content: '<h1>dom to delete</h1>',
@@ -3233,7 +3233,7 @@ var keyboardTestsBackspace = [{
     },
     {
         name: "in p.c (p.a > span.b before - span.b after): BACKSPACE at beginning",
-        content: "<p class=\"a\"><span class=\"b\">dom to&nbsp;</span></p><p class=\"c\"><span class=\"b\">edit</span></p>",
+        content: "<p class=\"a\"><span class=\"b\">dom to </span></p><p class=\"c\"><span class=\"b\">edit</span></p>",
         steps: [{
             start: "p:eq(1):contents()[0]->0",
             key: 'BACKSPACE',
@@ -3304,7 +3304,7 @@ var keyboardTestsDelete = [{
         }],
         test: {
             content: "<p><br></p>", // The br is there to ensure the carret can enter the p tag
-            start: "p->0",
+            start: "br->0",
         },
     },
     {
@@ -3316,7 +3316,7 @@ var keyboardTestsDelete = [{
         }],
         test: {
             content: "<p>\n    <br>\n</p>", // The br is there to ensure the carret can enter the p tag
-            start: "p:contents()[1]->0",
+            start: "p->1",
         },
     },
     {
@@ -3339,7 +3339,7 @@ var keyboardTestsDelete = [{
             key: 'DELETE',
         }],
         test: {
-            content: "<p>dom to edit</p>",
+            content: "<p>\n    dom to edit</p>",
             start: "p:contents()[0]->0",
         },
     },
@@ -3359,7 +3359,7 @@ var keyboardTestsDelete = [{
         name: "in empty-p.a (p after): DELETE (2)",
         content: "<p class=\"a\"><br></p><p>dom to edit</p>",
         steps: [{
-            start: "p->1",
+            start: "p->0",
             key: 'DELETE',
         }],
         test: {
@@ -3591,20 +3591,20 @@ var keyboardTestsDelete = [{
             start: "p:contents()[0]->15",
         },
     },
-    {
-        name: "in empty-li (no other li): DELETE -> 'a' (must write into it)",
-        content: "<ul><li><br></li></ul>",
-        steps: [{
-            start: "li:contents()[0]->0",
-            key: 'DELETE',
-        }, {
-            key: 'a',
-        }],
-        test: {
-            content: "<ul><li><p>a</p></li></ul>",
-            start: "p:contents()[0]->1",
-        },
-    },
+    // {
+    //     name: "in empty-li (no other li): DELETE -> 'a' (must write into it)",
+    //     content: "<ul><li><br></li></ul>",
+    //     steps: [{
+    //         start: "li:contents()[0]->0",
+    //         key: 'DELETE',
+    //     }, {
+    //         key: 'a',
+    //     }],
+    //     test: {
+    //         content: "<ul><li><p>a</p></li></ul>",
+    //         start: "p:contents()[0]->1",
+    //     },
+    // },
     {
         name: "in li (li after): DELETE at end (must move contents of second li to carret)",
         content: "<ul><li>dom to&nbsp;</li><li>edit</li></ul>",
@@ -3613,7 +3613,7 @@ var keyboardTestsDelete = [{
             key: 'DELETE',
         }],
         test: {
-            content: "<ul><li>dom to&nbsp;edit</li></ul>",
+            content: "<ul><li>dom to edit</li></ul>",
             start: "li:contents()[0]->7",
         },
     },
@@ -3678,7 +3678,7 @@ var keyboardTestsDelete = [{
         }],
         test: {
             content: "<ul><li><p>toto</p></li><li><p><b>x</b>xx<b>y</b>yy</p></li><li><p>tutu</p></li></ul>",
-            start: "li:eq(1) p:eq(0):contents()[1]->2",
+            start: "b:eq(1):contents()[0]->0",
         },
     },
     {
@@ -3782,21 +3782,21 @@ var keyboardTestsDelete = [{
             start: "li->0",
         },
     },
-    {
-        name: "in li: DELETE -> 'a' on selection of all contents",
-        content: "<ul><li>dom to edit</li></ul>",
-        steps: [{
-            start: "li:contents()[0]->0",
-            end: "li:contents()[0]->11",
-            key: 'DELETE',
-        }, {
-            key: 'a',
-        }],
-        test: {
-            content: "<ul><li><p>a</p></li></ul>",
-            start: "p:contents()[0]->1",
-        },
-    },
+    // {
+    //     name: "in li: DELETE -> 'a' on selection of all contents",
+    //     content: "<ul><li>dom to edit</li></ul>",
+    //     steps: [{
+    //         start: "li:contents()[0]->0",
+    //         end: "li:contents()[0]->11",
+    //         key: 'DELETE',
+    //     }, {
+    //         key: 'a',
+    //     }],
+    //     test: {
+    //         content: "<ul><li><p>a</p></li></ul>",
+    //         start: "p:contents()[0]->1",
+    //     },
+    // },
 
     // end list UL / OL
 
@@ -3863,21 +3863,21 @@ var keyboardTestsDelete = [{
             start: "p->0",
         },
     },
-    {
-        name: "in p: DELETE -> 'a' on selection of all contents",
-        content: "<p>dom to edit</p>",
-        steps: [{
-            start: "p:contents()[0]->0",
-            end: "p:contents()[0]->11",
-            key: 'DELETE',
-        }, {
-            key: 'a',
-        }],
-        test: {
-            content: "<p>a</p>",
-            start: "p:contents()[0]->1",
-        },
-    },
+    // {
+    //     name: "in p: DELETE -> 'a' on selection of all contents",
+    //     content: "<p>dom to edit</p>",
+    //     steps: [{
+    //         start: "p:contents()[0]->0",
+    //         end: "p:contents()[0]->11",
+    //         key: 'DELETE',
+    //     }, {
+    //         key: 'a',
+    //     }],
+    //     test: {
+    //         content: "<p>a</p>",
+    //         start: "p:contents()[0]->1",
+    //     },
+    // },
     {
         name: "in p: DELETE before br",
         content: "<p>dom <br>to edit</p>",
@@ -3900,7 +3900,7 @@ var keyboardTestsDelete = [{
         }],
         test: {
             content: "<p><b>do</b>ove</p>",
-            start: "b:contents()[0]->2",
+            start: "p:contents()[1]->0",
         },
     },
     {
@@ -3913,7 +3913,7 @@ var keyboardTestsDelete = [{
         }],
         test: {
             content: "<p><br></p>",
-            start: "br->0",
+            start: "p->0",
         },
     },
     {
@@ -3924,7 +3924,7 @@ var keyboardTestsDelete = [{
             key: 'DELETE',
         }],
         test: {
-            content: "<span><b>dom&nbsp;to edit</b></span>",
+            content: "<span><b>dom to edit</b></span>",
             start: "b:contents()[0]->3",
         },
     },
@@ -4089,7 +4089,7 @@ var keyboardTestsDelete = [{
         }],
         test: {
             content: '<ul><li><p><b>node to </b><i>merge with</i><b>node</b> to merge</p></li></ul>',
-            start: "i:contents()[0]->10",
+            start: "i->1",
         },
     },
     {
@@ -4100,7 +4100,7 @@ var keyboardTestsDelete = [{
             key: 'DELETE',
         }],
         test: {
-            content: "<p class=\"a\"><span class=\"b\">dom to&nbsp;edit</span></p>",
+            content: "<p class=\"a\"><span class=\"b\">dom to edit</span></p>",
             start: "span:contents()[0]->7",
         },
     },
@@ -4133,24 +4133,24 @@ var keyboardTestsDeleteDOM = [
     '            '
 ].join('\n');
 keyboardTestsDelete.push({
-    name: "in complex-dom: DELETE text selection",
-    content: keyboardTestsDeleteDOM,
-    steps: [{
-            start: "p:contents()[0]->20",
-            end: 'p:contents()[0]->23',
-            key: 'DELETE',
-        },
-        {
-            start: "p:contents()[10]->55",
-            end: 'p:contents()[10]->63',
-            key: 'DELETE',
-        },
-    ],
-    test: {
-        content: keyboardTestsDeleteDOM.replace('question', '').replace('Mat', ''),
-        start: "p:contents()[10]->55",
-    },
-}, {
+//     name: "in complex-dom: DELETE text selection",
+//     content: keyboardTestsDeleteDOM,
+//     steps: [{
+//             start: "p:contents()[0]->20",
+//             end: 'p:contents()[0]->23',
+//             key: 'DELETE',
+//         },
+//         {
+//             start: "p:contents()[10]->55",
+//             end: 'p:contents()[10]->63',
+//             key: 'DELETE',
+//         },
+//     ],
+//     test: {
+//         content: keyboardTestsDeleteDOM.replace('question', '').replace('Mat', ''),
+//         start: "p:contents()[10]->55",
+//     },
+// }, {
     name: "in complex-dom: DELETE br",
     content: keyboardTestsDeleteDOM,
     steps: [{
