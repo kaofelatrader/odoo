@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-from datetime import datetime
+from datetime import datetime, date
 from odoo.tests.common import TransactionCase
 from odoo.exceptions import ValidationError
 from dateutil.relativedelta import relativedelta
@@ -84,3 +84,12 @@ class TestHrContracts(TransactionCase):
         with self.assertRaises(ValidationError):
             # No end
             self.create_contract('incoming', datetime.strptime('2015-01-01', '%Y-%m-%d').date())
+
+    def test_set_employee_contract_create(self):
+        contract = self.create_contract('open', date(2018, 1, 1), date(2018, 1, 2))
+        self.assertEqual(self.employee.contract_id, contract)
+
+    def test_set_employee_contract_write(self):
+        contract = self.create_contract('draft', date(2018, 1, 1), date(2018, 1, 2))
+        contract.state = 'open'
+        self.assertEqual(self.employee.contract_id, contract)

@@ -1,0 +1,10 @@
+.o_calendar_warning {
+    cursor: help;
+    position: absolute;
+    margin-left: -40px;
+    margin-top: 3px;
+}
+
+.o_calendar_warning.o_calendar_warning_readonly {
+    margin-left: 15px;
+}

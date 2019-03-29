@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="assets_backend" name="hr_skills_assets_backend" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/scss" href="/hr_contract/static/src/css/calendar_mismatch.scss"/>
+            <script type="text/javascript" src="/hr_contract/static/src/js/calendar_mismatch_warning.js"></script>
+        </xpath>
+    </template>
+</odoo>

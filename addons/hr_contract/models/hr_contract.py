@@ -16,6 +16,7 @@ class Employee(models.Model):
     vehicle = fields.Char(string='Company Vehicle', groups="hr.group_hr_user")
     contract_ids = fields.One2many('hr.contract', 'employee_id', string='Employee Contracts')
     contract_id = fields.Many2one('hr.contract', string='Current Contract', help='Current contract of the employee')
+    contract_resource_calendar_id = fields.Many2one(related='contract_id.resource_calendar_id')
     contracts_count = fields.Integer(compute='_compute_contracts_count', string='Contract Count')
 
     def _compute_contracts_count(self):
@@ -154,12 +155,28 @@ class Contract(models.Model):
         })
         return True
 
+    @api.model
+    def create(self, vals_list):
+        contracts = super().create(vals_list)
+        open_contracts = contracts.filtered(lambda c: c.state in ['open', 'pending'])
+        # sync contract -> employee
+        for contract in open_contracts:
+            contract.employee_id.contract_id = contract
+        # sync contract calendar -> calendar employee
+        for contract in open_contracts.filtered(lambda c: c.resource_calendar_id):
+            contract.employee_id.resource_calendar_id = contract.resource_calendar_id
+        return contracts
+
     @api.multi
     def write(self, vals):
+        res = super(Contract, self).write(vals)
         if vals.get('state') == 'open':
             for contract in self:
                 contract.employee_id.contract_id = contract
-        return super(Contract, self).write(vals)
+        calendar = vals.get('resource_calendar_id')
+        if calendar and self.state in ['open', 'pending']:
+            self.mapped('employee_id').write({'resource_calendar_id': calendar})
+        return res
 
     @api.multi
     def _track_subtype(self, init_values):
