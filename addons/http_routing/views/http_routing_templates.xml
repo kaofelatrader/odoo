@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="frontend_layout" inherit_id="web.frontend_layout">
+        <xpath expr="//head/t[@t-css='false']" position="before">
+            <script type="text/javascript">
+                odoo.session_info.translationURL = '/website/translations';
+            </script>
+        </xpath>
+    </template>
+</odoo>

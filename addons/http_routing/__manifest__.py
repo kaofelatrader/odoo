@@ -11,6 +11,7 @@ Proposes advanced routing options not available in web or base to keep
 base modules simple.
 """,
     'data': [
+        'views/http_routing_templates.xml'
     ],
     'depends': ['web'],
 }
