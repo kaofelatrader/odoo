@@ -118,8 +118,8 @@ var ListPlugin = AbstractPlugin.extend({
                 $(ul).addClass('o_checklist');
             }
 
-            this.dom.deleteEdge(ul, 'next');
-            this.dom.deleteEdge(ul, 'prev');
+            this.dom.deleteEdge(ul, false);
+            this.dom.deleteEdge(ul, true);
 
         } else {
             // remove ol/ul
@@ -263,8 +263,8 @@ var ListPlugin = AbstractPlugin.extend({
      * @param {Node} ul
      */
     _deleteListElementEdges: function (ul) {
-        this.dom.deleteEdge(ul, 'next');
-        this.dom.deleteEdge(ul, 'prev');
+        this.dom.deleteEdge(ul, false);
+        this.dom.deleteEdge(ul, true);
         this.editable.normalize();
     },
     /**

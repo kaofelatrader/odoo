@@ -795,6 +795,18 @@ return {
         return !!this.ancestor(node, this.isList);
     },
     /**
+     * Return true if the given node is on a left edge (ignoring invisible text).
+     *
+     * @param {Node} node
+     * @returns {Boolean}
+     */
+    isLeftEdge: function (node) {
+        while (node.previousSibling && this.isText(node) && !this.isVisibleText(node)) {
+            node = node.previousSibling;
+        }
+        return this.position(node) === 0;
+    },
+    /**
      * Return true if the given node is the left-most node of given ancestor.
      *
      * @param {Node} node
@@ -850,6 +862,18 @@ return {
      */
     isPre: function (node) {
         return this.makePredByNodeName('PRE')(node);
+    },
+    /**
+    * Return true if the given node is on a right edge (ignoring invisible text).
+    *
+    * @param {Node} node
+    * @returns {Boolean}
+    */
+    isRightEdge: function (node) {
+        while (node.nextSibling && this.isText(node) && !this.isVisibleText(node)) {
+            node = node.nextSibling;
+        }
+        return this.position(node) === this.nodeLength(node.parentNode) - 1;
     },
     /**
      * Return true if the given node is the right-most node of given ancestor.

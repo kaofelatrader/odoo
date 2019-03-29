@@ -854,22 +854,19 @@ var FontStylePlugin = AbstractPlugin.extend({
      */
     _formatTextSelection: function (range, tag) {
         var self = this;
-        var Common = this.dependencies.Common;
-        var textNodes = range.getSelectedTextNodes(function (node) {
-            return Common.isEditableNode(node) && (Common.isVoidBlock(node) || self.utils.isVisibleText(node));
-        });
 
         var textNodesToFormat = this._nonFormattedTextNodes(range, tag);
+        var rest = [];
         _.each(textNodesToFormat, function (textNode) {
             self._formatTextNode(textNode, tag);
-            self._mergeSimilarSiblingsByTag(textNode, tag, 'prev');
+            rest.push(self._mergeSimilarSiblingsByTag(textNode, tag, true));
         });
 
         return range.replace({
-            sc: textNodes[0],
+            sc: rest[0],
             so: 0,
-            ec: textNodes[textNodes.length - 1],
-            eo: this.utils.nodeLength(textNodes[textNodes.length - 1]),
+            ec: rest[rest.length - 1],
+            eo: this.utils.nodeLength(rest[rest.length - 1]),
         });
     },
     /**
@@ -996,14 +993,20 @@ var FontStylePlugin = AbstractPlugin.extend({
      * @private
      * @param {Node} node
      * @param {Boolean} tag eg: 'B', 'I', 'U'
-     * @param {String('prev'|'next')} direction
+     * @param {Boolean} isPrev true to delete BEFORE the carret
+     * @returns {Node}
      */
-    _mergeSimilarSiblingsByTag: function (node, tag, direction) {
+    _mergeSimilarSiblingsByTag: function (node, tag, isPrev) {
+        var rest = node;
         var tagAncestor = this._ancestorWithTag(node, tag);
-        var nextElem = tagAncestor && tagAncestor[direction === 'prev' ? 'previousElementSibling' : 'nextElementSibling'];
+        var nextElem = tagAncestor && tagAncestor[isPrev ? 'previousElementSibling' : 'nextElementSibling'];
         if (nextElem && nextElem.tagName === tag) {
-            this.dom.deleteEdge(tagAncestor, direction, true);
+            rest = this.dom.deleteEdge(tagAncestor, isPrev, {
+                isRemoveBlock: false,
+                isTryNonSim: false,
+            }).node;
         }
+        return rest;
     },
     /**
      * Return the list of selected text nodes that are not contained
@@ -1390,7 +1393,7 @@ var ParagraphPlugin = AbstractPlugin.extend({
 
             // merge same ul or ol
             $ul.prev('ul, ol').each(function () {
-                self.dom.deleteEdge(this, 'next');
+                self.dom.deleteEdge(this, false);
             });
 
         }

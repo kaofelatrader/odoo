@@ -31,13 +31,24 @@ var KeyboardPlugin = AbstractPlugin.extend({
      *
      * @private
      * @param {WrappedRange} range
-     * @param {String('prev'|'next')} direction 'prev' to delete BEFORE the carret
+     * @param {Boolean} isPrev true to delete BEFORE the carret
      * @param {Boolean} doReplaceEmptyParent true to replace empty parent with empty p if any
      * @returns {WrappedRange}
      */
-    _afterDeletion: function (range, direction, doReplaceEmptyParent) {
-        range = direction === 'prev' ? this._insertInvisibleCharAfterSingleBR(range) : range;
-        range = this._rerangeOutOfBR(range, direction);
+    _afterDeletion: function (range, isPrev, doReplaceEmptyParent) {
+        if (this.utils.isEditable(range.sc) && this.utils.isBlankNode(range.sc)) {
+            var p = document.createElement('p');
+            var br = document.createElement('br');
+            p.appendChild(br);
+            range.sc.innerHTML = '';
+            range.sc.appendChild(p);
+            return range.replace({
+                sc: br,
+                so: 0,
+            });
+        }
+        range = isPrev ? this._insertInvisibleCharAfterSingleBR(range) : range;
+        range = this._rerangeOutOfBR(range, isPrev);
         range = this._cleanRangeAfterDeletion(range);
         if (doReplaceEmptyParent) {
             range = this._replaceEmptyParentWithEmptyP(range);
@@ -90,39 +101,37 @@ var KeyboardPlugin = AbstractPlugin.extend({
      *
      * @private
      * @param {WrappedRange} range
-     * @param {String('prev'|'next')} direction
+     * @param {Boolean} isPrev true to delete BEFORE the carret
      * @param {Boolean} didDeleteNodes true if nodes were already deleted prior to this call
-     * @returns {Object} {didDeleteNodes: Boolean, range: WrappedRange, direction: String('prev'|next')}
+     * @returns {Object} {didDeleteNodes: Boolean, range: WrappedRange, isPrev: Boolean}
      */
-    _beforeDeletion: function (range, direction, didDeleteNodes) {
+    _beforeDeletion: function (range, isPrev, didDeleteNodes) {
         var res = {
             range: range,
-            direction: direction,
+            isPrev: isPrev,
             didDeleteNodes: didDeleteNodes,
         };
 
-        res.range = this._rerangeToOffsetChild(res.range, direction);
+        res.range = this._rerangeToOffsetChild(res.range, isPrev);
         res.range = this._sliceAndRerangeBeforeDeletion(res.range);
-        res.range = direction === 'prev' ? this._moveBeforeInvisibleBR(res.range) : res.range;
+        res.range = isPrev ? this._moveBeforeInvisibleBR(res.range) : res.range;
 
         if (this.dependencies.Common.isVoidBlock(res.range.sc)) {
             var span = this._replaceMediaWithEmptySpan(res.range.sc);
             res.range.replace({
                 sc: span,
                 so: 0,
-                ec: span,
-                eo: 0,
             });
             res.didDeleteNodes = true;
             return res;
         }
 
         if (res.didDeleteNodes) {
-            res.direction = 'next';
+            res.isPrev = false;
             return res;
         }
         
-        res.range = this._cleanRangeBeforeDeletion(res.range, direction);
+        res.range = this._cleanRangeBeforeDeletion(res.range, isPrev);
 
         return res;
     },
@@ -151,11 +160,11 @@ var KeyboardPlugin = AbstractPlugin.extend({
      *
      * @private
      * @param {WrappedRange} range
-     * @param {String('prev'|'next')} direction
+     * @param {Boolean} isPrev true to delete BEFORE the carret
      * @returns {WrappedRange}
      */
-    _cleanRangeBeforeDeletion: function (range, direction) {
-        if (direction === 'prev') {
+    _cleanRangeBeforeDeletion: function (range, isPrev) {
+        if (isPrev) {
             this._removeAllPreviousInvisibleChars(range);
         }
         range = this._removeExtremeBreakableSpaceAndRerange(range);
@@ -169,26 +178,22 @@ var KeyboardPlugin = AbstractPlugin.extend({
      *
      * @private
      * @param {WrappedRange} range
-     * @param {String('prev'|'next')} direction
+     * @param {Boolean} isPrev true to delete BEFORE the carret
      * @param {Boolean} wasOnStartOfBR true if the requested deletion started at
      *                                 the beginning of a BR element
      * @returns {Object} {
-     *      point: {false|Object},
+     *      point: {false|BoundaryPoint},
      *      hasBlock: {Boolean},
      *      blockToRemove: {false|Node},
      * }
      */
-    _getDeleteInfo: function (range, direction, wasOnStartOfBR) {
+    _getDeleteInfo: function (range, isPrev, wasOnStartOfBR) {
         var self = this;
         var hasBlock = false;
         var blockToRemove = false;
-        var method = direction === 'prev' ? 'prevUntil' : 'nextUntil';
+        var method = isPrev ? 'prevUntil' : 'nextUntil';
 
-        var pt = range.getStartPoint();
-        pt[method](function (point) {
-            if (!point.node || self.utils.isEditable(point.node)) {
-                return true;
-            }
+        var pt = range.getStartPoint()[method](function (point) {
             var isAtStartOfMedia = !point.offset && self.dependencies.Common.isVoidBlock(point.node);
             var isBRorHR = point.node.tagName === 'BR' || point.node.tagName === 'HR';
             var isRootBR = wasOnStartOfBR && point.node === range.sc;
@@ -214,7 +219,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         });
 
         return {
-            point: !pt || pt.node === this.editable ? false : pt,
+            point: !pt ? false : pt,
             hasBlock: hasBlock,
             blockToRemove: blockToRemove,
         };
@@ -223,10 +228,10 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * Handle deletion (BACKSPACE / DELETE).
      *
      * @private
-     * @param {String('prev'|'next')} direction 'prev' to delete BEFORE the carret
+     * @param {Boolean} isPrev true to delete BEFORE the carret
      * @returns {Boolean} true if case handled
      */
-    _handleDeletion: function (direction) {
+    _handleDeletion: function (isPrev) {
         var range = this.dependencies.Range.getRange();
         var didDeleteNodes = !range.isCollapsed();
         var point = this.dom.deleteSelection(range);
@@ -234,23 +239,28 @@ var KeyboardPlugin = AbstractPlugin.extend({
             sc: point.node,
             so: point.offset,
         });
-        var wasOnStartOfBR = direction === 'prev' && !range.so && range.sc.tagName === 'BR';
+        var wasOnStartOfBR = isPrev && !range.so && range.sc.tagName === 'BR';
 
         this._removeNextEmptyUnbreakable(range.sc);
-        var temp = this._beforeDeletion(range, direction, didDeleteNodes);
+        var temp = this._beforeDeletion(range, isPrev, didDeleteNodes);
         didDeleteNodes = temp.didDeleteNodes;
         range = temp.range;
-        direction = temp.direction;
+        isPrev = temp.isPrev;
 
         if (!didDeleteNodes) {
-            var newRange = this._performDeletion(range, direction, wasOnStartOfBR);
-            didDeleteNodes = newRange.so !== range.so || newRange.sc !== range.sc;
-            range = newRange;
+            var rangePoint = this._performDeletion(range, isPrev, wasOnStartOfBR);
+            didDeleteNodes = !!rangePoint;
+            if (didDeleteNodes) {
+                range.replace({
+                    sc: rangePoint.node,
+                    so: rangePoint.offset,
+                });
+            }
         }
 
-        range = this._afterDeletion(range, direction, !didDeleteNodes);
+        range = this._afterDeletion(range, isPrev, !didDeleteNodes);
 
-        range = this.dependencies.Range.setRange(range.getPoints()).collapse(direction === 'prev');
+        this.dependencies.Range.setRange(range.getPoints()).collapse(isPrev);
         this.editable.normalize();
         return didDeleteNodes;
     },
@@ -354,7 +364,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         ) {
             point = point.nextUntil(function (pt) {
                 if (pt.node === point.node) {
-                    return;
+                    return false;
                 }
                 return (
                         pt.node.tagName === "BR" ||
@@ -502,7 +512,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         var point = this.getPoint(hr, 0);
         point = point.nextUntil(function (pt) {
             return pt.node !== hr && !self.dependencies.Common.isUnbreakableNode(pt.node);
-        }) || point;
+        }) || this.getPoint(hr, 0);
         this.dependencies.Range.setRange({
             sc: point.node,
             so: point.offset,
@@ -686,16 +696,16 @@ var KeyboardPlugin = AbstractPlugin.extend({
      *
      * @private
      * @param {WrappedRange} range
-     * @param {String('prev'|'next')} direction
+     * @param {Boolean} isPrev true to delete left
      */
-    _isOnEdgeToDelete: function (range, direction) {
+    _isOnEdgeToDelete: function (range, isPrev) {
         var isOnBR = range.sc.tagName === 'BR';
         var parentHasOnlyBR = range.sc.parentNode && range.sc.parentNode.innerHTML.trim() === "<br>";
         var isOnDirEdge;
-        if (direction === 'next') {
-            isOnDirEdge = range.so === this.utils.nodeLength(range.sc);
-        } else {
+        if (isPrev) {
             isOnDirEdge = range.so === 0;
+        } else {
+            isOnDirEdge = range.so === this.utils.nodeLength(range.sc);
         }
         return (!isOnBR || parentHasOnlyBR) && isOnDirEdge;
     },
@@ -723,28 +733,25 @@ var KeyboardPlugin = AbstractPlugin.extend({
      *
      * @private
      * @param {WrappedRange} range
-     * @param {String('prev'|'next')} direction 'prev' to delete BEFORE the carret
+     * @param {Boolean} isPrev true to delete BEFORE the carret
      * @param {Boolean} wasOnStartOfBR true if the requested deletion started at
      *                                 the beginning of a BR element
-     * @returns {WrappedRange}
+     * @returns {BoundaryPoint|null} point on which to rerange or null if no change was made
      */
-    _performDeletion: function (range, direction, wasOnStartOfBR) {
+    _performDeletion: function (range, isPrev, wasOnStartOfBR) {
         var didDeleteNodes = false;
-        if (this._isOnEdgeToDelete(range, direction)) {
-            var rest = this.dom.deleteEdge(range.sc, direction);
+        if (this._isOnEdgeToDelete(range, isPrev)) {
+            var rest = this.dom.deleteEdge(range.sc, isPrev);
             didDeleteNodes = !!rest;
             if (didDeleteNodes) {
-                return range.replace({
-                    sc: rest.node,
-                    so: rest.offset,
-                });
+                return rest;
             }
         }
 
-        var deleteInfo = this._getDeleteInfo(range, direction, wasOnStartOfBR);
+        var deleteInfo = this._getDeleteInfo(range, isPrev, wasOnStartOfBR);
 
         if (!deleteInfo.point) {
-            return range;
+            return null;
         }
 
         var point = deleteInfo.point;
@@ -756,11 +763,11 @@ var KeyboardPlugin = AbstractPlugin.extend({
 
         if (blockToRemove && !isLonelyBR) {
             $(blockToRemove).remove();
-            point = isHR ? this.dom.deleteEdge(range.sc, direction) : point;
+            point = isHR ? this.dom.deleteEdge(range.sc, isPrev) : point;
             didDeleteNodes = true;
         } else if (!hasBlock) {
             var isAtEndOfNode = point.offset === this.utils.nodeLength(point.node);
-            var shouldMove = isAtEndOfNode || direction === 'next' && point.offset;
+            var shouldMove = isAtEndOfNode || !isPrev && point.offset;
 
             point.offset = shouldMove ? point.offset - 1 : point.offset;
             point.node = this._removeCharAtOffset(point);
@@ -771,18 +778,12 @@ var KeyboardPlugin = AbstractPlugin.extend({
                 this.dom.secureExtremeSingleSpace(point.node);
             }
 
-            if (direction === 'prev' && !point.offset && !this._isAfterBR(point.node)) {
+            if (isPrev && !point.offset && !this._isAfterBR(point.node)) {
                 point.node = this._replaceLeadingSpaceWithSingleNBSP(point.node);
             }
         }
 
-        if (didDeleteNodes) {
-            range.replace({
-                sc: point.node,
-                so: point.offset,
-            });
-        }
-        return range;
+        return didDeleteNodes ? point : null;
     },
     /**
      * Prevent the appearance of a text node with the editable DIV as direct parent:
@@ -963,9 +964,9 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * @param {WrappedRange} range
      * @returns {WrappedRange}
      */
-    _rerangeOutOfBR: function (range, direction) {
+    _rerangeOutOfBR: function (range, isPrev) {
         range = this._rerangeToFirstNonBRElementLeaf(range);
-        range = this._rerangeToNextNonBR(range, direction === 'next');
+        range = this._rerangeToNextNonBR(range, !isPrev);
         return range;
     },
     /**
@@ -995,14 +996,14 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _rerangeToNextNonBR: function (range, previous) {
         var point = range.getStartPoint();
-        var method = previous ? 'prevUntil' : 'nextUntil';
-        point = point[method](function (pt) {
-            return pt.node.tagName !== 'BR';
-        });
-        range.replace({
-            sc: point.node,
-            so: point.offset,
-        });
+        var method = previous ? 'prevUntilNode' : 'nextUntilNode';
+        point = point[method](this.utils.not(this.utils.isBR.bind(this.utils)));
+        if (point) {
+            range.replace({
+                sc: point.node,
+                so: point.offset,
+            });
+        }
         return range;
     },
     /**
@@ -1010,14 +1011,14 @@ var KeyboardPlugin = AbstractPlugin.extend({
      *
      * @private
      * @param {WrappedRange} range
-     * @param {String('prev'|'next')} direction
+     * @param {Boolean} isPrev true to delete BEFORE the carret
      * @returns {WrappedRange}
      */
-    _rerangeToOffsetChild: function (range, direction) {
+    _rerangeToOffsetChild: function (range, isPrev) {
         if (range.sc.childNodes[range.so]) {
             var node;
             var offset;
-            if (direction === 'prev' && range.so > 0) {
+            if (isPrev && range.so > 0) {
                 node = range.sc.childNodes[range.so - 1];
                 offset = this.utils.nodeLength(node);
                 range.replace({
@@ -1200,11 +1201,11 @@ var KeyboardPlugin = AbstractPlugin.extend({
             }
         }
 
-        var flag = this._handleDeletion('prev');
+        var flag = this._handleDeletion(true);
 
         if (!flag && needOutdent) {
             this.dependencies.Range.setRange(range.getPoints());
-            this.dependencies.Paragraph.outdent();
+            this.dependencies.Paragraph.outdent(null, range);
         }
 
         return true;
@@ -1227,7 +1228,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             }
         }
 
-        this._handleDeletion('next');
+        this._handleDeletion(false);
         return true;
     },
     /**
@@ -1340,13 +1341,11 @@ var KeyboardPlugin = AbstractPlugin.extend({
                 }
                 var range = self.dependencies.Range.setRange(baseRange);
                 range = self.dom.insertTextInline(accentedChar, range);
-                range = this.dependencies.Range.setRange(range).normalize();
-                self.dependencies.Range.save(range);
+                self.dependencies.Range.setRange(range);
             });
         } else {
             var range = this.dom.insertTextInline(e.key, this.dependencies.Range.getRange());
-            range = this.dependencies.Range.setRange(range).normalize();
-            this.dependencies.Range.save(range);
+            this.dependencies.Range.setRange(range);
         }
         return true;
     },
