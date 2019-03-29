@@ -99,7 +99,7 @@ var WrappedRange = Class.extend({
         });
         // find new cursor point
         var point = this.getStartPoint().prevUntil(function (point) {
-            return nodes.indexOf(item) === -1;
+            return nodes.indexOf(point.node) === -1;
         });
         var emptyParents = [];
         $.each(nodes, function (idx, node) {
@@ -418,7 +418,7 @@ var WrappedRange = Class.extend({
         ) {
             var point = this.getStartPoint();
             var newPoint = point.prevUntil(function (pt) {
-                return pt.node !== self.sc && !pt.node.tagName && !utils.isBlankText(pt.node);
+                return pt.node !== self.sc && utils.isText(pt.node) && !utils.isBlankText(pt.node);
             });
             if (!newPoint || utils.firstBlockAncestor(newPoint.node) !== utils.firstBlockAncestor(point.node)) {
                 this.replace({
