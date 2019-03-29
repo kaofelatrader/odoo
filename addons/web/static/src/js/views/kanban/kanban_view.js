@@ -76,8 +76,10 @@ var KanbanView = BasicView.extend({
             editable: activeActions.edit,
             deletable: activeActions.delete,
             read_only_mode: params.readOnlyMode,
+            opensFromM2O: params.opensFromM2O,
         };
         this.rendererParams.quickCreateEnabled = this._isQuickCreateEnabled();
+        this.rendererParams.opensFromM2O = params.opensFromM2O;
         var examples = archAttrs.examples;
         if (examples) {
             this.rendererParams.examples = kanbanExamplesRegistry.get(examples);

@@ -347,6 +347,7 @@ var SelectCreateDialog = ViewDialog.extend({
         if (viewType === 'kanban') {
             _.extend(viewOptions, {
                 noDefaultGroupby: true,
+                opensFromM2O: true,
             });
         }
         var View = new View(fieldsViews[viewType], _.extend(viewOptions, {
