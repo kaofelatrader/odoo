@@ -28,6 +28,9 @@ var Dom = Class.extend({
         var nodes = this._getNodesToDelete(pointA, nextNode);
         $(nodes).remove();
         var newPoint = this._cleanAfterDelete(pointA, nextNode, nodes)
+        if (newPoint && utils.isEditable(newPoint.node)) {
+            newPoint.replace(newPoint.node.firstElementChild, 0);
+        }
         return newPoint || pointA;
     },
     /**
@@ -42,73 +45,7 @@ var Dom = Class.extend({
      * @returns {BoundaryPoint|null} (null if no change)
      */
     deleteEdge: function (node, isPrev, options) {
-        options = utils.defaults(options || {}, {
-            isTryNonSim: true,
-            isRemoveBlock: true,
-        });
-        var point = this._deleteEdgeRec(node, isPrev, false, options.isRemoveBlock);
-        if (options.isTryNonSim && !point) {
-            point = this.deleteNonSimilarEdge(node, isPrev);
-        }
-        return point;
-    },
-    /**
-     * Find and delete the previous/next non-similar edge if possible.
-     * "Similar" means that they have the same tag, styles, classes and attributes.
-     *
-     * @param {Node} node
-     * @param {Boolean} isPrev true to delete BEFORE the carret
-     * @returns {false|Object} {node, offset}
-     */
-    deleteNonSimilarEdge: function (node, isPrev) {
-        var self = this;
-        var next = node[!isPrev ? 'nextSibling' : 'previousSibling'];
-        while (
-            next && utils.isText(next) &&
-            utils.getRegexBlank({
-                space: true,
-                invisible: true,
-            }).test(next.textContent)
-        ) {
-            next = next[!isPrev ? 'nextSibling' : 'previousSibling'];
-        }
-
-        if (next) {
-            return;
-        }
-
-        node = utils.firstBlockAncestor(node);
-
-        if (this.options.isUnbreakableNode(node)) {
-            return;
-        }
-
-        var point = new BoundaryPoint(node, isPrev ? 0 : utils.nodeLength(node));
-        var otherBlock = this._findNextBlockToMerge(point.node, isPrev, this.options.styleTags);
-
-        if (!otherBlock) {
-            return;
-        }
-
-        var blockToMergeFrom = !isPrev ? otherBlock : point.node;
-        var blockToMergeInto = !isPrev ? point.node : otherBlock;
-
-        // empty tag are removed
-        if (
-            utils.getRegexBlank({
-                space: true,
-                newline: true,
-            }).test(blockToMergeInto.textContent) &&
-            !$(blockToMergeInto).find('.fa').length && $(blockToMergeInto).find('br').length <= 1
-        ) {
-            $(blockToMergeInto).remove();
-            var pointNode = utils.firstLeafUntil(blockToMergeFrom, function (n) {
-                return !self.options.isVoidBlock(n) && self.options.isEditableNode(n);
-            });
-            return new BoundaryPoint(pointNode, 0);
-        }
-
-        return this.mergeNonSimilarBlocks(blockToMergeFrom, blockToMergeInto);
+        return this._deleteEdgeRec(node, isPrev, false, options);
     },
     /**
      * Deletes the contents of the selected DOM.
@@ -138,7 +75,7 @@ var Dom = Class.extend({
      */
     fillEmptyNode: function (point) {
         if (
-            !point.node.tagName &&utils.getRegexBlank({
+            !point.node.tagName && utils.getRegexBlank({
                 space: true,
                 invisible: true,
                 nbsp: true,
@@ -275,58 +212,6 @@ var Dom = Class.extend({
         return this._removeInvisibleChar(range);
     },
     /**
-     * Merges mergeFromBlock into mergeIntoBlock, respecting the rules of unbreakable.
-     *
-     * @param {Node} mergeFromBlock block to merge from
-     * @param {Node} mergeIntoBlock block to merge into
-     * @returns {Object} {node, offset}
-     */
-    mergeNonSimilarBlocks: function (mergeFromBlock, mergeIntoBlock) {
-        var point;
-        var mergeableTags = this.options.styleTags.join(', ') + ', li';
-        var $contents = $(mergeFromBlock).find('*').addBack()
-            .filter(mergeableTags)
-            .filter(function (i, n) {
-                if (!(n.tagName === 'LI' && $(n).find(mergeableTags).length)) {
-                    return n;
-                }
-            }).contents();
-        var containsUnbreakables = !!$contents.filter(this.options.isUnbreakable).length;
-
-        if ($contents.length && !containsUnbreakables) {
-            if (utils.isText($contents[0])) {
-                this.removeExtremeBreakableSpace($contents[0]);
-            }
-            var $lastContents = $(mergeIntoBlock).contents().last();
-            if (!($contents.length === 1 && $contents[0].tagName === 'BR')) {
-                if (mergeIntoBlock.innerHTML.trim() === '<br>') {
-                    $(mergeIntoBlock).contents().remove();
-                    $(mergeIntoBlock).append($contents);
-                    $lastContents = false;
-                } else {
-                    $lastContents.after($contents);
-                }
-            }
-            while (mergeFromBlock.parentNode &&
-                utils.isBlankNode(mergeFromBlock.parentNode, this.options.isVoidBlock)) {
-                mergeFromBlock = mergeFromBlock.parentNode;
-            }
-            $(mergeFromBlock).remove();
-
-            point = {};
-            if ($lastContents && $lastContents.length) {
-                point = new BoundaryPoint($lastContents[0], utils.nodeLength($lastContents[0]));
-            } else {
-                point = new BoundaryPoint($contents[0], 0);
-            }
-
-            point = this.deleteEdge(point.node, false, {
-                isTryNonSim: false,
-            }) || point;
-        }
-        return point;
-    },
-    /**
      * Remove the given node from the DOM.
      *
      * @param {Node} node
@@ -373,12 +258,13 @@ var Dom = Class.extend({
      *
      * @param {Node} target
      * @param {Boolean} doNotInsertP true to NOT fill an empty unbreakable with a p element.
+     * @param {Boolean} doRemoveAgain true to allow removing another block on delete edge.
      * @returns {BoundaryPoint}
      */
-    removeBlockNode: function (target, doNotInsertP) {
+    removeBlockNode: function (target, doNotInsertP, doRemoveAgain) {
         var parent = target.parentNode;
         var offset = [].indexOf.call(parent.childNodes, target);
-        var point = this._removeBlock(target);
+        var point = this._removeBlock(target, doRemoveAgain);
         this._removeBlankContents(parent);
         point = this._cleanAfterRemoveBlock(point, doNotInsertP);
 
@@ -392,7 +278,7 @@ var Dom = Class.extend({
      */
     removeEmptyInlineNodes: function (point) {
         var node = point.node;
-        if (!point.node.tagName && !point.node.textContent.length) {
+        if (utils.isText(point.node) && !point.node.textContent.length) {
             node = node.parentNode;
             if ($(node).hasClass('o_default_snippet_text')) {
                 // for default snippet value
@@ -403,7 +289,7 @@ var Dom = Class.extend({
         var next;
         while (
             node.tagName !== 'BR' &&
-            (node.tagName ? node.innerHTML : node.textContent) === '' &&
+            (utils.isText(node) ? node.textContent : node.innerHTML) === '' &&
             !utils.isNodeBlockType(node) &&
             this.options.isEditableNode(node.parentNode) &&
             (!node.attributes || !node.attributes.contenteditable) &&
@@ -415,13 +301,13 @@ var Dom = Class.extend({
             $(node).remove();
             node = point.node;
         }
-        if (next && !next.tagName) {
+        if (next && utils.isText(next)) {
             if (/^\s+[^\s<]/.test(next.textContent)) {
                 next.textContent = next.textContent.replace(utils.getRegex('startSpace'), utils.char('nbsp'));
             }
         }
         if (prev) {
-            if (!prev.tagName) {
+            if (utils.isText(prev)) {
                 if (/[^\s>]\s+$/.test(prev.textContent)) {
                     prev.textContent = prev.textContent.replace(utils.getRegex('endSpace'), ' ');
                 }
@@ -603,7 +489,7 @@ var Dom = Class.extend({
             .enterUntil(utils.and(this.options.isVoidBlock, this.options.isEditableNode));
 
         if (removedNodes.length > 1 || removedNodes.length && !utils.isText(removedNodes[0])) {
-            newPoint.replace(this.removeEmptyInlineNodes(newPoint));
+            newPoint.replace(this.removeEmptyInlineNodes(point));
         }
 
         this._cleanListAfterDelete(point, nextNode);
@@ -682,11 +568,16 @@ var Dom = Class.extend({
      * @param {Node} node
      * @param {Boolean} isPrev true to delete BEFORE the carret
      * @param {Boolean} didChange true if anything was changed with deleteEdge yet
-     * @param {Boolean} [isRemoveBlock] default: true - true to allow the removal of a block node 
+     * @param {Object} [options]
+     * @param {Boolean} [options.isTryNonSim] (default: true) - true to try merging non-similar nodes
+     * @param {Boolean} [options.isRemoveBlock] (default: true) - true to not try merging non-similar nodes
      * @returns {Point|null} null if nothing changed
      */
-    _deleteEdgeRec: function (node, isPrev, didChange, isRemoveBlock) {
-        isRemoveBlock = isRemoveBlock === undefined || isRemoveBlock;
+    _deleteEdgeRec: function (node, isPrev, didChange, options) {
+        options = utils.defaults(options || {}, {
+            isTryNonSim: true,
+            isRemoveBlock: true,
+        });
         var edgeMethod = utils[isPrev ? 'isLeftEdge' : 'isRightEdge'].bind(utils);
         while (node.parentNode && edgeMethod(node) && !utils.isEditable(node.parentNode)) {
             node = node.parentNode;
@@ -698,16 +589,34 @@ var Dom = Class.extend({
         if (!next || this.options.isUnbreakableNode(next)) {
             return this._getDeleteEdgeResult(node, isPrev, didChange); // base case
         }
+        if (!utils.isText(node) && utils.isBlankNode(node)) {
+            return options.isRemoveBlock ? this.removeBlockNode(node, false, true) : this._getDeleteEdgeResult(next, isPrev, didChange);
+        }
+        if (!utils.isText(next) && utils.isBlankNode(next)) {
+            return options.isRemoveBlock ? this.removeBlockNode(next, false, true) : this._getDeleteEdgeResult(node, isPrev, didChange);
+        }
+        if (this.options.isVoidBlock(node) || utils.isVoid(node)) {
+            // special case: may call deleteEdge again
+            return options.isRemoveBlock ? this.removeBlockNode(node) : this._getDeleteEdgeResult(next, isPrev, didChange);
+        }
         if (this.options.isVoidBlock(next) || utils.isVoid(next)) {
             // special case: may call deleteEdge again
-            return isRemoveBlock ? this.removeBlockNode(next) : this._getDeleteEdgeResult(node, isPrev, didChange);
+            return options.isRemoveBlock ? this.removeBlockNode(next) : this._getDeleteEdgeResult(node, isPrev, didChange);
         }
         if (utils.compareNodes(node, next)) {
             next = isPrev ? [node, node = next][0] : next; // swap node and next
             if (utils.isText(node) && utils.isText(next)) {
                 return this._mergeTextNodes(node, next, isPrev); // base case
             }
-            return this._mergeNodes(node, next, isPrev, isRemoveBlock); // recursive: calls back _deleteEdgeRec
+            return this._mergeNodes(node, next, isPrev, options); // recursive: calls back _deleteEdgeRec
+        }
+        if (options.isTryNonSim) {
+            next = this._findNextBlockToMerge(node, isPrev);
+            if (next) {
+                options.isTryNonSim = false;
+                next = isPrev ? [node, node = next][0] : next; // swap node and next
+                return this._mergeNodes(node, next, isPrev, options); // recursive: calls back _deleteEdgeRec
+            }
         }
         return this._getDeleteEdgeResult(node, isPrev, didChange); // base case
     },
@@ -960,10 +869,12 @@ var Dom = Class.extend({
      * @param {Node} node
      * @param {Node} otherNode
      * @param {Boolean} isPrev true to delete BEFORE the carret
-     * @param {Boolean} isRemoveBlock true to allow `deleteEdge` to remove a block node
+     * @param {Object} [options]
+     * @param {Boolean} [options.isTryNonSim] (default: true) - true to try merging non-similar nodes
+     * @param {Boolean} [options.isRemoveBlock] (default: true) - true to not try merging non-similar nodes
      * @returns {BoundaryPoint}
      */
-    _mergeNodes: function (node, otherNode, isPrev, isRemoveBlock) {
+    _mergeNodes: function (node, otherNode, isPrev, options) {
         var $contents = $(otherNode).contents();
         $contents = $contents.filter(function (index, node) {
             return !utils.isInvisibleText(node);
@@ -977,7 +888,7 @@ var Dom = Class.extend({
             node = this._replaceEmptyNodeWithEmptyP(node);
             isPrev = false;
         }
-        return this._deleteEdgeRec(node, isPrev, true, isRemoveBlock);
+        return this._deleteEdgeRec(node, isPrev, true, options);
     },
     /**
      * Merge two text nodes together:
@@ -1060,9 +971,10 @@ var Dom = Class.extend({
      *
      * @private
      * @param {Node} block
+     * @param {Boolean} doRemoveAgain true to allow removing another block on delete edge.
      * @returns {BoundaryPoint}
      */
-    _removeBlock: function (block) {
+    _removeBlock: function (block, doRemoveAgain) {
         var isPrev = false;
         var point = new BoundaryPoint(block, 0).prevUntil(this._isOtherVisiblePoint(block));
         if (!point) {
@@ -1083,7 +995,7 @@ var Dom = Class.extend({
 
         return isPointOnEdge ? this.deleteEdge(point.node, isPrev, {
             isTryNonSim: false,
-            isRemoveBlock: false,
+            isRemoveBlock: doRemoveAgain || false,
         }) || point : point;
     },
     /**

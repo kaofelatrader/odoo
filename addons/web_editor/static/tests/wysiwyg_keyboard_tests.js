@@ -2301,7 +2301,7 @@ var keyboardTestsBackspace = [{
             key: 'BACKSPACE',
         }],
         test: {
-            content: "<p>dom to edit</p>",
+            content: "<p class=\"a\">dom to edit</p>",
             start: "p:contents()[0]->0",
         },
     },
@@ -2499,7 +2499,7 @@ var keyboardTestsBackspace = [{
             key: 'a',
         }],
         test: {
-            content: "<p>dom a</p>",
+            content: "<p>dom&nbsp;a</p>",
             start: "p:contents()[0]->5",
         },
     },
@@ -2703,8 +2703,8 @@ var keyboardTestsBackspace = [{
             key: 'a',
         }],
         test: {
-            content: "<ul><li><p>a</p></li></ul>",
-            start: "p:contents()[0]->1",
+            content: "<ul><li>a</li></ul>",
+            start: "li:contents()[0]->1",
         },
     },
     {
@@ -2902,7 +2902,7 @@ var keyboardTestsBackspace = [{
         }],
         test: {
             content: "<p><b>do</b>ove</p>",
-            start: "p:contents()[1]->0",
+            start: "b:contents()[0]->2",
         },
     },
     {
@@ -3164,8 +3164,8 @@ var keyboardTestsBackspace = [{
             key: 'a',
         }],
         test: {
-            content: '<h1>a</h1>',
-            start: "h1:contents()[0]->1",
+            content: '<p>a</p>',
+            start: "p:contents()[0]->1",
         },
     },
 
@@ -3230,7 +3230,7 @@ var keyboardTestsBackspace = [{
         }],
         test: {
             content: '<ul><li><p>node to merge with<b>node</b><i> to merge</i></p></li></ul>',
-            start: "p:contents()[0]->18",
+            start: "b:contents()[0]->0",
         },
     },
     {
@@ -3242,7 +3242,7 @@ var keyboardTestsBackspace = [{
         }],
         test: {
             content: '<ul><li><p><i>node to merge with</i><b>node</b><i> to merge</i></p></li></ul>',
-            start: "i->1",
+            start: "b:contents()[0]->0",
         },
     },
     {

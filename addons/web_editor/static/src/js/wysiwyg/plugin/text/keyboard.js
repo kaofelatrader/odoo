@@ -1171,7 +1171,6 @@ var KeyboardPlugin = AbstractPlugin.extend({
     _onBackspace: function (e) {
         var self = this;
         var range = this.dependencies.Range.getRange();
-        var needOutdent = false;
 
         // Special cases
         if (range.isCollapsed()) {
@@ -1192,20 +1191,19 @@ var KeyboardPlugin = AbstractPlugin.extend({
                 var style = self.utils.isCell(n) ? 'paddingLeft' : 'marginLeft';
                 return n.tagName && !!parseFloat(n.style[style] || 0);
             });
-            if (point.isLeftEdgeOfBlock()) {
-                if (isIndented) {
-                    this.dependencies.Paragraph.outdent();
-                    return true;
-                }
-                if (this.utils.ancestor(range.sc, this.utils.isLi)) {
-                    needOutdent = true;
-                }
+            if (point.isLeftEdgeOfBlock() && isIndented) {
+                this.dependencies.Paragraph.outdent();
+                return true;
             }
         }
 
-        var flag = this._handleDeletion(true);
+        var needOutdent = this.utils.isInList(range.sc) && range.getStartPoint().isEdgeOfTag('UL', 'left');
+        var didDelete;
+        if (!needOutdent || !range.isCollapsed()) {
+            didDelete = this._handleDeletion(true);
+        }
 
-        if (!flag && needOutdent) {
+        if (!didDelete && needOutdent) {
             this.dependencies.Range.setRange(range.getPoints());
             this.dependencies.Paragraph.outdent(null, range);
         }
