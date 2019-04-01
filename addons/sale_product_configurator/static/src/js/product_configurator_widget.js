@@ -44,7 +44,7 @@ var ProductConfiguratorWidget = relationalFields.FieldMany2One.extend({
     },
 
     /**
-     * This method is overridden to check to check if the product_template_id
+     * This method is overridden to check if the product_template_id
      * needs configuration or not:
      *
      * - The product_template has only one "product.product" and is not dynamic
