@@ -79,7 +79,7 @@ var ArchPlugin = AbstractPlugin.extend({
         ],
         // editable > p
         [
-            ['div', 'td', 'th', 'li'],
+            ['editable', 'div', 'td', 'th', 'li'],
             styleTags.concat(['ul', 'ol']),
         ],
         // H1 > i
@@ -106,7 +106,7 @@ var ArchPlugin = AbstractPlugin.extend({
     },
     setEditorValue: function (value) {
         this._htmlToArch(value);
-        return this.arch.html();
+        // return this.arch.html();
     },
     saveEditor: function () {
     },
@@ -213,6 +213,25 @@ var ArchPlugin = AbstractPlugin.extend({
     },
     _htmlToArch: function (html) {
         var archNode = this.arch.parse(html);
+
+        console.log(archNode);
+        console.log(archNode.toNode());
+
+
+        var archNode = this.arch.parse(`
+            
+            Bonjour,
+            <br>
+            <b>comment va-<i>tu</i> ?</b>
+            <td>wrong TD</td>
+            <div>
+                text dans div ?
+            </div>
+            `);
+
+        console.log(archNode);
+        console.log(archNode.toNode());
+
 
         return archNode;
     },

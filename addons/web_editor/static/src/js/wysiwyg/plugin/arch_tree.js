@@ -55,6 +55,36 @@ var ArchNode = Class.extend({
         return this._prevNext('prev', fn);
     },
 
+    // import
+
+    _applyStructureRules: function () {
+        var parentedRule = [];
+        var structureRules = this.tree.options.structure;
+        for (var k = 0; k < structureRules.length; k++) {
+            var children = structureRules[k][1];
+            for (var i = 0; i < children.length; i++) {
+                var check = children[i];
+                if (    (typeof check === 'function' && check(this)) || 
+                        (check === 'TEXT' && this instanceof TextNode) ||
+                        this.nodeName === check) {
+                    parentedRule = parentedRule.concat(structureRules[k][0]);
+                    break;
+                }
+            }
+        }
+        
+        if (!parentedRule.length || parentedRule.indexOf('editable') !== -1 || parentedRule.indexOf(null) !== -1 || parentedRule.indexOf(this.parent.nodeName) !== -1) {
+            return;
+        }
+
+        // create parent
+
+        var newParent = new ArchNode(this.tree, parentedRule[0], []);
+        this.parent.insertBefore(newParent, this);
+        newParent.append(this);
+        return newParent;
+    },
+
     // export
 
     /**
@@ -123,7 +153,7 @@ var ArchNode = Class.extend({
         return next;
     },
     _toNode: function (options) {
-        var node = this.nodeName ? document.createElement(this.nodeName) : document.createTextNode(this.nodeValue);
+        var node = document.createElement(this.nodeName);
         this.attributes.forEach(function (attribute) {
             node.setAttribute(attribute[0], attribute[1]);
         });
@@ -150,6 +180,11 @@ var TextNode = ArchNode.extend({
             nodeValue: this.nodeValue,
         };
     },
+    _toNode: function (options) {
+        var node = document.createTextNode(this.nodeValue);
+        this.tree._linkElement(this, node);
+        return node;
+    },
 });
 
 //////////////////////////////////////////////////////////////
@@ -164,31 +199,17 @@ var VirtualNode = TextNode.extend({
             id: this.id,
         };
     },
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    _toNode: function (options) {
-        var node = document.createTextNode(this.nodeValue);
-        this.tree._linkElement(this, node);
-        return node;
-    },
+    _applyStructureRules: function () {},
 });
 
 //////////////////////////////////////////////////////////////
 
 var ArchitecturalSpaceNode = TextNode.extend({
-    toJSON: function () {
-        return {
-            id: this.id,
-        };
-    },
-
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
 
+    _applyStructureRules: function () {},
     _toNode: function (options) {
         var keepArchitecturalSpaces = options && options.keepArchitecturalSpaces;
         var node = document.createTextNode(keepArchitecturalSpaces ? this.nodeValue : '');
@@ -200,7 +221,7 @@ var ArchitecturalSpaceNode = TextNode.extend({
 //////////////////////////////////////////////////////////////
 
 var FragmentNode = ArchNode.extend({
-    init: function () {
+    init: function (tree) {
         this.tree = tree;
         this.childNodes = [];
     },
@@ -227,6 +248,7 @@ var RootNode = FragmentNode.extend({
     // Private
     //--------------------------------------------------------------------------
 
+    _applyStructureRules: function () {},
     _prevNext: function (direction, fn, __inShearch) {
         if (!__inShearch && this.childNodes[0]) {
             var next;
@@ -260,29 +282,29 @@ function ArchTree (options) {
     this._nodeElementList = {};
     this._id = 1;
     this.root = new RootNode(this);
-    this._addArchNode(this.root);
+    this._addArchNode(this.root, null, []);
 }
 ArchTree.prototype.getArchNode = function (archNodeId) {
-    return this.nodeList[archNodeId];
+    return this._nodeList[archNodeId];
 };
 ArchTree.prototype.whoIsThisNode = function (element) {
     for (var k in this._nodeElementList) {
         if (this._nodeElementList[k] === element) {
-            return this.nodeList[k];
+            return this._nodeList[k];
         }
     }
     throw new Error('must implement method to search the archNode');
 };
 ArchTree.prototype._linkElement = function (archNode, element) {
-    this.nodeElementList[archNode.id] = element;
+    this._nodeElementList[archNode.id] = element;
 };
 ArchTree.prototype._addArchNode = function (archNode) {
     archNode.id = ++this._id;
-    this.nodeList[archNode.id] = archNode;
+    this._nodeList[archNode.id] = archNode;
 };
 ArchTree.prototype._removeArchNode = function (archNodeId) {
     delete this.nodeValue[archNode.id];
-    delete this.nodeElementList[archNode.id];
+    delete this._nodeElementList[archNode.id];
 };
 
 // Update arch
@@ -312,30 +334,55 @@ ArchTree.prototype.parse = function (xml) {
 
     var fragmentDOM = document.createDocumentFragment();
     var parser = new DOMParser()
-    var root = parser.parseFromString("<root>" + text + "</root>","text/xml").querySelector('root');
+    var element = parser.parseFromString("<root>" + xml + "</root>","text/html");
+
+    if (element.querySelector('parsererror')) {
+        console.error(element);
+        return;
+    }
+
+    var root = element.querySelector('root');
+    console.log(root);
+
     root.childNodes.forEach(function (element) {
-        fragment.append(self._parseElement(element));
+        self._parseElement(element).forEach(function (archNode) {
+            fragment.append(archNode);
+        });
     });
     this._applyStructure(fragment);
     this._applyOrdered(fragment);
 
     return fragment;
 };
+var parseText = /^(\s+?)?([ ]?(\S+[\S\s]*?)[ ]?)?(\s+?)?$/;
 ArchTree.prototype._parseElement = function (element) {
     var self = this;
-    var archNode;
-    if (element.nodeName) {
-        var attributes = Object.values(a).map(function (attribute) {
+    if (element.tagName) {
+        var archNode;
+        var attributes = Object.values(element.attributes).map(function (attribute) {
             return [attribute.name, attribute.value];
         });
         archNode = new ArchNode(this, element.nodeName, attributes);
         element.childNodes.forEach(function (child) {
-            archNode.append(self._parseElement(child));
+            self._parseElement(child).forEach(function (an) {
+                archNode.append(an);
+            });
         });
+        return [archNode];
     } else {
-       archNode = new TextNode(this, element.nodeValue);
+        var archNodes = [];
+        var match = element.nodeValue.match(parseText);
+        if (match[1]) {
+           archNodes.push(new ArchitecturalSpaceNode(this, match[1]));
+        }
+        if (match[2]) {
+           archNodes.push(new TextNode(this, match[2]));
+        }
+        if (match[4]) {
+           archNodes.push(new ArchitecturalSpaceNode(this, match[4]));
+        }
+        return archNodes;
     }
-    return archNode;
 };
 ArchTree.prototype._applyStructure = function (archNode) {
     var deepest = [];
@@ -348,33 +395,11 @@ ArchTree.prototype._applyStructure = function (archNode) {
             stack = stack.concat(item.childNodes);
         }
     }
-
-    var structureRules = this.options.structure;
     while (item = deepest.pop()) {
-        var parentedRule = [];
-        for (var k = 0; k < structureRules.length; k++) {
-            var children = structureRules[k][1];
-            for (var i = 0; i < children.length; i++) {
-                var check = children[i];
-                if (    (typeof check === 'function' && check(item)) || 
-                        (check === 'TEXT' && item instanceof TextNode) ||
-                        item.nodeName === check) {
-                    parentedRule = parentedRule.concat(structureRules[k][0]);
-                    break;
-                }
-            }
+        var newParent = item._applyStructureRules();
+        if (newParent) {
+            deepest.push(newParent);
         }
-        
-        if (parentedRule.indexOf(item.parent.nodeName) !== -1) {
-            continue;
-        }
-
-        // create parent
-
-        var newParent = new ArchNode(this, parentedRule[0], {});
-        item.parent.insertBefore(newParent, item);
-        newParent.append(item);
-        stack.push(newParent);
     }
 };
 ArchTree.prototype._applyOrdered = function (archNode) {
