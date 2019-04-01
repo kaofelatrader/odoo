@@ -206,7 +206,7 @@ var Wysiwyg = Widget.extend({
             var def = this._rpc({
                 model: 'ir.ui.view',
                 method: 'render_template',
-                args: [this.options.snippets || 'website.snippets', {}],
+                args: [this.options.snippets || 'web_editor.snippets', {}],
             }).then(function (template) {
                 var t = document.createElement('t');
                 t.setAttribute('t-name', 'web_editor.dropBlockTemplate.custom');

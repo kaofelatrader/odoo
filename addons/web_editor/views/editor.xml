@@ -59,6 +59,8 @@
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/abstract.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/common.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/range.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch_tree.js"/>
 
     <!-- plugins ui -->
 

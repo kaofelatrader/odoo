@@ -4,6 +4,7 @@ odoo.define('wysiwyg.plugin.arch', function (require) {
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var BoundaryPoint = require('wysiwyg.BoundaryPoint');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
+var ArchTree = require('wysiwyg.plugin.arch_tree');
 
 var $ = require('web_editor.jquery');
 var _ = require('web_editor._');
@@ -57,6 +58,7 @@ var ArchPlugin = AbstractPlugin.extend({
     dependencies: [],
 
     // must contains parents without other node between (must match at least with one)
+    // null = no needed parent (allow to have for eg: Table > jinja)
     structure: [
         // table > tbody
         [
@@ -90,12 +92,6 @@ var ArchPlugin = AbstractPlugin.extend({
             styleTags.concat(formatTags).concat(['div', 'td', 'th']),
             ['br'],
         ],
-
-        // add with jinja plugin
-        [
-            [null], // null = no needed parent (allow to have for eg: Table > jinja)
-            formatTags.concat(['Jinja.get']), // jinja node match for TEXT and jinja
-        ]
     ],
 
     // parents order, can contains itself as parents
@@ -103,9 +99,37 @@ var ArchPlugin = AbstractPlugin.extend({
         formatTags.concat(['br']),
     ],
 
+    init: function (parent, params, options) {
+        this._super.apply(this, arguments);
+        this.structure = this.structure.slice();
+        this.ordered = this.ordered.slice();
+    },
     setEditorValue: function (value) {
+        this._htmlToArch(value);
+        return this.arch.html();
     },
     saveEditor: function () {
+    },
+    start: function () {
+        var promise = this._super();
+        this.arch = new ArchTree({
+            structure: this.structure,
+            ordered: this.ordered,
+            isEditableNode: this.dependencies.Common.isEditableNode,
+            isUnbreakableNode: this.dependencies.Common.isUnbreakableNode,
+        });
+        return promise;
+    },
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    addStructureRule: function (parents, children) {
+        this.structure.push([parents, children]);
+    },
+    addOrderedList: function (list) {
+        this.ordered.push(list);
     },
 
     //--------------------------------------------------------------------------
@@ -118,22 +142,10 @@ var ArchPlugin = AbstractPlugin.extend({
      * @returns {JSON}
      **/
     export: function (id, options) {
-
+        return this.arch.export(id, options);
     },
     getRange: function () {
-        var start = this.arch;
-        while (start.childNodes[start.startRange]) {
-            start = start.childNodes[start.startRange];
-        }
-        while (end.childNodes[end.endRange]) {
-            end = end.childNodes[end.endRange];
-        }
-        return {
-            startId: start.id,
-            startOffset: start.startRange,
-            endId: end.id,
-            endOffset: end.endRange,
-        };
+        return this.arch.getRange();
     },
     /**
      * @param {Int} id
@@ -144,7 +156,7 @@ var ArchPlugin = AbstractPlugin.extend({
      * @returns {string}
      **/
     render: function (id, options) {
-        return this.arch.render(id);
+        return this.arch.render(id, options);
     },
 
     //--------------------------------------------------------------------------
@@ -199,9 +211,11 @@ var ArchPlugin = AbstractPlugin.extend({
         node.innerHTML = html;
         this.trigger('redraw', id, html);
     },
-    _domToArch: function () {
-        // maybe inside the arch ?
-    }
+    _htmlToArch: function (html) {
+        var archNode = this.arch.parse(html);
+
+        return archNode;
+    },
 });
 
 Manager.addPlugin('Arch', ArchPlugin);
