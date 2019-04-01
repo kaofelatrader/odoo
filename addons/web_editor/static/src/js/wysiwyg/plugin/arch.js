@@ -2,12 +2,14 @@ odoo.define('wysiwyg.plugin.arch', function (require) {
 'use strict';
 
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
+var BoundaryPoint = require('wysiwyg.BoundaryPoint');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 var $ = require('web_editor.jquery');
 var _ = require('web_editor._');
 
 var styleTags = [
+    'p',
     'td',
     'th',
     'h1',
@@ -17,8 +19,7 @@ var styleTags = [
     'h5',
     'h6',
     'blockquote',
-    'pre'
-    'p',
+    'pre',
 ];
 var formatTags = [
     'abbr',
@@ -91,12 +92,10 @@ var ArchPlugin = AbstractPlugin.extend({
         ],
 
         // add with jinja plugin
-
         [
             [null], // null = no needed parent (allow to have for eg: Table > jinja)
             formatTags.concat(['Jinja.get']), // jinja node match for TEXT and jinja
         ]
-
     ],
 
     // parents order, can contains itself as parents
@@ -152,12 +151,7 @@ var ArchPlugin = AbstractPlugin.extend({
     // Public SETTER
     //--------------------------------------------------------------------------
 
-    insert: function (DOM, id, offset) {
-        var newId = this.arch.getNode(id).insert(DOM, offset);
-        // ou var newId = this.arch.getNode(id).children.splice(offset, this._domToArch(arch));
-        this._autoRedraw(newId, DOM);
-    },
-    replace: function (DOM, fromId, fromOffset, toId, toOffset) {
+    delete: function (fromId, fromOffset, toId, toOffset) {
         var fromNode = this.arch.getNode(fromId, fromOffset);
         var parent = fromNode.parent;
         var offset = fromNode.index();
@@ -169,7 +163,17 @@ var ArchPlugin = AbstractPlugin.extend({
                 return true;
             }
         });
-        var newId = this.insertArch(DOM, parent.id, offset);
+        // todo: boundary point takes arch node named archNode instead of dom node
+        return new BoundaryPoint(parent, offset);
+    },
+    insert: function (DOM, id, offset) {
+        var newId = this.arch.getNode(id).insert(DOM, offset);
+        // ou var newId = this.arch.getNode(id).children.splice(offset, this._domToArch(arch));
+        this._autoRedraw(newId, DOM);
+    },
+    replace: function (DOM, fromId, fromOffset, toId, toOffset) {
+        var parentPoint = this.delete();
+        var newId = this.insertArch(DOM, parentPoint.archNode.id, parentPoint.offset);
         this._autoRedraw(newId, DOM);
     },
     setRange: function (sc, so, ec, eo) {
@@ -177,7 +181,7 @@ var ArchPlugin = AbstractPlugin.extend({
     },
 
     //--------------------------------------------------------------------------
-    // Public
+    // Private
     //--------------------------------------------------------------------------
 
     _autoRedraw: function (id, DOM) {
