@@ -1057,11 +1057,16 @@ var KeyboardPlugin = AbstractPlugin.extend({
         pointB = pointB.prevUntil(function (point) {
             return self.utils.isVisibleText(point.node);
         });
-        range.sc = pointA.node;
-        range.so = pointA.offset;
-        range.ec = pointB.node;
-        range.eo = pointB.offset;
-        range.select().normalize();
+        if (pointA && pointB) {
+            range.replace({
+                sc: pointA.node,
+                so: pointA.offset,
+                ec: pointB.node,
+                eo: pointB.offset,
+            }).normalize();
+            range = this.dependencies.Range.setRange(range.getPoints());
+            this.dependencies.Range.save(range);
+        }
     },
     /**
      * Before a deletion, if necessary, slice the text content at range, then rerange.
