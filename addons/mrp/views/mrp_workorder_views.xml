@@ -22,7 +22,7 @@
                 <filter string="Future Activities" name="activities_upcoming_all"
                     domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))]"/>
                 <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_ids', '!=', False)]"/>
+                        domain="[('exception_activity_type', '!=', False)]"/>
             </search>
         </field>
     </record>
@@ -283,7 +283,7 @@
                 <filter string="Future Activities" name="activities_upcoming_all"
                     domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))]"/>
                 <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_ids', '!=', False)]"/>
+                        domain="[('exception_activity_type', '!=', False)]"/>
                 <field name="workcenter_id"/>
                 <field name="production_id"/>
                 <group expand="0" string="Group By">

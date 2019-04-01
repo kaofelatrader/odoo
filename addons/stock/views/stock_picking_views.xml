@@ -384,7 +384,7 @@
                         domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                         ]"/>
                     <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_ids', '!=', False)]"/>
+                        domain="[('exception_activity_type', '!=', False)]"/>
                     <field name="partner_id" filter_domain="[('partner_id','child_of',self)]"/>
                     <field name="product_id"/>
                     <field name="picking_type_id"/>

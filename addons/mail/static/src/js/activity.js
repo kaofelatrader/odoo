@@ -682,6 +682,7 @@ var KanbanActivity = BasicActivity.extend({
      * @private
      */
     _render: function () {
+        this.renderElement()
         var $span = this.$('.o_activity_btn > span');
         $span.removeClass(function (index, classNames) {
             return classNames.split(/\s+/).filter(function (className) {

@@ -300,7 +300,7 @@
                         domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                         ]"/>
                     <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_ids', '!=', False)]"/>
+                        domain="[('exception_activity_type', '!=', False)]"/>
                     <group expand="0" string="Group By...">
                         <filter string="Product" name="product" domain="[]" context="{'group_by':'product_id'}"/>
                         <filter string="Routing" name="routing" domain="[]" context="{'group_by':'routing_id'}" groups="mrp.group_mrp_routings"/>

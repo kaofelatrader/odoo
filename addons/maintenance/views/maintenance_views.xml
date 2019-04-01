@@ -36,7 +36,7 @@
                         domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                         ]"/>
                 <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_ids', '!=', False)]"/>
+                        domain="[('exception_activity_type', '!=', False)]"/>
                 <separator/>
                 <filter string="Unread Messages" name="message_needaction" domain="[('message_needaction','=',True)]"/>
                 <separator/>
@@ -530,7 +530,7 @@
                         domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                         ]"/>
                 <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_ids', '!=', False)]"/>
+                        domain="[('exception_activity_type', '!=', False)]"/>
                 <separator/>
                 <filter string="Unread Messages" name="message_needaction" domain="[('message_needaction','=',True)]"/>
                 <!-- <filter string="Archived" name="inactive" domain="[('active','=',False)]"/> -->

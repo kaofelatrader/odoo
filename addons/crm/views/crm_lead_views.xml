@@ -458,7 +458,7 @@
                         domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                         ]"/>
                     <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_ids', '!=', False)]"/>
+                        domain="[('exception_activity_type', '!=', False)]"/>
                     <group expand="0" string="Group By">
                         <filter string="Salesperson" name="salesperson" context="{'group_by':'user_id'}"/>
                         <filter string="Sales Team" name="saleschannel" context="{'group_by':'team_id'}"/>
@@ -784,7 +784,7 @@
                         domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                         ]"/>
                     <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_ids', '!=', False)]"/>
+                        domain="[('exception_activity_type', '!=', False)]"/>
                     <group expand="0" string="Group By" colspan="16">
                         <filter string="Salesperson" name="salesperson" context="{'group_by':'user_id'}"/>
                         <filter string="Sales Team" name="saleschannel" context="{'group_by':'team_id'}"/>

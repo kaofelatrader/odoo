@@ -190,7 +190,7 @@
                         domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                         ]"/>
                 <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_ids', '!=', False)]"/>
+                        domain="[('exception_activity_type', '!=', False)]"/>
                 <group expand="1" string="Group By">
                     <filter name="groupby_status" context="{'group_by' : 'state_id'}" string="Status"/>
                     <filter name="groupby_model" context="{'group_by' : 'model_id'}" string="Model"/>

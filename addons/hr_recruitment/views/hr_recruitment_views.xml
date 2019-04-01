@@ -231,7 +231,7 @@
                         domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                         ]"/>
                 <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_ids', '!=', False)]"/>
+                        domain="[('exception_activity_type', '!=', False)]"/>
                 <field name="categ_ids"/>
                 <field name="attachment_ids" filter_domain="[('attachment_ids.index_content', 'ilike', self)]" string="Attachments"/>
                 <separator/>

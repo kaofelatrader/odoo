@@ -328,6 +328,8 @@ class MailActivity(models.Model):
             self.env['bus.bus'].sendone(
                 (self._cr.dbname, 'res.partner', activity.user_id.partner_id.id),
                 {'type': 'activity_updated', 'activity_created': True})
+        if activity.res_model and activity.res_id:
+            self.env[activity.res_model].browse(activity.res_id).set_exception_activity_type()
         return activity
 
     @api.multi
@@ -355,16 +357,25 @@ class MailActivity(models.Model):
                         self.env['bus.bus'].sendone(
                             (self._cr.dbname, 'res.partner', partner.id),
                             {'type': 'activity_updated', 'activity_deleted': True})
+        if values.get('activity_type_id'):
+            for activity in self.filtered(lambda x: x.res_id and x.res_model):
+                self.env[activity.res_model].browse(activity.res_id).set_exception_activity_type()
         return res
 
     @api.multi
     def unlink(self):
+        record_values = []
         for activity in self:
             if activity.date_deadline <= fields.Date.today():
                 self.env['bus.bus'].sendone(
                     (self._cr.dbname, 'res.partner', activity.user_id.partner_id.id),
                     {'type': 'activity_updated', 'activity_deleted': True})
-        return super(MailActivity, self).unlink()
+            if activity.res_model and activity.res_id:
+                record_values.append((activity.res_model, activity.res_id))
+        rec = super(MailActivity, self).unlink()
+        for record in record_values:
+            self.env[record[0]].browse(record[1]).set_exception_activity_type()
+        return rec
 
     # ------------------------------------------------------
     # Business Methods
@@ -597,16 +608,7 @@ class MailActivityMixin(models.AbstractModel):
         related='activity_ids.summary', readonly=False,
         search='_search_activity_summary',
         groups="base.group_user",)
-    exception_activity_ids = fields.One2many(
-        'mail.activity', 'res_id', 'Exception Activities',
-        auto_join=True,
-        groups="base.group_user",
-        domain=lambda self: [('res_model', '=', self._name), ('activity_type_id.decoration_type', 'in', ['warning', 'danger'])])
-    exception_activity_type = fields.Char(string=' ', compute='_compute_exception_activity_type')
-
-    def _compute_exception_activity_type(self):
-        for record in self.filtered(lambda x: x.exception_activity_ids):
-            record.exception_activity_type = "pull-right text-%s fa %s" % (record.exception_activity_ids[0].activity_type_id.decoration_type, record.exception_activity_ids[0].activity_type_id.icon)
+    exception_activity_type = fields.Char(string=' ')
 
     @api.depends('activity_ids.state')
     def _compute_activity_state(self):
@@ -636,6 +638,13 @@ class MailActivityMixin(models.AbstractModel):
     @api.model
     def _search_activity_type_id(self, operator, operand):
         return [('activity_ids.activity_type_id', operator, operand)]
+
+    @api.multi
+    def set_exception_activity_type(self):
+        self.ensure_one()
+        self.exception_activity_type = False
+        for record in self.activity_ids.filtered(lambda x: x.activity_type_id.decoration_type in ['warning', 'danger']):
+            self.exception_activity_type = "pull-right text-%s fa %s" % (record.activity_type_id.decoration_type, record.activity_type_id.icon)
 
     @api.model
     def _search_activity_summary(self, operator, operand):
