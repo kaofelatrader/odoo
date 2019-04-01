@@ -26,20 +26,14 @@
                         <div class="col-12 col-lg-6 o_setting_box" id="crm_lead"
                                 attrs="{'invisible': [('group_use_lead','=',False)]}"
                                 title="Emails received to that address generate new leads not assigned to any Sales Team yet. This can be made when converting them into opportunities. Incoming emails can be automatically assigned to specific Sales Teams. To do so, set an email alias on the Sales Team.">
-                            <div class="o_setting_left_pane">
-                                <field name="generate_lead_from_alias"/>
-                            </div>
                             <div class="o_setting_right_pane">
-                                <label for="generate_lead_from_alias" string="Manual Assignation of Incoming Emails"/>
+                                <label for="" string="Email Alias"/>
                                 <div class="text-muted">
-                                    Generate leads from incoming emails and assign them
-                                    to a Sales Team manually
+                                    A lead will be created for each email sent to the following address
                                 </div>
-                                <div class="content-group" attrs="{'invisible': [('generate_lead_from_alias','=',False)]}">
+                                <div class="content-group">
                                     <div class="mt16">
-                                        <label for="crm_alias_prefix" string="Alias" class="o_light_label"/>
-                                        <field name="crm_alias_prefix" class="oe_inline"
-                                            attrs="{'required': [('generate_lead_from_alias', '=', True)]}"/>
+                                        <field name="crm_alias_prefix" class="oe_inline"/>
                                         <label for="alias_domain" string="@"/>
                                         <field name="alias_domain" readonly="1" class="oe_inline"/>
                                     </div>

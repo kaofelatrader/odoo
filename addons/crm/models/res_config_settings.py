@@ -8,7 +8,6 @@ class ResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'
 
     crm_alias_prefix = fields.Char('Default Alias Name for Leads')
-    generate_lead_from_alias = fields.Boolean('Manual Assignation of Emails', config_parameter='crm.generate_lead_from_alias')
     group_use_lead = fields.Boolean(string="Leads", implied_group='crm.group_use_lead')
     module_crm_phone_validation = fields.Boolean("Phone Formatting")
     module_crm_iap_lead = fields.Boolean("Generate new leads based on their country, technologies, size, etc.")
@@ -30,12 +29,7 @@ class ResConfigSettings(models.TransientModel):
     @api.onchange('group_use_lead')
     def _onchange_group_use_lead(self):
         """ Reset alias / leads configuration if leads are not used """
-        if not self.group_use_lead:
-            self.generate_lead_from_alias = False
-
-    @api.onchange('generate_lead_from_alias')
-    def _onchange_generate_lead_from_alias(self):
-        self.crm_alias_prefix = (self.crm_alias_prefix or 'info') if self.generate_lead_from_alias else False
+        self.crm_alias_prefix = (self.crm_alias_prefix or 'info') if self.group_use_lead else False
 
     @api.model
     def get_values(self):
