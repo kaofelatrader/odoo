@@ -586,18 +586,20 @@ var Dom = Class.extend({
         while (next && utils.isInvisibleText(next)) {
             next = isPrev ? next.previousSibling : next.nextSibling;
         }
+
+        if (!utils.isText(node) && utils.isBlankNode(node) && options.isRemoveBlock) {
+            return this.removeBlockNode(node, false, true);
+        }
+        if (options.isRemoveBlock && (this.options.isVoidBlock(node) || utils.isVoid(node))) {
+            // special case: may call deleteEdge again
+            return this.removeBlockNode(node, false, true);
+        }
+
         if (!next || this.options.isUnbreakableNode(next)) {
             return this._getDeleteEdgeResult(node, isPrev, didChange); // base case
         }
-        if (!utils.isText(node) && utils.isBlankNode(node)) {
-            return options.isRemoveBlock ? this.removeBlockNode(node, false, true) : this._getDeleteEdgeResult(next, isPrev, didChange);
-        }
         if (!utils.isText(next) && utils.isBlankNode(next)) {
             return options.isRemoveBlock ? this.removeBlockNode(next, false, true) : this._getDeleteEdgeResult(node, isPrev, didChange);
-        }
-        if (this.options.isVoidBlock(node) || utils.isVoid(node)) {
-            // special case: may call deleteEdge again
-            return options.isRemoveBlock ? this.removeBlockNode(node) : this._getDeleteEdgeResult(next, isPrev, didChange);
         }
         if (this.options.isVoidBlock(next) || utils.isVoid(next)) {
             // special case: may call deleteEdge again

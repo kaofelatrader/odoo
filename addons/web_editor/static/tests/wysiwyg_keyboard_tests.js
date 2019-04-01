@@ -3306,7 +3306,7 @@ var keyboardTestsDelete = [{
         }],
         test: {
             content: "<p><br></p>", // The br is there to ensure the carret can enter the p tag
-            start: "br->0",
+            start: "p->0",
         },
     },
     {
@@ -3329,8 +3329,8 @@ var keyboardTestsDelete = [{
             key: 'DELETE',
         }],
         test: {
-            content: "<p>\n    <br>\n</p>", // The br is there to ensure the carret can enter the p tag
-            start: "p->1",
+            content: "<p><br></p>", // The br is there to ensure the carret can enter the p tag
+            start: "p->0",
         },
     },
     {
@@ -3365,7 +3365,7 @@ var keyboardTestsDelete = [{
             key: 'DELETE',
         }],
         test: {
-            content: "<p>dom to edit</p>",
+            content: "<p class=\"a\">dom to edit</p>",
             start: "p:contents()[0]->0",
         },
     },
@@ -3377,7 +3377,7 @@ var keyboardTestsDelete = [{
             key: 'DELETE',
         }],
         test: {
-            content: "<p>dom to edit</p>",
+            content: "<p class=\"a\">dom to edit</p>",
             start: "p:contents()[0]->0",
         },
     },
@@ -3615,8 +3615,8 @@ var keyboardTestsDelete = [{
             key: 'a',
         }],
         test: {
-            content: "<ul><li><p>a</p></li></ul>",
-            start: "p:contents()[0]->1",
+            content: "<ul><li>a</li></ul>",
+            start: "li:contents()[0]->1",
         },
     },
     {
@@ -3807,7 +3807,7 @@ var keyboardTestsDelete = [{
             key: 'a',
         }],
         test: {
-            content: "<ul><li><p>a</p></li></ul>",
+            content: "<ul><li>a</li></ul>",
             start: "p:contents()[0]->1",
         },
     },
@@ -3914,7 +3914,7 @@ var keyboardTestsDelete = [{
         }],
         test: {
             content: "<p><b>do</b>ove</p>",
-            start: "p:contents()[1]->0",
+            start: "p:contents()[0]->2",
         },
     },
     {
