@@ -119,10 +119,10 @@ QUnit.module('relational_fields', {
 
     QUnit.module('FieldMany2One');
 
-    QUnit.test("many2one in a mobile environment", function (assert) {
+    QUnit.test("many2one in a mobile environment", async function (assert) {
         assert.expect(7);
 
-        var form = createView({
+        var form = await createView({
             View: FormView,
             arch:
                 '<form>' +
@@ -144,12 +144,12 @@ QUnit.module('relational_fields', {
             viewOptions: {mode: 'edit'},
         });
 
-        var $input = form.$('.o_field_widget[name="parent_id"] input.o_input');
+        var $input = form.$('.o_field_many2one input');
 
         assert.doesNotHaveClass($input, 'ui-autocomplete-input',
             "autocomplete should not be visible in a mobile environment");
 
-        testUtils.dom.click($input);
+        await testUtils.dom.click($input);
 
         var $modal = $('.o_modal_full .modal-lg');
         assert.equal($modal.length, 1, 'there should be one modal opened in full screen');
@@ -162,7 +162,7 @@ QUnit.module('relational_fields', {
         assert.strictEqual($modal.find(".o_kanban_view .o_kanban_record:not(.o_kanban_ghost)").length, 3,
             "popup should load 3 records in kanban");
 
-        testUtils.dom.click($modal.find('.o_kanban_view .o_kanban_record:first'));
+        await testUtils.dom.click($modal.find('.o_kanban_view .o_kanban_record:first'));
 
         assert.strictEqual($input.val(), 'first record',
             'clicking kanban card should select record for many2one field');
@@ -171,12 +171,12 @@ QUnit.module('relational_fields', {
 
     QUnit.module('FieldMany2Many');
 
-    QUnit.test("many2many_tags in a mobile environment", function (assert) {
+    QUnit.test("many2many_tags in a mobile environment", async function (assert) {
         assert.expect(10);
 
         var rpcReadCount = 0;
 
-        var form = createView({
+        var form = await createView({
             View: FormView,
             arch:
                 '<form>' +
@@ -209,12 +209,12 @@ QUnit.module('relational_fields', {
             },
         });
 
-        var $input = form.$(".o_field_widget .o_input_dropdown .o_input");
+        var $input = form.$(".o_field_widget .o_input");
 
         assert.strictEqual($input.find(".badge").length, 0,
             "many2many_tags should have no tags");
 
-        testUtils.dom.click($input);
+        await testUtils.dom.click($input);
 
         var $modal = $('.o_modal_full .modal-lg');
         assert.equal($modal.length, 1, 'there should be one modal opened in full screen');
@@ -227,7 +227,7 @@ QUnit.module('relational_fields', {
         assert.strictEqual($modal.find(".o_kanban_view .o_kanban_record:not(.o_kanban_ghost)").length, 3,
             "popup should load 3 records in kanban");
 
-        testUtils.dom.click($modal.find('.o_kanban_view .o_kanban_record:first'));
+        await testUtils.dom.click($modal.find('.o_kanban_view .o_kanban_record:first'));
 
         assert.strictEqual(rpcReadCount, 2, "there should be a read for current form record and selected sibling");
         assert.strictEqual(form.$(".o_field_widget.o_input .badge").length, 1,

@@ -40,45 +40,44 @@ relational_fields.FieldMany2One.include({
      */
     _search: function (search_val) {
         var self = this;
-        var def = $.Deferred();
-        this.orderer.add(def);
+        var def = new Promise(function (resolve, reject) {
+            var context = self.record.getContext(self.recordParams);
+            var domain = self.record.getDomain(self.recordParams);
 
-        var context = this.record.getContext(this.recordParams);
-        var domain = this.record.getDomain(this.recordParams);
+            // Add the additionalContext
+            _.extend(context, self.additionalContext);
 
-        // Add the additionalContext
-        _.extend(context, this.additionalContext);
-
-        var blacklisted_ids = this._getSearchBlacklist();
-        if (blacklisted_ids.length > 0) {
-            domain.push(['id', 'not in', blacklisted_ids]);
-        }
-
-        self._rpc({
-            model: self.field.relation,
-            method: 'name_search',
-            kwargs: {
-                name: search_val || "",
-                args: domain,
-                operator: "ilike",
-                limit: 160,
-                context: context,
-            },
-        })
-        .then(function (results) {
-            var dynamicFilters;
-            if (results) {
-                var ids = _.map(results, function (x) {
-                    return x[0];
-                });
-                dynamicFilters = [{
-                    description: _.str.sprintf(_t('Quick search: %s'), search_val),
-                    domain: [['id', 'in', ids]],
-                }];
+            var blacklisted_ids = self._getSearchBlacklist();
+            if (blacklisted_ids.length > 0) {
+                domain.push(['id', 'not in', blacklisted_ids]);
             }
-            self._searchCreatePopup("search", ids, {}, dynamicFilters);
-            def.resolve();
+
+            var prom = self._rpc({
+                model: self.field.relation,
+                method: 'name_search',
+                kwargs: {
+                    name: search_val || "",
+                    args: domain,
+                    operator: "ilike",
+                    limit: self.SEARCH_MORE_LIMIT,
+                    context: context,
+                },
+            });
+            Promise.resolve(prom).then(function (results) {
+                var dynamicFilters;
+                if (results) {
+                    var ids = _.map(results, function (x) {
+                        return x[0];
+                    });
+                    dynamicFilters = [{
+                        description: _.str.sprintf(_t('Quick search: %s'), search_val),
+                        domain: [['id', 'in', ids]],
+                    }];
+                }
+                self._searchCreatePopup("search", ids, {}, dynamicFilters);
+            });
         });
+        this.orderer.add(def);
         return def;
     },
 
