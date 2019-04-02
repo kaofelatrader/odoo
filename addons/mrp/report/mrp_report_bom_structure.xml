@@ -183,7 +183,7 @@
                   <span t-att-style="space_td"/>
                   <span><t t-esc="l['name']"/></span>
               </td>
-              <td>
+              <td name="td_mrp_code">
                   <span t-if="l.get('code')" t-esc="l['code']" />
               </td>
               <td class="text-right">
