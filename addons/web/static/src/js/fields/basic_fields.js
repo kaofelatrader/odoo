@@ -20,6 +20,7 @@ var session = require('web.session');
 var utils = require('web.utils');
 var view_dialogs = require('web.view_dialogs');
 var field_utils = require('web.field_utils');
+var time = require('web.time');
 
 var qweb = core.qweb;
 var _t = core._t;
@@ -483,6 +484,121 @@ var LinkButton = AbstractField.extend({
     _onClick: function (event) {
         event.stopPropagation();
         window.open(this.value, '_blank');
+    },
+});
+
+var FieldDateRange = InputField.extend({
+    className: 'o_field_date_range',
+    tagName: 'span',
+    supportedFieldTypes: ['date', 'datetime'],
+    /**
+     * @override
+     */
+    init: function () {
+        this._super.apply(this, arguments);
+        this.isDateField = this.formatType === 'date';
+        this.dateRangePickerOptions = _.defaults(
+            {},
+            this.nodeOptions.pickerOptions || {},
+            {
+                timePicker: !this.isDateField,
+                timePicker24Hour: true,
+                autoUpdateInput: false,
+                locale: {
+                    format: this.isDateField ? time.getLangDateFormat() : time.getLangDatetimeFormat(),
+                },
+            },
+        );
+        this.relatedEndDate = this.nodeOptions.related_end_date;
+        this.relatedStartDate = this.nodeOptions.related_start_date;
+        var startDate;
+        var endDate;
+        if (this.relatedEndDate) {
+            startDate = this._formatValue(this.value);
+            endDate = this._formatValue(this.recordData[this.relatedEndDate]);
+        }
+        if (this.relatedStartDate) {
+            startDate = this._formatValue(this.recordData[this.relatedStartDate]);
+            endDate = this._formatValue(this.value);
+        }
+        this.dateRangePickerOptions.startDate = startDate || moment();
+        this.dateRangePickerOptions.endDate = endDate || moment();
+    },
+    /**
+     * @override
+     */
+    start: function () {
+        if (this.mode === 'edit') {
+            this.$el.daterangepicker(this.dateRangePickerOptions);
+            this.$el.on('apply.daterangepicker', this._applyChanges.bind(this));
+            this.$el.off('keyup.daterangepicker');
+            this.$pickerContainer = this.$el.data('daterangepicker').container;
+        }
+        return this._super.apply(this, arguments);
+    },
+    /**
+     * @override
+     */
+    destroy: function () {
+        if (this.$pickerContainer) {
+            this.$pickerContainer.remove();
+        }
+        this._super.apply(this, arguments);
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * @private
+     * @param {Event} ev
+     * @param {Object} picker
+     */
+    _applyChanges: function (ev, picker) {
+        var changes = {};
+        var displayStartDate = field_utils.format[this.formatType](picker.startDate, {}, {timezone: false});
+        var displayEndDate = field_utils.format[this.formatType](picker.endDate, {}, {timezone: false});
+        var changedStartDate = picker.startDate;
+        var changedEndDate = picker.endDate;
+        if (this.isDateField) {
+            changedStartDate = picker.startDate.add(session.getTZOffset(picker.startDate), 'minutes');
+            changedEndDate = picker.endDate.startOf('day').add(session.getTZOffset(picker.endDate), 'minutes');
+        }
+        if (this.relatedEndDate) {
+            this.$el.val(displayStartDate);
+            changes[this.name] = this._parseValue(changedStartDate);
+            changes[this.relatedEndDate] = this._parseValue(changedEndDate);
+        }
+        if (this.relatedStartDate) {
+            this.$el.val(displayEndDate);
+            changes[this.name] = this._parseValue(changedEndDate);
+            changes[this.relatedStartDate] = this._parseValue(changedStartDate);
+        }
+        this.trigger_up('field_changed', {
+            dataPointID: this.dataPointID,
+            viewType: this.viewType,
+            changes: changes,
+        });
+    },
+    /**
+     * @override
+     * @private
+     */
+    _reset: function () {
+        this._super.apply(this, arguments);
+        var startDate;
+        var endDate;
+        if (this.relatedStartDate) {
+            startDate = this._formatValue(this.recordData[this.relatedStartDate]);
+            endDate = this._formatValue(this.value);
+        }
+        if (this.relatedEndDate) {
+            startDate = this._formatValue(this.value);
+            endDate = this._formatValue(this.recordData[this.relatedEndDate]);
+        }
+        this.$el.data('daterangepicker').setStartDate(startDate);
+        this.$el.data('daterangepicker').setEndDate(endDate);
     },
 });
 
@@ -3019,6 +3135,7 @@ return {
     LinkButton: LinkButton,
     FieldDate: FieldDate,
     FieldDateTime: FieldDateTime,
+    FieldDateRange: FieldDateRange,
     FieldDomain: FieldDomain,
     FieldFloat: FieldFloat,
     FieldFloatTime: FieldFloatTime,
