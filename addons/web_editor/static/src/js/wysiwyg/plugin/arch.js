@@ -66,7 +66,7 @@ var ArchPlugin = AbstractPlugin.extend({
             ['tbody', 'thead', 'tfoot'],
         ],
         [
-            ['table', 'tbody', 'thead', 'tfoot'],
+            ['tbody', 'thead', 'tfoot'],
             ['tr'],
         ],
         [
@@ -214,9 +214,7 @@ var ArchPlugin = AbstractPlugin.extend({
         this.trigger('redraw', id, html);
     },
     _htmlToArch: function (html) {
-        var archNode = this.arch.parse(html);
-
-        var archNode = this.arch.parse(`
+        var archNode = this.arch.parse(html.indexOf('tutu') !== -1 ? html : `
 
             Bonjour,
             <br>

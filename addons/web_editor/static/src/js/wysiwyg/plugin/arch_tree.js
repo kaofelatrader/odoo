@@ -227,7 +227,7 @@ var isNode = {
         while (previousSibling.length && previousSibling[0].isInvisibleText()) {
             previousSibling.pop();
         }
-        return !!previousSibling.length;
+        return !previousSibling.length;
     },
     /**
      * Return true if the given node is the left-most node of given ancestor.
@@ -292,7 +292,7 @@ var isNode = {
         while (nextSibling.length && nextSibling[0].isInvisibleText()) {
             nextSibling.pop();
         }
-        return !!nextSibling.length;
+        return !nextSibling.length;
     },
     /**
      * Return true if the given node is the right-most node of given ancestor.
@@ -671,30 +671,48 @@ var TextNode = ArchNode.extend({
             return this._super();
         }
 
-        var before = this.nodeValue.match(/^(\s*)/)[0];
-        var after = before.length < this.nodeValue.length ? this.nodeValue.match(/(\s*)$/)[0] : '';
+        var before = this.nodeValue.match(/^([\s\n\r\t]*)/)[0];
+        var after = before.length < this.nodeValue.length ? this.nodeValue.match(/([\s\n\r\t]*)$/)[0] : '';
         var text = this.nodeValue.slice(before.length, this.nodeValue.length - after.length);
 
+        text = text.replace(/\s+/g, ' ');
+
         if (before.length || text.length) {
+            var ancestor = this.ancestor(this.isBlock);
+
             if (before.length) {
+                before = '';
                 var prev = this.previousSibling();
-                if ((!prev && this.parent.isInline()) || prev && prev.isInline()) {
-                    text = before[before.length - 1] + text;
-                    before = before.slice(0, -1);
+                if (!prev) {
+                    if (!this.isLeftEdge(ancestor)) {
+                        before = ' ';
+                    }
+                } else if (prev.isInline() && (!(prev instanceof TextNode) || prev.isVisibleText())) {
+                    before = ' ';
                 }
             }
             if (after.length) {
-                var next = this.previousSibling();
-                if ((!next && this.parent.isInline()) || next && next.isInline()) {
-                    text = after[0] + text;
-                    after = after.slice(1);
+                after = '';
+                var next = this.nextSibling();
+                if (!next) {
+                    if (!this.isRightEdge(ancestor)) {
+                        after = ' ';
+                    }
+                } else if (next.isInline() && (!(next instanceof TextNode) || next.isVisibleText())) {
+                    after = ' ';
                 }
+            }
+
+            if (!text.length) {
+                text = before.length && after.length ? ' ' : '';
+            } else {
+                text = before + text + after;
             }
         }
 
-        this.nodeValue = text.replace(/\s+/g, ' ');
 
-        if (this.nodeValue.length) {
+        if (text.length) {
+            this.nodeValue = text;
             // if this is an text node with content (not just an architechural node)
             return this._super();
         } else {
@@ -722,6 +740,8 @@ var VirtualNode = TextNode.extend({
             id: this.id,
         };
     },
+    _addArchitecturalSpaceNode: function () {
+    },
     _applyStructureRules: function () {
         return [];
     },
@@ -736,6 +756,8 @@ var ArchitecturalSpaceNode = TextNode.extend({
 
     _applyStructureRules: function () {
         return [];
+    },
+    _addArchitecturalSpaceNode: function () {
     },
     _toNode: function (options) {
         var space = '';
@@ -879,7 +901,6 @@ ArchTree.prototype.parse = function (xml) {
     }
 
     var root = element.querySelector('root');
-    console.log(root);
 
     root.childNodes.forEach(function (element) {
         fragment.append(self._parseElement(element));
