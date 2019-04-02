@@ -10,7 +10,8 @@ class PlanActivityType(models.Model):
     _description = 'Plan activity type'
 
     activity_type_id = fields.Many2one('mail.activity.type', 'Activity Type',
-                                       domain=lambda self: [('res_model_id', '=', self.env['ir.model']._get('hr.employee').id)])
+                                       domain=lambda self: [('res_model_id', '=', self.env['ir.model']._get('hr.employee').id)],
+                                       ondelete='restrict')
     name = fields.Char(related='activity_type_id.name')
     responsible = fields.Selection([
         ('coach', 'Coach'),
