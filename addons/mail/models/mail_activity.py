@@ -88,12 +88,6 @@ class MailActivityType(models.Model):
         for activity_type in self:
             activity_type.initial_res_model_id = activity_type.res_model_id
 
-    @api.multi
-    def unlink(self):
-        if any(self.get_external_id().values()):
-            raise exceptions.ValidationError("You can not delete activity type that are used as master data.")
-        return super(MailActivityType, self).unlink()
-
 
 class MailActivity(models.Model):
     """ An actual activity to perform. Activities are linked to
@@ -568,6 +562,17 @@ class MailActivityMixin(models.AbstractModel):
     _name = 'mail.activity.mixin'
     _description = 'Activity Mixin'
 
+    def _default_activity_type(self):
+        """Define a default fallback activity type when requested xml id wasn't found.
+
+        Can be overriden to specify the default activity type of a model.
+        It is only called in in activity_schedule() for now.
+        """
+        return (
+            self.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False)
+            or self.env['mail.activity.type'].search([('res_model_id', '=', False)], limit=1)
+        )
+
     activity_ids = fields.One2many(
         'mail.activity', 'res_id', 'Activities',
         auto_join=True,
@@ -699,15 +704,15 @@ class MailActivityMixin(models.AbstractModel):
         if isinstance(date_deadline, datetime):
             _logger.warning("Scheduled deadline should be a date (got %s)", date_deadline)
         if act_type_xmlid:
-            activity_type = self.sudo().env.ref(act_type_xmlid)
+            activity_type = self.env.ref(act_type_xmlid, raise_if_not_found=False) or self._default_activity_type()
         else:
-            activity_type = self.env['mail.activity.type'].sudo().browse(act_values['activity_type_id'])
+            activity_type = False
 
         model_id = self.env['ir.model']._get(self._name).id
         activities = self.env['mail.activity']
         for record in self:
             create_vals = {
-                'activity_type_id': activity_type.id,
+                'activity_type_id': activity_type and activity_type.id,
                 'summary': summary or activity_type.summary,
                 'automated': True,
                 'note': note,
@@ -758,7 +763,10 @@ class MailActivityMixin(models.AbstractModel):
             return False
 
         Data = self.env['ir.model.data'].sudo()
-        activity_types_ids = [Data.xmlid_to_res_id(xmlid) for xmlid in act_type_xmlids]
+        activity_types_ids = [Data.xmlid_to_res_id(xmlid, raise_if_not_found=False) for xmlid in act_type_xmlids]
+        activity_types_ids = [act_type_id for act_type_id in activity_types_ids if act_type_id]
+        if not any(activity_types_ids):
+            return False
         domain = [
             '&', '&', '&',
             ('res_model', '=', self._name),
@@ -785,7 +793,10 @@ class MailActivityMixin(models.AbstractModel):
             return False
 
         Data = self.env['ir.model.data'].sudo()
-        activity_types_ids = [Data.xmlid_to_res_id(xmlid) for xmlid in act_type_xmlids]
+        activity_types_ids = [Data.xmlid_to_res_id(xmlid, raise_if_not_found=False) for xmlid in act_type_xmlids]
+        activity_types_ids = [act_type_id for act_type_id in activity_types_ids if act_type_id]
+        if not any(activity_types_ids):
+            return False
         domain = [
             '&', '&', '&',
             ('res_model', '=', self._name),
@@ -807,7 +818,10 @@ class MailActivityMixin(models.AbstractModel):
             return False
 
         Data = self.env['ir.model.data'].sudo()
-        activity_types_ids = [Data.xmlid_to_res_id(xmlid) for xmlid in act_type_xmlids]
+        activity_types_ids = [Data.xmlid_to_res_id(xmlid, raise_if_not_found=False) for xmlid in act_type_xmlids]
+        activity_types_ids = [act_type_id for act_type_id in activity_types_ids if act_type_id]
+        if not any(activity_types_ids):
+            return False
         domain = [
             '&', '&', '&',
             ('res_model', '=', self._name),
