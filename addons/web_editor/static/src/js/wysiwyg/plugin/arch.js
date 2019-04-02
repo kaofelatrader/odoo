@@ -106,7 +106,7 @@ var ArchPlugin = AbstractPlugin.extend({
     },
     setEditorValue: function (value) {
         var archNode = this._htmlToArch(value);
-        return archNode.toText();
+        return archNode.toText({architecturalSpace: 4});
     },
     saveEditor: function () {
     },
@@ -230,7 +230,7 @@ var ArchPlugin = AbstractPlugin.extend({
                     console.log('div');
                 }
             </div>
-            <pre>
+            <pre> 
                 if (tata) {
                     console.log('tutu');
                 }
@@ -242,6 +242,8 @@ var ArchPlugin = AbstractPlugin.extend({
         console.log(archNode);
         console.log(archNode.toNode());
         console.log(archNode.toText());
+        console.log('>>>>>>>>>>>>>>> add structural spaces');
+        console.log(archNode.toText({architecturalSpace: 4}));
 
 
         return archNode;
