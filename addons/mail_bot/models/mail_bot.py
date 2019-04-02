@@ -69,12 +69,14 @@ class MailBot(models.AbstractModel):
                     return _("Not sure wat you are doing. Please press / and wait for the propositions. Select \"help\" and press enter")
                 elif odoobot_state == 'onboarding_ping':
                     return _("Sorry, I am not listening. To get someone's attention, <b>ping him</b>. Write \"@odoobot\" and select me.")
-                return random.choice([
-                    _("I'm not smart enough to answer your question.<br/>To follow my guide, ask") + ": <b>"+_('start the tour') + "</b>",
+                random_choices = [
                     _("Hmmm..."),
                     _("I'm afraid I don't understand. Sorry!"),
-                    _("Sorry I'm sleepy. Or not! Maybe I'm just trying to hide my unawareness of human language...<br/>I can show you features if you write")+ ": '<b>"+_('start the tour')+"</b>'.",
-                ])
+                ]
+                if odoobot_state == "idle":
+                    random_choices += [_("Sorry I'm sleepy. Or not! Maybe I'm just trying to hide my unawareness of human language...<br/>I can show you features if you write")+ ": '<b>"+_('start the tour')+"</b>'.",
+                                       _("I'm not smart enough to answer your question.<br/>To follow my guide, ask") + ": <b>"+_('start the tour') + "</b>"]
+                return random.choice(random_choices)
         elif self._is_bot_pinged(values):
             return random.choice([_("Yep, OdooBot is in the place!"), _("Pong.")])
         return False
