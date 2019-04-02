@@ -608,15 +608,19 @@ var Dom = Class.extend({
         if (utils.compareNodes(node, next)) {
             next = isPrev ? [node, node = next][0] : next; // swap node and next
             if (utils.isText(node) && utils.isText(next)) {
-                return this._mergeTextNodes(node, next, isPrev); // base case
+                return this._mergeTextNodes(node, next, isPrev, didChange); // base case
             }
             return this._mergeNodes(node, next, isPrev, options); // recursive: calls back _deleteEdgeRec
+        }
+        if (utils.isText(node) && !utils.welcomesText(node.parentNode) || utils.isText(next) && !utils.welcomesText(next.parentNode)) {
+            next = utils.isText(node) ? [node, node = next][0] : next; // next is text, node is elem
+            return this._mergeTextIntoElement(node, next, isPrev); // base case
         }
         if (options.isTryNonSim) {
             next = this._findNextBlockToMerge(node, isPrev);
             if (next) {
-                options.isTryNonSim = false;
                 next = isPrev ? [node, node = next][0] : next; // swap node and next
+                // TODO: ENSURE SYMMETRY! ONE ELEM LEFT, ONE RIGHT -> (wrap right in span)
                 return this._mergeNodes(node, next, isPrev, options); // recursive: calls back _deleteEdgeRec
             }
         }
@@ -822,8 +826,8 @@ var Dom = Class.extend({
                 }
             } else if (utils.isVoid(range.sc)) {
                 $(range.sc).before(textNode);
-            } else if (range.sc.childNodes[range.so]) {
-                var node = range.sc.childNodes[range.so];
+            } else if (range.so === utils.nodeLength(range.sc) || range.sc.childNodes[range.so]) {
+                var node = range.so === utils.nodeLength(range.sc) ? range.sc.childNodes[range.so - 1] : range.sc.childNodes[range.so];
                 if (utils.isBR(node)) {
                     $(node).replaceWith(textNode);
                 } else {
@@ -882,6 +886,9 @@ var Dom = Class.extend({
             return !utils.isInvisibleText(node);
         });
         $(node).append($contents);
+        while (otherNode.parentNode && !utils.isEditable(otherNode.parentNode) && utils.isBlankNode(otherNode.parentNode)) {
+            otherNode = otherNode.parentNode;
+        }
         $(otherNode).remove();
         if ($contents.length) {
             node = utils.firstLeaf($contents[0]);
@@ -891,6 +898,13 @@ var Dom = Class.extend({
             isPrev = false;
         }
         return this._deleteEdgeRec(node, isPrev, true, options);
+    },
+    _mergeTextIntoElement: function (element, textNode, isPrev) {
+        var clone = document.createTextNode(textNode.textContent);
+        var elementText = utils.lastLeaf(element, utils.isText.bind(utils));
+        $(elementText).after(clone);
+        $(textNode).remove();
+        return this._mergeTextNodes(elementText, clone, isPrev, true);
     },
     /**
      * Merge two text nodes together:
@@ -902,25 +916,53 @@ var Dom = Class.extend({
      * @param {Node} node
      * @param {Node} otherNode
      * @param {Boolean} isPrev true to delete BEFORE the carret
+     * @param {Boolean} didChange true if anything was changed with deleteEdge yet
      * @returns {BoundaryPoint}
      */
-    _mergeTextNodes: function (node, otherNode, isPrev) {
-        // A trailing or leading space is visually shown by the browser, implicitly making it a space not to trim
-        var nodeTrailingSpaceToKeep = /\s$/.test(node.textContent) ? ' ' : '';
-        var otherNodeLeadingSpaceToKeep;
-        if (/\u00A0\S*/.test(otherNode.textContent)) {
-            // all the space until the nbsp + the nbsp itself
-            var nSpace = otherNode.textContent.match(/( *)\u00A0/g)[0].length;
-            otherNodeLeadingSpaceToKeep = Array(nSpace + 1).join(' ') + '\u00A0';
-        } else {
-            otherNodeLeadingSpaceToKeep = /^\s/.test(otherNode.textContent) ? ' ' : '';
-        }
-        var spaceToKeep = nodeTrailingSpaceToKeep + otherNodeLeadingSpaceToKeep;
+    _mergeTextNodes: function (node, otherNode, isPrev, didChange) {
+        var nodePoint = new BoundaryPoint(node, node.textContent.length);
+        var trimmedNodePoint = this._removeInvisibleTrailingSpace(nodePoint);
+        var otherNodePoint = new BoundaryPoint(otherNode, 0);
+        var trimmedOtherNodePoint = this._removeInvisibleLeadingSpace(otherNodePoint);
 
-        var offset = node.textContent.trim().length + nodeTrailingSpaceToKeep.length;
-        node.textContent = node.textContent.trim() + spaceToKeep + otherNode.textContent.trim();
+        node.textContent = trimmedNodePoint.node.textContent.replace(/\u00A0$/, ' ') + trimmedOtherNodePoint.node.textContent;
         $(otherNode).remove();
-        return this._getDeleteEdgeResult(node, isPrev, true, offset);
+        return this._getDeleteEdgeResult(node, isPrev, didChange, trimmedNodePoint.offset);
+    },
+    _removeInvisibleLeadingSpace: function (point) {
+        var newNodeText = point.node.textContent;
+        for (var i = 0; i < point.node.textContent.length; i ++) {
+            if (newNodeText[i] === ' ' && i + 1 < newNodeText.length && newNodeText[i + 1] === ' ') {
+                var afterI = i + 1 > newNodeText.length ? newNodeText.length : i + 1;
+                newNodeText = newNodeText.slice(0, i) + newNodeText.slice(afterI, newNodeText.length);
+                point.offset = point.offset >= i ? point.offset - 1 : point.offset;
+                i = i - 1;
+            }
+        }
+        var leadingSpace = newNodeText.match(/^ +/);
+        if (leadingSpace) {
+            point.offset = point.offset >= leadingSpace.index ? point.offset - leadingSpace.length : point.offset;
+            newNodeText = newNodeText.slice(0, leadingSpace.index) + newNodeText.slice(leadingSpace.index + 1, newNodeText.length);
+        }
+        point.node = document.createTextNode(newNodeText);
+        return point;
+    },
+    _removeInvisibleTrailingSpace: function (point) {
+        var newNodeText = point.node.textContent;
+        for (var i = point.node.textContent.length - 1; i >= 0; i--) {
+            if (newNodeText[i] === ' ' && i - 1 >= 0 && newNodeText[i - 1] === ' ') {
+                var afterI = i + 1 > newNodeText.length ? newNodeText.length : i + 1;
+                newNodeText = newNodeText.slice(0, i) + newNodeText.slice(afterI, newNodeText.length);
+                point.offset = point.offset >= i ? point.offset - 1 : point.offset;
+            }
+        }
+        var trailingSpace = newNodeText.match(/ +$/);
+        if (trailingSpace && trailingSpace.length > 1) {
+            point.offset = point.offset >= trailingSpace.index ? point.offset - trailingSpace.length : point.offset;
+            newNodeText = newNodeText.slice(0, trailingSpace.index);
+        }
+        point.node = document.createTextNode(newNodeText);
+        return point;
     },
     /**
      * Pad the given node with `utils.blank` if the node is empty (for cursor position).

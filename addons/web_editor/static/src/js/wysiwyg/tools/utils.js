@@ -588,6 +588,15 @@ return {
         return !!(node && node.childNodes && node.childNodes.length);
     },
     /**
+     * Return true if the node has for only element child a BR element.
+     *
+     * @param {Node} node
+     * @returns {Boolean}
+     */
+    hasOnlyBR: function (node) {
+        return node.childElementCount === 1 && node.firstElementChild.tagName === 'BR' && /^\s*$/.test(node.textContent);
+    },
+    /**
      * Return true if the given node is an anchor element (A, BUTTON, .btn).
      *
      * @param {Node} node

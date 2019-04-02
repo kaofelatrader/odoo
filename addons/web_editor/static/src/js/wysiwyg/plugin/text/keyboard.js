@@ -601,17 +601,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * @returns {Boolean}
      */
     _isAfterOnlyBR: function (range) {
-        return this._hasOnlyBR(range.sc) && range.so === 1;
-    },
-    /**
-     * Return true if the node has for only element child a BR element.
-     *
-     * @private
-     * @param {Node} node
-     * @returns {Boolean}
-     */
-    _hasOnlyBR: function (node) {
-        return node.childElementCount === 1 && node.firstChild.tagName === 'BR';
+        return this.utils.hasOnlyBR(range.sc) && range.so === 1;
     },
     /**
      * Return true if the range if positioned after a BR element in a node that has only text
@@ -702,7 +692,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _isOnEdgeToDelete: function (range, isPrev) {
         var isOnBR = range.sc.tagName === 'BR';
-        var parentHasOnlyBR = range.sc.parentNode && range.sc.parentNode.innerHTML.trim() === "<br>";
+        var parentHasOnlyBR = range.sc.parentNode && this.utils.hasOnlyBR(range.sc.parentNode);
         var isOnDirEdge;
         if (isPrev) {
             isOnDirEdge = range.so === 0;
@@ -760,7 +750,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         var blockToRemove = deleteInfo.blockToRemove;
         var hasBlock = deleteInfo.hasBlock;
 
-        var isLonelyBR = blockToRemove && blockToRemove.tagName === 'BR' && this._hasOnlyBR(blockToRemove.parentNode);
+        var isLonelyBR = blockToRemove && blockToRemove.tagName === 'BR' && this.utils.hasOnlyBR(blockToRemove.parentNode);
         var isHR = blockToRemove && blockToRemove.tagName === "HR";
 
         if (blockToRemove && !isLonelyBR) {
@@ -769,7 +759,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             didDeleteNodes = true;
         } else if (!hasBlock) {
             var isAtEndOfNode = point.offset === this.utils.nodeLength(point.node);
-            var shouldMove = isAtEndOfNode || !isPrev && point.offset;
+            var shouldMove = isAtEndOfNode || !isPrev && !!point.offset;
 
             point.offset = shouldMove ? point.offset - 1 : point.offset;
             point.node = this._removeCharAtOffset(point);
@@ -1202,12 +1192,11 @@ var KeyboardPlugin = AbstractPlugin.extend({
             }
         }
 
-        var needOutdent = this.utils.isInList(range.sc) && range.getStartPoint().isEdgeOfTag('UL', 'left');
+        var needOutdent = this.utils.isInList(range.sc) && range.getStartPoint().isEdgeOfTag('LI', 'left');
         var didDelete;
         if (!needOutdent || !range.isCollapsed()) {
             didDelete = this._handleDeletion(true);
         }
-
         if (!didDelete && needOutdent) {
             this.dependencies.Range.setRange(range.getPoints());
             this.dependencies.Paragraph.outdent(null, range);

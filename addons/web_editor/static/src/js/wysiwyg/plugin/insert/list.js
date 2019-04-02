@@ -35,7 +35,7 @@ var ListPlugin = AbstractPlugin.extend({
      * @param {Object} startPoint
      * @param {Object} endPoint
      * @param {boolean} sorted
-     * @returns {boolean} isWithinElem
+     * @returns {Node []}
      */
     convertList: function (isWithinElem, nodes, startPoint, endPoint, sorted) {
         var self = this;
@@ -140,7 +140,7 @@ var ListPlugin = AbstractPlugin.extend({
                 // wrap in p
 
                 var hasNode = _.find(res, function (node) {
-                    return node.tagName && node.tagName !== "BR" && (!self.dependencies.Common.isVoidBlock(node));
+                    return node.tagName && node.tagName !== "BR" && !self.dependencies.Common.isVoidBlock(node);
                 });
                 if (!hasNode) {
                     var p = document.createElement('p');
@@ -154,7 +154,7 @@ var ListPlugin = AbstractPlugin.extend({
 
         nodes.push.apply(nodes, res);
 
-        return isWithinElem;
+        return nodes;
     },
     /**
      * Insert an ordered list, an unordered list or a checklist.

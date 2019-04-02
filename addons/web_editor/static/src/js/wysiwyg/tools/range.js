@@ -398,7 +398,7 @@ var WrappedRange = Class.extend({
         }
 
         // Create empty text node to have a range into the node
-        if (this.sc.tagName && !utils.isVoid(this.sc) && !this.sc.childNodes[this.so]) {
+        if (this.sc.tagName && !utils.isVoid(this.sc) && !utils.hasOnlyBR(this.sc) && !this.sc.childNodes[this.so]) {
             $(this.sc).append(invisible);
             this.replace({
                 sc: invisible,

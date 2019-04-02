@@ -1350,12 +1350,14 @@ var ParagraphPlugin = AbstractPlugin.extend({
             return this.tagName === "TR" ? this.firstElementChild : this;
         });
 
+        var newNode;
         $dom.each(function () {
             if (isWithinElem || $.contains(this, range.sc)) {
                 if (self.utils.isList(this)) {
                     if (outdent) {
                         var type = this.tagName === 'OL' ? 'ol' : (this.className && this.className.indexOf('o_checklist') !== -1 ? 'checklist' : 'ul');
-                        isWithinElem = self.dependencies.List.convertList(isWithinElem, nodes, range.getStartPoint(), range.getEndPoint(), type);
+                        newNode = (self.dependencies.List.convertList(isWithinElem, nodes, range.getStartPoint(), range.getEndPoint(), type) || [])[0];
+                        isWithinElem = !!newNode;
                     } else {
                         isWithinElem = self._indentUL(isWithinElem, nodes, this, range.sc, range.ec);
                     }
@@ -1364,6 +1366,13 @@ var ParagraphPlugin = AbstractPlugin.extend({
                 }
             }
         });
+
+        if (newNode) {
+            range.replace({
+                sc: newNode,
+                so: 0,
+            });
+        }
 
         if ($dom.parent().length) {
             var $parent = $dom.parent();

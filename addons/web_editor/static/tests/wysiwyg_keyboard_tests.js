@@ -2266,7 +2266,7 @@ var keyboardTestsBackspace = [{
         }],
         test: {
             content: "<p><br></p>", // The br is there to ensure the carret can enter the p tag
-            start: "br->0",
+            start: "p->0",
         },
     },
     {
@@ -2611,8 +2611,8 @@ var keyboardTestsBackspace = [{
             key: 'BACKSPACE',
         }],
         test: {
-            content: "<ul><li><p><br></p></li></ul>",
-            start: "p->0",
+            content: "<ul><li><p><br></p></li></ul><p><br></p>",
+            start: "p:eq(1)->1",
         },
     },
     {
@@ -2831,8 +2831,8 @@ var keyboardTestsBackspace = [{
             key: 'BACKSPACE',
         }],
         test: {
-            content: "<p>dom to edit dom to edit</p><ul><li><p>dom not to edit</p></li></ul>",
-            start: "p:contents()[0]->12",
+            content: "<p>dom to edit&nbsp; dom to edit</p><ul><li><p>dom not to edit</p></li></ul>",
+            start: "p:contents()[0]->13",
         },
     },
     {
@@ -3808,7 +3808,7 @@ var keyboardTestsDelete = [{
         }],
         test: {
             content: "<ul><li>a</li></ul>",
-            start: "p:contents()[0]->1",
+            start: "li:contents()[0]->1",
         },
     },
 
@@ -3914,7 +3914,7 @@ var keyboardTestsDelete = [{
         }],
         test: {
             content: "<p><b>do</b>ove</p>",
-            start: "p:contents()[0]->2",
+            start: "b:contents()[0]->2",
         },
     },
     {
@@ -3938,7 +3938,7 @@ var keyboardTestsDelete = [{
             key: 'DELETE',
         }],
         test: {
-            content: "<span><b>dom to edit</b></span>",
+            content: "<span><b>domto edit</b></span>", // the first space is invisible
             start: "b:contents()[0]->3",
         },
     },
