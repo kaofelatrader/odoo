@@ -11,7 +11,7 @@ class TestUi(HttpCase):
 
     def test_01_admin_shop_sale_coupon_tour(self):
         # pre enable "Show # found" option to avoid race condition...
-        self.env.ref("website_sale.search count").write({"active": True})
+        self.env.ref("website_sale.search_count_box").write({"active": True})
         self.phantom_js(
             "/",
             "odoo.__DEBUG__.services['web_tour.tour'].run('shop_sale_coupon')",
