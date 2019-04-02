@@ -594,7 +594,7 @@ class PoFileReader:
                     }
                     continue
 
-                match = re.match(r'(sql_constraint):([\w.]+)', occurrence)
+                match = re.match(r'(sql_constraint|constraint):([\w.]+)', occurrence)
                 if match:
                     type, model = match.groups()
                     yield {
