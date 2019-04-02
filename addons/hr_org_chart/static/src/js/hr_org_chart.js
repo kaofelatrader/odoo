@@ -23,7 +23,17 @@ var FieldOrgChart = AbstractField.extend({
     init: function (parent, options) {
         this._super.apply(this, arguments);
         this.dm = new concurrency.DropMisordered();
-        this.employee;
+        this.employee = null;
+    },
+
+    willStart: function() {
+        var self = this;
+
+        return Promise.all([this._super.apply(this, arguments), this._rpc({
+            route: '/hr/get_redirect_model',
+        }).then(function (result) {
+            self.model = result;
+        })]);
     },
 
     //--------------------------------------------------------------------------
@@ -36,15 +46,15 @@ var FieldOrgChart = AbstractField.extend({
      * @param {integer} employee_id
      * @returns {Promise}
      */
-    _getOrgData: function (employee_id) {
+    _getOrgData: function () {
         var self = this;
         return this.dm.add(this._rpc({
             route: '/hr/get_org_chart',
             params: {
-                employee_id: employee_id
+                employee_id: this.employee,
             },
         })).then(function (data) {
-            self.orgData = data;
+            return data;
         });
     },
     /**
@@ -80,10 +90,9 @@ var FieldOrgChart = AbstractField.extend({
         }
 
         var self = this;
-        return this._getOrgData(this.employee).then(function () {
-
-            self.orgData['view_employee_id'] = self.recordData.id;
-            self.$el.html(QWeb.render("hr_org_chart", self.orgData));
+        return this._getOrgData().then(function (orgData) {
+            orgData.view_employee_id = self.recordData.id;
+            self.$el.html(QWeb.render("hr_org_chart", orgData));
             self.$('[data-toggle="popover"]').each(function () {
                 $(this).popover({
                     html: true,
@@ -127,7 +136,7 @@ var FieldOrgChart = AbstractField.extend({
     _onEmployeeMoreManager: function(event) {
         event.preventDefault();
         this.employee = parseInt($(event.currentTarget).data('employee-id'));
-        this._render()
+        this._render();
     },
     /**
      * Redirect to the employee form view.
@@ -145,7 +154,7 @@ var FieldOrgChart = AbstractField.extend({
             view_mode: 'form',
             views: [[false, 'form']],
             target: 'current',
-            res_model: 'hr.employee',
+            res_model: this.model,
             res_id: employee_id,
         });
     },
@@ -161,7 +170,7 @@ var FieldOrgChart = AbstractField.extend({
         var employee_id = parseInt($(event.currentTarget).data('employee-id'));
         var employee_name = $(event.currentTarget).data('employee-name');
         var type = $(event.currentTarget).data('type') || 'direct';
-        var self = this
+        var self = this;
         if (employee_id) {
             this._getSubordinatesData(employee_id, type).then(function(data) {
                 var domain = [['id', 'in', data]];
@@ -172,10 +181,10 @@ var FieldOrgChart = AbstractField.extend({
                     view_mode: 'kanban,list,form',
                     views: [[false, 'kanban'], [false, 'list'], [false, 'form']],
                     target: 'current',
-                    res_model: 'hr.employee',
+                    res_model: this.model,
                     domain: domain,
                 });
-            })
+            });
 
         }
     },
