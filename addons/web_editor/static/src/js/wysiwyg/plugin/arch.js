@@ -105,8 +105,8 @@ var ArchPlugin = AbstractPlugin.extend({
         this.ordered = this.ordered.slice();
     },
     setEditorValue: function (value) {
-        this._htmlToArch(value);
-        // return this.arch.html();
+        var archNode = this._htmlToArch(value);
+        return archNode.toText();
     },
     saveEditor: function () {
     },
@@ -115,6 +115,8 @@ var ArchPlugin = AbstractPlugin.extend({
         this.arch = new ArchTree({
             structure: this.structure,
             ordered: this.ordered,
+            styleTags: styleTags,
+            formatTags: formatTags,
             isEditableNode: this.dependencies.Common.isEditableNode,
             isUnbreakableNode: this.dependencies.Common.isUnbreakableNode,
         });
@@ -214,16 +216,13 @@ var ArchPlugin = AbstractPlugin.extend({
     _htmlToArch: function (html) {
         var archNode = this.arch.parse(html);
 
-        console.log(archNode);
-        console.log(archNode.toNode());
-
-
         var archNode = this.arch.parse(`
-            
+
             Bonjour,
             <br>
             <b>comment va-<i>tu</i> ?</b>
-            <td>wrong TD</td>
+            <table><td>wrong TD</td></table>
+            <i><font color="red">comment</font> <font color="blue">va-<b>tu</b></font> ?</i>
             <div>
                 text dans div ?
             </div>
@@ -231,6 +230,7 @@ var ArchPlugin = AbstractPlugin.extend({
 
         console.log(archNode);
         console.log(archNode.toNode());
+        console.log(archNode.toText());
 
 
         return archNode;

@@ -5,11 +5,433 @@ var $ = require('web_editor.jquery');
 var _ = require('web_editor._');
 var Class = require('web.Class');
 
-var ArchNode = Class.extend({
+var isNode = {
+
+    /**
+     * Return true if the given node is an anchor element (A, BUTTON, .btn).
+     *
+     * @returns {Boolean}
+     */
+    isAnchor: function () {
+        return (
+                this.nodeName === 'a' ||
+                this.nodeName === 'button' ||
+                this.className.contains('btn')
+            ) &&
+            !this.className.contains('fa') &&
+            !this.className.contains('o_image');
+    },
+    /**
+     * Returns true if the node is a text node containing nothing
+     *
+     * @returns {Boolean}
+     */
+    isBlankText: function () {
+        return this instanceof ArchitecturalSpaceNode || this instanceof VirtualNode;
+    },
+    /**
+     * Returns true if the node is blank.
+     * In this context, a blank node is understood as
+     * a node expecting text contents (or with children expecting text contents)
+     * but without any.
+     * If a predicate function is included, the node is NOT blank if it matches it.
+     *
+     * @param {Function (Node) => Boolean} [isNotBlank]
+     * @returns {Boolean}
+     */
+    isBlankNode: function (isNotBlank) {
+        var self = this;
+        if (this.isVoid() || isNotBlank && isNotBlank(node)) {
+            return false;
+        }
+        if (this.isBlankText()) {
+            return true;
+        }
+        if (this instanceof TextNode) {
+            return false;
+        }
+        var isBlankNode = true;
+        for (var k = 0; k < this.childNodes.length; k++) {
+            if (!this.childNodes[k].isBlankNode(isNotBlank)) {
+                isBlankNode = false;
+                break;
+            }
+        }
+        return isBlankNode;
+    },
+    /**
+     * Return true if the given node is a block.
+     *
+     * @returns {Boolean}
+     */
+    isBlock: function () {
+        return !this.isInline();
+    },
+    /**
+     * Return true if the given node is a line break element (BR).
+     *
+     * @returns {Boolean}
+     */
+    isBR: function () {
+        return this.nodeName === 'br'
+    },
+    /**
+     * Return true if the given node is a table cell element (TD, TH).
+     *
+     * @returns {Boolean}
+     */
+    isCell: function () {
+        return ['td', 'th'].indexOf(this.nodeName) !== -1;
+    },
+    /**
+     * Return true if the given node is a data element (DATA).
+     *
+     * @returns {Boolean}
+     */
+    isData: function (node) {
+        return this.nodeName === 'data';
+    },
+    /**
+     * Return true if `node` is a descendent of `ancestor` (or is `ancestor` itself).
+     *
+     * @param {ArchNode} ancestor
+     * @returns {Boolean}
+     */
+    isDescendentOf: function (ancestor) {
+        var node = this;
+        while (node) {
+            if (node === ancestor) {
+                return true;
+            }
+            node = node.parent;
+        }
+        return false;
+    },
+    /**
+     * Return true if the given node is the editable node.
+     *
+     * @returns {Boolean}
+     */
+    isEditable: function () {
+        return this.nodeName === 'editable';
+    },
+    /**
+     * Return true if the given node's type is element (1).
+     *
+     * @returns {Boolean}
+     */
+    isElement: function () {
+        return !(this instanceof TextNode) &&
+            !(this instanceof FragmentNode) &&
+            !(this instanceof RootNode);
+    },
+    /**
+     * Return true if the given node is empty.
+     *
+     * @returns {Boolean}
+     */
+    isEmpty: function () {
+        if (this instanceof TextNode) {
+            return this instanceof VirtualNode;
+        }
+        if (this.childNodes.length === 0) {
+            return true;
+        }
+        if (this.childNodes.length === 1 && (this.childNodes[0].isBR() || this.childNodes[0] instanceof VirtualNode || this.childNodes[0] instanceof ArchitecturalSpaceNode)) {
+            return true;
+        }
+        return false;
+    },
+    /**
+     * Returns true if the node is a "format" node.
+     * In this context, a "format" node is understood as
+     * an editable block or an editable element expecting text
+     * (eg.: p, h1, span).
+     *
+     * @param {String []} [styleTags]
+     * @returns {Boolean}
+     */
+    isFormatNode: function (styleTags) {
+        styleTags = styleTags || this.options.defaultStyleTags;
+        console.warn('defaultStyleTags ?');
+        return styleTags.indexOf(this.nodeName) !== -1;
+    },
+    /**
+     * Return true if the given node is an image element (IMG).
+     *
+     * @returns {Boolean}
+     */
+    isImg: function () {
+        return this.nodeName === 'img';
+    },
+    /**
+     * Returns true if the node is within a table.
+     *
+     * @returns {Boolean}
+     */
+    isInTable: function () {
+        return !!this.ancestor(this._isTable);
+    },
+    /**
+     * Return true if the given node is contained within a node of given tag name.
+     *
+     * @param {Boolean} tag eg: 'B', 'I', 'U'
+     * @returns {Boolean}
+     */
+    isInTag: function (tag) {
+        return !!this.ancestor(function (n) {
+            return n.nodeName === tag;
+        });
+    },
+    /**
+     * Return true if the given node is an inline element.
+     *
+     * @returns {Boolean}
+     */
+    isInline: function () {
+        return !this.isCell() && 
+            !this.isEditable() &&
+            !this.isList() &&
+            !this._isHr() &&
+            !this._isPara() &&
+            !this._isTable() &&
+            !this._isBlockquote() &&
+            !this.isData();
+    },
+    /**
+     * Return true if the given node is contained within a list element.
+     *
+     * @returns {Boolean}
+     */
+    isInList: function () {
+        return !!this.ancestor(this.isList);
+    },
+    /**
+     * Return true if the given node is a text node that is not visible.
+     *
+     * @returns {Boolean}
+     */
+    isInvisibleText: function () {
+        return this.isText() && !this.isVisibleText();
+    },
+    /**
+     * Return true if the given node is on a left edge (ignoring invisible text).
+     *
+     * @returns {Boolean}
+     */
+    isLeftEdge: function () {
+        var previousSibling = this.parent.childNodes.slice(0, this.index());
+        while (previousSibling.length && previousSibling[0].isInvisibleText()) {
+            previousSibling.pop();
+        }
+        return !!previousSibling.length;
+    },
+    /**
+     * Return true if the given node is the left-most node of given ancestor.
+     *
+     * @param {Node} ancestor
+     * @returns {Boolean}
+     */
+    isLeftEdgeOf: function (ancestor) {
+        while (node && node !== ancestor) {
+            if (!node.isLeftEdge()) {
+                return false;
+            }
+            node = node.parentNode;
+        }
+        return true;
+    },
+    /**
+     * Return true if the given node is a list item element (LI).
+     *
+     * @returns {Boolean}
+     */
+    isLi: function () {
+        return this.nodeName === 'li';
+    },
+    /**
+     * Return true if the given node is a (un-)ordered list element (UL, OL).
+     *
+     * @returns {Boolean}
+     */
+    isList: function () {
+        return ['ul', 'ol'].indexOf(this.nodeName) !== -1;
+    },
+    /**
+     * Returns true if the node is a block.
+     *
+     * @returns {Boolean}
+     */
+    isNodeBlockType: function () {
+        if (this.isText()) {
+            return false;
+        }
+        console.warn('todo');
+        var display = window.getComputedStyle(node).display;
+        // All inline elements have the word 'inline' in their display value, except 'contents'
+        return display.indexOf('inline') === -1 && display !== 'contents';
+    },
+    /**
+     * Return true if the given node is a preformatted text element (PRE).
+     *
+     * @returns {Boolean}
+     */
+    isPre: function () {
+        return this.nodeName === 'pre';
+    },
+    /**
+     * Return true if the given node is on a right edge (ignoring invisible text).
+     *
+     * @returns {Boolean}
+     */
+    isRightEdge: function () {
+        var nextSibling = this.parent.childNodes.slice(this.index() + 1);
+        while (nextSibling.length && nextSibling[0].isInvisibleText()) {
+            nextSibling.pop();
+        }
+        return !!nextSibling.length;
+    },
+    /**
+     * Return true if the given node is the right-most node of given ancestor.
+     *
+     * @param {Node} ancestor
+     * @returns {Boolean}
+     */
+    isRightEdgeOf: function (ancestor) {
+        while (node && node !== ancestor) {
+            if (!node.isRightEdge()) {
+                return false;
+            }
+            node = node.parentNode;
+        }
+        return true;
+    },
+    /**
+     * Return true if the given node is a span element (SPAN).
+     *
+     * @returns {Boolean}
+     */
+    isSpan: function () {
+        return this.nodeName === 'span';
+    },
+    /**
+     * Return true if the given node's type is text (3).
+     *
+     * @returns {Boolean}
+     */
+    isText: function () {
+        return this instanceof TextNode;
+    },
+    /**
+     * Returns true if the node is a text node with visible text.
+     *
+     * @returns {Boolean}
+     */
+    isVisibleText: function () {
+        return this instanceof TextNode && !(this instanceof VirtualNode) && !(this instanceof ArchitecturalSpaceNode);
+    },
+    /**
+     * Return true if the given node is a void element (BR, COL, EMBED, HR, IMG, INPUT, ...).
+     *
+     * @see http://www.w3.org/html/wg/drafts/html/master/syntax.html#void-elements
+     * @returns {Boolean}
+     */
+    isVoid: function () {
+        return ['br', 'img', 'hr', 'iframe', 'button', 'input'].indexOf(this.nodeName) !== -1;
+    },
+    /**
+     * Return true if the given node is a block quote element (BLOCKQUOTE).
+     *
+     * @returns {Boolean}
+     */
+    _isBlockquote: function () {
+        return this.nodeName === 'blockquote';
+    },
+    /**
+     * Return true if the given node is a horizontal rule element (HR).
+     *
+     * @private
+     * @returns {Boolean}
+     */
+    _isHr: function () {
+        return this.nodeName === 'hr';
+    },
+    /**
+     * Return true if the given node is a paragraph element (DIV, P, LI, H[1-7]).
+     *
+     * @private
+     * @returns {Boolean}
+     */
+    _isPara: function () {
+        if (this.isEditable()) {
+            return false;
+        }
+        // Chrome(v31.0), FF(v25.0.1) use DIV for paragraph
+        return ['div', 'p', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7'].indexOf(this.nodeName) !== -1;
+    },
+    /**
+     * Return true if the given node is a table element (TABLE).
+     *
+     * @private
+     * @returns {Boolean}
+     */
+    _isTable: function () {
+        return this.nodeName === 'table';
+    },
+    /**
+     * Return true if the given node is a text area element (TEXTAREA).
+     *
+     * @private
+     * @returns {Boolean}
+     */
+    _isTextarea: function () {
+        return this.nodeName === 'textarea';
+    },
+};
+
+function ClassName (classNames) {
+    this.value = classNames.replace(/\s\s+/, ' ').split(' ');
+}
+ClassName.prototype.contains = function (className) {
+    return this.value.indexOf(className) !== -1;
+};
+ClassName.prototype.remove = function (classNames) {
+    classNames.replace(/\s\s+/, ' ').split(' ').forEach(function (className) {
+        var index = this.value.indexOf(className);
+        if (index !== -1) {
+            this.value.splice(index, 1);
+        }
+    });
+};
+ClassName.prototype.add = function (classNames) {
+    classNames.replace(/\s\s+/, ' ').split(' ').forEach(function (className) {
+        var index = this.value.indexOf(className);
+        if (index === -1) {
+            this.value.push(className);
+        }
+    });
+};
+ClassName.prototype.render = function () {
+    return this.value.join(' ');
+};
+
+//////////////////////////////////////////////////////////////
+
+var ArchNode = Class.extend(isNode, {
     init: function (tree, nodeName, attributes) {
+        var self = this;
         this.tree = tree;
         this.nodeName = nodeName.toLowerCase();
         this.attributes = attributes;
+        attributes.forEach(function (attribute) {
+            if (attribute[0] === "class") {
+                self.className = attribute[1] = new ClassName(attribute[1]);
+            }
+        });
+        if (!this.className) {
+            this.className = new ClassName('');
+            attributes.push(['class', this.className]);
+        }
         this.childNodes = [];
         this.startRange = null;
         this.endRange = null;
@@ -30,12 +452,16 @@ var ArchNode = Class.extend({
         this._changeParent(archNode, 0);
     },
     remove: function () {
-        this.id = null;
         this.parent.childNodes.splice(this.index(), 1);
-        this.tree._removeArchNode(this);
-        this.childNodes.forEach(function (archNode) {
-            archNode.remove();
-        });
+        if (this.id) {
+            this.tree._removeArchNode(this);
+        }
+        if (this.childNodes) {
+            this.childNodes.forEach(function (archNode) {
+                archNode.remove();
+            });
+        }
+        this.id = null;
     },
 
     // browse
@@ -51,38 +477,29 @@ var ArchNode = Class.extend({
     next: function (fn) {
         return this._prevNext('next', fn);
     },
+    nextSibling: function (fn) {
+        for (var k = this.index() + 1; k < this.parent.childNodes.length; k++) {
+            if (!fn || fn(this.parent.childNodes[k])) {
+                return this.parent.childNodes[k];
+            }
+        }
+    },
     prev: function (fn) {
         return this._prevNext('prev', fn);
     },
-
-    // import
-
-    _applyStructureRules: function () {
-        var parentedRule = [];
-        var structureRules = this.tree.options.structure;
-        for (var k = 0; k < structureRules.length; k++) {
-            var children = structureRules[k][1];
-            for (var i = 0; i < children.length; i++) {
-                var check = children[i];
-                if (    (typeof check === 'function' && check(this)) || 
-                        (check === 'TEXT' && this instanceof TextNode) ||
-                        this.nodeName === check) {
-                    parentedRule = parentedRule.concat(structureRules[k][0]);
-                    break;
-                }
+    previousSibling: function (fn) {
+        for (var k = this.index() - 1; k >= 0; k--) {
+            if (!fn || fn(this.parent.childNodes[k])) {
+                return this.parent.childNodes[k];
             }
         }
-        
-        if (!parentedRule.length || parentedRule.indexOf('editable') !== -1 || parentedRule.indexOf(null) !== -1 || parentedRule.indexOf(this.parent.nodeName) !== -1) {
-            return;
+    },
+    ancestor: function (fn) {
+        var parent = this.parent;
+        while (parent && !fn.call(parent, parent)) {
+            parent = parent.parent;
         }
-
-        // create parent
-
-        var newParent = new ArchNode(this.tree, parentedRule[0], []);
-        this.parent.insertBefore(newParent, this);
-        newParent.append(this);
-        return newParent;
+        return parent;
     },
 
     // export
@@ -105,11 +522,46 @@ var ArchNode = Class.extend({
             }),
         };
     },
+    toText: function () {
+        var d = document.createElement('div');
+        d.appendChild(this.toNode());
+        return d.innerHTML;
+    },
 
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
 
+    _applyStructureRules: function () {
+        var parentedRule = [];
+        var structureRules = this.tree.options.structure;
+        for (var k = 0; k < structureRules.length; k++) {
+            var children = structureRules[k][1];
+            for (var i = 0; i < children.length; i++) {
+                var check = children[i];
+                if (    (typeof check === 'function' && check(this)) || 
+                        (check === 'TEXT' && this instanceof TextNode) ||
+                        this.nodeName === check) {
+                    parentedRule = parentedRule.concat(structureRules[k][0]);
+                    break;
+                }
+            }
+        }
+        
+        if (!parentedRule.length || parentedRule.indexOf('editable') !== -1 || parentedRule.indexOf(null) !== -1 || parentedRule.indexOf(this.parent.nodeName) !== -1) {
+            return [];
+        }
+
+        // create parent
+
+        var newParent = new ArchNode(this.tree, parentedRule[0], []);
+        this.parent.insertBefore(newParent, this);
+        newParent.append(this);
+        var newParents = [newParent];
+        newParents = newParents.concat(newParent._applyStructureRules());
+
+        return newParents;
+    },
     _changeParent: function (archNode, index) {
         if (archNode instanceof VirtualNode) {
             var self = this;
@@ -155,7 +607,10 @@ var ArchNode = Class.extend({
     _toNode: function (options) {
         var node = document.createElement(this.nodeName);
         this.attributes.forEach(function (attribute) {
-            node.setAttribute(attribute[0], attribute[1]);
+            var value = typeof attribute[1] === 'string' ? attribute[1] : attribute[1].render();
+            if (value !== '') {
+                node.setAttribute(attribute[0], value);
+            }
         });
         this.childNodes.forEach(function (archNode) {
             node.appendChild(archNode._toNode(options));
@@ -167,6 +622,7 @@ var ArchNode = Class.extend({
 
 //////////////////////////////////////////////////////////////
 
+var parseText = /^(\s*?)?([ ]?(\S+[\S\s]*?)[ ]?)?(\s*?)?$/;
 var TextNode = ArchNode.extend({
     init: function (tree, nodeValue) {
         this.tree = tree;
@@ -179,6 +635,51 @@ var TextNode = ArchNode.extend({
             id: this.id,
             nodeValue: this.nodeValue,
         };
+    },
+    _applyStructureRules: function () {
+        var newParents = [];
+        
+        var before = this.nodeValue.match(/^(\s*)/)[0];
+        var after = before.length < this.nodeValue.length ? this.nodeValue.match(/(\s*)$/)[0] : '';
+        var text = this.nodeValue.slice(before.length, this.nodeValue.length - after.length);
+
+        if (before.length || text.length) {
+            if (before.length) {
+                var prev = this.previousSibling();
+                if ((!prev && this.parent.isInline()) || prev && prev.isInline()) {
+                    text = before[before.length - 1] + text;
+                    before = before.slice(0, -1);
+                }
+            }
+            if (after.length) {
+                var next = this.previousSibling();
+                if ((!next && this.parent.isInline()) || next && next.isInline()) {
+                    text = after[0] + text;
+                    after = after.slice(1);
+                }
+            }
+        }
+
+        if (text.length) {
+            // if this is an text node with content (not just an architechural node)
+            newParents = this._super();
+        }
+
+        if (before.length) {
+            var space = new ArchitecturalSpaceNode(this.tree, before);
+            this.parent.insertBefore(space, this);
+        }
+        if (after.length) {
+            var space = new ArchitecturalSpaceNode(this.tree, after);
+            this.parent.insertAfter(space, this);
+        }
+        if (text.length) {
+            this.nodeValue = text;
+        } else {
+            this.remove();
+        }
+
+        return newParents;
     },
     _toNode: function (options) {
         var node = document.createTextNode(this.nodeValue);
@@ -199,7 +700,9 @@ var VirtualNode = TextNode.extend({
             id: this.id,
         };
     },
-    _applyStructureRules: function () {},
+    _applyStructureRules: function () {
+        return [];
+    },
 });
 
 //////////////////////////////////////////////////////////////
@@ -209,7 +712,9 @@ var ArchitecturalSpaceNode = TextNode.extend({
     // Private
     //--------------------------------------------------------------------------
 
-    _applyStructureRules: function () {},
+    _applyStructureRules: function () {
+        return [];
+    },
     _toNode: function (options) {
         var keepArchitecturalSpaces = options && options.keepArchitecturalSpaces;
         var node = document.createTextNode(keepArchitecturalSpaces ? this.nodeValue : '');
@@ -248,7 +753,9 @@ var RootNode = FragmentNode.extend({
     // Private
     //--------------------------------------------------------------------------
 
-    _applyStructureRules: function () {},
+    _applyStructureRules: function () {
+        return [];
+    },
     _prevNext: function (direction, fn, __inShearch) {
         if (!__inShearch && this.childNodes[0]) {
             var next;
@@ -302,7 +809,7 @@ ArchTree.prototype._addArchNode = function (archNode) {
     archNode.id = ++this._id;
     this._nodeList[archNode.id] = archNode;
 };
-ArchTree.prototype._removeArchNode = function (archNodeId) {
+ArchTree.prototype._removeArchNode = function (archNode) {
     delete this.nodeValue[archNode.id];
     delete this._nodeElementList[archNode.id];
 };
@@ -345,60 +852,67 @@ ArchTree.prototype.parse = function (xml) {
     console.log(root);
 
     root.childNodes.forEach(function (element) {
-        self._parseElement(element).forEach(function (archNode) {
-            fragment.append(archNode);
-        });
+        fragment.append(self._parseElement(element));
     });
     this._applyStructure(fragment);
     this._applyOrdered(fragment);
 
     return fragment;
 };
-var parseText = /^(\s+?)?([ ]?(\S+[\S\s]*?)[ ]?)?(\s+?)?$/;
 ArchTree.prototype._parseElement = function (element) {
     var self = this;
+    var archNode;
     if (element.tagName) {
-        var archNode;
         var attributes = Object.values(element.attributes).map(function (attribute) {
             return [attribute.name, attribute.value];
         });
         archNode = new ArchNode(this, element.nodeName, attributes);
         element.childNodes.forEach(function (child) {
-            self._parseElement(child).forEach(function (an) {
-                archNode.append(an);
-            });
+            archNode.append(self._parseElement(child));
         });
-        return [archNode];
     } else {
-        var archNodes = [];
-        var match = element.nodeValue.match(parseText);
-        if (match[1]) {
-           archNodes.push(new ArchitecturalSpaceNode(this, match[1]));
-        }
-        if (match[2]) {
-           archNodes.push(new TextNode(this, match[2]));
-        }
-        if (match[4]) {
-           archNodes.push(new ArchitecturalSpaceNode(this, match[4]));
-        }
-        return archNodes;
+        archNode = new TextNode(this, element.nodeValue);
     }
+    return archNode;
 };
 ArchTree.prototype._applyStructure = function (archNode) {
-    var deepest = [];
+    var nodes = [];
     var stack = archNode.childNodes.slice();
     var item;
     while (item = stack.pop()) {
-        if (!item.childNodes || !item.childNodes.length) {
-            deepest.push(item);
-        } else {
+        nodes.push(item);
+        if (item.childNodes) {
             stack = stack.concat(item.childNodes);
         }
     }
-    while (item = deepest.pop()) {
-        var newParent = item._applyStructureRules();
-        if (newParent) {
-            deepest.push(newParent);
+    var newParents = []
+    var items = nodes.slice();
+    while (item = items.pop()) {
+        newParents = newParents.concat(item._applyStructureRules());
+    }
+
+    for (var k = 0; k < newParents.length; k++) {
+        var item = newParents[k];
+        var prev = item.previousSibling(function (n) {
+            return !(n instanceof VirtualNode) && !(n instanceof ArchitecturalSpaceNode);
+        });
+        if (prev && prev.nodeName === item.nodeName && newParents.indexOf(prev) !== -1) {
+            item.childNodes.forEach(function (node) {
+                prev.append(node);
+            });
+            item.remove();
+            continue;
+        }
+
+        var next = item.previousSibling(function (n) {
+            return !(n instanceof VirtualNode) && !(n instanceof ArchitecturalSpaceNode);
+        });
+        if (next && next.nodeName === item.nodeName && newParents.indexOf(next) !== -1) {
+            item.childNodes.forEach(function (node) {
+                next.append(node);
+            });
+            item.remove();
+            continue;
         }
     }
 };
@@ -438,7 +952,6 @@ ArchTree.prototype.export = function (archNodeId) {
     var archNode = archNodeId ? this.getArchNode(archNodeId) : this.root;
     return JSON.stringify(archNode);
 };
-
 
 return ArchTree;
 
