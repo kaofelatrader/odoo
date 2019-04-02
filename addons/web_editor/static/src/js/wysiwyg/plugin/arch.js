@@ -225,7 +225,18 @@ var ArchPlugin = AbstractPlugin.extend({
             <i><font color="red">comment</font> <font color="blue">va-<b>tu</b></font> ?</i>
             <div>
                 text dans div ?
+
+                if (div) {
+                    console.log('div');
+                }
             </div>
+            <pre>
+                if (tata) {
+                    console.log('tutu');
+                }
+
+                <span>OKI</span>
+            </pre>
             `);
 
         console.log(archNode);

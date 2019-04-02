@@ -192,6 +192,7 @@ var isNode = {
         return !this.isCell() && 
             !this.isEditable() &&
             !this.isList() &&
+            !this.isPre() &&
             !this._isHr() &&
             !this._isPara() &&
             !this._isTable() &&
@@ -522,9 +523,9 @@ var ArchNode = Class.extend(isNode, {
             }),
         };
     },
-    toText: function () {
+    toText: function (options) {
         var d = document.createElement('div');
-        d.appendChild(this.toNode());
+        d.appendChild(this.toNode(options));
         return d.innerHTML;
     },
 
@@ -612,6 +613,9 @@ var ArchNode = Class.extend(isNode, {
                 node.setAttribute(attribute[0], value);
             }
         });
+        if (this.isPre()) {
+            options = Object.assign({keepArchitecturalSpaces: true}, options);
+        }
         this.childNodes.forEach(function (archNode) {
             node.appendChild(archNode._toNode(options));
         });
@@ -622,7 +626,6 @@ var ArchNode = Class.extend(isNode, {
 
 //////////////////////////////////////////////////////////////
 
-var parseText = /^(\s*?)?([ ]?(\S+[\S\s]*?)[ ]?)?(\s*?)?$/;
 var TextNode = ArchNode.extend({
     init: function (tree, nodeValue) {
         this.tree = tree;
@@ -638,7 +641,7 @@ var TextNode = ArchNode.extend({
     },
     _applyStructureRules: function () {
         var newParents = [];
-        
+
         var before = this.nodeValue.match(/^(\s*)/)[0];
         var after = before.length < this.nodeValue.length ? this.nodeValue.match(/(\s*)$/)[0] : '';
         var text = this.nodeValue.slice(before.length, this.nodeValue.length - after.length);
@@ -661,6 +664,9 @@ var TextNode = ArchNode.extend({
         }
 
         if (text.length) {
+            if (!this.ancestor(this.isPre)) {
+                text = text.replace(/\s+/g, ' ');
+            }
             // if this is an text node with content (not just an architechural node)
             newParents = this._super();
         }
