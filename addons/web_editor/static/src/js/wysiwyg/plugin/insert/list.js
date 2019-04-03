@@ -263,8 +263,11 @@ var ListPlugin = AbstractPlugin.extend({
      * @param {Node} ul
      */
     _deleteListElementEdges: function (ul) {
-        this.dom.deleteEdge(ul, false);
-        this.dom.deleteEdge(ul, true);
+        var options = {
+            isTryNonSim: false,
+        };
+        this.dom.deleteEdge(ul, false, options);
+        this.dom.deleteEdge(ul, true, options);
         this.editable.normalize();
     },
     /**
