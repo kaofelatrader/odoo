@@ -5,6 +5,79 @@ var $ = require('web_editor.jquery');
 var _ = require('web_editor._');
 var Class = require('web.Class');
 
+function ClassName (classNames) {
+    this.value = classNames.replace(/\s\s+/, ' ').split(' ');
+}
+ClassName.prototype = {
+    add: function (classNames) {
+        classNames.replace(/\s\s+/, ' ').split(' ').forEach(function (className) {
+            var index = this.value.indexOf(className);
+            if (index === -1) {
+                this.value.push(className);
+            }
+        });
+    },
+    contains: function (className) {
+        return this.value.indexOf(className) !== -1;
+    },
+    remove: function (classNames) {
+        classNames.replace(/\s\s+/, ' ').split(' ').forEach(function (className) {
+            var index = this.value.indexOf(className);
+            if (index !== -1) {
+                this.value.splice(index, 1);
+            }
+        });
+    },
+    toString: function () {
+        return this.value.join(' ');
+    },
+    get length () {
+        return this.toString().length;
+    },
+};
+
+
+//////////////////////////////////////////////////////////////
+
+function Attributes (attributes) {
+    var self = this;
+    this.__order__ = [];
+    attributes.forEach(function (attribute) {
+        self.add(attribute[0], attribute[1])
+    })
+}
+Attributes.prototype = {
+    add: function (name, value) {
+        if (this.__order__.indexOf(name) === -1) {
+            this.__order__.push(name);
+        }
+        if (name === 'class') {
+            value = new ClassName(value + '');
+        }
+        this[name] = value;
+    },
+    forEach: function (fn) {
+        this.__order__.forEach(fn.bind(this));
+    },
+    remove: function (classNames) {
+        var index = this.__order__.indexOf(name);
+        if (index !== -1) {
+            this.__order__.splice(index, 1);
+        }
+        delete this[name];
+    },
+    toString: function () {
+        var self = this;
+        var value = '';
+        this.__order__.forEach(function (name) {
+            if (value.length) {
+                value += ' ';
+            }
+            value += name + '="' + self[name].toString().replace('"', '\\"') + '"';
+        })
+    },
+};
+
 var isNode = {
 
     /**
@@ -132,7 +205,7 @@ var isNode = {
      */
     isEmpty: function () {
         if (this instanceof TextNode) {
-            return this instanceof VirtualNode;
+            return !(this instanceof VisibleTextNode);
         }
         if (this.childNodes.length === 0) {
             return true;
@@ -215,7 +288,7 @@ var isNode = {
      * @returns {Boolean}
      */
     isInvisibleText: function () {
-        return this.isText() && !this.isVisibleText();
+        return this instanceof TextNode && !(this instanceof VisibleTextNode);
     },
     /**
      * Return true if the given node is on a left edge (ignoring invisible text).
@@ -326,12 +399,19 @@ var isNode = {
         return this instanceof TextNode;
     },
     /**
+     *
+     * @returns {Boolean}
+     */
+    isVirtualText: function () {
+        return this instanceof VirtualNode;
+    },
+    /**
      * Returns true if the node is a text node with visible text.
      *
      * @returns {Boolean}
      */
     isVisibleText: function () {
-        return this instanceof TextNode && !(this instanceof VirtualNode) && !(this instanceof ArchitecturalSpaceNode);
+        return this instanceof VisibleTextNode;
     },
     /**
      * Return true if the given node is a void element (BR, COL, EMBED, HR, IMG, INPUT, ...).
@@ -341,6 +421,9 @@ var isNode = {
      */
     isVoid: function () {
         return ['br', 'img', 'hr', 'iframe', 'button', 'input'].indexOf(this.nodeName) !== -1;
+    },
+    isVoidBlock: function () {
+        return this.isVoid();
     },
     /**
      * Return true if the given node is a block quote element (BLOCKQUOTE).
@@ -394,84 +477,10 @@ var isNode = {
 
 //////////////////////////////////////////////////////////////
 
-function ClassName (classNames) {
-    this.value = classNames.replace(/\s\s+/, ' ').split(' ');
-}
-ClassName.prototype = {
-    add: function (classNames) {
-        classNames.replace(/\s\s+/, ' ').split(' ').forEach(function (className) {
-            var index = this.value.indexOf(className);
-            if (index === -1) {
-                this.value.push(className);
-            }
-        });
-    },
-    contains: function (className) {
-        return this.value.indexOf(className) !== -1;
-    },
-    remove: function (classNames) {
-        classNames.replace(/\s\s+/, ' ').split(' ').forEach(function (className) {
-            var index = this.value.indexOf(className);
-            if (index !== -1) {
-                this.value.splice(index, 1);
-            }
-        });
-    },
-    toString: function () {
-        return this.value.join(' ');
-    },
-    get length () {
-        return this.toString().length;
-    },
-};
-
-
-//////////////////////////////////////////////////////////////
-
-function Attributes (attributes) {
-    var self = this;
-    this.__order__ = [];
-    attributes.forEach(function (attribute) {
-        self.add(attribute[0], attribute[1])
-    })
-}
-Attributes.prototype = {
-    add: function (name, value) {
-        if (this.__order__.indexOf(name) === -1) {
-            this.__order__.push(name);
-        }
-        if (name === 'class') {
-            value = new ClassName(value + '');
-        }
-        this[name] = value;
-    },
-    forEach: function (fn) {
-        this.__order__.forEach(fn.bind(this));
-    },
-    remove: function (classNames) {
-        var index = this.__order__.indexOf(name);
-        if (index !== -1) {
-            this.__order__.splice(index, 1);
-        }
-        delete this[name];
-    },
-    toString: function () {
-        var self = this;
-        var value = '';
-        this.__order__.forEach(function (name) {
-            if (value.length) {
-                value += ' ';
-            }
-            value += name + '="' + self[name].toString().replace('"', '\\"') + '"';
-        })
-    },
-};
-
 //////////////////////////////////////////////////////////////
 
 var ArchNode = Class.extend(isNode, {
     init: function (tree, nodeName, attributes) {
-        var self = this;
         this.tree = tree;
         this.nodeName = nodeName.toLowerCase();
         this.attributes = new Attributes(attributes);
@@ -480,8 +489,8 @@ var ArchNode = Class.extend(isNode, {
         }
         this.className = this.attributes.class;
         this.childNodes = [];
-        this.startRange = null;
-        this.endRange = null;
+        this._startRange = null;
+        this._endRange = null;
     },
 
     // Update arch
@@ -499,12 +508,15 @@ var ArchNode = Class.extend(isNode, {
         this._changeParent(archNode, 0);
     },
     remove: function () {
-        this.parent.childNodes.splice(this.index(), 1);
+        if (this.parent) {
+            this.parent.childNodes.splice(this.index(), 1);
+        }
         if (this.id) {
             this.tree._removeArchNode(this);
         }
+        this.__removed = true;
         if (this.childNodes) {
-            this.childNodes.forEach(function (archNode) {
+            this.childNodes.slice().forEach(function (archNode) {
                 archNode.remove();
             });
         }
@@ -542,7 +554,7 @@ var ArchNode = Class.extend(isNode, {
         }
     },
     ancestor: function (fn) {
-        var parent = this.parent;
+        var parent = this;
         while (parent && !fn.call(parent, parent)) {
             parent = parent.parent;
         }
@@ -580,63 +592,159 @@ var ArchNode = Class.extend(isNode, {
     // Private
     //--------------------------------------------------------------------------
 
-    _applyStructureRules: function () {
+    applyRules: function () {
+        this._applyRules();
+        this._architecturalSpaceNodePropagation();
+    },
+    _applyRules: function () {
+        this._applyRulesCustom();
+        if (!this.__removed) {
+            this._applyRulesArchNode();
+        }
+        if (!this.__removed) {
+            this._applyRulesOrder();
+        }
+        if (!this.__removed) {
+            this._applyRulesGenerateParent();
+        }
+        if (!this.__removed) {
+            this._applyRulesPropagation();
+        }
+    },
+    _applyRulesArchNode: function () {
+    },
+    _applyRulesOrder: function () {
+    },
+    _applyRulesCustom: function () {
+        var rules = this._applyRulesFilterRules(this.tree.options.customRules);
+        var ruleMethod;
+        while (ruleMethod = rules.pop()) {
+            var fragment = ruleMethod.call(this, this.tree, this);
+            if (fragment) {
+                var childNodes = fragment.childNodes.slice();
+                this.parent.insertBefore(fragment, this);
+                this.remove();
+                childNodes.forEach(function (archNode) {
+                    archNode._applyRules();
+                });
+                break;
+            }
+        }
+    },
+    _applyRulesGenerateParent: function () {
+        var parentedRule = this._applyRulesFilterRules(this.tree.options.parentedRules);
+        if (!(!parentedRule.length || parentedRule.indexOf('editable') !== -1 || parentedRule.indexOf(null) !== -1 || parentedRule.indexOf(this.parent.nodeName) !== -1)) {
+            // create parent
+            var newParent = new ArchNode(this.tree, parentedRule[0], []);
+            newParent.__applyRulesGenerateParentFlag = true;
+            this.parent.insertBefore(newParent, this);
+            newParent.append(this);
+            newParent._applyRules();
+        }
+    },
+    _applyRulesPropagation: function () {
+        var childNodes = this.childNodes.slice();
+        childNodes.forEach(function (archNode) {
+            archNode._applyRules();
+        });
         var newParents = [];
-        var parentedRule = [];
-        var structureRules = this.tree.options.structure;
-        for (var k = 0; k < structureRules.length; k++) {
-            var children = structureRules[k][1];
+        this.childNodes.forEach(function (archNode) {
+            if (childNodes.indexOf(archNode) === -1 && archNode.__applyRulesGenerateParentFlag) {
+                archNode.__applyRulesGenerateParentFlag = false;
+                newParents.push(archNode);
+            }
+        });
+        this._applyRulesMergeExcessStructure(newParents);
+    },
+    _applyRulesFilterRules: function (rules) {
+        var selectedRules = [];
+        for (var k = 0; k < rules.length; k++) {
+            var children = rules[k][1];
             for (var i = 0; i < children.length; i++) {
                 var check = children[i];
-                if (    (typeof check === 'function' && check(this)) || 
-                        (check === 'TEXT' && this instanceof TextNode) ||
-                        this.nodeName === check) {
-                    parentedRule = parentedRule.concat(structureRules[k][0]);
+                if ((typeof check === 'function' && check.call(this, this)) || this.nodeName === check) {
+                    selectedRules = selectedRules.concat(rules[k][0]);
                     break;
                 }
             }
         }
-
-        if (!(!parentedRule.length || parentedRule.indexOf('editable') !== -1 || parentedRule.indexOf(null) !== -1 || parentedRule.indexOf(this.parent.nodeName) !== -1)) {
-            // create parent
-            var newParent = new ArchNode(this.tree, parentedRule[0], []);
-            this.parent.insertBefore(newParent, this);
-            newParent.append(this);
-            newParents.push(newParent);
-            newParents = newParents.concat(newParent._applyStructureRules());
-        }
-
-        if (this.childNodes) {
-            this.childNodes.slice().forEach(function (archNode) {
-                newParents = newParents.concat(archNode._applyStructureRules());
-            });
-        }
-        return newParents;
+        return selectedRules;
     },
-    _addArchitecturalSpaceNode: function () {
-        if (this.isPre()) {
+    _applyRulesMergeExcessStructure: function (newParents) {
+        for (var k = 0; k < newParents.length; k++) {
+            var item = newParents[k];
+            var prev = item.previousSibling(function (n) {
+                return !(n instanceof VirtualNode) && !(n instanceof ArchitecturalSpaceNode);
+            });
+            if (prev && prev.nodeName === item.nodeName && newParents.indexOf(prev) !== -1) {
+                item.childNodes.slice().forEach(function (node) {
+                    prev.append(node);
+                });
+                item.remove();
+                continue;
+            }
+
+            var next = item.previousSibling(function (n) {
+                return !(n instanceof VirtualNode) && !(n instanceof ArchitecturalSpaceNode);
+            });
+            if (next && next.nodeName === item.nodeName && newParents.indexOf(next) !== -1) {
+                item.childNodes.slice().forEach(function (node) {
+                    next.append(node);
+                });
+                item.remove();
+                continue;
+            }
+        }
+    },
+    _architecturalSpaceNodePropagation: function () {
+        if (this.__removed) {
             return;
         }
-        if (this.parent && (this.isBlock() || this.parent.isBlock())) {
-            if (!(this.previousSibling() instanceof ArchitecturalSpaceNode)) {
-                this.parent.insertBefore(new ArchitecturalSpaceNode(this.tree), this);
-            }
-            if (!(this.nextSibling() instanceof ArchitecturalSpaceNode)) {
-                this.parent.insertAfter(new ArchitecturalSpaceNode(this.tree), this);
-            }
+        if (this.parent) {
+            this._addArchitecturalSpaceNode();
+        }
+        if (!(this instanceof TextNode) && !this.ancestor(this.isPre)) {
+            this.childNodes.slice().forEach(function (archNode) {
+                if (!(archNode instanceof ArchitecturalSpaceNode)) {
+                    archNode._architecturalSpaceNodePropagation();
+                }
+            });
+        }
+    },
+    _addArchitecturalSpaceNode: function () {
+        if (!this.isBlock() && !this.parent.isBlock()) {
+            return;
         }
 
-        if (!(this instanceof TextNode)) {
-            this.childNodes.slice().forEach(function (archNode) {
-                archNode._addArchitecturalSpaceNode();
-            });
+        var prev = this.previousSibling();
+
+        if (!this.isText() || this.nodeValue[0] !== '\n') {
+            if (!(prev instanceof ArchitecturalSpaceNode)) {
+                this.parent.insertBefore(new ArchitecturalSpaceNode(this.tree), this);
+            }
+        } else if (prev instanceof ArchitecturalSpaceNode) {
+            console.log(prev.previousSibling());
+            prev.remove();
+        }
+
+        var next = this.nextSibling();
+        if (!(next instanceof ArchitecturalSpaceNode)) {
+            this.parent.insertAfter(new ArchitecturalSpaceNode(this.tree), this);
+        }
+
+        if (this.isBlock() && !this.isPre() && !this.isText() && !this.isVoid() && this.childNodes.length) {
+            this.append(new ArchitecturalSpaceNode(this.tree), this);
         }
     },
     _changeParent: function (archNode, index) {
-        if (archNode instanceof VirtualNode) {
+        if (this.isVoid()) {
+            throw new Error("You can't add a node in a void");
+        }
+
+        if (archNode instanceof FragmentNode) {
             var self = this;
-            archNode.childNodes.forEach(function (archNode) {
-                self._changeParent(archNode, index);
+            archNode.childNodes.slice().forEach(function (archNode) {
+                self._changeParent(archNode, index++);
             });
             archNode.remove();
             return;
@@ -649,11 +757,13 @@ var ArchNode = Class.extend(isNode, {
         }
         archNode.parent = this;
         this.childNodes.splice(index, 0, archNode);
+
+        this.__removed = false;
     },
     _addInTree: function () {
         if (!this.id && this.parent && this.parent.id) {
             this.tree._addArchNode(this);
-            this.childNodes.forEach(function (archNode) {
+            this.childNodes.slice().forEach(function (archNode) {
                 archNode._addInTree();
             });
         }
@@ -686,7 +796,7 @@ var ArchNode = Class.extend(isNode, {
                 architecturalLevel: (options.architecturalLevel || 0) + 1,
             });
         }
-        this.childNodes.forEach(function (archNode) {
+        this.childNodes.slice().forEach(function (archNode) {
             node.appendChild(archNode._toNode(options));
         });
         this.tree._linkElement(this, node);
@@ -699,9 +809,10 @@ var ArchNode = Class.extend(isNode, {
 var TextNode = ArchNode.extend({
     init: function (tree, nodeValue) {
         this.tree = tree;
+        this.nodeName = 'TEXT';
         this.nodeValue = nodeValue;
-        this.startRange = null;
-        this.endRange = null;
+        this._startRange = null;
+        this._endRange = null;
     },
     toJSON: function () {
         return {
@@ -709,7 +820,35 @@ var TextNode = ArchNode.extend({
             nodeValue: this.nodeValue,
         };
     },
-    _applyStructureRules: function () {
+    _applyRulesPropagation: function () {},
+    _addArchitecturalSpaceNodePropagation: function () {},
+    _toNode: function (options) {
+        var node = document.createTextNode(this.nodeValue);
+        this.tree._linkElement(this, node);
+        return node;
+    },
+});
+
+//////////////////////////////////////////////////////////////
+
+var VisibleTextNode = TextNode.extend({
+});
+
+//////////////////////////////////////////////////////////////
+
+var VirtualNode = TextNode.extend({
+    char: '\uFEFF',
+    init: function () {
+        this._super.apply(this, arguments);
+        this.nodeValue = this.nodeValue.length ? this.nodeValue : this.char;
+    },
+    toJSON: function () {
+        return {
+            id: this.id,
+            virtualValue: this.nodeValue,
+        };
+    },
+    _applyRulesArchNode: function () {
         if (this.ancestor(this.isPre)) {
             return this._super();
         }
@@ -749,55 +888,37 @@ var TextNode = ArchNode.extend({
             }
         }
 
-
-        if (text.length) {
-            this.nodeValue = text;
-            // if this is an text node with content (not just an architechural node)
-            return this._super();
-        } else {
-            this.remove();
+        if (text.length && text !== this.char) {
+            var visibleText = new VisibleTextNode(this.tree, text);
+            this.parent.insertBefore(visibleText, this);
+            visibleText._applyRules();
         }
 
-        return [];
+        this.remove();
     },
-    _toNode: function (options) {
-        var node = document.createTextNode(this.nodeValue);
-        this.tree._linkElement(this, node);
-        return node;
-    },
+    _applyRulesGenerateParent: function () {},
+    _addArchitecturalSpaceNode: function () {},
 });
 
 //////////////////////////////////////////////////////////////
 
-var VirtualNode = TextNode.extend({
-    init: function () {
+var ArchitecturalSpaceNode = TextNode.extend({
+    init: function (tree, nodeValue) {
         this._super.apply(this, arguments);
-        this.nodeValue = '\uFEFF';
+        this.nodeName = 'TEXT-ARCH';
     },
     toJSON: function () {
         return {
             id: this.id,
         };
     },
-    _addArchitecturalSpaceNode: function () {
-    },
-    _applyStructureRules: function () {
-        return [];
-    },
-});
 
-//////////////////////////////////////////////////////////////
-
-var ArchitecturalSpaceNode = TextNode.extend({
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
 
-    _applyStructureRules: function () {
-        return [];
-    },
-    _addArchitecturalSpaceNode: function () {
-    },
+    _applyRulesGenerateParent: function () {},
+    _addArchitecturalSpaceNode: function () {},
     _toNode: function (options) {
         var space = '';
         if (options.architecturalSpace) {
@@ -826,7 +947,7 @@ var FragmentNode = ArchNode.extend({
     },
     _toNode: function (options) {
         var fragment = document.createDocumentFragment();
-        this.childNodes.forEach(function (archNode) {
+        this.childNodes.slice().forEach(function (archNode) {
             fragment.appendChild(archNode._toNode(options));
         });
         return fragment;
@@ -844,9 +965,6 @@ var RootNode = FragmentNode.extend({
     // Private
     //--------------------------------------------------------------------------
 
-    _applyStructureRules: function () {
-        return [];
-    },
     _prevNext: function (direction, fn, __inShearch) {
         if (!__inShearch && this.childNodes[0]) {
             var next;
@@ -880,7 +998,8 @@ function ArchTree (options) {
     this._nodeElementList = {};
     this._id = 1;
     this.root = new RootNode(this);
-    this._addArchNode(this.root, null, []);
+    this._addArchNode(this.root);
+    this.FragmentNode = FragmentNode;
 }
 ArchTree.prototype.getArchNode = function (archNodeId) {
     return this._nodeList[archNodeId];
@@ -944,9 +1063,6 @@ ArchTree.prototype.parse = function (xml) {
     root.childNodes.forEach(function (element) {
         fragment.append(self._parseElement(element));
     });
-    this._applyStructure(fragment);
-    this._applyOrdered(fragment);
-
     return fragment;
 };
 ArchTree.prototype._parseElement = function (element) {
@@ -961,43 +1077,9 @@ ArchTree.prototype._parseElement = function (element) {
             archNode.append(self._parseElement(child));
         });
     } else {
-        archNode = new TextNode(this, element.nodeValue);
+        archNode = new VirtualNode(this, element.nodeValue);
     }
     return archNode;
-};
-ArchTree.prototype._applyStructure = function (archNode) {
-    var item;
-    var newParents = archNode._applyStructureRules();
-
-    for (var k = 0; k < newParents.length; k++) {
-        var item = newParents[k];
-        var prev = item.previousSibling(function (n) {
-            return !(n instanceof VirtualNode) && !(n instanceof ArchitecturalSpaceNode);
-        });
-        if (prev && prev.nodeName === item.nodeName && newParents.indexOf(prev) !== -1) {
-            item.childNodes.forEach(function (node) {
-                prev.append(node);
-            });
-            item.remove();
-            continue;
-        }
-
-        var next = item.previousSibling(function (n) {
-            return !(n instanceof VirtualNode) && !(n instanceof ArchitecturalSpaceNode);
-        });
-        if (next && next.nodeName === item.nodeName && newParents.indexOf(next) !== -1) {
-            item.childNodes.forEach(function (node) {
-                next.append(node);
-            });
-            item.remove();
-            continue;
-        }
-    }
-
-    archNode._addArchitecturalSpaceNode();
-};
-ArchTree.prototype._applyOrdered = function (archNode) {
-
 };
 /**
  * @param {JSON} json
@@ -1010,18 +1092,18 @@ ArchTree.prototype.import = function (json) {
 
 ArchTree.prototype.getRange = function () {
     var start = this.root;
-    while (start.childNodes[start.startRange]) {
-        start = start.childNodes[start.startRange];
+    while (start.childNodes[start._startRange]) {
+        start = start.childNodes[start._startRange];
     }
     var end = this.root;
-    while (end.childNodes[end.endRange]) {
-        end = end.childNodes[end.endRange];
+    while (end.childNodes[end._endRange]) {
+        end = end.childNodes[end._endRange];
     }
     return {
         startId: start.id,
-        startOffset: start.startRange,
+        startOffset: start._startRange,
         endId: end.id,
-        endOffset: end.endRange,
+        endOffset: end._endRange,
     };
 };
 ArchTree.prototype.render = function (archNodeId) {

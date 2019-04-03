@@ -57,9 +57,14 @@ var formatTags = [
 var ArchPlugin = AbstractPlugin.extend({
     dependencies: [],
 
+    customRules: [
+        // [function (tree, archNode) {},
+        // ['TEXT']],
+    ],
+
     // must contains parents without other node between (must match at least with one)
     // null = no needed parent (allow to have for eg: Table > jinja)
-    structure: [
+    parentedRules: [
         // table > tbody
         [
             ['table'],
@@ -95,14 +100,15 @@ var ArchPlugin = AbstractPlugin.extend({
     ],
 
     // parents order, can contains itself as parents
-    ordered: [
+    orderRules: [
         formatTags.concat(['br']),
     ],
 
     init: function (parent, params, options) {
         this._super.apply(this, arguments);
-        this.structure = this.structure.slice();
-        this.ordered = this.ordered.slice();
+        this.customRules = this.customRules.slice();
+        this.parentedRules = this.parentedRules.slice();
+        this.orderRules = this.orderRules.slice();
     },
     setEditorValue: function (value) {
         var archNode = this._htmlToArch(value);
@@ -113,8 +119,9 @@ var ArchPlugin = AbstractPlugin.extend({
     start: function () {
         var promise = this._super();
         this.arch = new ArchTree({
-            structure: this.structure,
-            ordered: this.ordered,
+            parentedRules: this.parentedRules,
+            customRules: this.customRules,
+            orderRules: this.orderRules,
             styleTags: styleTags,
             formatTags: formatTags,
             isEditableNode: this.dependencies.Common.isEditableNode,
@@ -127,11 +134,14 @@ var ArchPlugin = AbstractPlugin.extend({
     // Public
     //--------------------------------------------------------------------------
 
+    addCustomRule: function (callback, children) {
+        this.customRules.push([callback, children]);
+    },
     addStructureRule: function (parents, children) {
-        this.structure.push([parents, children]);
+        this.parentedRules.push([parents, children]);
     },
     addOrderedList: function (list) {
-        this.ordered.push(list);
+        this.orderRules.push(list);
     },
 
     //--------------------------------------------------------------------------
@@ -235,13 +245,23 @@ var ArchPlugin = AbstractPlugin.extend({
 
                 <span>OKI</span>
             </pre>
+
+            <section>
+                <block>
+  % if toto:
+                    TOTO
+  %end
+                </block>
+            </section>
             `);
 
+        archNode.applyRules();
+        console.log('----------------------------------------');
         console.log(archNode);
-        console.log(archNode.toNode());
         console.log(archNode.toText());
         console.log('>>>>>>>>>>>>>>> add structural spaces');
         console.log(archNode.toText({architecturalSpace: 4}));
+        console.log('----------------------------------------');
 
 
         return archNode;

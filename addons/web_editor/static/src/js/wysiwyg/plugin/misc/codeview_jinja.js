@@ -4,10 +4,11 @@ odoo.define('web_editor.wysiwyg.plugin.codeview_jinja', function (require) {
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 
-var jinjaExp = /(^|\n)\s*%\send|%\sset/;
+var jinjaExp = /(^|\n)\s*%\s?(end|endif|else|if|set)/;
+var isJinjaLineExp = /^\n?\s*((%\s?(end|endif|else|(if|set) [^\n]+)?)|(\{%.*%\})|(\$\{[^}]+\}\s*%?))\s*\n?$/;
 
 var JinjaPlugin = AbstractPlugin.extend({
-    dependencies: ['CodeView', 'ArchPlugin'],
+    dependencies: ['CodeView', 'Arch'],
 
     /**
      * @overwrite
@@ -21,9 +22,9 @@ var JinjaPlugin = AbstractPlugin.extend({
     start: function () {
         var self = this;
         var promise = this._super();
-        this.dependencies.ArchPlugin.addStructureRule([null], [function isJinja (archNode) {
-            return typeof archNode.nodeValue === 'string' && jinjaExp.test(archNode.nodeValue);
-        }]);
+        this.dependencies.Arch.addStructureRule([null], [this._isArchJinja.bind(this)]);
+        this.dependencies.Arch.addCustomRule(this._splitVirtualTextArchNode.bind(this), [this._hasArchJinja.bind(this)]);
+        this.dependencies.Arch.addCustomRule(this._preventSpaceUpdate.bind(this), [this._hasArchJinja.bind(this)]);
         return promise;
     },
 
@@ -31,6 +32,32 @@ var JinjaPlugin = AbstractPlugin.extend({
     // Private
     //--------------------------------------------------------------------------
 
+    _preventSpaceUpdate: function (tree, archNode) {
+        archNode.isPre = function () {
+            return true;
+        };
+        archNode.isBlock = function () {
+            return true;
+        };
+    },
+    _splitVirtualTextArchNode: function (tree, archNode) {
+        if (this._isArchJinja(archNode)) {
+            return;
+        }
+        var lines = archNode.nodeValue.split('\n');
+        var fragment = tree.parse('\n' + lines.shift());
+        lines.forEach(function (line) {
+            fragment.append(tree.parse('\n' + line));
+        });
+
+        return fragment;
+    },
+    _isArchJinja: function (archNode) {
+        return archNode.isText() && isJinjaLineExp.test(archNode.nodeValue);
+    },
+    _hasArchJinja: function (archNode) {
+        return typeof archNode.isText() && this._hasJinja(archNode.nodeValue);
+    },
     /**
      * Returns true if the value contains jinja logic
      *
@@ -38,8 +65,7 @@ var JinjaPlugin = AbstractPlugin.extend({
      * @returns {Boolean}
      */
     _hasJinja: function (value) {
-        var reHasJinja = this.utils.getRegex('jinja', '', jinjaExp);
-        return reHasJinja.test(value);
+        return jinjaExp.test(value);
     },
 });
 
