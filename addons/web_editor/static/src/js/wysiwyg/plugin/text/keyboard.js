@@ -345,19 +345,21 @@ var KeyboardPlugin = AbstractPlugin.extend({
 
         var point = range.getStartPoint();
 
-        if (!point.node.tagName && this.dependencies.Common.isUnbreakableNode(point.node.parentNode)) {
+        if (this.utils.isText(point.node) && this.dependencies.Common.isUnbreakableNode(point.node.parentNode)) {
             return this._handleShiftEnter();
         }
 
-        if (point.node.tagName && point.node.childNodes[point.offset] && point.node.childNodes[point.offset].tagName === "BR") {
+        if (!this.utils.isText(point.node) && point.node.childNodes[point.offset] && point.node.childNodes[point.offset].tagName === "BR") {
             point = point.next();
         }
         if (point.node.tagName === "BR") {
             point = point.next();
         }
 
+        var isSkipPaddingBlankNode = this.utils.isEditable(ancestor) ||
+            (!this.utils.isNodeBlockType(point.node.parentNode) && !!point.node.parentNode.nextSibling);
         var next = this.dom.splitTree(ancestor, point, {
-            isSkipPaddingBlankNode: !this.utils.isNodeBlockType(point.node.parentNode) && !!point.node.parentNode.nextSibling
+            isSkipPaddingBlankNode: isSkipPaddingBlankNode,
         });
         while (next.firstChild) {
             next = next.firstChild;
@@ -375,17 +377,17 @@ var KeyboardPlugin = AbstractPlugin.extend({
             lastChecked = node;
             node = node.parentNode;
         }
-        if (!hasSplitBlock && lastChecked.tagName) {
+        if (!hasSplitBlock && !this.utils.isText(lastChecked)) {
             $(lastChecked).before(document.createElement('br'));
         }
 
-        if (!next.tagName) {
+        if (this.utils.isText(next)) {
             this.dom.secureExtremeSingleSpace(next);
         }
         if (next.tagName !== "BR" && next.innerHTML === "") {
             next.innerHTML = this.utils.char('zeroWidth');
         }
-        if (ancestor) {
+        if (ancestor && !this.utils.isEditable(ancestor)) {
             var firstChild = this.utils.firstLeafUntil(ancestor, function (n) {
                 return !self.dependencies.Common.isVoidBlock(n) && self.dependencies.Common.isEditableNode(n);
             });
@@ -405,8 +407,8 @@ var KeyboardPlugin = AbstractPlugin.extend({
         // move to next editable area
         point = this.getPoint(next, 0);
         if (
-            (point.node.tagName && point.node.tagName !== 'BR') ||
-            !this.utils.isVisibleText(point.node.textContent)
+            (!this.utils.isText(point.node) && point.node.tagName !== 'BR') ||
+            this.utils.isInvisibleText(point.node)
         ) {
             point = point.nextUntil(function (pt) {
                 if (pt.node === point.node) {
@@ -422,11 +424,6 @@ var KeyboardPlugin = AbstractPlugin.extend({
             if (point.node.tagName === "BR") {
                 point = point.next();
             }
-        }
-
-        if (!hasSplitBlock && !point.node.tagName) {
-            point.node.textContent = this.utils.char('zeroWidth') + point.node.textContent;
-            point.offset = 1;
         }
 
         // if the left part of the split node ends with a space, replace that space with nbsp
@@ -452,8 +449,8 @@ var KeyboardPlugin = AbstractPlugin.extend({
             });
 
             // Force content in empty buttons, the carret can be moved there
-            this.dependencies.Link.fillEmptyLink(next, true);
-            this.dependencies.Link.fillEmptyLink(btn, true);
+            this.dependencies.Link.fillEmptyLink(next);
+            this.dependencies.Link.fillEmptyLink(btn);
 
             // Move carret to the new button
             range = this.dependencies.Range.setRange({
@@ -480,7 +477,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         var range = this.dependencies.Range.getRange();
         var target = range.sc.childNodes[range.so] || range.sc;
         var before;
-        if (target.tagName) {
+        if (!this.utils.isText(target)) {
             if (target.tagName === "BR") {
                 before = target;
             } else if (target === range.sc) {
@@ -512,14 +509,14 @@ var KeyboardPlugin = AbstractPlugin.extend({
         var br = document.createElement('br');
         $(before).after(br);
         var next = this.getPoint(br, 0);
-        var startSpace = this.utils.getRegex('startSpace');
+        var reStartSpace = /^ +/;
 
-        if (!before.tagName) {
+        if (this.utils.isText(before)) {
             next = next.next();
             var nextNode = this.utils.firstLeafUntil(next.node.childNodes[next.offset] || next.node, function (n) {
-                return (!self.dependencies.Common.isVoidBlock(n)) && self.dependencies.Common.isEditableNode(n);
+                return !self.dependencies.Common.isVoidBlock(n) && self.dependencies.Common.isEditableNode(n);
             });
-            if (!nextNode.tagName) {
+            if (this.utils.isText(nextNode)) {
                 next.node = nextNode;
                 next.offset = 0;
             }
@@ -529,14 +526,14 @@ var KeyboardPlugin = AbstractPlugin.extend({
             next.node.tagName === "BR" && next.node.nextSibling &&
             !next.node.nextSibling.tagName && !this.utils.ancestor(next.node, this.utils.isPre)
         ) {
-            next.node.nextSibling.textContent = next.node.nextSibling.textContent.replace(startSpace, this.utils.char('nbsp'));
+            next.node.nextSibling.textContent = next.node.nextSibling.textContent.replace(reStartSpace, this.utils.char('nbsp'));
         }
         if (
-            !next.node.tagName &&
+            this.utils.isText(next.node) &&
             (!next.node.previousSibling || next.node.previousSibling.tagName === "BR") &&
             !this.utils.ancestor(next.node, this.utils.isPre)
         ) {
-            next.node.textContent = next.node.textContent.replace(startSpace, this.utils.char('nbsp'));
+            next.node.textContent = next.node.textContent.replace(reStartSpace, this.utils.char('nbsp'));
         }
 
         range = this.dependencies.Range.setRange({

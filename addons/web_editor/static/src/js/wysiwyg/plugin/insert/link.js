@@ -247,8 +247,8 @@ var Link = AbstractPlugin.extend({
         },
     },
 
-    get: function () {
-        var range = this.dependencies.Range.getRange();
+    get: function (range) {
+        range = range || this.dependencies.Range.getRange();
         var anchor = this.utils.ancestor(range.sc, this.utils.isAnchor);
         return anchor && range.replace({
             sc: anchor,
@@ -256,6 +256,11 @@ var Link = AbstractPlugin.extend({
         });
     },
 
+    fillEmptyLink: function (link) {
+        if (this.dependencies.Common.isEditableNode(link)) {
+            link.textContent = this.dependencies.LinkCreate.blankContent;
+        }
+    },
     /**
      * @param {Object} linkInfo
      * @param {WrappedRange} range

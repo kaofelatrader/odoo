@@ -437,6 +437,9 @@ return {
     firstLeafUntil: function (node, pred) {
         while (node.firstChild && (!pred || pred(node))) {
             node = node.firstChild;
+            while (node.nextSibling && this.isInvisibleText(node)) {
+                node = node.nextSibling;
+            }
         }
         return node;
     },
@@ -994,6 +997,9 @@ return {
     lastLeafUntil: function (node, pred) {
         while (node.lastChild && (!pred || pred(node))) {
             node = node.lastChild;
+            while (node.previousSibling && this.isInvisibleText(node)) {
+                node = node.previousSibling;
+            }
         }
         return node;
     },

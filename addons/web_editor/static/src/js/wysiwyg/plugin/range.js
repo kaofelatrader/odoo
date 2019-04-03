@@ -298,7 +298,9 @@ var RangePlugin = AbstractPlugin.extend({
 
         var range = this.getRange();
         console.log('range: ', range ? range.getPoints() : 'null');
-        console.log('dom: ', this.editable.innerHTML);
+        var html = this.editable.innerHTML;
+        html = html ? html.replace(/\u00A0/g, '&nbsp;').replace(/\uFEFF/g, '&#65279;') : null;
+        console.log('dom: ', html);
         this.trigger('range');
     },
 });

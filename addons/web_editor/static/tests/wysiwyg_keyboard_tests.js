@@ -1484,8 +1484,8 @@ var keyboardTestsEnter = [{
             key: 'ENTER',
         }],
         test: {
-            content: "<span><b>dom</b></span><br><span><b>&#65279;&nbsp;to edit</b></span>",
-            start: "b:eq(1):contents()[0]->1",
+            content: "<span><b>dom</b></span><br><span><b>&nbsp;to edit</b></span>",
+            start: "b:eq(1)->0",
         },
     },
     {
@@ -1499,12 +1499,12 @@ var keyboardTestsEnter = [{
             key: 'ENTER',
         }],
         test: {
-            content: "<span><b>dom<br></b></span><br><span><b>&#65279;&nbsp;to edit</b></span>",
-            start: "b:eq(1):contents()[0]->1",
+            content: "<span><b>dom<br></b></span><br><span><b>&nbsp;to edit</b></span>",
+            start: "b:eq(1)->0",
         },
     },
     {
-        name: "in span > b: ENTER -> a'",
+        name: "in span > b: ENTER -> 'a'",
         content: "<span><b>dom to edit</b></span>",
         steps: [{
             start: "b:contents()[0]->3",
@@ -1513,7 +1513,7 @@ var keyboardTestsEnter = [{
             key: 'a',
         }],
         test: {
-            content: "<span><b>dom</b></span><br><span><b>a to edit</b></span>",
+            content: "<span><b>dom</b></span><br><span><b>a&nbsp;to edit</b></span>",
             start: "b:eq(1):contents()[0]->1",
         },
     },
@@ -1558,7 +1558,7 @@ var keyboardTestsEnter = [{
             key: 'a',
         }],
         test: {
-            content: "<span><b>dom<br></b></span><br><span><b>a to edit</b></span>",
+            content: "<span><b>dom<br></b></span><br><span><b>a&nbsp;to edit</b></span>",
             start: "b:eq(1):contents()[0]->1",
         },
     },
