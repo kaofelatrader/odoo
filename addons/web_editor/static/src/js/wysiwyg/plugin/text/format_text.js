@@ -1368,9 +1368,10 @@ var ParagraphPlugin = AbstractPlugin.extend({
         });
 
         if (newNode) {
+            var firstLeaf = this.utils.firstLeaf(newNode);
             range.replace({
-                sc: newNode,
-                so: 0,
+                sc: firstLeaf,
+                so: this.utils.isText(firstLeaf) ? range.so : 0,
             });
         }
 
