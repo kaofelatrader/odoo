@@ -343,7 +343,7 @@ var ClipboardPlugin = AbstractPlugin.extend({
         }
 
         // Delete selection
-        var point = this.dom.deleteSelection(this.dependencies.Range.getRange());
+        var point = this.dom.deleteSelection(this.dependencies.Range.getRange(), true);
         var range = this.dependencies.Range.setRange({
             sc: point.node,
             so: point.offset,

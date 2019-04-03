@@ -41,7 +41,7 @@ var DropzonePlugin = Plugins.dropzone.extend({
         var nodes = this.context.invoke('ClipboardPlugin.prepareClipboardData', html);
 
         // Delete selection
-        var point = this.dom.deleteSelection(this.dependencies.Range.getRange());
+        var point = this.dom.deleteSelection(this.dependencies.Range.getRange(), true);
         var range = this.dependencies.Range.setRange({
             sc: point.node,
             so: point.offset,

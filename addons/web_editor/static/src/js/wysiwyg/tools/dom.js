@@ -21,13 +21,14 @@ var Dom = Class.extend({
      *
      * @param {BoundaryPoint} pointA
      * @param {BoundaryPoint} pointB
+     * @param {Boolean} [doPadBlank]
      * @returns {BoundaryPoint}
      */
-    deleteBetween: function (pointA, pointB) {
+    deleteBetween: function (pointA, pointB, doPadBlank) {
         var nextNode = this._prepareDelete(pointA, pointB);
         var nodes = this._getNodesToDelete(pointA, nextNode);
         $(nodes).remove();
-        var newPoint = this._cleanAfterDelete(pointA, nextNode, nodes)
+        var newPoint = this._cleanAfterDelete(pointA, nextNode, nodes, doPadBlank);
         if (newPoint && utils.isEditable(newPoint.node)) {
             newPoint.replace(newPoint.node.firstElementChild, 0);
         }
@@ -51,13 +52,14 @@ var Dom = Class.extend({
      * Deletes the contents of the selected DOM.
      *
      * @param {WrappedRange} range
+     * @param {Boolean} [doPadBlank]
      * @returns {BoundaryPoint|null}
      */
-    deleteSelection: function (range) {
+    deleteSelection: function (range, doPadBlank) {
         if (range.isCollapsed()) {
             return range.getStartPoint();
         }
-        var point = this.deleteBetween(range.getStartPoint(), range.getEndPoint());
+        var point = this.deleteBetween(range.getStartPoint(), range.getEndPoint(), doPadBlank);
 
         // remove tooltip when remove DOM nodes
         $('body > .tooltip').tooltip('hide');
@@ -187,7 +189,7 @@ var Dom = Class.extend({
         if (text === " ") {
             text = utils.char('nbsp');
         }
-        var point = this.deleteSelection(range);
+        var point = this.deleteSelection(range, true);
         while (!point.welcomesText()) {
             point.enter();
         }
@@ -482,9 +484,10 @@ var Dom = Class.extend({
      * @param {BoundaryPoint} point
      * @param {Node} nextNode
      * @param {Node []} removedNodes
+     * @param {Boolean} [doPadBlank]
      * @returns {BoundaryPoint}
      */
-    _cleanAfterDelete: function (point, nextNode, removedNodes) {
+    _cleanAfterDelete: function (point, nextNode, removedNodes, doPadBlank) {
         var newPoint = new BoundaryPoint(nextNode, 0)
             .enterUntil(utils.and(this.options.isVoidBlock, this.options.isEditableNode));
 
@@ -499,6 +502,9 @@ var Dom = Class.extend({
         }
 
         if (removedNodes.length && point.node.parentNode !== nextNode.parentNode) {
+            if (doPadBlank && utils.isBlankNode(point.node)) {
+                this._padBlankNode(point.node);
+            }
             return this.deleteEdge(point.node, false) || point;
         }
 

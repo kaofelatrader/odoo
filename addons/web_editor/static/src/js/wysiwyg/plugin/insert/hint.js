@@ -25,7 +25,7 @@ var HintPlugin = Plugins.hintPopover.extend({
         var $item = this.$content.find('.note-hint-item.active');
         if ($item.length) {
             var range = this.dependencies.Range.setRange(this.lastWordRange);
-            var point = this.dom.deleteSelection(range);
+            var point = this.dom.deleteSelection(range, true);
             range = this.dependencies.Range.setRange({
                 sc: point.node,
                 so: point.offset,

@@ -320,8 +320,8 @@ var keyboardTestsChar = [{
             key: 'a',
         }],
         test: {
-            content: "<h1 class=\"a\"><font style=\"font-size: 62px;\"><b>a</b></font></h1>",
-            start: "b:contents()[0]->1",
+            content: "<p>a</p>",
+            start: "p:contents()[0]->1",
         },
     },
     {
