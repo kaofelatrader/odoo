@@ -7,9 +7,6 @@ var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 var defaultOptions = require('wysiwyg.options');
 
-/**
- * Allows to customize link content and style.
- */
 var keyMapPlugin = AbstractPlugin.extend({
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_help.xml'],
     dependencies: ['Range'],
@@ -71,7 +68,7 @@ var keyMapPlugin = AbstractPlugin.extend({
         this.nameFromCode = {};
         Object.keys(this.codeFromName).forEach(function (key) {
             self.nameFromCode[self.codeFromName[key]] = key;
-        })
+        });
 
         var defaults = JSON.parse(JSON.stringify(defaultOptions.keyMap));
         var keyMap = Object.assign(defaults, this.options.keyMap);
@@ -91,7 +88,7 @@ var keyMapPlugin = AbstractPlugin.extend({
                 shortcut: shortcut,
                 pluginName: pluginName,
                 methodName: method[0],
-                value: method[1],
+                value: method[1] === 'true' ? true : (method[1] === 'false' ? false : method[1]),
                 description: help[command] && self.options.translate('KeyMap', help[command]),
             };
             if (!help[command]) {
@@ -104,7 +101,7 @@ var keyMapPlugin = AbstractPlugin.extend({
         this.dependencies = dependencies;
     },
     /**
-     * @see Manager.translatePluginTerm
+     * @see Manager.translatePluginString
      */
     translatePluginTerm: function (pluginName, value, originalValue, elem, attributeName) {
         if (attributeName !== 'title' || !this.dependencies[pluginName]) {
@@ -189,11 +186,11 @@ var keyMapPlugin = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     _onKeydown: function (ev) {
-        if (!ev.key || !ev.key.length === 1 || (!ev.ctrlKey && !ev.altKey && !ev.shiftKey && !ev.metaKey)) {
+        if (!ev.keyCode) {
             return;
         }
         var shortcut = this._eventToShortcut(ev);
-        var item = this.keyMap[shortcut];
+        var item = shortcut ? this.keyMap[shortcut] : null;
 
         if (!item) {
             return;

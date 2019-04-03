@@ -576,9 +576,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         this._isFocused = false;
         this._forceEditableFocus = false;
         this._mouseInEditor = false;
-        this._summernote.disable();
-        this.$target.focus();
-        setTimeout(this._summernote.enable.bind(this._summernote));
+        $(this.target).focus();
         this._onBlur(ev.data);
     },
     /**

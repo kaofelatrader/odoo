@@ -5,7 +5,7 @@ var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 var KeyboardPlugin = AbstractPlugin.extend({
-    dependencies: ['Common', 'Range', 'Paragraph', 'Link', 'History'], // TODO: Remove dependencies
+    dependencies: ['Common', 'Range', 'Paragraph', 'Link', 'History', 'Table'], // TODO: Remove dependencies
 
     editableDomEvents: {
         'keydown': '_onKeydown',
@@ -17,6 +17,50 @@ var KeyboardPlugin = AbstractPlugin.extend({
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * Handle TAB keydown event.
+     *
+     * @param {Boolean} [untab] true for shift+tab
+     */
+    handleTab: function (untab) {
+        var range = this.dependencies.Range.getRange();
+        var point = range.getStartPoint();
+        var startSpace = this.utils.getRegex('startSpace');
+
+        // In table, on tab switch to next cell
+        if (range.isOnCell()) {
+            var nextCell = this.dependencies.Table[untab ? 'prev' : 'next'](null, range);
+            if (!nextCell) {
+                return;
+            }
+            var elementChild = nextCell[untab ? 'lastElementChild' : 'firstElementChild'];
+            var nextText = this.utils[untab ? 'lastLeaf' : 'firstLeaf'](elementChild || nextCell);
+            range.replace({
+                sc: nextText,
+                so: untab ? this.utils.nodeLength(nextText) : 0,
+            });
+            this.dependencies.Range.setRange(range);
+            this.dependencies.Range.save();
+            return;
+        }
+        // If on left edge point: indent/outdent
+        if (this.utils.isText(point.node)) { // Clean up start spaces on textNode
+            point.node.textContent.replace(startSpace, function (startSpaces) {
+                point.offset = startSpaces.length === point.offset ? 0 : point.offset;
+                return '';
+            });
+        }
+        if (point.isLeftEdgeOfBlock() || this.utils.isEmpty(point.node)) {
+            this.dependencies.Paragraph[untab ? 'outdent' : 'indent'](null, range);
+            this.dependencies.Range.getRange().normalize();
+            return;
+        }
+        // Otherwise insert a tab or do nothing
+        if (!untab) {
+            this._insertTab();
+            this.dependencies.Range.getRange().normalize();
+        }
+    },
 
     //--------------------------------------------------------------------------
     // Private
@@ -291,7 +335,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             !$(ancestor).find('.fa, img').length
         ) {
             // double enter in a list make oudent
-            this.dependencies.Paragraph.outdent();
+            this.dependencies.Paragraph.outdent(null, range);
             return true;
         }
 
@@ -1136,9 +1180,6 @@ var KeyboardPlugin = AbstractPlugin.extend({
                 case 8: // BACKSPACE
                     handled = this._onBackspace(e);
                     break;
-                case 9: // TAB
-                    handled = this._onTab(e);
-                    break;
                 case 13: // ENTER
                     handled = this._onEnter(e);
                     break;
@@ -1187,7 +1228,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
                 return n.tagName && !!parseFloat(n.style[style] || 0);
             });
             if (point.isLeftEdgeOfBlock() && isIndented) {
-                this.dependencies.Paragraph.outdent();
+                this.dependencies.Paragraph.outdent(null, range);
                 return true;
             }
         }
@@ -1249,54 +1290,6 @@ var KeyboardPlugin = AbstractPlugin.extend({
             this._handleEnter();
         }
         return true;
-    },
-    /**
-     * Handle TAB keydown event.
-     *
-     * @private
-     * @param {jQueryEvent} e
-     * @returns {Boolean} true if case is handled and event default must be prevented
-     */
-    _onTab: function (e) {
-        // If TAB not handled, prevent default and do nothing
-        if (!this.options.keyMap.pc.TAB) {
-            this.trigger_up('wysiwyg_blur', {
-                key: 'TAB',
-                keyCode: 9,
-                shiftKey: e.shiftKey,
-            });
-            return true;
-        }
-        var range = this.dependencies.Range.getRange();
-        var point = range.getStartPoint();
-        var startSpace = this.utils.getRegex('startSpace');
-
-        if (!range.isOnCell()) {
-            // If on left edge point: indent/outdent
-            if (!point.node.tagName) { // Clean up start spaces on textNode
-                point.node.textContent.replace(startSpace, function (startSpaces) {
-                    point.offset = startSpaces.length === point.offset ? 0 : point.offset;
-                    return '';
-                });
-            }
-            if (point.isLeftEdgeOfBlock() || this.utils.isEmpty(point.node)) {
-                if (e.shiftKey) {
-                    this.dependencies.Paragraph.outdent();
-                } else {
-                    this.dependencies.Paragraph.indent();;
-                }
-                this.dependencies.Range.getRange().normalize();
-                return true;
-            }
-            // Otherwise insert a tab or do nothing
-            if (!e.shiftKey) {
-                this._insertTab();
-                this.dependencies.Range.getRange().normalize();
-            }
-            return true;
-        }
-        // In table, on tab switch to next cell
-        return false;
     },
     /**
      * Handle visible char keydown event.

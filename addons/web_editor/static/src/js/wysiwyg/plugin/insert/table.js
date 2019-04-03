@@ -376,6 +376,36 @@ var Table = AbstractPlugin.extend({
         });
         this.dependencies.Range.save(range);
     },
+    next: function (value, range) {
+        var cell = this.utils.ancestor(range.ec, this.utils.isCell);
+        var nextCell = cell.nextElementSibling;
+        if (!nextCell) {
+            var row = this.utils.ancestor(range.ec, function (node) {
+                return node.tagName === 'TR';
+            });
+            var nextRow = row.nextElementSibling;
+            if (!nextRow) {
+                return;
+            }
+            nextCell = nextRow.firstElementChild;
+        }
+        return nextCell;
+    },
+    prev: function (value, range) {
+        var cell = this.utils.ancestor(range.sc, this.utils.isCell);
+        var nextCell = cell.previousElementSibling;
+        if (!nextCell) {
+            var row = this.utils.ancestor(range.sc, function (node) {
+                return node.tagName === 'TR';
+            });
+            var nextRow = row.previousElementSibling;
+            if (!nextRow) {
+                return;
+            }
+            nextCell = nextRow.lastElementChild;
+        }
+        return nextCell;
+    },
 
     //--------------------------------------------------------------------------
     // Private

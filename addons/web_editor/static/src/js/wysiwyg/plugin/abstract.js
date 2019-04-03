@@ -113,7 +113,7 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
         return Promise.resolve();
     },
     /**
-     * @see Manager.translatePluginTerm
+     * @see Manager.translatePluginString
      */
     translatePluginTerm: function (pluginName, value, originalValue, elem, attributeName) {
         return value;

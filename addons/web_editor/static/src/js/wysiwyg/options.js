@@ -137,8 +137,8 @@ return {
             'CTRL+J':           'Media.showImageDialog',
             'CTRL+K':           'Link.showLinkDialog',
             // 'CTRL+ENTER':       'insertHorizontalRule',
-            // 'TAB':              'tab',
-            // 'SHIFT+TAB':        'untab',
+            'TAB':              'Keyboard.handleTab',
+            'SHIFT+TAB':        'Keyboard.handleTab:true',
         },
         mac: {
             'CMD+Z':            'History.undo',
@@ -168,8 +168,8 @@ return {
             'CMD+NUM8':         'FontStyle.formatBlock:PRE',
             'CMD+J':            'Media.showImageDialog',
             'CMD+K':            'Link.showLinkDialog',
-            // 'TAB':              'tab',
-            // 'SHIFT+TAB':        'untab',
+            'TAB':              'Keyboard.handleTab',
+            'SHIFT+TAB':        'Keyboard.handleTab:true',
             // 'CMD+ENTER':       'insertHorizontalRule',
         },
         help: {
@@ -200,8 +200,8 @@ return {
             'FontStyle.formatBlock:PRE':'Change current block\'s format as PRE for code',
             'Media.showImageDialog':    'Show Media Dialog (image, document, video, font)',
             'Link.showLinkDialog':      'Show Link Dialog',
-            // tab: 'Tab'),
-            // untab: 'Outdent (when at the start of a line)'),
+            'Keyboard.handleTab':       'Indent (when at the start of a line)',
+            'Keyboard.handleTab:true': 'Outdent (when at the start of a line)',
             // insertHorizontalRule: 'Insert horizontal rule'),
         }
     },
