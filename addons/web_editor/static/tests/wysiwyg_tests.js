@@ -2808,12 +2808,7 @@ QUnit.test('Table', function (assert) {
 
         range = weTestUtils.select('td td:eq(1)->0', 'td td:eq(1)->0', $editable);
         $(range.sc).mousedown();
-        Wysiwyg.setRange({
-            sc: range.sc,
-            so: range.so,
-            ec: range.ec,
-            eo: range.eo,
-        });
+        Wysiwyg.setRange(range);
 
         $trash = $('popover[name="Table"] button[name="delete-table"]');
         await testUtils.dom.triggerNativeEvents($trash[0], ['mousedown', 'click']);

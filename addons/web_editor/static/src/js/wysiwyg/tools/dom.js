@@ -894,6 +894,9 @@ var Dom = Class.extend({
         $contents = $contents.filter(function (index, node) {
             return !utils.isInvisibleText(node);
         });
+        if (utils.hasOnlyBR(node) && $contents.length === 1 && utils.isBR($contents[0])) {
+            $contents = $();
+        }
         $(node).append($contents);
         while (otherNode.parentNode && !utils.isEditable(otherNode.parentNode) && utils.isBlankNode(otherNode.parentNode)) {
             otherNode = otherNode.parentNode;
