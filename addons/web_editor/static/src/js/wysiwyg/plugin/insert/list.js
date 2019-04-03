@@ -118,8 +118,11 @@ var ListPlugin = AbstractPlugin.extend({
                 $(ul).addClass('o_checklist');
             }
 
-            this.dom.deleteEdge(ul, false);
-            this.dom.deleteEdge(ul, true);
+            var options = {
+                isTryNonSim: false,
+            };
+            this.dom.deleteEdge(ul, false, options);
+            this.dom.deleteEdge(ul, true, options);
 
         } else {
             // remove ol/ul

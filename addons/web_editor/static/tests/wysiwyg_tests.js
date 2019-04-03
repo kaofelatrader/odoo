@@ -1340,7 +1340,7 @@ QUnit.test('Ordered list', function (assert) {
                 },
             },
             {
-                name: "Click OL + Click OL: ul ul -> ul ol -> ul",
+                name: "Click OL + Click OL 2x: ul ul -> ul ol -> ul",
                 content: '<p>a</p>' +
                     '<ul>' +
                     '<li><p>b</p></li>' +
@@ -1350,7 +1350,7 @@ QUnit.test('Ordered list', function (assert) {
                     '</ul>' +
                     '<li><p>e</p></li>' +
                     '</ul>',
-                start: 'ul ul li:first:contents()[0]->1',
+                start: 'ul ul li:first:contents()[0]->1', // after 'c'
                 do: async function () {
                     await testUtils.dom.triggerNativeEvents($btnOL[0], ['mousedown', 'click']);
                     await testUtils.dom.triggerNativeEvents($btnOL[0], ['mousedown', 'click']);
