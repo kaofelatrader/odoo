@@ -123,7 +123,7 @@ var Wysiwyg = Widget.extend({
             styleTags: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre'],
             colors: this._groupColors,
             dropblocks: this._dropblocks,
-
+            plugins: this.options.plugins,
             renderTemplate: this._renderTemplate.bind(this),
             loadTemplates: this._loadTemplates.bind(this),
             translate: this._translate.bind(this),

@@ -394,6 +394,17 @@ function createWysiwyg(params) {
         useOnlyTestUnbreakable: params.useOnlyTestUnbreakable,
     });
 
+    wysiwygOptions.plugins = _.extend({
+        TestPlugin: {
+            dependencies: ['Range'],
+            start: function () {
+                wysiwyg.on('testResetRange', this, function () {
+                    this.dependencies.Range.save();
+                });
+            },
+        }
+    }, wysiwygOptions.plugins);
+
     var wysiwyg = new WysiwygTest(parent, wysiwygOptions);
     wysiwyg._parentToDestroyForTest = parent;
 
@@ -540,6 +551,7 @@ var testKeyboard = function (wysiwyg, assert, keyboardTests, addTests) {
                 so: start.offset,
             });
         }
+        wysiwyg.trigger('testResetRange');
         target = end ? end.node : start.node;
         $(target.tagName ? target : target.parentNode).trigger('mouseup');
     }

@@ -143,7 +143,7 @@ var RangePlugin = AbstractPlugin.extend({
         }
 
         var input = this.lastRange && this.lastRange.sc.childNodes[this.lastRange.so];
-        if (input && (input.tagName === 'TEXTAREA' || input.tagName === 'IMPUT')) {
+        if (input && (input.tagName === 'TEXTAREA' || input.tagName === 'INPUT')) {
             this.lastRange.input = input;
             this.lastRange.inputSelection = this._getTextSelection(input);
         }

@@ -1,6 +1,7 @@
 odoo.define('web_editor.wysiwyg.plugin.manager', function (require) {
 'use strict';
 
+var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Class = require('web.Class');
 var Dom = require('wysiwyg.Dom');
 var mixins = require('web.mixins');
@@ -232,10 +233,20 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
         var pluginInstances = {};
         for (var i = 0; i < pluginNames.length; i++) {
             var pluginName = pluginNames[i];
-            if ((!params.plugins[pluginName] || typeof params.plugins[pluginName] !== 'object') && !pluginsRegistry[pluginName]) {
+            var Plugin = params.plugins[pluginName];
+            if (typeof Plugin === 'object') {
+                if (pluginsRegistry[pluginName]) {
+                    Plugin = pluginsRegistry[pluginName].extend(Plugin);
+                } else {
+                    Plugin = AbstractPlugin.extend(Plugin);
+                }
+            } else if (typeof Plugin !== 'function') {
+                Plugin = pluginsRegistry[pluginName];
+            }
+
+            if (!Plugin) {
                 throw new Error("The plugin '" + pluginName + "' is unknown or couldn't be loaded.");
             }
-            var Plugin = typeof params.plugins[pluginName] === 'object' ? params.plugins[pluginName] : pluginsRegistry[pluginName];
             var pluginInstance = new Plugin(this, params, options);
             pluginInstance.pluginName = pluginName;
 

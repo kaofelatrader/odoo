@@ -4071,7 +4071,7 @@ var keyboardTestsDelete = [{
         },
     },
     {
-        name: "in li > p (p after): DELETE at end",
+        name: "in li > p (p after ul): DELETE at end",
         content: '<ul><li><p>node to merge with</p></li></ul><p>node to merge</p>',
         steps: [{
             start: 'p:contents()[0]->18',
@@ -4091,7 +4091,7 @@ var keyboardTestsDelete = [{
         }],
         test: {
             content: '<ul><li><p><i>node to merge</i>&nbsp;with<b>node</b> to merge</p></li></ul>',
-            start: "p:contents()[1]->5",
+            start: "b:contents()[0]->0",
         },
     },
     {
@@ -4103,7 +4103,7 @@ var keyboardTestsDelete = [{
         }],
         test: {
             content: '<ul><li><p><b>node to </b><i>merge with</i><b>node</b> to merge</p></li></ul>',
-            start: "i->1",
+            start: "b:eq(1):contents()[0]->0",
         },
     },
     {

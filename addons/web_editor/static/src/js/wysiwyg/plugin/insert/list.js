@@ -181,10 +181,10 @@ var ListPlugin = AbstractPlugin.extend({
         }
 
         var startLeaf = this.utils.firstLeafUntil(start.node, function (n) {
-            return (!self.dependencies.Common.isVoidBlock(n)) && self.dependencies.Common.isEditableNode(n);
+            return !self.dependencies.Common.isVoidBlock(n) && self.dependencies.Common.isEditableNode(n);
         });
         var endLeaf = this.utils.firstLeafUntil(end.node, function (n) {
-            return (!self.dependencies.Common.isVoidBlock(n)) && self.dependencies.Common.isEditableNode(n);
+            return !self.dependencies.Common.isVoidBlock(n) && self.dependencies.Common.isEditableNode(n);
         });
         range = this.dependencies.Range.setRange({
             sc: startLeaf,

@@ -619,8 +619,11 @@ var Dom = Class.extend({
         if (options.isTryNonSim) {
             next = this._findNextBlockToMerge(node, isPrev);
             if (next) {
+                if (utils.isList(node) && !utils.isLi(next)) {
+                    node = utils[isPrev ? 'lastLeafUntil' : 'firstLeafUntil'](node, utils.not(utils.isLi.bind(utils)));
+                    node = isPrev ? node.lastElementChild || node : node.firstElementChild || node;
+                }
                 next = isPrev ? [node, node = next][0] : next; // swap node and next
-                // TODO: ENSURE SYMMETRY! ONE ELEM LEFT, ONE RIGHT -> (wrap right in span)
                 return this._mergeNodes(node, next, isPrev, options); // recursive: calls back _deleteEdgeRec
             }
         }
