@@ -1825,7 +1825,7 @@ var keyboardTestsComplex = [{
             key: 'a',
         }],
         test: {
-            content: "<span><b>doma to edit</b></span>",
+            content: "<span><b>doma&nbsp;to edit</b></span>",
             start: "b:contents()[0]->4",
         },
     },
@@ -1861,7 +1861,7 @@ var keyboardTestsComplex = [{
             key: 'a',
         }],
         test: {
-            content: "<span><b>dom<br>a to edit</b></span>",
+            content: "<span><b>dom<br>a&nbsp;to edit</b></span>",
             start: "b:contents()[2]->1",
         },
     },
@@ -1880,7 +1880,7 @@ var keyboardTestsComplex = [{
         }],
         test: {
             content: "<p><b>dom<br>&nbsp;to edit</b></p>",
-            start: "b:contents()[2]->0",
+            start: "b->1",
         },
     },
     {
@@ -1984,7 +1984,7 @@ var keyboardTestsComplex = [{
             key: 'a',
         }],
         test: {
-            content: "<ul><li><p>dom<br>&#65279;</p></li><li><p>a to edit</p></li></ul>",
+            content: "<ul><li><p>dom<br>&#65279;</p></li><li><p>a&nbsp;to edit</p></li></ul>",
             start: "p:eq(1):contents()[0]->1",
         },
     },
@@ -2042,7 +2042,7 @@ var keyboardTestsComplex = [{
         }],
         test: {
             content: '<p class=\"a\">pi<i>f</i></p>',
-            start: "p:contents()[0]->2",
+            start: "i:contents()[0]->0",
         },
     },
     {
@@ -2055,7 +2055,7 @@ var keyboardTestsComplex = [{
         }],
         test: {
             content: '<p class=\"a\">pi<i>f</i></p>',
-            start: "p:contents()[0]->2",
+            start: "i:contents()[0]->0",
         },
     },
 
