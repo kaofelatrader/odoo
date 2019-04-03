@@ -88,7 +88,7 @@ var isNode = {
      *
      * @returns {Boolean}
      */
-    isData: function (node) {
+    isData: function () {
         return this.nodeName === 'data';
     },
     /**
@@ -392,30 +392,79 @@ var isNode = {
     },
 };
 
+//////////////////////////////////////////////////////////////
+
 function ClassName (classNames) {
     this.value = classNames.replace(/\s\s+/, ' ').split(' ');
 }
-ClassName.prototype.contains = function (className) {
-    return this.value.indexOf(className) !== -1;
+ClassName.prototype = {
+    add: function (classNames) {
+        classNames.replace(/\s\s+/, ' ').split(' ').forEach(function (className) {
+            var index = this.value.indexOf(className);
+            if (index === -1) {
+                this.value.push(className);
+            }
+        });
+    },
+    contains: function (className) {
+        return this.value.indexOf(className) !== -1;
+    },
+    remove: function (classNames) {
+        classNames.replace(/\s\s+/, ' ').split(' ').forEach(function (className) {
+            var index = this.value.indexOf(className);
+            if (index !== -1) {
+                this.value.splice(index, 1);
+            }
+        });
+    },
+    toString: function () {
+        return this.value.join(' ');
+    },
+    get length () {
+        return this.toString().length;
+    },
 };
-ClassName.prototype.remove = function (classNames) {
-    classNames.replace(/\s\s+/, ' ').split(' ').forEach(function (className) {
-        var index = this.value.indexOf(className);
+
+
+//////////////////////////////////////////////////////////////
+
+function Attributes (attributes) {
+    var self = this;
+    this.__order__ = [];
+    attributes.forEach(function (attribute) {
+        self.add(attribute[0], attribute[1])
+    })
+}
+Attributes.prototype = {
+    add: function (name, value) {
+        if (this.__order__.indexOf(name) === -1) {
+            this.__order__.push(name);
+        }
+        if (name === 'class') {
+            value = new ClassName(value + '');
+        }
+        this[name] = value;
+    },
+    forEach: function (fn) {
+        this.__order__.forEach(fn.bind(this));
+    },
+    remove: function (classNames) {
+        var index = this.__order__.indexOf(name);
         if (index !== -1) {
-            this.value.splice(index, 1);
+            this.__order__.splice(index, 1);
         }
-    });
-};
-ClassName.prototype.add = function (classNames) {
-    classNames.replace(/\s\s+/, ' ').split(' ').forEach(function (className) {
-        var index = this.value.indexOf(className);
-        if (index === -1) {
-            this.value.push(className);
-        }
-    });
-};
-ClassName.prototype.render = function () {
-    return this.value.join(' ');
+        delete this[name];
+    },
+    toString: function () {
+        var self = this;
+        var value = '';
+        this.__order__.forEach(function (name) {
+            if (value.length) {
+                value += ' ';
+            }
+            value += name + '="' + self[name].toString().replace('"', '\\"') + '"';
+        })
+    },
 };
 
 //////////////////////////////////////////////////////////////
@@ -425,16 +474,11 @@ var ArchNode = Class.extend(isNode, {
         var self = this;
         this.tree = tree;
         this.nodeName = nodeName.toLowerCase();
-        this.attributes = attributes;
-        attributes.forEach(function (attribute) {
-            if (attribute[0] === "class") {
-                self.className = attribute[1] = new ClassName(attribute[1]);
-            }
-        });
-        if (!this.className) {
-            this.className = new ClassName('');
-            attributes.push(['class', this.className]);
+        this.attributes = new Attributes(attributes);
+        if (!this.attributes.class) {
+            this.attributes.add('class', '');
         }
+        this.className = this.attributes.class;
         this.childNodes = [];
         this.startRange = null;
         this.endRange = null;
@@ -632,10 +676,9 @@ var ArchNode = Class.extend(isNode, {
     },
     _toNode: function (options) {
         var node = document.createElement(this.nodeName);
-        this.attributes.forEach(function (attribute) {
-            var value = typeof attribute[1] === 'string' ? attribute[1] : attribute[1].render();
-            if (value !== '') {
-                node.setAttribute(attribute[0], value);
+        this.attributes.forEach(function (name) {
+            if (this[name].length) {
+                node.setAttribute(name, this[name].toString());
             }
         });
         if (options.architecturalSpace) {
@@ -683,22 +726,18 @@ var TextNode = ArchNode.extend({
             if (before.length) {
                 before = '';
                 var prev = this.previousSibling();
-                if (!prev) {
-                    if (!this.isLeftEdge(ancestor)) {
-                        before = ' ';
-                    }
-                } else if (prev.isInline() && (!(prev instanceof TextNode) || prev.isVisibleText())) {
+                if (!prev && !this.isLeftEdge(ancestor)) {
+                    before = ' ';
+                } else if (prev && prev.isInline() && (!(prev instanceof TextNode) || prev.isVisibleText())) {
                     before = ' ';
                 }
             }
-            if (after.length) {
+            if (after.length || !text.length) {
                 after = '';
                 var next = this.nextSibling();
-                if (!next) {
-                    if (!this.isRightEdge(ancestor)) {
-                        after = ' ';
-                    }
-                } else if (next.isInline() && (!(next instanceof TextNode) || next.isVisibleText())) {
+                if (!next && !this.isRightEdge(ancestor)) {
+                    after = ' ';
+                } else if (next && next.isInline() && (!(next instanceof TextNode) || next.isVisibleText())) {
                     after = ' ';
                 }
             }
