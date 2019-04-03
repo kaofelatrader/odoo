@@ -2972,7 +2972,7 @@ QUnit.test('CodeView', async function (assert) {
         assert.strictEqual($('textarea[name="codeview"]:visible').length, 1, "should show the CodeView textarea");
         assert.strictEqual($editable.is(':visible'), false, "should hide the editable area");
         assert.strictEqual($('popover:visible').length, 0, "should hide all popovers");
-        assert.strictEqual($('toolbar group button:not(.disabled)').length, 4, "should disable all buttons except the codeview, add blocks, fullscreen and help buttons");
+        assert.strictEqual($('toolbar group button:not(.disabled)').length, 3, "should disable all buttons except the codeview, fullscreen and help buttons");
         wysiwyg.$('textarea[name="codeview"]').val('<p>dom to edit a <img src="/web_editor/static/src/img/transparent.png"></p>');
         await testUtils.dom.triggerNativeEvents($buttonCodeView[0], ['mousedown', 'click']);
         assert.strictEqual($('textarea[name="codeview"]:visible').length, 0, "should hide the CodeView textarea");
