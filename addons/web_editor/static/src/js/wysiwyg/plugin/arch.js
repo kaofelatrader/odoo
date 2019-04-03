@@ -84,7 +84,7 @@ var ArchPlugin = AbstractPlugin.extend({
         ],
         // editable > p
         [
-            ['editable', 'div', 'td', 'th', 'li'],
+            ['EDITABLE', 'div', 'td', 'th', 'li'],
             styleTags.concat(['ul', 'ol']),
         ],
         // H1 > i
@@ -229,7 +229,7 @@ var ArchPlugin = AbstractPlugin.extend({
             Bonjour,
             <br>
             <b>comment va-<i>tu</i> ?</b>
-            <table><td>wrong TD</td></table>
+            <table><td>wrong TD</td> free text in table</table>
             <i><font color="red">comment</font> <font color="blue">va-<b>tu</b></font> ?</i>
             <div>
                 text dans div ?
@@ -253,6 +253,9 @@ var ArchPlugin = AbstractPlugin.extend({
   %end
                 </block>
             </section>
+            <p>
+                <i>iiii</i> <iframe src="/test"/> <b>bbb</b>
+            </p>
             `);
 
         archNode.applyRules();

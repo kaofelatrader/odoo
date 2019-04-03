@@ -78,6 +78,8 @@ Attributes.prototype = {
     },
 };
 
+//////////////////////////////////////////////////////////////
+
 var isNode = {
 
     /**
@@ -186,7 +188,7 @@ var isNode = {
      * @returns {Boolean}
      */
     isEditable: function () {
-        return this.nodeName === 'editable';
+        return this.nodeName === 'EDITABLE';
     },
     /**
      * Return true if the given node's type is element (1).
@@ -477,8 +479,6 @@ var isNode = {
 
 //////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////
-
 var ArchNode = Class.extend(isNode, {
     init: function (tree, nodeName, attributes) {
         this.tree = tree;
@@ -605,7 +605,7 @@ var ArchNode = Class.extend(isNode, {
             this._applyRulesOrder();
         }
         if (!this.__removed) {
-            this._applyRulesGenerateParent();
+            this._applyRulesCheckParents();
         }
         if (!this.__removed) {
             this._applyRulesPropagation();
@@ -631,15 +631,71 @@ var ArchNode = Class.extend(isNode, {
             }
         }
     },
-    _applyRulesGenerateParent: function () {
-        var parentedRule = this._applyRulesFilterRules(this.tree.options.parentedRules);
-        if (!(!parentedRule.length || parentedRule.indexOf('editable') !== -1 || parentedRule.indexOf(null) !== -1 || parentedRule.indexOf(this.parent.nodeName) !== -1)) {
-            // create parent
-            var newParent = new ArchNode(this.tree, parentedRule[0], []);
-            newParent.__applyRulesGenerateParentFlag = true;
-            this.parent.insertBefore(newParent, this);
-            newParent.append(this);
-            newParent._applyRules();
+    _applyRulesGenerateParent: function (nodeName) {
+        if (nodeName === 'EDITABLE') {
+            return;
+        }
+        var newParent = new ArchNode(this.tree, nodeName, []);
+        newParent.__applyRulesCheckParentsFlag = true;
+        this.parent.insertBefore(newParent, this);
+        newParent.append(this);
+        newParent._applyRules();
+    },
+    _applyRulesCheckParents: function () {
+        var rules = this.tree.options.parentedRules;
+        var parentedRule = this._applyRulesFilterRules(rules);
+        if (!(!parentedRule.length || parentedRule.indexOf(null) !== -1)) {
+
+            // We seek to minimize the number of parents to create
+            var parentName = this.parent.nodeName === 'FRAGMENT' ? 'EDITABLE' : this.parent.nodeName;
+            var allreadyParents = [parentName];
+            var availableCandidates = [parentName];
+            var nextAvailables = [];
+            // add children who match everthing for check next level
+            for (var i = 0; i < rules.length; i++) {
+                if (rules[i][0].indexOf(null) === -1) {
+                    continue;
+                }
+                rules[i][1].forEach(function (value) {
+                    if (allreadyParents.indexOf(value) === -1) {
+                        allreadyParents.push(value);
+                        nextAvailables.push(value)
+                    }
+                });
+            }
+
+            while (availableCandidates.length) {
+                for (var k = 0; k < availableCandidates.length; k++) {
+
+                    // check if a parent can match at this level
+                    var candidate = availableCandidates[k];
+                    if (parentedRule.indexOf(candidate) !== -1) {
+                        if (parentName === candidate) {
+                            return;
+                        }
+                        return this._applyRulesGenerateParent(candidate);
+                    }
+
+                    // add children for check next level
+                    for (var i = 0; i < rules.length; i++) {
+                        if (rules[i][0].indexOf(candidate) === -1) {
+                            continue;
+                        }
+                        rules[i][1].forEach(function (value) {
+                            if (allreadyParents.indexOf(value) === -1) {
+                                allreadyParents.push(value);
+                                nextAvailables.push(value)
+                            }
+                        });
+                    }
+                }
+                availableCandidates = nextAvailables;
+                nextAvailables = [];
+            }
+
+            if (parentedRule.indexOf(parentName) === -1 && parentedRule.indexOf('EDITABLE') === -1) {
+                this._applyRulesGenerateParent(parentedRule[0]);
+            }
         }
     },
     _applyRulesPropagation: function () {
@@ -649,8 +705,8 @@ var ArchNode = Class.extend(isNode, {
         });
         var newParents = [];
         this.childNodes.forEach(function (archNode) {
-            if (childNodes.indexOf(archNode) === -1 && archNode.__applyRulesGenerateParentFlag) {
-                archNode.__applyRulesGenerateParentFlag = false;
+            if (childNodes.indexOf(archNode) === -1 && archNode.__applyRulesCheckParentsFlag) {
+                archNode.__applyRulesCheckParentsFlag = false;
                 newParents.push(archNode);
             }
         });
@@ -712,24 +768,18 @@ var ArchNode = Class.extend(isNode, {
         }
     },
     _addArchitecturalSpaceNode: function () {
-        if (!this.isBlock() && !this.parent.isBlock()) {
-            return;
-        }
-
         var prev = this.previousSibling();
-
-        if (!this.isText() || this.nodeValue[0] !== '\n') {
-            if (!(prev instanceof ArchitecturalSpaceNode)) {
-                this.parent.insertBefore(new ArchitecturalSpaceNode(this.tree), this);
-            }
-        } else if (prev instanceof ArchitecturalSpaceNode) {
+        if (prev instanceof ArchitecturalSpaceNode && this.isText() && this.nodeValue[0] === '\n') {
             console.log(prev.previousSibling());
             prev.remove();
         }
 
-        var next = this.nextSibling();
-        if (!(next instanceof ArchitecturalSpaceNode)) {
-            this.parent.insertAfter(new ArchitecturalSpaceNode(this.tree), this);
+        if (!this.isBlock() && !this.parent.isBlock()) {
+            return;
+        }
+
+        if (!(prev instanceof ArchitecturalSpaceNode) && (!this.isText() || this.nodeValue[0] !== '\n')) {
+            this.parent.insertBefore(new ArchitecturalSpaceNode(this.tree), this);
         }
 
         if (this.isBlock() && !this.isPre() && !this.isText() && !this.isVoid() && this.childNodes.length) {
@@ -896,7 +946,7 @@ var VirtualNode = TextNode.extend({
 
         this.remove();
     },
-    _applyRulesGenerateParent: function () {},
+    _applyRulesCheckParents: function () {},
     _addArchitecturalSpaceNode: function () {},
 });
 
@@ -917,7 +967,7 @@ var ArchitecturalSpaceNode = TextNode.extend({
     // Private
     //--------------------------------------------------------------------------
 
-    _applyRulesGenerateParent: function () {},
+    _applyRulesCheckParents: function () {},
     _addArchitecturalSpaceNode: function () {},
     _toNode: function (options) {
         var space = '';
@@ -939,11 +989,15 @@ var ArchitecturalSpaceNode = TextNode.extend({
 var FragmentNode = ArchNode.extend({
     init: function (tree) {
         this.tree = tree;
+        this.nodeName = 'FRAGMENT';
         this.childNodes = [];
     },
     toNode: function (options) {
         options = options || {};
         return this._toNode(options);
+    },
+    _applyRules: function () {
+        this._applyRulesPropagation();
     },
     _toNode: function (options) {
         var fragment = document.createDocumentFragment();
@@ -957,6 +1011,11 @@ var FragmentNode = ArchNode.extend({
 //////////////////////////////////////////////////////////////
 
 var RootNode = FragmentNode.extend({
+    init: function (tree) {
+        this.tree = tree;
+        this.nodeName = 'EDITABLE';
+        this.childNodes = [];
+    },
     index: function () {
         return null;
     },
@@ -1045,13 +1104,14 @@ ArchTree.prototype.prepend = function (archNode) {
  * @param {string} xml
  * @returns {ArchNode}
  **/
-ArchTree.prototype.parse = function (xml) {
+ArchTree.prototype.parse = function (html) {
     var self = this;
     var fragment = new FragmentNode(this);
 
+    var xml = html.replace(/<((br|img|iframe)[^>/]*)>/g, '<\$1/>');
     var fragmentDOM = document.createDocumentFragment();
-    var parser = new DOMParser()
-    var element = parser.parseFromString("<root>" + xml + "</root>","text/html");
+    var parser = new DOMParser();
+    var element = parser.parseFromString("<root>" + xml + "</root>","text/xml");
 
     if (element.querySelector('parsererror')) {
         console.error(element);
