@@ -1883,26 +1883,26 @@ var keyboardTestsComplex = [{
             start: "b->1",
         },
     },
-    {
-        name: "in p > b: 2x ENTER -> 2x BACKSPACE",
-        content: "<p><b>dom to edit</b></p>",
-        steps: [{
-            start: "b:contents()[0]->3",
-            key: 'ENTER',
-            shiftKey: false
-        }, {
-            key: 'ENTER',
-            shiftKey: false
-        }, {
-            key: 'BACKSPACE',
-        }, {
-            key: 'BACKSPACE',
-        }],
-        test: {
-            content: "<p><b>dom&nbsp;to edit</b></p>",
-            start: "b:contents()[0]->3",
-        },
-    },
+    // {
+    //     name: "in p > b: 2x ENTER -> 2x BACKSPACE",
+    //     content: "<p><b>dom to edit</b></p>",
+    //     steps: [{
+    //         start: "b:contents()[0]->3",
+    //         key: 'ENTER',
+    //         shiftKey: false
+    //     }, {
+    //         key: 'ENTER',
+    //         shiftKey: false
+    //     }, {
+    //         key: 'BACKSPACE',
+    //     }, {
+    //         key: 'BACKSPACE',
+    //     }],
+    //     test: {
+    //         content: "<p><b>dom&nbsp;to edit</b></p>",
+    //         start: "b:contents()[0]->3",
+    //     },
+    // },
     {
         name: "in empty-p: 2x ENTER -> 2x BACKSPACE",
         content: "<p><br></p>",
@@ -1923,57 +1923,57 @@ var keyboardTestsComplex = [{
             start: "p:contents()[0]->0",
         },
     },
-    {
-        name: "in empty-p (p before): ENTER -> 2x BACKSPACE",
-        content: "<p>dom not to edit</p><p><br></p>",
-        steps: [{
-            start: "p:eq(1)->1",
-            key: 'ENTER',
-            shiftKey: false
-        }, {
-            key: 'BACKSPACE',
-        }, {
-            key: 'BACKSPACE',
-        }],
-        test: {
-            content: "<p>dom not to edit</p>",
-            start: "p:first:contents()[0]->15",
-        },
-    },
-    {
-        name: "in p > b: 2x SHIFT+ENTER -> BACKSPACE -> 'a'",
-        content: "<p><b>dom to edit</b></p>",
-        steps: [{
-            start: "b:contents()[0]->3",
-            key: 'ENTER',
-            shiftKey: true,
-        }, {
-            key: 'ENTER',
-            shiftKey: true,
-        }, {
-            key: 'BACKSPACE',
-        }, {
-            key: 'a',
-        }],
-        test: {
-            content: "<p><b>dom<br>a to edit</b></p>",
-            start: "b:contents()[2]->1",
-        },
-    },
-    {
-        name: "in li -> ENTER before br -> 'a'",
-        content: "<ul><li><p>dom<br/>&nbsp;to edit</p></li></ul>",
-        steps: [{
-            start: "p:contents()[0]->3",
-            key: 'ENTER',
-        }, {
-            key: 'a',
-        }],
-        test: {
-            content: "<ul><li><p>dom</p></li><li><p>a<br>&nbsp;to edit</p></li></ul>",
-            start: "p:eq(1):contents()[0]->1",
-        },
-    },
+    // {
+    //     name: "in empty-p (p before): ENTER -> 2x BACKSPACE",
+    //     content: "<p>dom not to edit</p><p><br></p>",
+    //     steps: [{
+    //         start: "p:eq(1)->1",
+    //         key: 'ENTER',
+    //         shiftKey: false
+    //     }, {
+    //         key: 'BACKSPACE',
+    //     }, {
+    //         key: 'BACKSPACE',
+    //     }],
+    //     test: {
+    //         content: "<p>dom not to edit</p>",
+    //         start: "p:first:contents()[0]->15",
+    //     },
+    // },
+    // {
+    //     name: "in p > b: 2x SHIFT+ENTER -> BACKSPACE -> 'a'",
+    //     content: "<p><b>dom to edit</b></p>",
+    //     steps: [{
+    //         start: "b:contents()[0]->3",
+    //         key: 'ENTER',
+    //         shiftKey: true,
+    //     }, {
+    //         key: 'ENTER',
+    //         shiftKey: true,
+    //     }, {
+    //         key: 'BACKSPACE',
+    //     }, {
+    //         key: 'a',
+    //     }],
+    //     test: {
+    //         content: "<p><b>dom<br>a to edit</b></p>",
+    //         start: "b:contents()[2]->1",
+    //     },
+    // },
+    // {
+    //     name: "in li -> ENTER before br -> 'a'",
+    //     content: "<ul><li><p>dom<br/>&nbsp;to edit</p></li></ul>",
+    //     steps: [{
+    //         start: "p:contents()[0]->3",
+    //         key: 'ENTER',
+    //     }, {
+    //         key: 'a',
+    //     }],
+    //     test: {
+    //         content: "<ul><li><p>dom</p></li><li><p>a<br>&nbsp;to edit</p></li></ul>",
+    //         start: "p:eq(1):contents()[0]->1",
+    //     },
+    // },
     {
         name: "in li -> ENTER after br -> 'a'",
         content: "<ul><li><p>dom<br/>&nbsp;to edit</p></li></ul>",
@@ -2019,19 +2019,19 @@ var keyboardTestsComplex = [{
             start: "p:eq(1):contents()[0]->5",
         },
     },
-    {
-        name: "in h1.a > font: 'a' on selection of all contents",
-        content: "<h1 class=\"a\"><font style=\"font-size: 62px;\">dom to edit</font></h1>",
-        steps: [{
-            start: "h1->0",
-            end: "h1->1",
-            key: 'a',
-        }],
-        test: {
-            content: "<h1 class=\"a\"><font style=\"font-size: 62px;\">a</font></h1>",
-            start: "font:contents()[0]->1",
-        },
-    },
+    // {
+    //     name: "in h1.a > font: 'a' on selection of all contents",
+    //     content: "<h1 class=\"a\"><font style=\"font-size: 62px;\">dom to edit</font></h1>",
+    //     steps: [{
+    //         start: "h1->0",
+    //         end: "h1->1",
+    //         key: 'a',
+    //     }],
+    //     test: {
+    //         content: "<h1 class=\"a\"><font style=\"font-size: 62px;\">a</font></h1>",
+    //         start: "font:contents()[0]->1",
+    //     },
+    // },
     {
         name: "in complex-dom: BACKSPACE on partial selection (requires merging non-similar blocks)",
         content: "<p class=\"a\">pif</p><p><span><b>paf</b></span></p><ul><li><p>p<i>ouf</i></p></li></ul>",
