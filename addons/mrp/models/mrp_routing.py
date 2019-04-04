@@ -22,7 +22,7 @@ class MrpRouting(models.Model):
         copy=True, oldname='workcenter_lines')
     location_id = fields.Many2one(
         'stock.location', 'Production Location',
-        help="Keep empty if you produce at the location where you find the raw materials. "
+        help="Keep empty if you produce at the location where you find the components. "
              "Set a location if you produce at a fixed location. This can be a partner location "
              "if you subcontract the manufacturing operations.")
     company_id = fields.Many2one(

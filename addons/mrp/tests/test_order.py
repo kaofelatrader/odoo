@@ -318,7 +318,7 @@ class TestMrpOrder(TestMrpCommon):
         self.assertEqual(line1['qty_done'], 3, "Wrong quantity done")
         self.assertEqual(line2['qty_to_consume'], 12, "Wrong quantity to consume")
         self.assertEqual(line2['qty_done'], 12, "Wrong quantity done")
-        
+
         product_produce = produce_form.save()
         self.assertEqual(len(product_produce.workorder_line_ids), 2, 'You should have produce lines even the consumed products are not tracked.')
         product_produce.do_produce()
@@ -443,7 +443,7 @@ class TestMrpOrder(TestMrpCommon):
         self.assertEqual(mo.state, 'done', "Production order should be in done state.")
 
     def test_product_produce_4(self):
-        """ Possibility to produce with a given raw material in multiple locations. """
+        """ Possibility to produce with a given component in multiple locations. """
         # FIXME sle: how is it possible to consume before producing in the interface?
         self.stock_location = self.env.ref('stock.stock_location_stock')
         self.stock_shelf_1 = self.env.ref('stock.stock_location_components')

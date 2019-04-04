@@ -357,7 +357,7 @@
                     <t t-name="kanban-box">
                         <div t-attf-class="oe_kanban_card oe_kanban_global_click">
                             <div class="oe_kanban_content">
-                                <div class="o_kanban_record_top">
+                                <div class="o_kanban_record_top mb16">
                                     <strong class="o_kanban_record_headings">
                                         <span><t t-esc="record.production_id.value"/></span> - <span><t t-esc="record.name.value"/></span>
                                     </strong>
@@ -367,7 +367,7 @@
                                 </div>
                                 <div class="o_kanban_record_bottom">
                                     <div class="oe_kanban_bottom_left">
-                                        <span><t t-esc="record.product_id.value"/></span> <span><t t-esc="record.qty_production.value"/> <t t-esc="record.product_uom_id.value"/></span>
+                                        <span><t t-esc="record.product_id.value"/>, </span> <span><t t-esc="record.qty_production.value"/> <t t-esc="record.product_uom_id.value"/></span>
                                     </div>
                                     <div class="oe_kanban_bottom_right" t-if="record.state.raw_value == 'progress'">
                                         <span t-if="record.working_state.raw_value != 'blocked' and record.working_user_ids.raw_value.length > 0"><i class="fa fa-play" role="img" aria-label="Run" title="Run"/></span>
@@ -420,7 +420,7 @@
           <p class="o_view_nocontent_smiling_face">
             Start a new work order
           </p><p>
-            To manufacture or assemble products, and use raw materials and
+            To manufacture or assemble products, and use components and
             finished products you must also handle manufacturing operations.
             Manufacturing operations are often called Work Orders. The various
             operations will have different impacts on the costs of

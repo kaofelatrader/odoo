@@ -470,10 +470,10 @@ class TestWorkOrderProcess(TestMrpCommon):
         mo_custom_laptop.action_assign()
         self.assertEqual(mo_custom_laptop.reservation_state, 'assigned')
 
-        # Check current status of raw materials.
+        # Check current status of components.
         for move in mo_custom_laptop.move_raw_ids:
-            self.assertEqual(move.product_uom_qty, 20, "Wrong consume quantity of raw material %s: %s instead of %s" % (move.product_id.name, move.product_uom_qty, 20))
-            self.assertEqual(move.quantity_done, 0, "Wrong produced quantity on raw material %s: %s instead of %s" % (move.product_id.name, move.quantity_done, 0))
+            self.assertEqual(move.product_uom_qty, 20, "Wrong consume quantity of component %s: %s instead of %s" % (move.product_id.name, move.product_uom_qty, 20))
+            self.assertEqual(move.quantity_done, 0, "Wrong produced quantity on component %s: %s instead of %s" % (move.product_id.name, move.quantity_done, 0))
 
         # -----------------
         # Start production
@@ -491,7 +491,7 @@ class TestWorkOrderProcess(TestMrpCommon):
 
         # Check consumed move after produce 6 quantity of customized laptop.
         for move in mo_custom_laptop.move_raw_ids:
-            self.assertEqual(move.quantity_done, 12, "Wrong produced quantity on raw material %s" % (move.product_id.name))
+            self.assertEqual(move.quantity_done, 12, "Wrong produced quantity on component %s" % (move.product_id.name))
         self.assertEqual(len(mo_custom_laptop.move_raw_ids), 2)
         mo_custom_laptop.post_inventory()
         self.assertEqual(len(mo_custom_laptop.move_raw_ids), 4)
