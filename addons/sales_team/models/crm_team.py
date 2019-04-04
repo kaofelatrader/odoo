@@ -21,7 +21,7 @@ class CrmTeam(models.Model):
 
     @api.model
     @api.returns('self', lambda value: value.id if value else False)
-    def _get_default_team_id(self, user_id=None):
+    def _get_default_team_id(self, user_id=None, domain=[]):
         if not user_id:
             user_id = self.env.uid
         company_id = self.sudo(user_id).env.user.company_id.id
@@ -32,14 +32,15 @@ class CrmTeam(models.Model):
         if not team_id and 'default_team_id' in self.env.context:
             team_id = self.env['crm.team'].browse(self.env.context.get('default_team_id'))
         if not team_id:
-            default_team_id = self.env.ref('sales_team.team_sales_department', raise_if_not_found=False)
+            default_team_id = self.env['crm.team'].search(domain, limit=1)
             if default_team_id:
                 try:
                     default_team_id.check_access_rule('read')
                 except AccessError:
                     return self.env['crm.team']
-                if self.env.context.get('default_type') != 'lead' or default_team_id.use_leads and default_team_id.active:
-                    team_id = default_team_id
+                team_id = default_team_id
+            else:
+                return self.env['crm.team']
         return team_id
 
     def _get_default_favorite_user_ids(self):
