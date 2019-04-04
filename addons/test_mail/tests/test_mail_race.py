@@ -29,7 +29,7 @@ class TestMailRace(common.TransactionCase, mail_common.MockEmails):
             'needaction_partner_ids': [(6, 0, [self.partner.id])],
         })
         notif = self.env['mail.notification'].search([('res_partner_id', '=', self.partner.id)])
-        notif.write({
+        notif.sudo().write({
             'mail_id': mail.id,
             'is_email': True,
             'is_read': True,

@@ -223,6 +223,7 @@ class TestMessageAccess(common.BaseFunctionalTest, common.MockEmails):
         # which still generate exception in except_orm.So we need to change all
         # except_orm to warning in mail module.)
         with self.assertRaises(except_orm):
+            self.env['mail.notification'].sudo(self.user_employee).create({'mail_message_id': self.message.id, 'res_partner_id': self.user_employee.partner_id.id})
             self.message.sudo(self.user_employee).read()
 
     @mute_logger('odoo.models')
