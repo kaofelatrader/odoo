@@ -66,15 +66,37 @@ Attributes.prototype = {
         }
         delete this[name];
     },
-    toString: function () {
+    toJSON: function (argument) {
         var self = this;
-        var value = '';
+        var attributes = [];
         this.__order__.forEach(function (name) {
-            if (value.length) {
-                value += ' ';
+            if (name === 'data-archnode-id') {
+                return;
             }
-            value += name + '="' + self[name].toString().replace('"', '\\"') + '"';
-        })
+            var value = self[name].toString();
+            if (value.length) {
+                attributes.push([name, value]);
+            }
+        });
+        return attributes;
+    },
+    toString: function (options) {
+        var self = this;
+        var string = '';
+        this.__order__.forEach(function (name) {
+            if (name === 'data-archnode-id' && (!options || !options.displayId)) {
+                return;
+            }
+            var value = self[name].toString();
+            if (!value.length) {
+                return;
+            }
+            if (string.length) {
+                string += ' ';
+            }
+            string += name + '="' + value.replace('"', '\\"') + '"';
+        });
+        return string;
     },
 };
 
@@ -102,7 +124,7 @@ var isNode = {
      * @returns {Boolean}
      */
     isBlankText: function () {
-        return this instanceof ArchitecturalSpaceNode || this instanceof VirtualNode;
+        return this instanceof ArchitecturalSpaceNode || this instanceof VirtualTextNode;
     },
     /**
      * Returns true if the node is blank.
@@ -212,7 +234,7 @@ var isNode = {
         if (this.childNodes.length === 0) {
             return true;
         }
-        if (this.childNodes.length === 1 && (this.childNodes[0].isBR() || this.childNodes[0] instanceof VirtualNode || this.childNodes[0] instanceof ArchitecturalSpaceNode)) {
+        if (this.childNodes.length === 1 && (this.childNodes[0].isBR() || this.childNodes[0] instanceof VirtualTextNode || this.childNodes[0] instanceof ArchitecturalSpaceNode)) {
             return true;
         }
         return false;
@@ -404,8 +426,8 @@ var isNode = {
      *
      * @returns {Boolean}
      */
-    isVirtualText: function () {
-        return this instanceof VirtualNode;
+    isVirtual: function () {
+        return this instanceof VirtualTextNode || this instanceof FragmentNode || this._isVirtual;
     },
     /**
      * Returns true if the node is a text node with visible text.
@@ -489,8 +511,6 @@ var ArchNode = Class.extend(isNode, {
         }
         this.className = this.attributes.class;
         this.childNodes = [];
-        this._startRange = null;
-        this._endRange = null;
     },
 
     // Update arch
@@ -507,20 +527,18 @@ var ArchNode = Class.extend(isNode, {
     prepend: function (archNode) {
         this._changeParent(archNode, 0);
     },
+    empty: function () {
+        this.childNodes.slice().forEach(function (archNode) {
+            archNode.remove();
+        });
+    },
     remove: function () {
         if (this.parent) {
             this.parent.childNodes.splice(this.index(), 1);
         }
-        if (this.id) {
-            this.tree._removeArchNode(this);
-        }
+        this.tree._removeArchNode(this);
         this.__removed = true;
-        if (this.childNodes) {
-            this.childNodes.slice().forEach(function (archNode) {
-                archNode.remove();
-            });
-        }
-        this.id = null;
+        this.empty();
     },
 
     // browse
@@ -568,24 +586,80 @@ var ArchNode = Class.extend(isNode, {
      **/
     toNode: function (options) {
         options = options || {};
+        if (options.architecturalSpace) {
+            this._architecturalSpaceNodePropagation();
+        }
         var fragment = document.createDocumentFragment();
         fragment.appendChild(this._toNode(options));
         return fragment;
     },
     toJSON: function () {
-        return {
-            id: this.id,
-            nodeName: this.nodeName,
-            attributes: this.attributes.slice(),
-            childNodes: this.childNodes.map(function (archNode) {
-                return archNode.toJSON();
-            }),
-        };
+        var data = {};
+        var childNodes = [];
+        this.childNodes.forEach(function (archNode) {
+            var json = archNode.toJSON();
+            if (json) {
+                if (json.nodeName || json.nodeValue) {
+                    childNodes.push(json);
+                } else if (json.childNodes) {
+                    childNodes = childNodes.concat(json.childNodes);
+                }
+            }
+        });
+
+        if (childNodes.length) {
+            data.childNodes = childNodes;
+        }
+
+        if (this.isVirtual()) {
+            return data;
+        }
+
+        if (this.id) {
+            data.id = this.id;
+        }
+        if (this.nodeName) {
+            data.nodeName = this.nodeName;
+        }
+        if (this.nodeValue) {
+            data.nodeValue = this.nodeValue;
+        }
+        var attributes = this.attributes.toJSON();
+        if (attributes.length) {
+            data.attributes = attributes;
+        }
+
+        return data;
     },
-    toText: function (options) {
-        var d = document.createElement('div');
-        d.appendChild(this.toNode(options));
-        return d.innerHTML;
+    toString: function (options) {
+        var string = '';
+        var isVirtual = this.isVirtual() && !options.keepVirtual;
+
+        if (!isVirtual) {
+            string += '<' + this.nodeName;
+            var attributes = this.attributes.toString(options);
+            if (attributes.length) {
+                string += ' ';
+                string += attributes;
+            }
+            if (this.isVoid() && !this.childNodes.length) {
+                string += '/';
+            }
+            string += '>';
+
+            if (options.architecturalSpace) {
+                options = Object.assign({}, options, {
+                    architecturalLevel: (options.architecturalLevel || 0) + 1,
+                });
+            }
+        }
+        this.childNodes.forEach(function (archNode) {
+            string += archNode.toString(options);
+        });
+        if (!isVirtual && (!this.isVoid() || this.childNodes.length)) {
+            string += '</' + this.nodeName + '>';
+        }
+        return string;
     },
 
     //--------------------------------------------------------------------------
@@ -593,10 +667,6 @@ var ArchNode = Class.extend(isNode, {
     //--------------------------------------------------------------------------
 
     applyRules: function () {
-        this._applyRules();
-        this._architecturalSpaceNodePropagation();
-    },
-    _applyRules: function () {
         this._applyRulesCustom();
         if (!this.__removed) {
             this._applyRulesArchNode();
@@ -625,7 +695,7 @@ var ArchNode = Class.extend(isNode, {
                 this.parent.insertBefore(fragment, this);
                 this.remove();
                 childNodes.forEach(function (archNode) {
-                    archNode._applyRules();
+                    archNode.applyRules();
                 });
                 break;
             }
@@ -639,7 +709,7 @@ var ArchNode = Class.extend(isNode, {
         newParent.__applyRulesCheckParentsFlag = true;
         this.parent.insertBefore(newParent, this);
         newParent.append(this);
-        newParent._applyRules();
+        newParent.applyRules();
     },
     _applyRulesCheckParents: function () {
         var rules = this.tree.options.parentedRules;
@@ -701,7 +771,7 @@ var ArchNode = Class.extend(isNode, {
     _applyRulesPropagation: function () {
         var childNodes = this.childNodes.slice();
         childNodes.forEach(function (archNode) {
-            archNode._applyRules();
+            archNode.applyRules();
         });
         var newParents = [];
         this.childNodes.forEach(function (archNode) {
@@ -730,9 +800,9 @@ var ArchNode = Class.extend(isNode, {
         for (var k = 0; k < newParents.length; k++) {
             var item = newParents[k];
             var prev = item.previousSibling(function (n) {
-                return !(n instanceof VirtualNode) && !(n instanceof ArchitecturalSpaceNode);
+                return !(n instanceof VirtualTextNode) && !(n instanceof ArchitecturalSpaceNode);
             });
-            if (prev && prev.nodeName === item.nodeName && newParents.indexOf(prev) !== -1) {
+            if (prev && prev.nodeName === item.nodeName && newParents.indexOf(prev) !== -1 && item.attributes.toString() === prev.attributes.toString()) {
                 item.childNodes.slice().forEach(function (node) {
                     prev.append(node);
                 });
@@ -741,9 +811,9 @@ var ArchNode = Class.extend(isNode, {
             }
 
             var next = item.previousSibling(function (n) {
-                return !(n instanceof VirtualNode) && !(n instanceof ArchitecturalSpaceNode);
+                return !(n instanceof VirtualTextNode) && !(n instanceof ArchitecturalSpaceNode);
             });
-            if (next && next.nodeName === item.nodeName && newParents.indexOf(next) !== -1) {
+            if (next && next.nodeName === item.nodeName && newParents.indexOf(next) !== -1 && item.attributes.toString() === next.attributes.toString()) {
                 item.childNodes.slice().forEach(function (node) {
                     next.append(node);
                 });
@@ -753,7 +823,7 @@ var ArchNode = Class.extend(isNode, {
         }
     },
     _architecturalSpaceNodePropagation: function () {
-        if (this.__removed) {
+        if (this.__removed || this instanceof ArchitecturalSpaceNode) {
             return;
         }
         if (this.parent) {
@@ -761,9 +831,7 @@ var ArchNode = Class.extend(isNode, {
         }
         if (!(this instanceof TextNode) && !this.ancestor(this.isPre)) {
             this.childNodes.slice().forEach(function (archNode) {
-                if (!(archNode instanceof ArchitecturalSpaceNode)) {
-                    archNode._architecturalSpaceNodePropagation();
-                }
+                archNode._architecturalSpaceNodePropagation();
             });
         }
     },
@@ -786,6 +854,15 @@ var ArchNode = Class.extend(isNode, {
             this.append(new ArchitecturalSpaceNode(this.tree), this);
         }
     },
+
+    // _applyRulesGenerateVirtualParent: function (nodeName) {
+    //     var newParent = this._applyRulesGenerateParent(nodeName);
+    //     if (newParent) {
+    //         newParent._isVirtual = true;
+    //         newParent.attributes.add('data-archnode-virtual', true);
+    //     }
+    // },
+
     _changeParent: function (archNode, index) {
         if (this.isVoid()) {
             throw new Error("You can't add a node in a void");
@@ -800,23 +877,13 @@ var ArchNode = Class.extend(isNode, {
             return;
         }
 
-        archNode._addInTree();
-
         if (archNode.parent) {
             archNode.parent.childNodes.splice(archNode.parent.childNodes.indexOf(archNode), 1);
         }
         archNode.parent = this;
         this.childNodes.splice(index, 0, archNode);
-
         this.__removed = false;
-    },
-    _addInTree: function () {
-        if (!this.id && this.parent && this.parent.id) {
-            this.tree._addArchNode(this);
-            this.childNodes.slice().forEach(function (archNode) {
-                archNode._addInTree();
-            });
-        }
+        this.tree._addArchNode(archNode);
     },
     /**
      * @param {function} fn called on this and get the next point as param
@@ -835,10 +902,18 @@ var ArchNode = Class.extend(isNode, {
         return next;
     },
     _toNode: function (options) {
-        var node = document.createElement(this.nodeName);
+        if (this.isVirtual() && !options.keepVirtual) {
+            return document.createDocumentFragment();
+        }
+
+        var node = this.tree._createElement(this, this.nodeName);
         this.attributes.forEach(function (name) {
-            if (this[name].length) {
-                node.setAttribute(name, this[name].toString());
+            if (name === 'data-archnode-id' && !options.displayId) {
+                return;
+            }
+            var value = this[name].toString()
+            if (value.length) {
+                node.setAttribute(name, value);
             }
         });
         if (options.architecturalSpace) {
@@ -846,10 +921,9 @@ var ArchNode = Class.extend(isNode, {
                 architecturalLevel: (options.architecturalLevel || 0) + 1,
             });
         }
-        this.childNodes.slice().forEach(function (archNode) {
+        this.childNodes.forEach(function (archNode) {
             node.appendChild(archNode._toNode(options));
         });
-        this.tree._linkElement(this, node);
         return node;
     },
 });
@@ -861,42 +935,50 @@ var TextNode = ArchNode.extend({
         this.tree = tree;
         this.nodeName = 'TEXT';
         this.nodeValue = nodeValue;
-        this._startRange = null;
-        this._endRange = null;
     },
-    toJSON: function () {
-        return {
-            id: this.id,
-            nodeValue: this.nodeValue,
-        };
+    empty: function () {
+        this.nodeValue = '';
+    },
+    toString: function (options) {
+        if (this.isVirtual() && !options.keepVirtual) {
+            return '';
+        }
+        return this.nodeValue || '';
     },
     _applyRulesPropagation: function () {},
     _addArchitecturalSpaceNodePropagation: function () {},
     _toNode: function (options) {
-        var node = document.createTextNode(this.nodeValue);
-        this.tree._linkElement(this, node);
-        return node;
+        if (this.isVirtual() && !options.keepVirtual) {
+            return document.createDocumentFragment();
+        }
+        return this.tree._createTextNode(this, this.toString(options));
     },
 });
 
 //////////////////////////////////////////////////////////////
 
 var VisibleTextNode = TextNode.extend({
+    toJSON: function () {
+        var data = {
+            nodeValue: this.nodeValue,
+        };
+        if (this.id) {
+            data.id = this.id;
+        }
+        return data;
+    },
 });
 
 //////////////////////////////////////////////////////////////
 
-var VirtualNode = TextNode.extend({
+var VirtualTextNode = TextNode.extend({
     char: '\uFEFF',
     init: function () {
         this._super.apply(this, arguments);
         this.nodeValue = this.nodeValue.length ? this.nodeValue : this.char;
     },
     toJSON: function () {
-        return {
-            id: this.id,
-            virtualValue: this.nodeValue,
-        };
+        return null;
     },
     _applyRulesArchNode: function () {
         if (this.ancestor(this.isPre)) {
@@ -941,7 +1023,7 @@ var VirtualNode = TextNode.extend({
         if (text.length && text !== this.char) {
             var visibleText = new VisibleTextNode(this.tree, text);
             this.parent.insertBefore(visibleText, this);
-            visibleText._applyRules();
+            visibleText.applyRules();
         }
 
         this.remove();
@@ -958,18 +1040,12 @@ var ArchitecturalSpaceNode = TextNode.extend({
         this.nodeName = 'TEXT-ARCH';
     },
     toJSON: function () {
-        return {
-            id: this.id,
-        };
+        return null;
     },
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    _applyRulesCheckParents: function () {},
-    _addArchitecturalSpaceNode: function () {},
-    _toNode: function (options) {
+    toString: function (options) {
+        if (this.isVirtual() && !options.keepVirtual) {
+            return '';
+        }
         var space = '';
         if (options.architecturalSpace) {
             space = '\n';
@@ -978,10 +1054,15 @@ var ArchitecturalSpaceNode = TextNode.extend({
                 space += (new Array(level * options.architecturalSpace + 1).join(' '));
             }
         }
-        var node = document.createTextNode(space);
-        this.tree._linkElement(this, node);
-        return node;
+        return space;
     },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    _applyRulesCheckParents: function () {},
+    _addArchitecturalSpaceNode: function () {},
 });
 
 //////////////////////////////////////////////////////////////
@@ -994,14 +1075,17 @@ var FragmentNode = ArchNode.extend({
     },
     toNode: function (options) {
         options = options || {};
+        if (options.architecturalSpace) {
+            this._architecturalSpaceNodePropagation();
+        }
         return this._toNode(options);
     },
-    _applyRules: function () {
+    applyRules: function () {
         this._applyRulesPropagation();
     },
     _toNode: function (options) {
         var fragment = document.createDocumentFragment();
-        this.childNodes.slice().forEach(function (archNode) {
+        this.childNodes.forEach(function (archNode) {
             fragment.appendChild(archNode._toNode(options));
         });
         return fragment;
@@ -1038,64 +1122,218 @@ var RootNode = FragmentNode.extend({
             return next;
         }
 
-        var virtualNode = new VirtualNode(this.tree);
-        virtualNode.parent = this;
-        this[direction === 'next' ? 'append' : 'prepend'](virtualNode);
-        if (!this.options.isEditableNode(virtualNode) || (fn && !fn.call(this, virtualNode))) {
-            virtualNode.remove();
+        var VirtualTextNode = new VirtualTextNode(this.tree);
+        VirtualTextNode.parent = this;
+        this[direction === 'next' ? 'append' : 'prepend'](VirtualTextNode);
+        if (!this.options.isEditableNode(VirtualTextNode) || (fn && !fn.call(this, VirtualTextNode))) {
+            VirtualTextNode.remove();
             return;
         }
-        return virtualNode;
+        return VirtualTextNode;
     },
 });
 
 //////////////////////////////////////////////////////////////
 
-function ArchTree (options) {
+/*function ArchTree (options) {
     this.options = options;
-    this._nodeList = {};
-    this._nodeElementList = {};
+    this._archNodeList = {};
+    this._nodeList = [];
+    this._nodeListArchNodeID = [];
     this._id = 1;
     this.root = new RootNode(this);
-    this._addArchNode(this.root);
+    this.root.id = 1;
     this.FragmentNode = FragmentNode;
 }
-ArchTree.prototype.getArchNode = function (archNodeId) {
-    return this._nodeList[archNodeId];
+ArchTree.prototype.getNode = function (archNodeId) {
+    return this._archNodeList[archNodeId];
 };
 ArchTree.prototype.whoIsThisNode = function (element) {
-    for (var k in this._nodeElementList) {
-        if (this._nodeElementList[k] === element) {
-            return this._nodeList[k];
-        }
+    var index = this._nodeList.indexOf(element);
+    if (index !== -1) {
+        return this._archNodeList[this._nodeListArchNodeID[index]];
     }
     throw new Error('must implement method to search the archNode');
 };
-ArchTree.prototype._linkElement = function (archNode, element) {
-    this._nodeElementList[archNode.id] = element;
+ArchTree.prototype._linkNode = function (archNode, element, options) {
+    if (options.linkNode && !archNode.__removed && archNode.id && archNode.parent && archNode.parent.id && this._nodeList.indexOf(archNode.id) === -1) {
+        this._nodeList.push(element);
+        this._nodeListArchNodeID.push(element);
+    }
 };
 ArchTree.prototype._addArchNode = function (archNode) {
-    archNode.id = ++this._id;
-    this._nodeList[archNode.id] = archNode;
+    var self = this;
+    if (!archNode.__removed && !archNode.id && archNode.parent && archNode.parent.id) {
+        archNode.id = ++this._id;
+        this._archNodeList[archNode.id] = archNode;
+        if (archNode.attributes) {
+            archNode.attributes.add('data-archnode-id', archNode.id);
+        }
+
+        if (archNode.childNodes) {
+            archNode.childNodes.forEach(function (archNode) {
+                self._addArchNode(archNode);
+            });
+        }
+    }
 };
 ArchTree.prototype._removeArchNode = function (archNode) {
-    delete this.nodeValue[archNode.id];
-    delete this._nodeElementList[archNode.id];
+    var self = this;
+    if (this._archNodeList[archNode.id]) {
+        delete this._archNodeList[archNode.id];
+
+        var index = this._nodeListArchNodeID.indexOf(archNode.id);
+        while (index !== -1) {
+            this._nodeList.splice(index, 1);
+            this._nodeListArchNodeID.splice(index, 1);
+            index = this._nodeListArchNodeID.indexOf(archNode.id);
+        }
+
+        if (archNode.childNodes) {
+            archNode.childNodes.forEach(function (archNode) {
+                self._removeArchNode(archNode);
+            });
+        }
+    }
+};
+*/
+function ArchTree (options) {
+    this.options = options;
+    this._archNodeList = {};
+    this._nodeList = {};
+    this._id = 1;
+    this.root = new RootNode(this);
+    this.root.id = 1;
+    this.FragmentNode = FragmentNode;
+
+    this._startRangeID = null;
+    this._startRangeOffset = null;
+    this._endRangeID = null;
+    this._endRangeOffset = null;
+}
+ArchTree.prototype.getNode = function (archNodeId) {
+    return this._archNodeList[archNodeId];
+};
+ArchTree.prototype.whoIsThisNode = function (element) {
+    for (var k in this._nodeList) {
+        if (this._nodeList[k] === element) {
+            return this._archNodeList[k].id;
+        }
+    }
+    throw new Error('This dom node is not present in the arch');
+};
+ArchTree.prototype._createTextNode = function (archNode, text) {
+    var el = this._nodeList[archNode.id];
+    if (el) {
+        el.textContent = text;
+    } else {
+        el = this._nodeList[archNode.id] = document.createTextNode(text);
+    }
+    return el;
+};
+ArchTree.prototype._createElement = function (archNode, tagName) {
+    var el = this._nodeList[archNode.id];
+    if (el) {
+        Object.values(el.attributes).forEach(function (attribute) {
+            el.removeAttribute(attribute.name);
+        });
+        el.innerHTML = '';
+    } else {
+        el = this._nodeList[archNode.id] = document.createElement(tagName);
+    }
+    el.textContent = '';
+    return el;
+};
+ArchTree.prototype._addArchNode = function (archNode) {
+    var self = this;
+    if (!archNode.__removed && !archNode.id && archNode.parent && archNode.parent.id) {
+        archNode.id = ++this._id;
+        this._archNodeList[archNode.id] = archNode;
+        if (archNode.attributes) {
+            archNode.attributes.add('data-archnode-id', archNode.id);
+        }
+
+        if (archNode.childNodes) {
+            archNode.childNodes.forEach(function (archNode) {
+                self._addArchNode(archNode);
+            });
+        }
+    }
+};
+ArchTree.prototype._removeArchNode = function (archNode) {
+    var self = this;
+    if (this._archNodeList[archNode.id]) {
+        delete this._archNodeList[archNode.id];
+        delete this._nodeList[archNode.id];
+
+        if (archNode.childNodes) {
+            archNode.childNodes.forEach(function (archNode) {
+                self._removeArchNode(archNode);
+            });
+        }
+    }
 };
 
 // Update arch
 
 ArchTree.prototype.append = function (archNode) {
+    if (typeof archNode === 'string') {
+        archNode = this.parse(archNode);
+    }
+    archNode.applyRules();
     this.root.append(archNode);
+    return this;
 };
 ArchTree.prototype.insertAfter = function (archNode, archNodeId) {
-    this.root.insertAfter(archNode, this.getArchNode(archNodeId));
+    if (typeof archNode === 'string') {
+        archNode = this.parse(archNode);
+    }
+    archNode.applyRules();
+    this.root.insertAfter(archNode, this.getNode(archNodeId));
+    return this;
 };
 ArchTree.prototype.insertBefore = function (archNode, archNodeId) {
-    this.root.insertBefore(archNode, this.getArchNode(archNodeId));
+    if (typeof archNode === 'string') {
+        archNode = this.parse(archNode);
+    }
+    archNode.applyRules();
+    this.root.insertBefore(archNode, this.getNode(archNodeId));
+    return this;
 };
 ArchTree.prototype.prepend = function (archNode) {
+    if (typeof archNode === 'string') {
+        archNode = this.parse(archNode);
+    }
+    archNode.applyRules();
     this.root.prepend(archNode);
+    return this;
+};
+ArchTree.prototype.empty = function () {
+    this.root.childNodes.slice().forEach(function (archNode) {
+        archNode.remove();
+    });
+    return this;
+};
+
+// range
+
+ArchTree.prototype.setRange = function (sc, so, ec, eo) {
+    this._startRangeID = this.whoIsThisNode(sc);
+    this._startRangeOffset = so;
+    this._endRangeID = this.whoIsThisNode(ec);
+    this._endRangeOffset = eo;
+};
+ArchTree.prototype.getRange = function () {
+    return {
+        start: {
+            id: this._startRangeID,
+            offset: this._startRangeOffset,
+        },
+        end: {
+            id: this._endRangeID,
+            offset: this._endRangeOffset,
+        },
+    };
 };
 
 // import
@@ -1137,7 +1375,7 @@ ArchTree.prototype._parseElement = function (element) {
             archNode.append(self._parseElement(child));
         });
     } else {
-        archNode = new VirtualNode(this, element.nodeValue);
+        archNode = new VirtualTextNode(this, element.nodeValue);
     }
     return archNode;
 };
@@ -1150,29 +1388,14 @@ ArchTree.prototype.import = function (json) {
 
 // export
 
-ArchTree.prototype.getRange = function () {
-    var start = this.root;
-    while (start.childNodes[start._startRange]) {
-        start = start.childNodes[start._startRange];
-    }
-    var end = this.root;
-    while (end.childNodes[end._endRange]) {
-        end = end.childNodes[end._endRange];
-    }
-    return {
-        startId: start.id,
-        startOffset: start._startRange,
-        endId: end.id,
-        endOffset: end._endRange,
-    };
+ArchTree.prototype.toString = function (options) {
+    return this.root.toString(options || {});
 };
-ArchTree.prototype.render = function (archNodeId) {
-    var archNode = archNodeId ? this.getArchNode(archNodeId) : this.root;
-    return archNode.render();
+ArchTree.prototype.toNode = function (options) {
+    return this.root.toNode(options || {});
 };
-ArchTree.prototype.export = function (archNodeId) {
-    var archNode = archNodeId ? this.getArchNode(archNodeId) : this.root;
-    return JSON.stringify(archNode);
+ArchTree.prototype.toJSON = function () {
+    return this.root.toJSON();
 };
 
 return ArchTree;

@@ -23,6 +23,7 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
         this._super.apply(this, arguments);
         this.options = options || {};
         this.setParent(parent);
+        params.plugins.Arch = true;
         params.plugins.Common = true; // `Common` is a mandatory Plugin, used virtually everywhere
         this._loadPlugins(params, options);
     },
@@ -72,8 +73,9 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
      * @param {string} value
      * @returns string
      */
-    getEditorValue: function (value) {
-        return this._each('getEditorValue', value);
+    getEditorValue: function () {
+        this._each('getEditorValue');
+        return this._plugins.Arch.getValue();
     },
     /**
      *
@@ -81,7 +83,8 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
      * @returns string
      */
     setEditorValue: function (value) {
-        return this._each('setEditorValue', value);
+        this._each('setEditorValue', value);
+        return this._plugins.Arch.getNode();
     },
     /**
      *
@@ -97,8 +100,11 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
      * @param {string} value
      * @returns {Promise<string>}
      */
-    saveEditor: function (value) {
-        return this._eachAsync('saveEditor', value);
+    saveEditor: function () {
+        var Arch = this._plugins.Arch;
+        return this._eachAsync('saveEditor').then(function () {
+            return Arch.getValue();
+        });
     },
     /**
      * 
@@ -154,7 +160,8 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
     },
     _each: function (methodName, value) {
         for (var i = 0; i < this._pluginNames.length; i++) {
-            var plugin = this._plugins[this._pluginNames[i]];
+            var pluginName = this._pluginNames[i];
+            var plugin = this._plugins[pluginName];
             value = plugin[methodName](value) || value;
         }
         return value;
@@ -162,15 +169,18 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
     _eachAsync: function (methodName, value) {
         var promise = Promise.resolve(value);
         for (var i = 0; i < this._pluginNames.length; i++) {
-            var plugin = this._plugins[this._pluginNames[i]];
+            var pluginName = this._pluginNames[i];
+            var plugin = this._plugins[pluginName];
             promise.then(plugin[methodName].bind(plugin));
         }
         return promise;
     },
     _eachAsyncParallel: function (methodName, value) {
         var promises = [];
-        for (var pluginName in this._plugins) {
-            promises.push(this._plugins[pluginName][methodName](value));
+        for (var i = 0; i < this._pluginNames.length; i++) {
+            var pluginName = this._pluginNames[i];
+            var plugin = this._plugins[pluginName];
+            promises.push(plugin[methodName](value));
         }
         return Promise.all(promises);
     },
@@ -217,6 +227,8 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
         for (var i = 0; i < pluginNames.length; i++) {
             delete pluginInstances[pluginNames[i]]._deepestPluginsDependent;
         }
+        pluginNames.splice(pluginNames.indexOf('Arch'), 1);
+        pluginNames.unshift('Arch');
         return pluginNames;
     },
     _createPluginInstance: function (params, options) {

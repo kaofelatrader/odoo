@@ -111,10 +111,8 @@ var ArchPlugin = AbstractPlugin.extend({
         this.orderRules = this.orderRules.slice();
     },
     setEditorValue: function (value) {
-        var archNode = this._htmlToArch(value);
-        return archNode.toText({architecturalSpace: 4});
-    },
-    saveEditor: function () {
+        this.arch.empty().append(value || '');
+        return this.arch.toString();
     },
     start: function () {
         var promise = this._super();
@@ -134,6 +132,14 @@ var ArchPlugin = AbstractPlugin.extend({
     // Public
     //--------------------------------------------------------------------------
 
+    getNode: function () {
+        return this.arch.toNode();
+    },
+    getValue: function () {
+        var value = this.arch.toString();
+        console.log(value);
+        return value;
+    },
     addCustomRule: function (callback, children) {
         this.customRules.push([callback, children]);
     },
@@ -153,8 +159,11 @@ var ArchPlugin = AbstractPlugin.extend({
      * @param {boolean} options.keepArchitecturalSpaces
      * @returns {JSON}
      **/
-    export: function (id, options) {
-        return this.arch.export(id, options);
+    export: function (id) {
+        if (id) {
+            return this.arch.getNode(id).toJSON();
+        }
+        return this.arch.toJSON();
     },
     getRange: function () {
         return this.arch.getRange();
@@ -201,7 +210,7 @@ var ArchPlugin = AbstractPlugin.extend({
         this._autoRedraw(newId, DOM);
     },
     setRange: function (sc, so, ec, eo) {
-
+        return this.arch.setRange(sc, so, ec, eo);
     },
 
     //--------------------------------------------------------------------------
@@ -223,9 +232,11 @@ var ArchPlugin = AbstractPlugin.extend({
         node.innerHTML = html;
         this.trigger('redraw', id, html);
     },
-    _htmlToArch: function (html) {
-        var archNode = this.arch.parse(html.indexOf('tutu') !== -1 ? html : `
+});
 
+
+/*
+`
             Bonjour,
             <br>
             <b>comment va-<i>tu</i> ?</b>
@@ -248,29 +259,16 @@ var ArchPlugin = AbstractPlugin.extend({
 
             <section>
                 <block>
-  % if toto:
+                    % if toto:
                     TOTO
-  %end
+                    %end
                 </block>
             </section>
             <p>
                 <i>iiii</i> <iframe src="/test"/> <b>bbb</b>
             </p>
-            `);
-
-        archNode.applyRules();
-        console.log('----------------------------------------');
-        console.log(archNode);
-        console.log(archNode.toText());
-        console.log('>>>>>>>>>>>>>>> add structural spaces');
-        console.log(archNode.toText({architecturalSpace: 4}));
-        console.log('----------------------------------------');
-
-
-        return archNode;
-    },
-});
-
+            `
+*/
 Manager.addPlugin('Arch', ArchPlugin);
 
 return ArchPlugin;

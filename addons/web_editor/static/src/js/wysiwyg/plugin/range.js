@@ -9,7 +9,7 @@ var _ = require('web_editor._');
 
 
 var RangePlugin = AbstractPlugin.extend({
-    dependencies: [],
+    dependencies: ['Arch', 'Common'],
 
     editableDomEvents: {
         'mouseup': '_onMouseUp',
@@ -297,11 +297,17 @@ var RangePlugin = AbstractPlugin.extend({
         this._rerange = false;
 
         var range = this.getRange();
-        console.log('range: ', range ? range.getPoints() : 'null');
         var html = this.editable.innerHTML;
         html = html ? html.replace(/\u00A0/g, '&nbsp;').replace(/\uFEFF/g, '&#65279;') : null;
-        console.log('dom: ', html);
         this.trigger('range');
+
+        try {
+            if (range) {
+                this.dependencies.Arch.setRange(range.sc, range.so, range.ec, range.eo);
+            }
+        } catch (e) {
+            console.error(e);
+        }
     },
 });
 
