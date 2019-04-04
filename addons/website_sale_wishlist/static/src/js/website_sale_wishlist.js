@@ -130,7 +130,7 @@ publicWidget.registry.ProductWishlist = publicWidget.Widget.extend(VariantMixin,
     /**
      * @private
      */
-    _removeWish: function (e, deferred_redirect){
+    _removeWish: function (e, deferred_redirect) {
         var tr = $(e.currentTarget).parents('tr');
         var wish = tr.data('wish-id');
         var product = tr.data('product-id');

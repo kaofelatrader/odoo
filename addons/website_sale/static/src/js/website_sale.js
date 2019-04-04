@@ -239,14 +239,13 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
             var $q = $(".my_cart_quantity");
             if (data.cart_quantity) {
                 $q.parents('li:first').removeClass('d-none');
-            }
-            else {
+            } else {
                 window.location = '/shop/cart';
             }
 
             $q.html(data.cart_quantity).hide().fadeIn(600);
             $input.val(data.quantity);
-            $('.js_quantity[data-line-id='+line_id+']').val(data.quantity).html(data.quantity);
+            $('.js_quantity[data-line-id=' + line_id + ']').val(data.quantity).html(data.quantity);
 
             $(".js_cart_lines").first().before(data['website_sale.cart_lines']).end().remove();
             $(".js_cart_summary").first().before(data['website_sale.short_cart_summary']).end().remove();
@@ -254,10 +253,9 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
             if (data.warning) {
                 var cart_alert = $('.oe_cart').parent().find('#data_warning');
                 if (cart_alert.length === 0) {
-                    $('.oe_cart').prepend('<div class="alert alert-danger alert-dismissable" role="alert" id="data_warning">'+
+                    $('.oe_cart').prepend('<div class="alert alert-danger alert-dismissable" role="alert" id="data_warning">' +
                             '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button> ' + data.warning + '</div>');
-                }
-                else {
+                } else {
                     cart_alert.html('<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button> ' + data.warning);
                 }
                 $input.val(data.quantity);
@@ -283,7 +281,7 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
             // populate states and display
             var selectStates = $("select[name='state_id']");
             // dont reload state at first loading (done in qweb)
-            if (selectStates.data('init')===0 || selectStates.find('option').length===1) {
+            if (selectStates.data('init') === 0 || selectStates.find('option').length === 1) {
                 if (data.states.length) {
                     selectStates.html('');
                     _.each(data.states, function (x) {
@@ -303,14 +301,14 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
 
             // manage fields order / visibility
             if (data.fields) {
-                if ($.inArray('zip', data.fields) > $.inArray('city', data.fields)){
+                if ($.inArray('zip', data.fields) > $.inArray('city', data.fields)) {
                     $(".div_zip").before($(".div_city"));
                 } else {
                     $(".div_zip").after($(".div_city"));
                 }
                 var all_fields = ["street", "zip", "city", "country_name"]; // "state_code"];
                 _.each(all_fields, function (field) {
-                    $(".checkout_autoformat .div_" + field.split('_')[0]).toggle($.inArray(field, data.fields)>=0);
+                    $(".checkout_autoformat .div_" + field.split('_')[0]).toggle($.inArray(field, data.fields) >= 0);
                 });
             }
         });
@@ -328,8 +326,7 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
     _getProductId: function ($parent) {
         if ($parent.find('input.js_product_change').length !== 0) {
             return parseInt($parent.find('input.js_product_change:checked').val());
-        }
-        else {
+        } else {
             return VariantMixin._getProductId.apply(this, arguments);
         }
     },
@@ -390,8 +387,7 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
                 // fix issue with carousel height
                 this.trigger_up('widgets_start_request', {$target: $carousel});
             }
-        }
-        else { // compatibility 12.0
+        } else { // compatibility 12.0
             var model = productId ? 'product.product' : 'product.template';
             var modelId = productId || productTemplateId;
             var imageSrc = '/web/image/{0}/{1}/image'
@@ -458,7 +454,7 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
             false
         );
 
-        productReady.then(function (productId){
+        productReady.then(function (productId) {
             $form.find(productSelector.join(', ')).val(productId);
 
             self.rootProduct = {
@@ -507,7 +503,7 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
      * @private
      * @param {MouseEvent} ev
      */
-    _onClickAddCartJSON: function (ev){
+    _onClickAddCartJSON: function (ev) {
         this.onClickAddCartJSON(ev);
     },
     /**
@@ -564,13 +560,13 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
             ev.preventDefault();
             $aSubmit.closest('form').submit();
         }
-        if ($aSubmit.hasClass('a-submit-disable')){
+        if ($aSubmit.hasClass('a-submit-disable')) {
             $aSubmit.addClass("disabled");
         }
-        if ($aSubmit.hasClass('a-submit-loading')){
+        if ($aSubmit.hasClass('a-submit-loading')) {
             var loading = '<span class="fa fa-cog fa-spin"/>';
             var fa_span = $aSubmit.find('span[class*="fa"]');
-            if (fa_span.length){
+            if (fa_span.length) {
                 fa_span.replaceWith(loading);
             } else {
                 $aSubmit.append(loading);
@@ -600,7 +596,7 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
         var value = $price.data("price") + parseFloat($label.find(".badge span").text() || 0);
 
         var dec = value % 1;
-        $price.html(value + (dec < 0.01 ? ".00" : (dec < 1 ? "0" : "") ));
+        $price.html(value + (dec < 0.01 ? ".00" : (dec < 1 ? "0" : "")));
     },
     /**
      * @private
@@ -631,7 +627,7 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
         if (!ev.isDefaultPrevented() && !$this.is(".disabled")) {
             ev.preventDefault();
             var oldurl = $this.attr('action');
-            oldurl += (oldurl.indexOf("?")===-1) ? "?" : "";
+            oldurl += (oldurl.indexOf("?") === -1) ? "?" : "";
             var search = $this.find('input.search-query');
             window.location = oldurl + '&' + search.attr('name') + '=' + encodeURIComponent(search.val());
         }
@@ -717,7 +713,7 @@ publicWidget.registry.websiteSaleCart = publicWidget.Widget.extend({
         $new.addClass('border_primary');
 
         var $form = $(ev.currentTarget).parent('div.one_kanban').find('form.d-none');
-        $.post($form.attr('action'), $form.serialize()+'&xhr=1');
+        $.post($form.attr('action'), $form.serialize() + '&xhr=1');
     },
     /**
      * @private

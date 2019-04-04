@@ -11,7 +11,7 @@ var VariantMixin = require('sale.VariantMixin');
  * @param {string} uri The uri to adapt
  */
 VariantMixin._getUri = function (uri) {
-    if (this.isWebsite){
+    if (this.isWebsite) {
         return uri + '_website';
     } else {
         return uri;

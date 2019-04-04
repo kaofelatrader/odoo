@@ -45,9 +45,9 @@ var VariantMixin = {
         var $component;
         if (params && params.$container) {
             $component = params.$container;
-        } else if ($(ev.currentTarget).closest('form').length > 0){
+        } else if ($(ev.currentTarget).closest('form').length > 0) {
             $component = $(ev.currentTarget).closest('form');
-        } else if ($(ev.currentTarget).closest('.oe_optional_products_modal').length > 0){
+        } else if ($(ev.currentTarget).closest('.oe_optional_products_modal').length > 0) {
             $component = $(ev.currentTarget).closest('.oe_optional_products_modal');
         } else if ($(ev.currentTarget).closest('.o_product_configurator').length > 0) {
             $component = $(ev.currentTarget).closest('.o_product_configurator');
@@ -79,13 +79,13 @@ var VariantMixin = {
      * @private
      * @param {MouseEvent} ev
      */
-    handleCustomValues: function ($target){
+    handleCustomValues: function ($target) {
         var $variantContainer;
         var $customInput = false;
         if ($target.is('input[type=radio]') && $target.is(':checked')) {
             $variantContainer = $target.closest('ul').closest('li');
             $customInput = $target;
-        } else if ($target.is('select')){
+        } else if ($target.is('select')) {
             $variantContainer = $target.closest('li');
             $customInput = $target
                 .find('option[value="' + $target.val() + '"]');
@@ -99,7 +99,7 @@ var VariantMixin = {
                 if ($variantContainer.find('.variant_custom_value').length === 0
                         || $variantContainer
                               .find('.variant_custom_value')
-                              .data('attribute_value_id') !== parseInt(attributeValueId)){
+                              .data('attribute_value_id') !== parseInt(attributeValueId)) {
                     $variantContainer.find('.variant_custom_value').remove();
 
                     var $input = $('<input>', {
@@ -154,11 +154,11 @@ var VariantMixin = {
     onChangeAddQuantity: function (ev) {
         var $parent;
 
-        if ($(ev.currentTarget).closest('.oe_optional_products_modal').length > 0){
+        if ($(ev.currentTarget).closest('.oe_optional_products_modal').length > 0) {
             $parent = $(ev.currentTarget).closest('.oe_optional_products_modal');
-        } else if ($(ev.currentTarget).closest('form').length > 0){
+        } else if ($(ev.currentTarget).closest('form').length > 0) {
             $parent = $(ev.currentTarget).closest('form');
-        }  else {
+        } else {
             $parent = $(ev.currentTarget).closest('.o_product_configurator');
         }
 
@@ -190,9 +190,9 @@ var VariantMixin = {
      */
     getCustomVariantValues: function ($container) {
         var variantCustomValues = [];
-        $container.find('.variant_custom_value').each(function (){
+        $container.find('.variant_custom_value').each(function () {
             var $variantCustomValueInput = $(this);
-            if ($variantCustomValueInput.length !== 0){
+            if ($variantCustomValueInput.length !== 0) {
                 variantCustomValues.push({
                     'attribute_value_id': $variantCustomValueInput.data('attribute_value_id'),
                     'attribute_value_name': $variantCustomValueInput.data('attribute_value_name'),
@@ -223,14 +223,14 @@ var VariantMixin = {
             'select.no_variant.js_variant_change'
         ];
 
-        $container.find(variantsValuesSelectors.join(',')).each(function (){
+        $container.find(variantsValuesSelectors.join(',')).each(function () {
             var $variantValueInput = $(this);
 
-            if ($variantValueInput.is('select')){
+            if ($variantValueInput.is('select')) {
                 $variantValueInput = $variantValueInput.find('option[value=' + $variantValueInput.val() + ']');
             }
 
-            if ($variantValueInput.length !== 0){
+            if ($variantValueInput.length !== 0) {
                 noVariantAttributeValues.push({
                     'attribute_value_id': $variantValueInput.data('value_id'),
                     'attribute_value_name': $variantValueInput.data('value_name'),
@@ -398,7 +398,7 @@ var VariantMixin = {
         }
 
         // parent exclusions (tell which attributes are excluded from parent)
-        _.each(combinationData.parent_exclusions, function (exclusions, excluded_by){
+        _.each(combinationData.parent_exclusions, function (exclusions, excluded_by) {
             // check that the selected combination is in the parent exclusions
             _.each(exclusions, function (ptav) {
                 if (isPtavInCombination(ptav, combination)) {

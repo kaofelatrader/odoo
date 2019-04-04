@@ -38,7 +38,7 @@ VariantMixin._onChangeCombinationStock = function (ev, $parent, combination) {
         ($parent.is('.js_main_product') || $parent.is('.main_product')) &&
         combination.product_id === parseInt(product_id);
 
-    if (!this.isWebsite || !isMainProduct){
+    if (!this.isWebsite || !isMainProduct) {
         return;
     }
 
@@ -80,7 +80,7 @@ publicWidget.registry.WebsiteSale.include({
      * Adds the stock checking to the regular _onChangeCombination method
      * @override
      */
-    _onChangeCombination: function (){
+    _onChangeCombination: function () {
         this._super.apply(this, arguments);
         VariantMixin._onChangeCombinationStock.apply(this, arguments);
     }
