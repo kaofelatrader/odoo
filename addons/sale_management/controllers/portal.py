@@ -23,13 +23,21 @@ class CustomerPortal(CustomerPortal):
             return False
         if unlink:
             order_line.unlink()
-            return False  # return False to reload the page, the line must move back to options and the JS doesn't handle it
-        number = -1 if remove else 1
+            template = request.env['ir.ui.view'].render_template("sale.sale_order_portal_content", {
+                'sale_order': order_sudo, 'report_type': "html",
+            })
+            return {'amount': str(order_sudo.amount_total), 'sale_order_portal_content': template}
+        number = 0 if order_line.product_uom_qty == 1 and remove else -1 if remove else 1
         quantity = order_line.product_uom_qty + number
         order_line.write({'product_uom_qty': quantity})
-        return [str(quantity), str(order_sudo.amount_total)]
+        value = {
+                'quantity': str(quantity),
+                'amount': str(order_sudo.amount_total),
+                'price_subtotal': str(order_line.price_subtotal)
+                }
+        return value
 
-    @http.route(["/my/orders/<int:order_id>/add_option/<int:option_id>"], type='http', auth="public", website=True)
+    @http.route(["/my/orders/add_option"], type='json', auth="public", website=True)
     def add(self, order_id, option_id, access_token=None, **post):
         try:
             order_sudo = self._document_check_access('sale.order', order_id, access_token=access_token)
@@ -39,8 +47,11 @@ class CustomerPortal(CustomerPortal):
         option_sudo = request.env['sale.order.option'].sudo().browse(option_id)
 
         if order_sudo != option_sudo.order_id:
-            return request.redirect(order_sudo.get_portal_url())
-
+            return False
         option_sudo.add_option_to_order()
-
-        return request.redirect(option_sudo.order_id.get_portal_url(anchor='details'))
+        value = {}
+        value['sale_order_portal_content'] = request.env['ir.ui.view'].render_template("sale.sale_order_portal_content", {
+            'sale_order': option_sudo.order_id, 'report_type': "html",
+        })
+        value['amount'] = option_sudo.order_id.amount_total
+        return value

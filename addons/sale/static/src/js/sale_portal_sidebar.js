@@ -84,7 +84,7 @@ publicWidget.registry.SalePortalSidebar = PortalSidebar.extend({
                         if (!lastUL) {
                             lastUL = $("<ul class='nav flex-column'>").appendTo(lastLI);
                         }
-                        $("<li class='nav-item'>").append($('<a class="nav-link" href="#' + id + '"/>').text(text)).appendTo(lastUL);
+                        $("<li class='nav-item'>").append($('<a class="nav-link ' + text + '" href="#' + id + '"/>').text(text)).appendTo(lastUL);
                     }
                     break;
             }
