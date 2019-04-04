@@ -91,7 +91,7 @@ var TablePicker = AbstractPlugin.extend({
     insertTable: function (dim, range) {
         var dimension = dim.split('x');
         var table = this.createTable(dimension[0], dimension[1], this.options);
-        if (range.getStartPoint().isRightEdge()) {
+        if (range.getStartPoint().isRightEdge() && !range.getStartPoint().isLeftEdge()) {
             var parentBlock = this.utils.firstBlockAncestor(range.sc);
             range.replace({
                 sc: parentBlock,

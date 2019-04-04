@@ -834,7 +834,7 @@ return {
      * @returns {Boolean}
      */
     isLeftEdge: function (node) {
-        while (node.previousSibling && this.isInvisibleText(node)) {
+        while (node.previousSibling && this.isInvisibleText(node.previousSibling)) {
             node = node.previousSibling;
         }
         return this.position(node) === 0;
@@ -903,7 +903,7 @@ return {
     * @returns {Boolean}
     */
     isRightEdge: function (node) {
-        while (node.nextSibling && this.isInvisibleText(node)) {
+        while (node.nextSibling && this.isInvisibleText(node.nextSibling)) {
             node = node.nextSibling;
         }
         return this.position(node) === this.nodeLength(node.parentNode) - 1;

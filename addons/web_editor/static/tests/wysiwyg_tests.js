@@ -2780,7 +2780,7 @@ QUnit.test('Table', function (assert) {
         await testUtils.dom.triggerNativeEvents($trash[0], ['mousedown', 'click']);
 
         assert.strictEqual($editable.html().replace(/\s+/g, ' '),
-            '<p>dom to edit</p>',
+            '<p>dom t</p><p>o edit</p>',
             "should remove the table");
 
         // re create a table and table in table

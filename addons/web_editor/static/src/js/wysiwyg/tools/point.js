@@ -43,49 +43,55 @@ BoundaryPoint.prototype = {
         return this;
     },
     /**
-     * Returns true if the point is on the left/right edge of the first
-     * previous/next point with the given tag name (skips insignificant nodes).
-     *
-     * @param {String} tagName
-     * @param {String('left'|'right')} side
-     * @returns {Boolean}
-     */
-    isEdgeOfTag: function (tagName, side) {
-        var self = this;
-        var method = side === 'left' ? 'isLeftEdge' : 'isRightEdge';
-        var prevOrNext = side === 'left' ? 'prev' : 'next';
-        var newPt;
-        var first = true;
-        var point = new BoundaryPoint(this.node, this.offset);
-        while (point && point.node.tagName !== tagName) {
-            newPt = point.skipNodes(prevOrNext, function (pt) {
-                return pt.node.tagName === tagName && self[method](pt);
-            });
-            if (newPt.node.tagName === tagName || newPt.node.tagName === 'BR') {
-                point = newPt;
-                break;
-            }
-            if (newPt === point && (!first || utils.isText(point.node) && !point[method]())) {
-                break;
-            }
-            point = newPt[prevOrNext]();
-            first = false;
-        }
-        if (!point) {
-            return false;
-        }
-        var ancestor = utils.ancestor(point.node, function (n) {
-            return n.tagName === tagName;
-        });
-        return !!(ancestor && point[method + 'Of'](ancestor));
-    },
-    /**
-     * Return true if the given point is on an edge.
+     * Return true if the point is on an edge.
      *
      * @returns {Boolean}
      */
     isEdge: function () {
         return this.isLeftEdge() || this.isRightEdge();
+    },
+    /**
+     * Return true if the point is on the requested edge of a block.
+     *
+     * @param {Boolean} isLeft
+     * @returns {Boolean}
+     */
+    isEdgeOfBlock: function (isLeft) {
+        return this.isEdgeOfPred(function (node) {
+            return utils.isNodeBlockType(node);
+        }, isLeft);
+    },
+    /**
+     * Return true if the point is on the requested edge of a node
+     * that matches the given predicate function.
+     *
+     * @param {Function (Node) => Boolean} pred
+     * @param {Boolean} isLeft
+     * @returns {Boolean}
+     */
+    isEdgeOfPred: function (pred, isLeft) {
+        pred = pred.bind(this);
+        var isEdge = isLeft ? 'isLeftEdge' : 'isRightEdge';
+        var ancestorChildOfTag = utils.ancestor(this.node, function (node) {
+            return node.parentNode && pred(node.parentNode);
+        });
+        if (!ancestorChildOfTag || !this[isEdge]()) {
+            return false;
+        }
+        return utils[isEdge](ancestorChildOfTag);
+    },
+    /**
+     * Returns true if the point is on the left/right edge of the first
+     * previous/next point with the given tag name (skips insignificant nodes).
+     *
+     * @param {String} tagName
+     * @param {Boolean} isLeft
+     * @returns {Boolean}
+     */
+    isEdgeOfTag: function (tagName, isLeft) {
+        return this.isEdgeOfPred(function (node) {
+            return utils.makePredByNodeName(tagName)(node);
+        }, isLeft);
     },
     /**
      * Return true if the point is on the left edge of a block node
@@ -94,8 +100,7 @@ BoundaryPoint.prototype = {
      * @returns {Boolean}
      */
     isLeftEdgeOfBlock: function () {
-        var point = this.skipNodes('prev');
-        return point.isLeftEdgeOf(utils.firstBlockAncestor(point.node));
+        return this.isEdgeOfBlock(true);
     },
     /**
      * Return true if the point is on the left edge of the first
@@ -105,7 +110,7 @@ BoundaryPoint.prototype = {
      * @returns {Boolean}
      */
     isLeftEdgeOfTag: function (tagName) {
-        return this.isEdgeOfTag(tagName, 'left');
+        return this.isEdgeOfTag(tagName, true);
     },
     /**
      * Return true if the given point is on a left edge.
@@ -113,7 +118,18 @@ BoundaryPoint.prototype = {
      * @returns {Boolean}
      */
     isLeftEdge: function () {
-        return this.offset === 0;
+        if (utils.isText(this.node)) {
+            var reInvisible = utils.getRegex('invisible');
+            var leftOffset = 0;
+            var text = this.node.textContent;
+            while (leftOffset < utils.nodeLength(this.node) && text[leftOffset] && reInvisible.test(text[leftOffset])) {
+                leftOffset += 1;
+            }
+            if (this.offset !== leftOffset) {
+                return false;
+            }
+        }
+        return utils.isLeftEdge(this.node);
     },
     /**
      * Return true if the given point is on the left edge of the given ancestor node.
@@ -132,7 +148,7 @@ BoundaryPoint.prototype = {
      * @returns {Boolean}
      */
     isRightEdgeOfTag: function (tagName) {
-        return this.isEdgeOfTag(tagName, 'right');
+        return this.isEdgeOfTag(tagName, false);
     },
     /**
      * Return true if the given point is on a right edge.
@@ -140,7 +156,18 @@ BoundaryPoint.prototype = {
      * @returns {Boolean}
      */
     isRightEdge: function () {
-        return this.offset === utils.nodeLength(this.node);
+        if (utils.isText(this.node)) {
+            var reInvisible = utils.getRegex('invisible');
+            var rightOffset = utils.nodeLength(this.node);
+            var text = this.node.textContent;
+            while (rightOffset > 0 && text[rightOffset - 1] && reInvisible.test(text[rightOffset - 1])) {
+                rightOffset -= 1;
+            }
+            if (this.offset !== rightOffset) {
+                return false;
+            }
+        }
+        return utils.isRightEdge(this.node);
     },
     /**
      * Return true if the given point is on the right edge of the given ancestor node.
@@ -343,7 +370,7 @@ BoundaryPoint.prototype = {
      */
     replace: function (pointOrNode, offset) {
         var node;
-        if (pointOrNode instanceof BoundaryPoint) {
+        if (pointOrNode.node && (pointOrNode.offset || pointOrNode.offset === 0)) {
             node = pointOrNode.node;
             offset = pointOrNode.offset;
         } else {
@@ -368,7 +395,7 @@ BoundaryPoint.prototype = {
      * @returns {BoundaryPoint}
      */
     skipNodes: function (isPrev, pred, options) {
-        var startPoint = _.clone(this);
+        var startPoint = new BoundaryPoint(this.node, this.offset);
         if (arguments.length === 3 && !_.isFunction(arguments[2])) {
             // allow for passing options and no pred function
             options = _.clone(pred);

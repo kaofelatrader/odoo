@@ -947,8 +947,8 @@ var keyboardTestsEnter = [{
         }],
         test: {
             content: "<p>d</p><p>edit</p>",
-            start: "p:contents()[1]->0",
-            end: "p:contents()[1]->0",
+            start: "p:eq(1)->0",
+            end: "p:eq(1)->0",
         },
     },
     {
@@ -1055,7 +1055,7 @@ var keyboardTestsEnter = [{
         }],
         test: {
             content: "<ul><li>d</li><li>edit</li></ul>",
-            start: "li:eq(1):contents()[0]->0",
+            start: "li:eq(1)->0",
         },
     },
     {
@@ -1880,29 +1880,29 @@ var keyboardTestsComplex = [{
         }],
         test: {
             content: "<p><b>dom<br>&nbsp;to edit</b></p>",
-            start: "b->1",
+            start: "b:contents()[2]->0",
         },
     },
-    // {
-    //     name: "in p > b: 2x ENTER -> 2x BACKSPACE",
-    //     content: "<p><b>dom to edit</b></p>",
-    //     steps: [{
-    //         start: "b:contents()[0]->3",
-    //         key: 'ENTER',
-    //         shiftKey: false
-    //     }, {
-    //         key: 'ENTER',
-    //         shiftKey: false
-    //     }, {
-    //         key: 'BACKSPACE',
-    //     }, {
-    //         key: 'BACKSPACE',
-    //     }],
-    //     test: {
-    //         content: "<p><b>dom&nbsp;to edit</b></p>",
-    //         start: "b:contents()[0]->3",
-    //     },
-    // },
+    {
+        name: "in p > b: 2x ENTER -> 2x BACKSPACE",
+        content: "<p><b>dom to edit</b></p>",
+        steps: [{
+            start: "b:contents()[0]->3",
+            key: 'ENTER',
+            shiftKey: false
+        }, {
+            key: 'ENTER',
+            shiftKey: false
+        }, {
+            key: 'BACKSPACE',
+        }, {
+            key: 'BACKSPACE',
+        }],
+        test: {
+            content: "<p><b>dom&nbsp;to edit</b></p>",
+            start: "b:contents()[0]->3",
+        },
+    },
     {
         name: "in empty-p: 2x ENTER -> 2x BACKSPACE",
         content: "<p><br></p>",
@@ -1920,60 +1920,60 @@ var keyboardTestsComplex = [{
         }],
         test: {
             content: "<p><br></p>",
-            start: "p:contents()[0]->0",
+            start: "p->0",
         },
     },
-    // {
-    //     name: "in empty-p (p before): ENTER -> 2x BACKSPACE",
-    //     content: "<p>dom not to edit</p><p><br></p>",
-    //     steps: [{
-    //         start: "p:eq(1)->1",
-    //         key: 'ENTER',
-    //         shiftKey: false
-    //     }, {
-    //         key: 'BACKSPACE',
-    //     }, {
-    //         key: 'BACKSPACE',
-    //     }],
-    //     test: {
-    //         content: "<p>dom not to edit</p>",
-    //         start: "p:first:contents()[0]->15",
-    //     },
-    // },
-    // {
-    //     name: "in p > b: 2x SHIFT+ENTER -> BACKSPACE -> 'a'",
-    //     content: "<p><b>dom to edit</b></p>",
-    //     steps: [{
-    //         start: "b:contents()[0]->3",
-    //         key: 'ENTER',
-    //         shiftKey: true,
-    //     }, {
-    //         key: 'ENTER',
-    //         shiftKey: true,
-    //     }, {
-    //         key: 'BACKSPACE',
-    //     }, {
-    //         key: 'a',
-    //     }],
-    //     test: {
-    //         content: "<p><b>dom<br>a to edit</b></p>",
-    //         start: "b:contents()[2]->1",
-    //     },
-    // },
-    // {
-    //     name: "in li -> ENTER before br -> 'a'",
-    //     content: "<ul><li><p>dom<br/>&nbsp;to edit</p></li></ul>",
-    //     steps: [{
-    //         start: "p:contents()[0]->3",
-    //         key: 'ENTER',
-    //     }, {
-    //         key: 'a',
-    //     }],
-    //     test: {
-    //         content: "<ul><li><p>dom</p></li><li><p>a<br>&nbsp;to edit</p></li></ul>",
-    //         start: "p:eq(1):contents()[0]->1",
-    //     },
-    // },
+    {
+        name: "in empty-p (p before): ENTER -> 2x BACKSPACE",
+        content: "<p>dom not to edit</p><p><br></p>",
+        steps: [{
+            start: "p:eq(1)->1",
+            key: 'ENTER',
+            shiftKey: false
+        }, {
+            key: 'BACKSPACE',
+        }, {
+            key: 'BACKSPACE',
+        }],
+        test: {
+            content: "<p>dom not to edit</p>",
+            start: "p:first:contents()[0]->15",
+        },
+    },
+    {
+        name: "in p > b: 2x SHIFT+ENTER -> BACKSPACE -> 'a'",
+        content: "<p><b>dom to edit</b></p>",
+        steps: [{
+            start: "b:contents()[0]->3",
+            key: 'ENTER',
+            shiftKey: true,
+        }, {
+            key: 'ENTER',
+            shiftKey: true,
+        }, {
+            key: 'BACKSPACE',
+        }, {
+            key: 'a',
+        }],
+        test: {
+            content: "<p><b>dom<br>a&nbsp;to edit</b></p>",
+            start: "b:contents()[2]->1",
+        },
+    },
+    {
+        name: "in li -> ENTER before br -> 'a'",
+        content: "<ul><li><p>dom<br/>&nbsp;to edit</p></li></ul>",
+        steps: [{
+            start: "p:contents()[0]->3",
+            key: 'ENTER',
+        }, {
+            key: 'a',
+        }],
+        test: {
+            content: "<ul><li><p>dom</p></li><li><p>a<br>&nbsp;to edit</p></li></ul>",
+            start: "p:eq(1):contents()[0]->1",
+        },
+    },
     {
         name: "in li -> ENTER after br -> 'a'",
         content: "<ul><li><p>dom<br/>&nbsp;to edit</p></li></ul>",
@@ -2019,19 +2019,19 @@ var keyboardTestsComplex = [{
             start: "p:eq(1):contents()[0]->5",
         },
     },
-    // {
-    //     name: "in h1.a > font: 'a' on selection of all contents",
-    //     content: "<h1 class=\"a\"><font style=\"font-size: 62px;\">dom to edit</font></h1>",
-    //     steps: [{
-    //         start: "h1->0",
-    //         end: "h1->1",
-    //         key: 'a',
-    //     }],
-    //     test: {
-    //         content: "<h1 class=\"a\"><font style=\"font-size: 62px;\">a</font></h1>",
-    //         start: "font:contents()[0]->1",
-    //     },
-    // },
+    {
+        name: "in h1.a > font: 'a' on selection of all contents",
+        content: "<h1 class=\"a\"><font style=\"font-size: 62px;\">dom to edit</font></h1>",
+        steps: [{
+            start: "font:contents()[0]->0",
+            end: "font:contents()[0]->11",
+            key: 'a',
+        }],
+        test: {
+            content: "<h1 class=\"a\"><font style=\"font-size: 62px;\">a</font></h1>",
+            start: "font:contents()[0]->1",
+        },
+    },
     {
         name: "in complex-dom: BACKSPACE on partial selection (requires merging non-similar blocks)",
         content: "<p class=\"a\">pif</p><p><span><b>paf</b></span></p><ul><li><p>p<i>ouf</i></p></li></ul>",
@@ -2903,7 +2903,7 @@ var keyboardTestsBackspace = [{
         }],
         test: {
             content: "<p><b>do</b>ove</p>",
-            start: "b:contents()[0]->2",
+            start: "p:contents()[1]->0",
         },
     },
     {
@@ -2965,8 +2965,8 @@ var keyboardTestsBackspace = [{
             key: 'BACKSPACE',
         }],
         test: {
-            content: '<p>aaabbb</p>',
-            start: "p:contents()[0]->3",
+            content: '<p>aaa</p><p>bbb</p>',
+            start: "p:eq(1):contents()[0]->0",
         },
     },
     {
@@ -3106,7 +3106,7 @@ var keyboardTestsBackspace = [{
         name: "in complex-dom (empty-td (td before) -> 2x SHIFT-ENTER): 3x BACKSPACE -> 'a'",
         content: '<table class="table table-bordered"><tbody><tr><td><p>dom not to edit</p></td><td><p><br><br><br></p></td></tr></tbody></table>',
         steps: [{
-            start: 'p:eq(1)->3',
+            start: 'p:eq(1)->2',
             key: 'BACKSPACE',
         }, {
             key: 'BACKSPACE',
@@ -3330,8 +3330,8 @@ var keyboardTestsDelete = [{
             key: 'DELETE',
         }],
         test: {
-            content: "<p><br></p>", // The br is there to ensure the carret can enter the p tag
-            start: "p->0",
+            content: "<p>\n    <br>\n</p>", // The br is there to ensure the carret can enter the p tag
+            start: "p->1",
         },
     },
     {
@@ -3915,7 +3915,7 @@ var keyboardTestsDelete = [{
         }],
         test: {
             content: "<p><b>do</b>ove</p>",
-            start: "b:contents()[0]->2",
+            start: "p:contents()[1]->0",
         },
     },
     {
@@ -3963,7 +3963,7 @@ var keyboardTestsDelete = [{
             key: 'DELETE',
         }],
         test: {
-            content: '<p>aaabbb</p>',
+            content: '<p>aaa</p><p>bbb</p>',
             start: "p:contents()[0]->3",
         },
     },
