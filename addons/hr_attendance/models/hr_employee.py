@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-from odoo import models, fields, api, exceptions, _, SUPERUSER_ID
+
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
+from odoo import models, fields, api, exceptions, _, SUPERUSER_ID
 
-class HrEmployee(models.Model):
-    _inherit = "hr.employee"
-    _description = "Employee"
+
+class EmployeeAttendanceMixin(models.AbstractModel):
+    _name = "hr.attendance.employee.mixin"
+    _description = "EmployeeAttendanceMixin"
 
     attendance_ids = fields.One2many('hr.attendance', 'employee_id', help='list of attendances for the employee')
     last_attendance_id = fields.Many2one('hr.attendance', compute='_compute_last_attendance_id', store=True)
@@ -44,9 +46,9 @@ class HrEmployee(models.Model):
         """ Receive a barcode scanned from the Kiosk Mode and change the attendances of corresponding employee.
             Returns either an action or a warning.
         """
-        employee = self.search([('barcode', '=', barcode)], limit=1)
-        return employee and employee.attendance_action('hr_attendance.hr_attendance_action_kiosk_mode') or \
-            {'warning': _('No employee corresponding to barcode %(barcode)s') % {'barcode': barcode}}
+        employee = self.sudo().search([('barcode', '=', barcode)], limit=1)
+        return (employee.attendance_action('hr_attendance.hr_attendance_action_kiosk_mode') if employee else
+            {'warning': _('No employee corresponding to barcode %(barcode)s') % {'barcode': barcode}})
 
     @api.multi
     def attendance_manual(self, next_action, entered_pin=None):
@@ -63,14 +65,15 @@ class HrEmployee(models.Model):
             next_action defines which menu the check in/out message should return to. ("My Attendances" or "Kiosk Mode")
         """
         self.ensure_one()
+        employee_id = self.env['hr.employee.public'].browse(self.id)
         action_message = self.env.ref('hr_attendance.hr_attendance_action_greeting_message').read()[0]
-        action_message['previous_attendance_change_date'] = self.last_attendance_id and (self.last_attendance_id.check_out or self.last_attendance_id.check_in) or False
-        action_message['employee_name'] = self.name
-        action_message['barcode'] = self.barcode
+        action_message['previous_attendance_change_date'] = employee_id.last_attendance_id and (employee_id.last_attendance_id.check_out or employee_id.last_attendance_id.check_in) or False
+        action_message['employee_name'] = employee_id.name
+        action_message['barcode'] = self.sudo().barcode
         action_message['next_action'] = next_action
 
-        if self.user_id:
-            modified_attendance = self.sudo(self.user_id.id).attendance_action_change()
+        if employee_id.user_id:
+            modified_attendance = employee_id.sudo(employee_id.user_id.id).attendance_action_change()
         else:
             modified_attendance = self.sudo().attendance_action_change()
         action_message['attendance'] = modified_attendance.read()[0]
@@ -82,8 +85,7 @@ class HrEmployee(models.Model):
             Check In: create a new attendance record
             Check Out: modify check_out field of appropriate attendance record
         """
-        if len(self) > 1:
-            raise exceptions.UserError(_('Cannot perform check in or check out on multiple employees.'))
+        self.ensure_one()
         action_date = fields.Datetime.now()
 
         if self.attendance_state != 'checked_in':
@@ -92,11 +94,20 @@ class HrEmployee(models.Model):
                 'check_in': action_date,
             }
             return self.env['hr.attendance'].create(vals)
+        attendance = self.env['hr.attendance'].search([('employee_id', '=', self.id), ('check_out', '=', False)], limit=1)
+        if attendance:
+            attendance.check_out = action_date
         else:
-            attendance = self.env['hr.attendance'].search([('employee_id', '=', self.id), ('check_out', '=', False)], limit=1)
-            if attendance:
-                attendance.check_out = action_date
-            else:
-                raise exceptions.UserError(_('Cannot perform check out on %(empl_name)s, could not find corresponding check in. '
-                    'Your attendances have probably been modified manually by human resources.') % {'empl_name': self.name, })
-            return attendance
+            raise exceptions.UserError(_('Cannot perform check out on %(empl_name)s, could not find corresponding check in. '
+                'Your attendances have probably been modified manually by human resources.') % {'empl_name': self.sudo().name, })
+        return attendance
+
+
+class HrEmployee(models.Model):
+    _name = 'hr.employee'
+    _inherit = ["hr.employee", 'hr.attendance.employee.mixin']
+
+
+class HrEmployeePublic(models.Model):
+    _name = 'hr.employee.public'
+    _inherit = ['hr.employee.public', 'hr.attendance.employee.mixin']
