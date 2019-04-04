@@ -73,8 +73,8 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
      * @param {string} value
      * @returns string
      */
-    getEditorValue: function () {
-        this._each('getEditorValue');
+    getEditorValue: function (value) {
+        return this._each('getEditorValue', value);
         return this._plugins.Arch.getValue();
     },
     /**
@@ -83,7 +83,7 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
      * @returns string
      */
     setEditorValue: function (value) {
-        this._each('setEditorValue', value);
+        return this._each('setEditorValue', value);
         return this._plugins.Arch.getNode();
     },
     /**
@@ -100,9 +100,10 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
      * @param {string} value
      * @returns {Promise<string>}
      */
-    saveEditor: function () {
+    saveEditor: function (html) {
         var Arch = this._plugins.Arch;
-        return this._eachAsync('saveEditor').then(function () {
+        return this._eachAsync('saveEditor', html).then(function (html) {
+            return html;
             return Arch.getValue();
         });
     },
