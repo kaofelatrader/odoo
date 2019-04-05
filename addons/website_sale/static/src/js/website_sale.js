@@ -130,7 +130,6 @@ var qweb = core.qweb;
 publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
     selector: '.oe_website_sale',
     events: _.extend({}, VariantMixin.events || {}, {
-        'change form .js_product:first input[name="add_qty"]': '_onChangeAddQuantity',
         'mouseup .js_publish': '_onMouseupPublish',
         'touchend .js_publish': '_onMouseupPublish',
         'change .oe_cart input.js_quantity[data-product-id]': '_onChangeCartQuantity',
@@ -506,13 +505,7 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
     _onClickAddCartJSON: function (ev) {
         this.onClickAddCartJSON(ev);
     },
-    /**
-     * @private
-     * @param {Event} ev
-     */
-    _onChangeAddQuantity: function (ev) {
-        this.onChangeAddQuantity(ev);
-    },
+    
     /**
      * @private
      * @param {Event} ev
@@ -685,6 +678,27 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
     },
 });
 
+// Product Page
+publicWidget.registry.websiteSaleProduct = publicWidget.Widget.extend({
+    selector: '#product_detail',
+    events: {
+        'change form .js_product:first input[name="add_qty"]': '_onChangeAddQuantity',
+    },
+
+    //--------------------------------------------------------------------------
+    // Handlers
+    //--------------------------------------------------------------------------
+
+    /**
+     * @private
+     * @param {Event} ev
+     */
+    _onChangeAddQuantity: function (ev) {
+        this.onChangeAddQuantity(ev);
+    },
+});
+
+// Cart Page
 publicWidget.registry.websiteSaleCart = publicWidget.Widget.extend({
     selector: '.oe_website_sale .oe_cart',
     events: {
