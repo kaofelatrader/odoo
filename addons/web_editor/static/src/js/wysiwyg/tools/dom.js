@@ -1165,11 +1165,9 @@ var Dom = Class.extend({
         if (utils.isText(point.node)) {
             return;
         }
-        var entered = new BoundaryPoint(point.node, point.offset).enter();
-        if (options.isNotSplitEdgePoint && point.isEdge() &&
-            (!entered || entered.node === point.node ||
-                !(utils.isText(entered.node) && entered.node.previousSibling && utils.isText(entered.node.previousSibling)))) {
-            return point.isLeftEdge() ? point.node : point.node.nextSibling;
+        var entered = new BoundaryPoint(point.node, point.offset).enterUntil();
+        if (options.isNotSplitEdgePoint && (entered.isEdgeOfBlock(true) || entered.isEdgeOfBlock(false))) {
+            return entered.isEdgeOfBlock(true) ? point.node : point.node.nextSibling;
         }
         var childNode = point.node.childNodes[point.offset];
         var clone = this._insertAfter(point.node.cloneNode(false), point.node);

@@ -30,7 +30,7 @@ BoundaryPoint.prototype = {
      * If possible, move the point to its first leaf until optional predicate hit, at offset 0.
      * Can be chained.
      *
-     * @param {Function (Node) => Boolean} pred
+     * @param {Function (Node) => Boolean} [pred]
      * @returns {BoundaryPoint}
      */
     enterUntil: function (pred) {
@@ -72,13 +72,13 @@ BoundaryPoint.prototype = {
     isEdgeOfPred: function (pred, isLeft) {
         pred = pred.bind(this);
         var isEdge = isLeft ? 'isLeftEdge' : 'isRightEdge';
-        var ancestorChildOfTag = utils.ancestor(this.node, function (node) {
+        var ancestorChildrenOfTag = utils.listAncestor(this.node, function (node) {
             return node.parentNode && pred(node.parentNode);
         });
-        if (!ancestorChildOfTag || !this[isEdge]()) {
+        if (!ancestorChildrenOfTag.length || !this[isEdge]()) {
             return false;
         }
-        return utils[isEdge](ancestorChildOfTag);
+        return _.all(ancestorChildrenOfTag, utils[isEdge].bind(utils));
     },
     /**
      * Returns true if the point is on the left/right edge of the first
@@ -118,6 +118,9 @@ BoundaryPoint.prototype = {
      * @returns {Boolean}
      */
     isLeftEdge: function () {
+        if (this.offset === 0) {
+            return true;
+        }
         if (utils.isText(this.node)) {
             var reInvisible = utils.getRegex('invisible');
             var leftOffset = 0;
@@ -156,6 +159,9 @@ BoundaryPoint.prototype = {
      * @returns {Boolean}
      */
     isRightEdge: function () {
+        if (this.offset === utils.nodeLength(this.node)) {
+            return true;
+        }
         if (utils.isText(this.node)) {
             var reInvisible = utils.getRegex('invisible');
             var rightOffset = utils.nodeLength(this.node);
