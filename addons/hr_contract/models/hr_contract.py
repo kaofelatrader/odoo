@@ -158,7 +158,7 @@ class Contract(models.Model):
     def write(self, vals):
         if vals.get('state') == 'open':
             for contract in self:
-                contract.employee_id.contract_id = contract
+                contract.employee_id.sudo().write({'contract_id': contract.id})
         return super(Contract, self).write(vals)
 
     @api.multi
