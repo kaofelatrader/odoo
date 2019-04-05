@@ -85,41 +85,6 @@ var WrappedRange = Class.extend({
         return utils.commonAncestor(this.sc, this.ec);
     },
     /**
-     * Delete the contents of the current range.
-     *
-     * @returns {WrappedRange}
-     */
-    deleteContents: function () {
-        if (this.isCollapsed()) {
-            return this;
-        }
-        this.splitText();
-        var nodes = this.nodes(null, {
-            fullyContains: true,
-        });
-        // find new cursor point
-        var point = this.getStartPoint().prevUntil(function (point) {
-            return nodes.indexOf(point.node) === -1;
-        });
-        var emptyParents = [];
-        $.each(nodes, function (idx, node) {
-            // find empty parents
-            var parent = node.parentNode;
-            if (point.node !== parent && utils.nodeLength(parent) === 1) {
-                emptyParents.push(parent);
-            }
-            utils.remove(node, false);
-        });
-        // remove empty parents
-        $.each(emptyParents, function (idx, node) {
-            utils.remove(node, false);
-        });
-        return this.replace({
-            sc: point.node,
-            so: point.offset,
-        }).normalize();
-    },
-    /**
      * Get the end point of the current range.
      *
      * @returns {Object} {node, offset}

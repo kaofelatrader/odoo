@@ -124,8 +124,11 @@ var Dom = Class.extend({
      */
     insertBlockNode: function (node, range) {
         var self = this;
-        range = range.deleteContents();
-        var point = range.getStartPoint();
+        var point = this.deleteSelection(range, true);
+        range.replace({
+            sc: point.node,
+            so: point.offset,
+        });
         var unbreakable = point.node;
         if (!this.options.isUnbreakableNode(point.node)) {
             unbreakable = utils.ancestor(point.node, function (node) {
@@ -134,7 +137,7 @@ var Dom = Class.extend({
         }
 
         if (unbreakable === point.node && !point.offset && point.node.tagName !== 'P') {
-            if (point.node.innerHTML === '<br>') {
+            if (utils.hasOnlyBR(point.node)) {
                 $(point.node.firstElementChild).remove();
             }
             if (utils.isBR(point.node)) {
@@ -198,7 +201,6 @@ var Dom = Class.extend({
             sc: point.node,
             so: point.offset,
         });
-        range.deleteContents();
         range.standardizeRangeOnEdge(this.options.isEditableNode);
 
         var textNode = this._insertTextNodeInEditableArea(range, text);
