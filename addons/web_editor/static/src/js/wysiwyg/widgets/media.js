@@ -174,7 +174,7 @@ var ImageWidget = MediaWidget.extend({
             args: [],
             kwargs: {
                 domain: this._getAttachmentsDomain(needle),
-                fields: ['name', 'datas_fname', 'mimetype', 'checksum', 'url', 'type', 'res_id', 'res_model', 'access_token'],
+                fields: ['name', 'mimetype', 'checksum', 'url', 'type', 'res_id', 'res_model', 'access_token'],
                 order: [{name: 'id', asc: false}],
                 context: this.context,
             },
@@ -189,13 +189,13 @@ var ImageWidget = MediaWidget.extend({
                 .sortBy(function (r) {
                     if (_.any(self.firstFilters, function (filter) {
                         var regex = new RegExp(filter, 'i');
-                        return r.name.match(regex) || r.datas_fname && r.datas_fname.match(regex);
+                        return r.name.match(regex);
                     })) {
                         return -1;
                     }
                     if (_.any(self.lastFilters, function (filter) {
                         var regex = new RegExp(filter, 'i');
-                        return r.name.match(regex) || r.datas_fname && r.datas_fname.match(regex);
+                        return r.name.match(regex);
                     })) {
                         return 1;
                     }
@@ -282,9 +282,9 @@ var ImageWidget = MediaWidget.extend({
             ['mimetype', '=', false],
             ['mimetype', this.options.document ? 'not in' : 'in', ['image/gif', 'image/jpe', 'image/jpeg', 'image/jpg', 'image/gif', 'image/png']]);
         if (needle && needle.length) {
-            domain.push('|', ['datas_fname', 'ilike', needle], ['name', 'ilike', needle]);
+            domain.push(['name', 'ilike', needle]);
         }
-        domain.push('|', ['datas_fname', '=', false], '!', ['datas_fname', '=like', '%.crop'], '!', ['name', '=like', '%.crop']);
+        domain.push('!', ['name', '=like', '%.crop']);
         return domain;
     },
     /**

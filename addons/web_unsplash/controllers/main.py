@@ -110,9 +110,8 @@ class Web_Unsplash(http.Controller):
             url_frags = ['unsplash', key, query]
 
             attachment = Attachments.create({
-                'name': query,
+                'name': '_'.join(url_frags),
                 'url': '/' + '/'.join(url_frags),
-                'datas_fname': '_'.join(url_frags),
                 'mimetype': mimetype,
                 'datas': base64.b64encode(datas),
                 'public': res_model == 'ir.ui.view',

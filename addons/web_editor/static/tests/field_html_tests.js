@@ -197,8 +197,7 @@ QUnit.module('web_editor', {}, function () {
                             return Promise.resolve([{
                                 "id": 1,
                                 "public": true,
-                                "name": "image",
-                                "datas_fname": "image.png",
+                                "name": "image.png",
                                 "mimetype": "image/png",
                                 "checksum": false,
                                 "url": "/web_editor/static/src/img/transparent.png",

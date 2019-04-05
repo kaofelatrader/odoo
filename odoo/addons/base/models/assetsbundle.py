@@ -260,8 +260,8 @@ class AssetsBundle(object):
                FROM ir_attachment
               WHERE create_uid = %s
                 AND url like %s
-           GROUP BY datas_fname
-           ORDER BY datas_fname
+           GROUP BY name
+           ORDER BY name
          """, [SUPERUSER_ID, url_pattern])
         attachment_ids = [r[0] for r in self.env.cr.fetchall()]
         return self.env['ir.attachment'].sudo().browse(attachment_ids)
@@ -278,7 +278,6 @@ class AssetsBundle(object):
         mimetype = 'application/javascript' if type == 'js' else 'text/css'
         values = {
             'name': "/web/content/%s" % type,
-            'datas_fname': fname,
             'mimetype': mimetype,
             'res_model': 'ir.ui.view',
             'res_id': False,
@@ -446,12 +445,11 @@ class AssetsBundle(object):
                                 datas=base64.b64encode(asset.content.encode('utf8')),
                                 mimetype='text/css',
                                 type='binary',
-                                name=url,
+                                name=fname,
                                 url=url,
-                                datas_fname=fname,
                                 res_model=False,
                                 res_id=False,
-                            ))
+                            ))   # TODO datas_fname special usage
 
                         if self.env.context.get('commit_assetsbundle') is True:
                             self.env.cr.commit()
