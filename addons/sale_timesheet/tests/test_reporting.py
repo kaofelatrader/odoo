@@ -387,3 +387,84 @@ class TestReporting(TestCommonSaleTimesheetNoChart):
         self.assertTrue(float_is_zero(project_global_stat['expense_amount_untaxed_to_invoice'], precision_rounding=rounding), "The expense cost to reinvoice of the global project should be 0.0")
         self.assertTrue(float_is_zero(project_global_stat['expense_amount_untaxed_invoiced'], precision_rounding=rounding), "The expense invoiced amount of the project from SO1 should be 0.0")
         self.assertEqual(float_compare(project_global_stat['expense_cost'], expense2.amount, precision_rounding=rounding), 0, "The expense cost of the global project should be 0.0")
+
+    def test_profitability_report_downpayment(self):
+        """ This test case check:
+            - confirm SO with one line (oredered qty, create new T in new P)
+            - create a downpayment (check it is included in expense cost with positive amount)
+            -
+        """
+        InvoiceWizard = self.env['sale.advance.payment.inv'].with_context(mail_notrack=True)
+        downpayment_amount = 30.0
+        # this test suppose everything is in the same currency as the current one
+        currency = self.env.user.company_id.currency_id
+        rounding = currency.rounding
+
+        # to simplify, we only use the create new Task in new Project, ordered qty SOL
+        self.so_line_order_task.unlink()
+
+        # confirm sales orders
+        self.sale_order_2.action_confirm()
+        project_so_2 = self.so_line_order_project.project_id
+        task_so_2 = self.so_line_order_project.task_id
+
+        # order project should be to invoice, but nothing has been delivered yet
+        project_so_2_stat = self.env['project.profitability.report'].read_group([('project_id', 'in', project_so_2.ids)], ['project_id', 'amount_untaxed_to_invoice', 'amount_untaxed_invoiced', 'timesheet_unit_amount', 'timesheet_cost', 'expense_cost', 'expense_amount_untaxed_to_invoice', 'expense_amount_untaxed_invoiced'], ['project_id'])[0]
+        self.assertTrue(float_is_zero(project_so_2_stat['amount_untaxed_invoiced'], precision_rounding=rounding), "The invoiced amount of the project from SO2 should be 0.0")
+        self.assertEqual(float_compare(project_so_2_stat['amount_untaxed_to_invoice'], self.so_line_order_project.price_unit * self.so_line_order_project.qty_to_invoice, precision_rounding=rounding), 0, "The amount to invoice should be the one from the SO line, as we are in ordered quantity")
+        self.assertTrue(float_is_zero(project_so_2_stat['timesheet_unit_amount'], precision_rounding=rounding), "The timesheet unit amount of the project from SO2 should be 0.0")
+        self.assertTrue(float_is_zero(project_so_2_stat['timesheet_cost'], precision_rounding=rounding), "The timesheet cost of the project from SO2 should be 0.0")
+        self.assertTrue(float_is_zero(project_so_2_stat['expense_amount_untaxed_to_invoice'], precision_rounding=rounding), "The expense cost to reinvoice of the project from SO2 should be 0.0")
+        self.assertTrue(float_is_zero(project_so_2_stat['expense_amount_untaxed_invoiced'], precision_rounding=rounding), "The expense invoiced amount of the global project should be 0.0")
+        self.assertTrue(float_is_zero(project_so_2_stat['expense_cost'], precision_rounding=rounding), "The expense cost of the project from SO2 should be 0.0")
+
+        # 'downpayment' invoice from Sales Order SO2
+        context = {
+            "active_model": 'sale.order',
+            "active_ids": [self.sale_order_2.id],
+            "active_id": self.sale_order_2.id,
+            'open_invoices': True,
+        }
+        payment = InvoiceWizard.create({
+            'advance_payment_method': 'fixed',
+            'amount': downpayment_amount,
+            'deposit_account_id': self.account_sale.id  # first call to wizard will create the deposit product. So, we need to set an income account
+        })
+        action_invoice = payment.with_context(context).create_invoices()
+        invoice_downpayment_id = action_invoice['res_id']
+        invoice_downpayment = self.env['account.invoice'].browse(invoice_downpayment_id)
+        invoice_downpayment.action_invoice_open()
+
+        # order project should be to invoice, but nothing has been delivered yet
+        project_so_2_stat = self.env['project.profitability.report'].read_group([('project_id', 'in', project_so_2.ids)], ['project_id', 'amount_untaxed_to_invoice', 'amount_untaxed_invoiced', 'timesheet_unit_amount', 'timesheet_cost', 'expense_cost', 'expense_amount_untaxed_to_invoice', 'expense_amount_untaxed_invoiced'], ['project_id'])[0]
+        self.assertTrue(float_is_zero(project_so_2_stat['amount_untaxed_invoiced'], precision_rounding=rounding), "The invoiced amount of the project from SO2 should be 0.0")
+        self.assertEqual(float_compare(project_so_2_stat['amount_untaxed_to_invoice'], self.so_line_order_project.price_unit * self.so_line_order_project.qty_to_invoice, precision_rounding=rounding), 0, "The amount to invoice should be the one from the SO line, as we are in ordered quantity")
+        self.assertTrue(float_is_zero(project_so_2_stat['timesheet_unit_amount'], precision_rounding=rounding), "The timesheet unit amount of the project from SO2 should be 0.0")
+        self.assertTrue(float_is_zero(project_so_2_stat['timesheet_cost'], precision_rounding=rounding), "The timesheet cost of the project from SO2 should be 0.0")
+        self.assertTrue(float_is_zero(project_so_2_stat['expense_amount_untaxed_to_invoice'], precision_rounding=rounding), "The expense cost to reinvoice of the project from SO2 should be 0.0")
+        self.assertTrue(float_is_zero(project_so_2_stat['expense_amount_untaxed_invoiced'], precision_rounding=rounding), "The expense invoiced amount of the global project should be 0.0")
+        self.assertTrue(float_compare(project_so_2_stat['expense_cost'], downpayment_amount, precision_rounding=rounding) == 0, "The expense cost is positive and must be the same as the downpayment")
+
+        # invoice the Sales Order SO2, including the downpayment
+        context = {
+            "active_model": 'sale.order',
+            "active_ids": [self.sale_order_2.id],
+            "active_id": self.sale_order_2.id,
+        }
+        payment = InvoiceWizard.create({
+            'advance_payment_method': 'all',  # include downpayment
+        })
+        payment.with_context(context).create_invoices()
+
+        invoice = self.sale_order_2.invoice_ids[0]
+        invoice.action_invoice_open()
+
+        # order project should be to invoice, but nothing has been delivered yet
+        project_so_2_stat = self.env['project.profitability.report'].read_group([('project_id', 'in', project_so_2.ids)], ['project_id', 'amount_untaxed_to_invoice', 'amount_untaxed_invoiced', 'timesheet_unit_amount', 'timesheet_cost', 'expense_cost', 'expense_amount_untaxed_to_invoice', 'expense_amount_untaxed_invoiced'], ['project_id'])[0]
+        self.assertEqual(float_compare(project_so_2_stat['amount_untaxed_invoiced'], self.so_line_order_project.price_unit * self.so_line_order_project.product_uom_qty, precision_rounding=rounding), 0, "The invoiced amount should be the one from the SO line, as we are in ordered quantity")
+        self.assertTrue(float_is_zero(project_so_2_stat['amount_untaxed_to_invoice'], precision_rounding=rounding), "The amount to invoice of the project from SO2 should be 0.0")
+        self.assertTrue(float_is_zero(project_so_2_stat['timesheet_unit_amount'], precision_rounding=rounding), "The timesheet unit amount of the project from SO2 should be 0.0")
+        self.assertTrue(float_is_zero(project_so_2_stat['timesheet_cost'], precision_rounding=rounding), "The timesheet cost of the project from SO2 should be 0.0")
+        self.assertTrue(float_is_zero(project_so_2_stat['expense_amount_untaxed_to_invoice'], precision_rounding=rounding), "The expense cost to reinvoice of the project from SO2 should be 0.0")
+        self.assertTrue(float_is_zero(project_so_2_stat['expense_amount_untaxed_invoiced'], precision_rounding=rounding), "The expense invoiced amount of the global project should be 0.0")
+        self.assertTrue(float_is_zero(project_so_2_stat['expense_cost'], precision_rounding=rounding), "The expense cost should be 0.0, as the downpayment should be cancelled by the invoice")

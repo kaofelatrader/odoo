@@ -108,7 +108,7 @@ class ProfitabilityAnalysis(models.Model):
                             FROM project_project P
                                 LEFT JOIN account_analytic_account AA ON P.analytic_account_id = AA.id
                                 LEFT JOIN account_analytic_line AAL ON AAL.account_id = AA.id
-                            WHERE AAL.amount < 0.0 AND AAL.project_id IS NULL AND P.active = 't' AND P.allow_timesheets = 't'
+                            WHERE P.active = 't' AND P.allow_timesheets = 't' AND ((AAL.amount < 0.0 AND AAL.project_id IS NULL) OR (AAL.product_id IN (SELECT CAST(value AS INTEGER) FROM ir_config_parameter WHERE key = 'sale.default_deposit_product_id')))
                             GROUP BY P.id, AA.id, AAL.so_line
 
                             UNION
