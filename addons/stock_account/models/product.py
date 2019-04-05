@@ -52,7 +52,7 @@ class ProductProduct(models.Model):
 
     stock_value_currency_id = fields.Many2one('res.currency', compute='_compute_stock_value_currency')
     stock_value = fields.Float(
-        'Value', compute='_compute_stock_value')
+        'Stock Value', compute='_compute_stock_value')
     qty_at_date = fields.Float(
         'Quantity', compute='_compute_stock_value')
     stock_fifo_real_time_aml_ids = fields.Many2many(
