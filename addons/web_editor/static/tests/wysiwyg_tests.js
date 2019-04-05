@@ -2816,7 +2816,7 @@ QUnit.test('Table', function (assert) {
         assert.strictEqual($editable.html().replace(/\s+/g, ' '),
             '<p>dom t</p>' +
             '<table class=\"table table-bordered\"><tbody>' +
-            '<tr><td><p><br></p></td><td><p><br></p></td><td><p><br></p></td></tr>' +
+            '<tr><td><p><br></p><p><br></p></td><td><p><br></p></td><td><p><br></p></td></tr>' +
             '<tr><td><p><br></p></td><td><p><br></p></td><td><p><br></p></td></tr>' +
             '<tr><td><p><br></p></td><td><p><br></p></td><td><p><br></p></td></tr>' +
             '</tbody></table>' +

@@ -129,25 +129,22 @@ var Dom = Class.extend({
             sc: point.node,
             so: point.offset,
         });
-        var unbreakable = point.node;
-        if (!this.options.isUnbreakableNode(point.node)) {
-            unbreakable = utils.ancestor(point.node, function (node) {
-                return self.options.isUnbreakableNode(node.parentNode) || utils.isEditable(node);
-            }) || point.node;
-        }
 
-        if (unbreakable === point.node && !point.offset && point.node.tagName !== 'P') {
-            if (utils.hasOnlyBR(point.node)) {
-                $(point.node.firstElementChild).remove();
+        // Get the highest breakable ancestor (or itself)
+        var unbreakable = utils.ancestor(point.node, function (node) {
+            return self.options.isUnbreakableNode(point.node) || self.options.isUnbreakableNode(node.parentNode) || utils.isEditable(node);
+        });
+
+        if (this.options.isUnbreakableNode(point.node)) {
+            // prevent unwrapped text in unbreakable
+            if (utils.isText(unbreakable)) {
+                $(unbreakable).wrap(document.createElement('p'));
+                unbreakable.splitText(point.offset);
+                unbreakable = unbreakable.parentNode;
+                point.offset = 1;
             }
-            if (utils.isBR(point.node)) {
-                $(point.node).replaceWith(node);
-            } else {
-                point.node.append(node);
-            }
-            return;
-        }
-        if (!this.options.isUnbreakableNode(point.node)) {
+            $(unbreakable.childNodes[point.offset]).before(node);
+        } else {
             var tree = this.splitTree(unbreakable, point, {
                 isSkipPaddingBlankNode: true,
                 isNotSplitEdgePoint: true,
@@ -158,17 +155,9 @@ var Dom = Class.extend({
                 });
                 $(tree).after(node);
             } else {
+                tree = utils.isText(tree) ? unbreakable : tree;
                 $(tree).before(node);
             }
-        } else {
-            // prevent unwrapped text in unbreakable
-            if (utils.isText(unbreakable)) {
-                $(unbreakable).wrap(document.createElement('p'));
-                unbreakable.splitText(point.offset);
-                unbreakable = unbreakable.parentNode;
-                point.offset = 1;
-            }
-            $(unbreakable.childNodes[point.offset]).before(node);
         }
         if (utils.hasOnlyBR(range.sc)) {
             var clone = range.sc.cloneNode(true);
