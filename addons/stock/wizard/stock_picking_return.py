@@ -59,8 +59,15 @@ class ReturnPicking(models.TransientModel):
                 .mapped('move_line_ids').mapped('product_qty')
                 )
             quantity = float_round(quantity, precision_rounding=move.product_uom.rounding)
-            product_return_moves.append((0, 0, {'product_id': move.product_id.id, 'quantity': quantity, 'move_id': move.id, 'uom_id': move.product_id.uom_id.id}))
-
+            fields = self.product_return_moves
+            values = fields.default_get(fields.fields_get())
+            values.update({
+                'product_id': move.product_id.id,
+                'quantity': quantity,
+                'move_id': move.id,
+                'uom_id': move.product_id.uom_id.id
+            })
+            product_return_moves.append((0, 0, values))
         if self.picking_id and not product_return_moves:
             raise UserError(_("No products to return (only lines in Done state and not fully returned yet can be returned)."))
         if self.picking_id:
