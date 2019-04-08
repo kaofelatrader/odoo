@@ -484,8 +484,8 @@ class HolidaysAllocation(models.Model):
 
     def _check_approval_update(self, state):
         """ Check if target state is achievable. """
-        current_employee = self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1)
-        if not current_employee or self.env.in_onchange:
+        current_employee_id = self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1).id
+        if not current_employee_id or self.env.in_onchange:
             return
         is_officer = self.env.user.has_group('hr_holidays.group_hr_holidays_user')
         is_manager = self.env.user.has_group('hr_holidays.group_hr_holidays_manager')
@@ -495,7 +495,7 @@ class HolidaysAllocation(models.Model):
                 continue
 
             if state == 'draft':
-                if holiday.employee_id != current_employee and not is_manager:
+                if holiday.employee_id.id != current_employee_id and not is_manager:
                     raise UserError(_('Only a time off Manager can reset other people time off.'))
                 continue
 
@@ -506,12 +506,12 @@ class HolidaysAllocation(models.Model):
                 # use ir.rule based first access check: department, members, ... (see security.xml)
                 holiday.check_access_rule('write')
 
-            if holiday.employee_id == current_employee and not is_manager:
+            if holiday.employee_id.id == current_employee_id and not is_manager:
                 raise UserError(_('Only a time off Manager can approve its own requests.'))
 
             if (state == 'validate1' and val_type == 'both') or (state == 'validate' and val_type == 'manager'):
                 manager = holiday.employee_id.parent_id or holiday.employee_id.department_id.manager_id
-                if (manager and manager != current_employee) and not self.env.user.has_group('hr_holidays.group_hr_holidays_manager'):
+                if (manager and manager.id != current_employee_id) and not self.env.user.has_group('hr_holidays.group_hr_holidays_manager'):
                     raise UserError(_('You must be either %s\'s manager or time off manager to approve this time off') % (holiday.employee_id.name))
 
             if state == 'validate' and val_type == 'both':

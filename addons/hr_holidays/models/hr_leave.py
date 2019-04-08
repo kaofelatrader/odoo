@@ -749,7 +749,7 @@ class HolidaysRequest(models.Model):
         if self.env.user.id == SUPERUSER_ID:
             return
 
-        current_employee = self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1)
+        current_employee_id = self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1).id
         is_officer = self.env.user.has_group('hr_holidays.group_hr_holidays_user')
         is_manager = self.env.user.has_group('hr_holidays.group_hr_holidays_manager')
         if self.env.in_onchange:
@@ -759,16 +759,16 @@ class HolidaysRequest(models.Model):
 
             if not is_manager and state != 'confirm':
                 if state == 'draft':
-                    if holiday.employee_id != current_employee:
+                    if holiday.employee_id.id != current_employee_id:
                         raise UserError(_('Only a Leave Manager can reset other people leaves.'))
                 else:
-                    if val_type == 'no_validation' and current_employee == holiday.employee_id:
+                    if val_type == 'no_validation' and current_employee_id == holiday.employee_id.id:
                         continue
                     # use ir.rule based first access check: department, members, ... (see security.xml)
                     holiday.check_access_rule('write')
 
                     # This handles states validate1 validate and refuse
-                    if holiday.employee_id == current_employee:
+                    if holiday.employee_id.id == current_employee_id:
                         raise UserError(_('Only a Leave Manager can approve its own requests.'))
 
                     if (state == 'validate1' and val_type == 'both') or (state == 'validate' and val_type == 'manager') and holiday.holiday_type == 'employee':
@@ -779,7 +779,7 @@ class HolidaysRequest(models.Model):
                         if not manager and not team_leader:
                             error = not is_officer
                         else:
-                            error = (not (manager and manager == current_employee) and not (team_leader and team_leader == self.env.user))
+                            error = (not (manager and manager.id == current_employee_id) and not (team_leader and team_leader == self.env.user))
 
                         if error:
                             raise UserError(_('You must be either %s\'s manager or Leave manager to approve this leave') % (holiday.employee_id.name))
