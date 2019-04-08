@@ -4,7 +4,7 @@ odoo.define('wysiwyg.plugin.arch', function (require) {
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var BoundaryPoint = require('wysiwyg.BoundaryPoint');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
-var ArchTree = require('wysiwyg.plugin.arch_tree');
+var ArchManager = require('wysiwyg.plugin.arch.ArchManager');
 
 var $ = require('web_editor.jquery');
 var _ = require('web_editor._');
@@ -144,7 +144,7 @@ var ArchPlugin = AbstractPlugin.extend({
         }
 
         var self = this;
-        ['customRules', 'parentedRules', 'orderRules', 'isVoidBlockList', 'isUnbreakableNodeList', 'isEditableNodeList',].forEach(function (name) {
+        ['customRules', 'parentedRules'].forEach(function (name) {
             self[name].forEach(function (rule) {
                 rule[1].forEach(function (checker) {
                     if (typeof checker === 'string' && checker.indexOf('.') !== -1) {
@@ -152,6 +152,14 @@ var ArchPlugin = AbstractPlugin.extend({
                         self.dependencies.push(checker[0]);
                     }
                 });
+            });
+        });
+        ['isVoidBlockList', 'isUnbreakableNodeList', 'isEditableNodeList'].forEach(function (name) {
+            self[name].forEach(function (checker) {
+                if (typeof checker === 'string' && checker.indexOf('.') !== -1) {
+                    checker = checker.split('.');
+                    self.dependencies.push(checker[0]);
+                }
             });
         });
     },
@@ -163,7 +171,7 @@ var ArchPlugin = AbstractPlugin.extend({
         var promise = this._super();
 
         var self = this;
-        ['customRules', 'parentedRules', 'orderRules', 'isVoidBlockList', 'isUnbreakableNodeList', 'isEditableNodeList',].forEach(function (name) {
+        ['customRules', 'parentedRules'].forEach(function (name) {
             self[name].forEach(function (rule) {
                 rule[1] = rule[1].map(function (checker) {
                     if (typeof checker === 'string' && checker.indexOf('.') !== -1) {
@@ -175,8 +183,18 @@ var ArchPlugin = AbstractPlugin.extend({
                 });
             });
         });
+        ['isVoidBlockList', 'isUnbreakableNodeList', 'isEditableNodeList'].forEach(function (name) {
+            self[name] = self[name].map(function (checker) {
+                if (typeof checker === 'string' && checker.indexOf('.') !== -1) {
+                    checker = checker.split('.');
+                    var Plugin = self.dependencies[checker[0]];
+                    return Plugin[checker[1]].bind(Plugin);
+                }
+                return checker;
+            });
+        });
 
-        this.arch = new ArchTree({
+        this.arch = new ArchManager({
             parentedRules: this.parentedRules,
             customRules: this.customRules,
             orderRules: this.orderRules,

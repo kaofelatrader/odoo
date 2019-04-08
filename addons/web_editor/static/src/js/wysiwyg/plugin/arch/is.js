@@ -38,7 +38,6 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isBlankNode: function (isNotBlank) {
-        var self = this;
         if (this.isVoid() || isNotBlank && isNotBlank(node)) {
             return false;
         }

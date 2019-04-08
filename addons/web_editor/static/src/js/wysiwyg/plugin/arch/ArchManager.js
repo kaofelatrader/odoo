@@ -20,7 +20,7 @@ function ArchManager (options) {
     this._endRangeID = null;
     this._endRangeOffset = null;
 }
-ClassName.prototype = {
+ArchManager.prototype = {
     getNode: function (archNodeId) {
         return this._archNodeList[archNodeId];
     },
