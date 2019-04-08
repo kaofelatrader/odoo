@@ -440,7 +440,7 @@ BoundaryPoint.prototype = {
      */
     walkUntil: function (pred, handler, isSkipInnerOffset) {
         var point = new BoundaryPoint(this.node, this.offset);
-        while (point && point.node) {
+        while (point && point.node && !utils.isEditable(point.node)) {
             handler(point);
             if (pred(point)) {
                 break;
