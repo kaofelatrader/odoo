@@ -4,8 +4,9 @@
 from odoo import api, fields, models
 
 
-class HrEmployee(models.Model):
-    _inherit = "hr.employee"
+class GamificationEmployeeMixin(models.AbstractModel):
+    _name = "hr.gamification.employee.mixin"
+    _description = "Employee Gamification Mixin"
 
     goal_ids = fields.One2many('gamification.goal', string='Employee HR Goals', compute='_compute_employee_goals')
     badge_ids = fields.One2many(
@@ -36,6 +37,16 @@ class HrEmployee(models.Model):
             ])
             employee.has_badges = bool(badge_ids)
             employee.badge_ids = badge_ids
+
+
+class HrEmployeePrivate(models.Model):
+    _name = 'hr.employee'
+    _inherit = ['hr.employee', 'hr.gamification.employee.mixin']
+
+
+class HrEmployeePublic(models.Model):
+    _name = 'hr.employee.public'
+    _inherit = ['hr.employee.public', 'hr.gamification.employee.mixin']
 
 
 class ResUsers(models.Model):
