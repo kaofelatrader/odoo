@@ -195,6 +195,7 @@ var ArchPlugin = AbstractPlugin.extend({
         });
 
         this.arch = new ArchManager({
+            editable: this.editable,
             parentedRules: this.parentedRules,
             customRules: this.customRules,
             orderRules: this.orderRules,
@@ -343,10 +344,9 @@ var ArchPlugin = AbstractPlugin.extend({
     remove: function (element) {
         return this.arch.remove(element);
     },
-    insert: function (DOM, id, offset) {
-        var newIds = this.arch.insert(DOM, id, offset);
-        // ou var newId = this.arch.getNode(id).children.splice(offset, this._domToArch(arch));
-        newIds.forEach(this._autoRedraw.bind(this));
+    insert: function (DOM, element, offset) {
+        var newIds = this.arch.insert(DOM, element, offset);
+        this.arch.toNode();
         return newIds;
     },
     setRange: function (sc, so, ec, eo) {
@@ -359,38 +359,6 @@ var ArchPlugin = AbstractPlugin.extend({
     removeRight: function () {
     },
 
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    _autoRedraw: function (id) {
-        var archNode = this.arch.getNode(id);
-        var fragment = archNode.toNode();
-        var node;
-        var redraw = false;
-        while (archNode && !this.editable.contains(node)) {
-            redraw = true;
-            archNode = archNode.parent;
-            fragment = archNode.toNode();
-            node = fragment.firstChild;
-        }
-
-        if (!redraw) {
-            var html = archNode.toString();
-            if (node.innerHTML !== html) {
-                // if the html is different, re-generate the node and its children
-                node.innerHTML = '';
-                archNode.toNode();
-                redraw = true;
-            }
-        }
-
-        if (redraw) {
-            this.trigger('redraw', archNode.id);
-
-            // rerange
-        }
-    },
 
     //--------------------------------------------------------------------------
     // Private from Common
@@ -400,9 +368,11 @@ var ArchPlugin = AbstractPlugin.extend({
         return archNode.attributes && archNode.attributes.contentEditable === 'false';
     },
     _isUnbreakableNode: function (archNode) {
+        return false;
         return  $(node).is(this.editable) || !this.isEditableNode(node.parentNode);
     },
     _isEditableNode: function (node) {
+        return false;
         node = node && (node.tagName ? node : node.parentNode);
         if (!node) {
             return false;

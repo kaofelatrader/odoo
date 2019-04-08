@@ -2,7 +2,6 @@ odoo.define('wysiwyg.plugin.arch.fragment', function (require) {
 'use strict';
 
 var ArchNode = require('wysiwyg.plugin.arch.node');
-var text = require('wysiwyg.plugin.arch.text');
 
 var FragmentNode = ArchNode.extend({
     init: function (tree) {
@@ -20,6 +19,9 @@ var FragmentNode = ArchNode.extend({
     applyRules: function () {
         this._applyRulesPropagation();
     },
+    isFragment: function () {
+        return true;
+    },
     isVirtual: function () {
         return true;
     },
@@ -32,55 +34,6 @@ var FragmentNode = ArchNode.extend({
     },
 });
 
-//////////////////////////////////////////////////////////////
-
-var RootNode = FragmentNode.extend({
-    init: function (tree) {
-        this.tree = tree;
-        this.nodeName = 'EDITABLE';
-        this.childNodes = [];
-    },
-    index: function () {
-        return null;
-    },
-    insert: function (fragment, offset) {
-        if (offset || offset === 0) {
-            return this._changeParent(fragment, offset + 1);
-        }
-        return this.append(fragment);
-    },
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    _prevNextUntil: function (direction, fn, __closestUnbreakable, __goUp) {
-        if (!__closestUnbreakable) {
-            __closestUnbreakable = this;
-            var next = this._super.apply(this, arguments);
-            if (next) {
-                return next;
-            }
-        }
-
-        var insertMethod = this[direction === 'next' ? 'append' : 'prepend'].bind(this);
-        return this._generateVirtualNode(insertMethod, fn);
-    },
-    _generateVirtualNode: function (insertMethod, fn) {
-        var virtualTextNode = new text.VirtualTextNode(this.tree);
-        virtualTextNode.parent = this;
-        insertMethod(virtualTextNode);
-        if (!virtualTextNode.isEditable() || (fn && !fn.call(this, virtualTextNode))) {
-            virtualTextNode.remove();
-            return;
-        }
-        return virtualTextNode;
-    },
-});
-
-return {
-    FragmentNode: FragmentNode,
-    RootNode: RootNode,
-};
+return FragmentNode;
 
 });

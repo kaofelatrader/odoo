@@ -214,9 +214,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         this.trigger_up('change');
     },
     reset: function (value) {
-        this.editable.innerHTML = '';
-        var fragment = this._pluginsManager.setEditorValue(value || '');
-        this.editable.appendChild(fragment);
+        this._pluginsManager.setEditorValue(value || '');
         this._dirty = false;
     },
 

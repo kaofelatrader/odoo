@@ -31,6 +31,9 @@ var TextNode = ArchNode.extend({
     length: function (argument) {
         return this.nodeValue.length;
     },
+    insert: function (fragment, offset) {
+        console.error('todo: implement');
+    },
     isText: function () {
         return true;
     },
@@ -43,7 +46,13 @@ var TextNode = ArchNode.extend({
         if (this.isVirtual() && !options.keepVirtual) {
             return document.createDocumentFragment();
         }
-        return this.tree._createTextNode(this, this.toString(options));
+
+        var text = this.toString(options);
+        var node = this.tree._createTextNode(this);
+        if (node.textContent !== text) {
+            node.textContent = text;
+        }
+        return node;
     },
 });
 
@@ -105,7 +114,7 @@ var VisibleTextNode = TextNode.extend({
 
 var VirtualTextNode = TextNode.extend({
     char: '\uFEFF',
-    init: function () {
+    init: function (tree) {
         this.tree = tree;
         this.nodeName = 'TEXT';
         this.nodeValue = this.char;
@@ -115,7 +124,7 @@ var VirtualTextNode = TextNode.extend({
     // Public
     //--------------------------------------------------------------------------
 
-    insert: function (offset, fragment) {
+    insert: function (fragment, offset) {
         var self = this;
         var parent = this;
         var changes = [];

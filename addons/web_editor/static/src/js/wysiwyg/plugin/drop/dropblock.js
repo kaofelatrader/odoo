@@ -292,6 +292,19 @@ var DropBlock = AbstractPlugin.extend({
             },
         });
     },
+    _removeDropZones: function (dropzone) {
+        this._origin.parentNode.removeChild(this._origin);
+        this._enabledDropZones.forEach(function (zone) {
+            if (zone.node !== dropzone) {
+                zone.node.parentNode.removeChild(zone.node);
+            }
+        });
+        if (dropzone) {
+            var index = [].indexOf.call(dropzone.parentNode.childNodes, dropzone) - 1;
+            dropzone.parentNode.removeChild(dropzone);
+            return index;
+        }
+    },
     _triggerDragAndDrop: function () {
         this.trigger('dragAndDrop');
     },
@@ -356,13 +369,21 @@ var DropBlock = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     _onDragAndDropEnd: function (dragAndDrop, dropzone) {
-        dragAndDrop.contents.forEach(function (node) {
-            dropzone.parentNode.insertBefore(node, dropzone);
-        });
-        this._origin.parentNode.removeChild(this._origin);
-        this._enabledDropZones.forEach(function (dropzone) {
-            dropzone.node.parentNode.removeChild(dropzone.node);
-        });
+        if (!dropzone) {
+            this._removeDropZones();
+            return;
+        }
+        var node = dragAndDrop.contents[0];
+        if (dragAndDrop.contents.length > 1) {
+            node = document.createDocumentFragment();
+            dragAndDrop.contents.forEach(function (node) {
+                node.appendChild(node);
+            });
+        }
+
+        var parent = dropzone.parentNode;
+        var index = this._removeDropZones(dropzone);
+        this.dependencies.Arch.insert(node, parent, index);
     },
     _onDragAndDropMove: function () {
         var editableBox = this._blockHandle.getBoundingClientRect();

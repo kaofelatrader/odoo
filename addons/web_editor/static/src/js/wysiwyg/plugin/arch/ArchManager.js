@@ -4,16 +4,21 @@ odoo.define('wysiwyg.plugin.arch.ArchManager', function (require) {
 var ArchNode = require('wysiwyg.plugin.arch.node');
 var text = require('wysiwyg.plugin.arch.text');
 var customNodes = require('wysiwyg.plugin.arch.customNodes');
-var fragment = require('wysiwyg.plugin.arch.fragment');
+var FragmentNode = require('wysiwyg.plugin.arch.fragment');
+var RootNode = require('wysiwyg.plugin.arch.root');
 
 
 function ArchManager (options) {
     this.options = options;
+    this.editable = options.editable;
     this._archNodeList = {};
     this._nodeList = {};
     this._id = 1;
-    this.root = new fragment.RootNode(this);
+    this.root = new RootNode(this);
     this.root.id = 1;
+    this.root.parent = null;
+    this._archNodeList[1] = this.root;
+    this._nodeList[1] = this.editable;
 
     this._startRangeID = null;
     this._startRangeOffset = null;
@@ -25,12 +30,14 @@ ArchManager.prototype = {
         return this._archNodeList[archNodeId];
     },
     whoIsThisNode: function (element) {
+        if (element.tagName === 'EDITABLE') {
+            return this.root.id;
+        }
         for (var k in this._nodeList) {
             if (this._nodeList[k] === element) {
                 return this._archNodeList[k].id;
             }
         }
-        throw new Error('This dom node is not present in the arch');
     },
 
     //--------------------------------------------------------------------------
@@ -38,8 +45,8 @@ ArchManager.prototype = {
     //--------------------------------------------------------------------------
 
     reset: function () {
-        this._archNodeList = {};
-        this._nodeList = {};
+        this._archNodeList = {'1':  this.root};
+        this._nodeList = {'1': this.editable};
         this._id = 1;
         this._startRangeID = null;
         this._startRangeOffset = null;
@@ -74,15 +81,38 @@ ArchManager.prototype = {
     /**
      * Insert a node in the Arch.
      *
-     * @param {String} DOM
-     * @param {Number} [id]
+     * @param {string|DOM|FragmentDOM} DOM
+     * @param {DOM} [element]
      * @param {Number} [offset]
      * @returns {Number}
      */
-    insert: function (DOM, id, offset) {
-        id = id || this.getRange().start.id;
-        var node = id ? this.arch.getNode(id) : this.root;
-        return node.insert(this.parse(DOM), offset || 0);
+    insert: function (DOM, element, offset) {
+        var self = this;
+        var id = element ? this.whoIsThisNode(element) : this.getRange().start.id;
+        var archNode = id ? this.getNode(id) : this.root;
+        var fragment;
+        if (typeof DOM === 'string') {
+            fragment = this.parse(DOM);
+        } else if (this.whoIsThisNode(DOM)) {
+            var archNode = this.getNode(this.whoIsThisNode(DOM));
+            if (archNode !== this.root && !archNode.isFragment()) {
+                fragment = new FragmentNode(this);
+                fragment.append(archNode);
+            } else {
+                fragment = archNode;
+            }
+        } else {
+            var fragment = new FragmentNode(this);
+            if (DOM.nodeType !== DOM.DOCUMENT_FRAGMENT_NODE) {
+                var dom = document.createDocumentFragment();
+                dom.append(DOM);
+                DOM = dom;
+            }
+            DOM.childNodes.forEach(function (node) {
+                fragment.append(self._parseElement(node));
+            });
+        }
+        return archNode.insert(fragment, offset || 0);
     },
     addLine: function () {
         this.remove();
@@ -161,7 +191,7 @@ ArchManager.prototype = {
      **/
     parse: function (html) {
         var self = this;
-        var frag = new fragment.FragmentNode(this);
+        var fragment = new FragmentNode(this);
 
         var xml = html.replace(/<((br|img|iframe)[^>/]*)>/g, '<\$1/>');
         var fragmentDOM = document.createDocumentFragment();
@@ -176,9 +206,9 @@ ArchManager.prototype = {
         var root = element.querySelector('root');
 
         root.childNodes.forEach(function (element) {
-            frag.append(self._parseElement(element));
+            fragment.append(self._parseElement(element));
         });
-        return frag;
+        return fragment;
     },
     /**
      * @param {JSON} json
@@ -186,7 +216,7 @@ ArchManager.prototype = {
      **/
     import: function (json) {
         var self = this;
-        var fragment = new fragment.FragmentNode(this);
+        var fragment = new FragmentNode(this);
         if (!json.childNodes || json.nodeValue || json.nodeName) {
             json = {
                 childNodes: [json],
@@ -258,26 +288,18 @@ ArchManager.prototype = {
             return new text.VisibleTextNode(this, param);
         }
     },
-    _createTextNode: function (archNode, text) {
+    _createTextNode: function (archNode) {
         var el = this._nodeList[archNode.id];
-        if (el) {
-            el.textContent = text;
-        } else {
-            el = this._nodeList[archNode.id] = document.createTextNode(text);
+        if (!el) {
+            el = this._nodeList[archNode.id] = document.createTextNode('');
         }
         return el;
     },
     _createElement: function (archNode, tagName) {
         var el = this._nodeList[archNode.id];
-        if (el) {
-            Object.values(el.attributes).forEach(function (attribute) {
-                el.removeAttribute(attribute.name);
-            });
-            el.innerHTML = '';
-        } else {
+        if (!el) {
             el = this._nodeList[archNode.id] = document.createElement(tagName);
         }
-        el.textContent = '';
         return el;
     },
     _addArchNode: function (archNode) {
@@ -295,6 +317,16 @@ ArchManager.prototype = {
                 });
             }
         }
+    },
+    _generateVirtualNode: function (archNode, insertMethod, fn) {
+        var virtualTextNode = new text.VirtualTextNode(this.tree);
+        virtualTextNode.parent = archNode;
+        insertMethod(virtualTextNode);
+        if (!virtualTextNode.isEditable() || (fn && !fn.call(this, virtualTextNode))) {
+            virtualTextNode.remove();
+            return;
+        }
+        return virtualTextNode;
     },
     _removeArchNode: function (archNode) {
         var self = this;

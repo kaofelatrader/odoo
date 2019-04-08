@@ -39,7 +39,7 @@ return {
     },
     // toolbar
     toolbar: [
-        // 'DropBlock',
+        'DropBlock',
         'FontStyle',
         'FontSize',
         // 'FontName',

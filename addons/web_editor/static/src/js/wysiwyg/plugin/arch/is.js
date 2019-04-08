@@ -137,6 +137,9 @@ ArchNode.include({
         }
         return false;
     },
+    isFragment: function () {
+        return false;
+    },
     /**
      * Returns true if the node is a "format" node.
      * In this context, a "format" node is understood as
@@ -315,7 +318,7 @@ ArchNode.include({
     isUnbreakable: function () {
         return ["td", "tr", "tbody", "tfoot", "thead", "table"].indexOf(this.nodeName) !== -1 ||
             this.isContentEditable() ||
-            this.tree.options.isUnbreakable(this);
+            this.tree.options.isUnbreakableNode(this);
     },
     /**
      *

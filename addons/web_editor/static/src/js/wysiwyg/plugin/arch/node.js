@@ -215,7 +215,7 @@ return Class.extend({
         return this._changeParent(archNode, 0);
     },
     empty: function () {
-        if (!this.isEditable()) {
+        if (this.id && !this.isEditable()) {
             console.warn("can not empty a non editable node");
             return;
         }
@@ -224,11 +224,11 @@ return Class.extend({
         });
     },
     remove: function () {
-        if (!this.parent.isEditable()) {
-            console.warn("can not remove a node in a non editable node");
-            return;
-        }
         if (this.parent) {
+            if (this.id && !this.parent.isEditable()) {
+                console.warn("can not remove a node in a non editable node");
+                return;
+            }
             this.parent.childNodes.splice(this.index(), 1);
         }
         this.tree._removeArchNode(this);
@@ -240,8 +240,11 @@ return Class.extend({
     // Public: Update
     //--------------------------------------------------------------------------
 
-    insert: function (offset, fragment) {
-        return this.parent && this.parent.insert(this.index(), fragment);
+    insert: function (fragment, offset) {
+        var ref = this.childNodes[offset];
+        this.insertBefore(fragment, ref);
+        this.applyRules();
+        // return this.parent && this.parent.insert(this.index(), fragment);
     },
     addLine: function (offset) {
         return this.parent && this.parent.addLine(this.index());
@@ -321,16 +324,22 @@ return Class.extend({
             throw new Error("You can't add a node in a void");
         }
 
-        if (!this.isEditable()) {
+        if (this.id && !this.isEditable()) { // id is setted only if the node is contains in the root
             console.warn("can not add a node in a non editable node");
             return;
         }
-        if (archNode.parent && !archNode.parent.isEditable()) {
+        if (archNode.parent && archNode.parent.id && !archNode.parent.isEditable()) {
             console.warn("can not remove a node in a non editable node");
             return;
         }
 
-        if (archNode instanceof FragmentNode) {
+        var self = this;
+        if (archNode.ancestor(function (node) { return node === self;})) {
+            console.warn("can not add an node in itself");
+            return;
+        }
+
+        if (archNode.isFragment()) {
             var self = this;
             var ids = [];
             archNode.childNodes.slice().forEach(function (archNode) {
@@ -387,36 +396,64 @@ return Class.extend({
         }
         if (!__closestUnbreakable.contains(next)) {
             var insertMethod = __closestUnbreakable[direction === 'next' ? 'append' : 'prepend'].bind(__closestUnbreakable);
-            return this._generateVirtualNode(insertMethod, fn);
+            return this.tree._generateVirtualNode(this, insertMethod, fn);
         }
         if (fn && !fn.call(this, next)) {
             return next._prevNextUntil(direction, fn, __closestUnbreakable, __goUp);
         }
         return next;
     },
+    _redrawChildren: function (node, options) {
+        var childNodes = [].slice.call(node.childNodes);
+        this.childNodes.forEach(function (archNode, offset) {
+            var child = archNode._toNode(options);
+            var index = childNodes.indexOf(child);
+
+            if (index !== -1) {
+                childNodes.splice(index, 1);
+                if (index === 0) {
+                    return;
+                }
+            }
+
+            var ref = node.childNodes[offset];
+            if (!ref) {
+                node.appendChild(child);
+            } else {
+                node.insertBefore(child, ref);
+            }
+        });
+        childNodes.forEach(function (node) {
+            node.parentNode.removeChild(node);
+        });
+    },
     _toNode: function (options) {
+        var node;
         if (this.isVirtual() && !options.keepVirtual) {
-            return document.createDocumentFragment();
+            node = document.createDocumentFragment();
+        } else {
+            node = this.tree._createElement(this, this.nodeName);
+
+            Object.values(node.attributes).forEach(function (attribute) {
+                node.removeAttribute(attribute.name);
+            });
+            this.attributes.forEach(function (name) {
+                if (name === 'data-archnode-id' && !options.displayId) {
+                    return;
+                }
+                var value = this[name].toString()
+                if (value.length) {
+                    node.setAttribute(name, value);
+                }
+            });
+            if (options.architecturalSpace) {
+                options = Object.assign({}, options, {
+                    architecturalLevel: (options.architecturalLevel || 0) + 1,
+                });
+            }   
         }
 
-        var node = this.tree._createElement(this, this.nodeName);
-        this.attributes.forEach(function (name) {
-            if (name === 'data-archnode-id' && !options.displayId) {
-                return;
-            }
-            var value = this[name].toString()
-            if (value.length) {
-                node.setAttribute(name, value);
-            }
-        });
-        if (options.architecturalSpace) {
-            options = Object.assign({}, options, {
-                architecturalLevel: (options.architecturalLevel || 0) + 1,
-            });
-        }
-        this.childNodes.forEach(function (archNode) {
-            node.appendChild(archNode._toNode(options));
-        });
+        this._redrawChildren(node, options);
         return node;
     },
 });
