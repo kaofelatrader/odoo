@@ -83,7 +83,6 @@
 
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/text/format_text.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/text/keyboard.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/text/unbreakable.js"/>
 
     <!-- plugins drop -->
 
@@ -172,7 +171,7 @@
                 'use strict';
                 var WysiwygRoot = require('web_editor.wysiwyg.root');
                 WysiwygRoot.include({
-                    assetLibs: null // We need to add the asset because tests performed overwrites (Dialog, Unbreakable...)
+                    assetLibs: null // We need to add the asset because tests performed overwrites (Dialog...)
                 });
             });
         </script>

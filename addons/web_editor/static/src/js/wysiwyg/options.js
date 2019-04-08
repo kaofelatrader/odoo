@@ -31,7 +31,6 @@ return {
         History: true,
         Toolbar: true,
         Popover: true,
-        // Unbreakable: true,
         // Handle: true,
         KeyMap: true,
         Keyboard: true,

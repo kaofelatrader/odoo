@@ -168,7 +168,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         // $editable.find('a.o_image, span.fa, i.fa').html('');
         $editable.find('[aria-describedby]').removeAttr('aria-describedby').removeAttr('data-original-title');
 
-        return this._pluginsManager.getEditorValue($editable.html());
+        return this._pluginsManager.getEditorValue();
     },
     /**
      * Return true if the content has changed.
@@ -196,7 +196,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     save: function () {
         var self = this;
         var isDirty = this.isDirty();
-        return this._pluginsManager.saveEditor(this.getValue()).then(function (html) {
+        return this._pluginsManager.saveEditor().then(function (html) {
             self.target.innerText = html;
             self.target.innerHTML = html;
             return {
@@ -214,9 +214,9 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         this.trigger_up('change');
     },
     reset: function (value) {
-        this.editable.innerHTML = value || '';
-        this.editable.innerHTML = this._pluginsManager.setEditorValue(value || '');
-        // this.editable.appendChild(fragment);
+        this.editable.innerHTML = '';
+        var fragment = this._pluginsManager.setEditorValue(value || '');
+        this.editable.appendChild(fragment);
         this._dirty = false;
     },
 

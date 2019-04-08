@@ -513,73 +513,9 @@ var ArchNode = Class.extend(isNode, {
         this.childNodes = [];
     },
 
-    // Update arch
-
-    append: function (archNode) {
-        this._changeParent(archNode, this.childNodes.length);
-    },
-    insertAfter: function (archNode, ref) {
-        this._changeParent(archNode, ref.index() + 1);
-    },
-    insertBefore: function (archNode, ref) {
-        this._changeParent(archNode, ref.index());
-    },
-    prepend: function (archNode) {
-        this._changeParent(archNode, 0);
-    },
-    empty: function () {
-        this.childNodes.slice().forEach(function (archNode) {
-            archNode.remove();
-        });
-    },
-    remove: function () {
-        if (this.parent) {
-            this.parent.childNodes.splice(this.index(), 1);
-        }
-        this.tree._removeArchNode(this);
-        this.__removed = true;
-        this.empty();
-    },
-
-    // browse
-
-    index: function () {
-        return this.parent.childNodes.indexOf(this);
-    },
-    /**
-     * @param {function} fn called on this and get the next point as param
-     *          return true if the next node is available
-     * @returns {ArchNode}
-     **/
-    next: function (fn) {
-        return this._prevNext('next', fn);
-    },
-    nextSibling: function (fn) {
-        for (var k = this.index() + 1; k < this.parent.childNodes.length; k++) {
-            if (!fn || fn(this.parent.childNodes[k])) {
-                return this.parent.childNodes[k];
-            }
-        }
-    },
-    prev: function (fn) {
-        return this._prevNext('prev', fn);
-    },
-    previousSibling: function (fn) {
-        for (var k = this.index() - 1; k >= 0; k--) {
-            if (!fn || fn(this.parent.childNodes[k])) {
-                return this.parent.childNodes[k];
-            }
-        }
-    },
-    ancestor: function (fn) {
-        var parent = this;
-        while (parent && !fn.call(parent, parent)) {
-            parent = parent.parent;
-        }
-        return parent;
-    },
-
-    // export
+    //--------------------------------------------------------------------------
+    // Public: Export
+    //--------------------------------------------------------------------------
 
     /**
      * @returns {Document-fragment}
@@ -663,9 +599,42 @@ var ArchNode = Class.extend(isNode, {
     },
 
     //--------------------------------------------------------------------------
-    // Private
+    // Public: Update
     //--------------------------------------------------------------------------
 
+    append: function (archNode) {
+        this._changeParent(archNode, this.childNodes.length);
+    },
+    insertAfter: function (archNode, ref) {
+        this._changeParent(archNode, ref.index() + 1);
+    },
+    insertBefore: function (archNode, ref) {
+        this._changeParent(archNode, ref.index());
+    },
+    prepend: function (archNode) {
+        this._changeParent(archNode, 0);
+    },
+    empty: function () {
+        if (!this.options.isEditableNode(this)) {
+            console.warn("can not empty a non editable node");
+            return;
+        }
+        this.childNodes.slice().forEach(function (archNode) {
+            archNode.remove();
+        });
+    },
+    remove: function () {
+        if (!this.options.isEditableNode(this.parent)) {
+            console.warn("can not remove a node in a non editable node");
+            return;
+        }
+        if (this.parent) {
+            this.parent.childNodes.splice(this.index(), 1);
+        }
+        this.tree._removeArchNode(this);
+        this.__removed = true;
+        this.empty();
+    },
     applyRules: function () {
         this._applyRulesCustom();
         if (!this.__removed) {
@@ -681,6 +650,76 @@ var ArchNode = Class.extend(isNode, {
             this._applyRulesPropagation();
         }
     },
+
+    //--------------------------------------------------------------------------
+    // Public: Browse
+    //--------------------------------------------------------------------------
+
+    firstChild: function () {
+        return this.childNodes && this.childNodes.length ? this.childNodes[0] : this;
+    },
+    index: function () {
+        return this.parent.childNodes.indexOf(this);
+    },
+    lastChild: function () {
+        return this.childNodes && this.childNodes.length ? this.childNodes[this.childNodes.length - 1] : this;
+    },
+    nextSibling: function (fn) {
+        for (var k = this.index() + 1; k < this.parent.childNodes.length; k++) {
+            if (!fn || fn(this.parent.childNodes[k])) {
+                return this.parent.childNodes[k];
+            }
+        }
+    },
+    previousSibling: function (fn) {
+        for (var k = this.index() - 1; k >= 0; k--) {
+            if (!fn || fn(this.parent.childNodes[k])) {
+                return this.parent.childNodes[k];
+            }
+        }
+    },
+    ancestor: function (fn) {
+        var parent = this;
+        while (parent && !fn.call(parent, parent)) {
+            parent = parent.parent;
+        }
+        return parent;
+    },
+    contains: function (archNode) {
+        var parent = archNode.parent;
+        while (parent && parent !== this) {
+            parent = parent.parent;
+        }
+        return !!parent;
+    },
+    /**
+     * @param {function} fn called on this and get the next point as param
+     *          return true if the next node is available
+     * @returns {ArchNode}
+     **/
+    nextUntil: function (fn) {
+        return this._prevNextUntil('next', fn);
+    },
+    prevUntil: function (fn) {
+        return this._prevNextUntil('prev', fn);
+    },
+    length: function (argument) {
+        return this.childNodes.length;
+    },
+    path: function (ancestor) {
+        var path = [];
+        var node = this;
+        while (node.parent && node.parent !== ancestor) {
+            path.unshift(node.index());
+            node = node.parent;
+        }
+        return path;
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
     _applyRulesArchNode: function () {
     },
     _applyRulesOrder: function () {
@@ -854,18 +893,18 @@ var ArchNode = Class.extend(isNode, {
             this.append(new ArchitecturalSpaceNode(this.tree), this);
         }
     },
-
-    // _applyRulesGenerateVirtualParent: function (nodeName) {
-    //     var newParent = this._applyRulesGenerateParent(nodeName);
-    //     if (newParent) {
-    //         newParent._isVirtual = true;
-    //         newParent.attributes.add('data-archnode-virtual', true);
-    //     }
-    // },
-
     _changeParent: function (archNode, index) {
         if (this.isVoid()) {
             throw new Error("You can't add a node in a void");
+        }
+
+        if (!this.options.isEditableNode(this)) {
+            console.warn("can not add a node in a non editable node");
+            return;
+        }
+        if (archNode.parent && !this.options.isEditableNode(archNode.parent)) {
+            console.warn("can not remove a node in a non editable node");
+            return;
         }
 
         if (archNode instanceof FragmentNode) {
@@ -885,19 +924,58 @@ var ArchNode = Class.extend(isNode, {
         this.__removed = false;
         this.tree._addArchNode(archNode);
     },
+    _generateVirtualNode: function (insertMethod, fn) {
+        var VirtualTextNode = new VirtualTextNode(this.tree);
+        VirtualTextNode.parent = this;
+        insertMethod(VirtualTextNode);
+        if (!this.options.isEditableNode(VirtualTextNode) || (fn && !fn.call(this, VirtualTextNode))) {
+            VirtualTextNode.remove();
+            return;
+        }
+        return VirtualTextNode;
+    },
     /**
+     * Next or previous node, following the leaf
+     * - go to the first child (or last) if exist (an the node in not unbreakable)
+     * - go to next sibbling
+     * - when the are no next sibbling, go to the parent
+     * - go to then next node
+     * - go to the first child...
+     *
+     * if begin in an unbreakable, stop before go out this unbreakable and before stop
+     * try to insert a virtual node and check it.
+     *
      * @param {function} fn called on this and get the next point as param
      *          return true if the next node is available
-     * @param {boolean} __inShearch: internal flag
+     * @param {boolean} __closestUnbreakable: internal flag
+     * @param {boolean} __goUp: internal flag
      * @returns {ArchNode}
      **/
-    _prevNext: function (direction, fn, __inShearch) {
-        var next = this.parent.childNodes[this.index() + (direction === 'next' ? 1 : -1)];
-        if (!next) {
-            return this.parent._prevNext(direction, fn, true);
+    _prevNextUntil: function (direction, fn, __closestUnbreakable, __goUp) {
+        if (!__closestUnbreakable) {
+            __closestUnbreakable = this.ancestor(this.options.isUnbreakable);
         }
-        if (!this.options.isEditableNode(next) || (fn && !fn.call(this, next))) {
-            return next._prevNext(direction, fn, true);
+        var next;
+        if (!__goUp && !this.options.isUnbreakable(this)) {
+            var deeper = direction === 'next' ? this.firstChild() : this.lastChild();
+            if (deeper !== this) {
+                next = deeper;
+            }
+        }
+        __goUp = false;
+        if (!next) {
+            next = this.parent.childNodes[this.index() + (direction === 'next' ? 1 : -1)];
+        }
+        if (!next) {
+            __goUp = true;
+            next = this.parent;
+        }
+        if (!__closestUnbreakable.contains(next)) {
+            var insertMethod = __closestUnbreakable[direction === 'next' ? 'append' : 'prepend'].bind(__closestUnbreakable);
+            return this._generateVirtualNode(insertMethod, fn);
+        }
+        if (fn && !fn.call(this, next)) {
+            return next._prevNextUntil(direction, fn, __closestUnbreakable, __goUp);
         }
         return next;
     },
@@ -944,6 +1022,9 @@ var TextNode = ArchNode.extend({
             return '';
         }
         return this.nodeValue || '';
+    },
+    length: function (argument) {
+        return this.nodeValue.length;
     },
     _applyRulesPropagation: function () {},
     _addArchitecturalSpaceNodePropagation: function () {},
@@ -1108,28 +1189,17 @@ var RootNode = FragmentNode.extend({
     // Private
     //--------------------------------------------------------------------------
 
-    _prevNext: function (direction, fn, __inShearch) {
-        if (!__inShearch && this.childNodes[0]) {
-            var next;
-            if (direction === 'next') {
-                next = this.childNodes[0];
-            } else if (direction === 'prev') {
-                next = this.childNodes[this.childNodes.length - 1];
+    _prevNextUntil: function (direction, fn, __closestUnbreakable, __goUp) {
+        if (!__closestUnbreakable) {
+            __closestUnbreakable = this;
+            var next = this._super.apply(this, arguments);
+            if (next) {
+                return next;
             }
-            if (!this.options.isEditableNode(next) || (fn && !fn.call(this, next))) {
-                return next._prevNext(direction, fn, true);
-            }
-            return next;
         }
 
-        var VirtualTextNode = new VirtualTextNode(this.tree);
-        VirtualTextNode.parent = this;
-        this[direction === 'next' ? 'append' : 'prepend'](VirtualTextNode);
-        if (!this.options.isEditableNode(VirtualTextNode) || (fn && !fn.call(this, VirtualTextNode))) {
-            VirtualTextNode.remove();
-            return;
-        }
-        return VirtualTextNode;
+        var insertMethod = this[direction === 'next' ? 'append' : 'prepend'].bind(this);
+        return this._generateVirtualNode(insertMethod, fn);
     },
 });
 
@@ -1319,9 +1389,28 @@ ArchTree.prototype.empty = function () {
 
 ArchTree.prototype.setRange = function (sc, so, ec, eo) {
     this._startRangeID = this.whoIsThisNode(sc);
+    var start = this.getNode(this._startRangeID);
     this._startRangeOffset = so;
-    this._endRangeID = this.whoIsThisNode(ec);
-    this._endRangeOffset = eo;
+
+    var endRangeID = this.whoIsThisNode(ec);
+    var end = this.getNode(endRangeID);
+    var node = start;
+    start.nextUntil(function (next) {
+        node = next;
+        return next.id === endRangeID;
+    });
+    this._endRangeID = node.id;
+    if (node.id === endRangeID) {
+        this._endRangeOffset = eo;
+    } else if (!node.contains(end)) {
+        while (node) {
+            var firstChild = node.firstChild();
+            if (!firstChild === node) {
+                break;
+            }
+        }
+        this._endRangeOffset = node.length();
+    }
 };
 ArchTree.prototype.getRange = function () {
     return {

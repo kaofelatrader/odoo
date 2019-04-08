@@ -110,10 +110,10 @@ var ArchPlugin = AbstractPlugin.extend({
         this.parentedRules = this.parentedRules.slice();
         this.orderRules = this.orderRules.slice();
     },
-    // setEditorValue: function (value) {
-    //     this.arch.empty().append(value || '');
-    //     return this.arch.toString();
-    // },
+    setEditorValue: function (value) {
+        this.arch.empty().append(value || '');
+        return this.arch.toString();
+    },
     start: function () {
         var promise = this._super();
         this.arch = new ArchTree({
@@ -189,7 +189,8 @@ var ArchPlugin = AbstractPlugin.extend({
         var parent = fromNode.parent;
         var offset = fromNode.index();
         var toNode = this.arch.getNode(toId, toOffset);
-        fromNode.nextNode(function (prev, next) {
+
+        fromNode.nextUntil(function (prev, next) {
             prev.remove();
             if (next === toNode) {
                 next.remove();
