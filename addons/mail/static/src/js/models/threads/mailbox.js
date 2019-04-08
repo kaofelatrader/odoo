@@ -123,17 +123,13 @@ var Mailbox = SearchableThread.extend({
      *   on the server
      */
     markAllMessagesAsRead: function (domain) {
-        var self = this;
         if (this._id === 'mailbox_inbox' && this.getMailboxCounter() > 0) {
-            var messages = self.getMessages();
             return this._rpc({
                 model: 'mail.message',
                 method: 'mark_all_as_read',
                 kwargs: {
                     domain: domain,
                 },
-            }).then(function (result) {
-                self.trigger_up('move_messages_to_history', { messages: messages });
             });
         }
         return Promise.resolve();
