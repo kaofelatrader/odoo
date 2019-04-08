@@ -37,7 +37,7 @@ ArchManager.prototype = {
     // Public: update
     //--------------------------------------------------------------------------
 
-    reset: function (DOM) {
+    reset: function () {
         this._archNodeList = {};
         this._nodeList = {};
         this._id = 1;
