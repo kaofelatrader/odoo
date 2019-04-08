@@ -344,9 +344,10 @@ var ArchPlugin = AbstractPlugin.extend({
         return this.arch.remove(element);
     },
     insert: function (DOM, id, offset) {
-        var newId = this.arch.getNode(id).insert(DOM, offset);
+        var newIds = this.arch.insert(DOM, id, offset);
         // ou var newId = this.arch.getNode(id).children.splice(offset, this._domToArch(arch));
-        this._autoRedraw(newId, DOM);
+        newIds.forEach(this._autoRedraw.bind(this));
+        return newIds;
     },
     setRange: function (sc, so, ec, eo) {
         return this.arch.setRange(sc, so, ec, eo);
@@ -362,20 +363,33 @@ var ArchPlugin = AbstractPlugin.extend({
     // Private
     //--------------------------------------------------------------------------
 
-    _autoRedraw: function (id, DOM) {
-        var html = this.arch.getNode(id).render();
-        if (html !== DOM) {
-            this._redraw(id);
+    _autoRedraw: function (id) {
+        var archNode = this.arch.getNode(id);
+        var fragment = archNode.toNode();
+        var node;
+        var redraw = false;
+        while (archNode && !this.editable.contains(node)) {
+            redraw = true;
+            archNode = archNode.parent;
+            fragment = archNode.toNode();
+            node = fragment.firstChild;
         }
-    },
-    /**
-     * @param {Int} id
-     **/
-    _redraw: function (id, options) {
-        var html = this.render(id);
-        var node = id ? this.editable.querySelector('[data-wysiwig-node-id=' + id + ']') : this.editable;
-        node.innerHTML = html;
-        this.trigger('redraw', id, html);
+
+        if (!redraw) {
+            var html = archNode.toString();
+            if (node.innerHTML !== html) {
+                // if the html is different, re-generate the node and its children
+                node.innerHTML = '';
+                archNode.toNode();
+                redraw = true;
+            }
+        }
+
+        if (redraw) {
+            this.trigger('redraw', archNode.id);
+
+            // rerange
+        }
     },
 
     //--------------------------------------------------------------------------

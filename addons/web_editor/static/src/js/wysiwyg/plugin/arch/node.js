@@ -203,16 +203,16 @@ return Class.extend({
     //--------------------------------------------------------------------------
 
     append: function (archNode) {
-        this._changeParent(archNode, this.childNodes.length);
+        return this._changeParent(archNode, this.childNodes.length);
     },
     insertAfter: function (archNode, ref) {
-        this._changeParent(archNode, ref.index() + 1);
+        return this._changeParent(archNode, ref.index() + 1);
     },
     insertBefore: function (archNode, ref) {
-        this._changeParent(archNode, ref.index());
+        return this._changeParent(archNode, ref.index());
     },
     prepend: function (archNode) {
-        this._changeParent(archNode, 0);
+        return this._changeParent(archNode, 0);
     },
     empty: function () {
         if (!this.isEditable()) {
@@ -332,11 +332,12 @@ return Class.extend({
 
         if (archNode instanceof FragmentNode) {
             var self = this;
+            var ids = [];
             archNode.childNodes.slice().forEach(function (archNode) {
-                self._changeParent(archNode, index++);
+                ids = ids.concat(self._changeParent(archNode, index++));
             });
             archNode.remove();
-            return;
+            return ids;
         }
 
         if (archNode.parent) {
@@ -346,6 +347,7 @@ return Class.extend({
         this.childNodes.splice(index, 0, archNode);
         this.__removed = false;
         this.tree._addArchNode(archNode);
+        return [archNode.id];
     },
     /**
      * Next or previous node, following the leaf

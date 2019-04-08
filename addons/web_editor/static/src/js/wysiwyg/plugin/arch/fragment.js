@@ -43,6 +43,12 @@ var RootNode = FragmentNode.extend({
     index: function () {
         return null;
     },
+    insert: function (fragment, offset) {
+        if (offset || offset === 0) {
+            return this._changeParent(fragment, offset + 1);
+        }
+        return this.append(fragment);
+    },
 
     //--------------------------------------------------------------------------
     // Private

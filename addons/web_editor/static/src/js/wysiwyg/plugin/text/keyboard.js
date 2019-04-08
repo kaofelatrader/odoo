@@ -593,11 +593,11 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * Handle visible char keydown event.
      *
      * @private
-     * @param {JQueryEvent} ev
+     * @param {TextEvent} ev
      * @returns {Boolean} true if case is handled and event default must be prevented
      */
     _onTextInput: function (ev) {
-        return Arch.insert(ev.originalEvent.data);
+        return this.dependencies.Arch.insert(ev.data);
     },
 });
 

@@ -70,7 +70,7 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isBR: function () {
-        return this.nodeName === 'br'
+        return this.nodeName === 'br';
     },
     /**
      * Return true if the given node is a table cell element (TD, TH).
@@ -79,6 +79,9 @@ ArchNode.include({
      */
     isCell: function () {
         return ['td', 'th'].indexOf(this.nodeName) !== -1;
+    },
+    isContentEditable: function () {
+        return this.tree.options.isEditableNode(this);
     },
     /**
      * Return true if the given node is a data element (DATA).
@@ -104,13 +107,8 @@ ArchNode.include({
         }
         return false;
     },
-    /**
-     * Return true if the given node is the editable node.
-     *
-     * @returns {Boolean}
-     */
     isEditable: function () {
-        return this.nodeName === 'EDITABLE';
+        return this.ancestor(this.isContentEditable);
     },
     /**
      * Return true if the given node's type is element (1).
@@ -314,6 +312,11 @@ ArchNode.include({
     isText: function () {
         return false;
     },
+    isUnbreakable: function () {
+        return ["td", "tr", "tbody", "tfoot", "thead", "table"].indexOf(this.nodeName) !== -1 ||
+            this.isContentEditable() ||
+            this.tree.options.isUnbreakable(this);
+    },
     /**
      *
      * @returns {Boolean}
@@ -337,6 +340,9 @@ ArchNode.include({
      */
     isVoid: function () {
         return ['br', 'img', 'hr', 'iframe', 'button', 'input'].indexOf(this.nodeName) !== -1;
+    },
+    isVoidBlock: function () {
+        return (!this.isBR() && this.isVoid()) || this.options.isVoidBlock(this);
     },
     /**
      * Return true if the given node is a block quote element (BLOCKQUOTE).
@@ -362,9 +368,6 @@ ArchNode.include({
      * @returns {Boolean}
      */
     _isPara: function () {
-        if (this.isEditable()) {
-            return false;
-        }
         // Chrome(v31.0), FF(v25.0.1) use DIV for paragraph
         return ['div', 'p', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7'].indexOf(this.nodeName) !== -1;
     },
@@ -385,17 +388,6 @@ ArchNode.include({
      */
     _isTextarea: function () {
         return this.nodeName === 'textarea';
-    },
-    isVoidBlock: function () {
-        return (!this.isBR() && this.isVoid()) || this.options.isVoidBlock(this);
-    },
-    isUnbreakable: function () {
-        return ["td", "tr", "tbody", "tfoot", "thead", "table"].indexOf(this.nodeName) !== -1 ||
-            this.isEditable() ||
-            this.tree.options.isUnbreakable(this);
-    },
-    isEditable: function () {
-        return this.tree.options.isEditableNode(this);
     },
 });
 

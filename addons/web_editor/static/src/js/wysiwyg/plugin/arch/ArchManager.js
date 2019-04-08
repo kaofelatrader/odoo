@@ -71,9 +71,18 @@ ArchManager.prototype = {
 
         // todo: rerange
     },
+    /**
+     * Insert a node in the Arch.
+     *
+     * @param {String} DOM
+     * @param {Number} [id]
+     * @param {Number} [offset]
+     * @returns {Number}
+     */
     insert: function (DOM, id, offset) {
+        id = id || this.getRange().start.id;
         var node = id ? this.arch.getNode(id) : this.root;
-        var newIds = node.insert(DOM, offset || 0);
+        return node.insert(this.parse(DOM), offset || 0);
     },
     addLine: function () {
         this.remove();
@@ -152,7 +161,7 @@ ArchManager.prototype = {
      **/
     parse: function (html) {
         var self = this;
-        var fragment = new fragment.FragmentNode(this);
+        var frag = new fragment.FragmentNode(this);
 
         var xml = html.replace(/<((br|img|iframe)[^>/]*)>/g, '<\$1/>');
         var fragmentDOM = document.createDocumentFragment();
@@ -167,9 +176,9 @@ ArchManager.prototype = {
         var root = element.querySelector('root');
 
         root.childNodes.forEach(function (element) {
-            fragment.append(self._parseElement(element));
+            frag.append(self._parseElement(element));
         });
-        return fragment;
+        return frag;
     },
     /**
      * @param {JSON} json
