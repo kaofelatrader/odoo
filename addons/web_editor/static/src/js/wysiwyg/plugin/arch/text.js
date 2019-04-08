@@ -13,6 +13,15 @@ var TextNode = ArchNode.extend({
     empty: function () {
         this.nodeValue = '';
     },
+    toJSON: function () {
+        var data = {
+            nodeValue: this.nodeValue,
+        };
+        if (this.id) {
+            data.id = this.id;
+        }
+        return data;
+    },
     toString: function (options) {
         if (this.isVirtual() && !options.keepVirtual) {
             return '';
@@ -21,6 +30,12 @@ var TextNode = ArchNode.extend({
     },
     length: function (argument) {
         return this.nodeValue.length;
+    },
+    isText: function () {
+        return true;
+    },
+    isVisibleText: function (argument) {
+        return true;
     },
     _applyRulesPropagation: function () {},
     _addArchitecturalSpaceNodePropagation: function () {},
@@ -38,15 +53,6 @@ var regExpSpaceBegin = /^([\s\n\r\t]*)/;
 var regExpSpaceEnd = /([\s\n\r\t]*)$/;
 var regExpSpace = /\s+/g;
 var VisibleTextNode = TextNode.extend({
-    toJSON: function () {
-        var data = {
-            nodeValue: this.nodeValue,
-        };
-        if (this.id) {
-            data.id = this.id;
-        }
-        return data;
-    },
     _applyRulesArchNode: function () {
         if (this.nodeValue.length && this.ancestor(this.isPre)) {
             return this._super();
@@ -121,6 +127,9 @@ var VirtualTextNode = TextNode.extend({
         this.parent.applyRules();
         return changes;
     },
+    isVirtual: function () {
+        return true;
+    },
 
     //--------------------------------------------------------------------------
     // Public: export
@@ -162,6 +171,9 @@ var ArchitecturalSpaceNode = TextNode.extend({
             }
         }
         return space;
+    },
+    isVisibleText: function (argument) {
+        return false;
     },
 
     //--------------------------------------------------------------------------

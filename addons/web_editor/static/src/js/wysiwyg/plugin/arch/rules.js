@@ -33,7 +33,8 @@ ArchNode.include({
         var rules = this._applyRulesFilterRules(this.tree.options.customRules);
         var ruleMethod;
         while (ruleMethod = rules.pop()) {
-            var fragment = ruleMethod.call(this, this.tree, this);
+            var json = ruleMethod(this.toJSON());
+            var fragment = this.tree.import(json);
             if (fragment) {
                 var childNodes = fragment.childNodes.slice();
                 this.parent.insertBefore(fragment, this);
@@ -49,7 +50,7 @@ ArchNode.include({
         if (nodeName === 'EDITABLE') {
             return;
         }
-        var newParent = this.tree.constructNode(nodeName, []);
+        var newParent = this.tree._constructNode(nodeName, []);
         newParent.__applyRulesCheckParentsFlag = true;
         this.parent.insertBefore(newParent, this);
         newParent.append(this);
@@ -132,7 +133,7 @@ ArchNode.include({
             var children = rules[k][1];
             for (var i = 0; i < children.length; i++) {
                 var check = children[i];
-                if ((typeof check === 'function' && check.call(this, this)) || this.nodeName === check) {
+                if ((typeof check === 'function' && check(this.toJSON())) || this.nodeName === check) {
                     selectedRules = selectedRules.concat(rules[k][0]);
                     break;
                 }
@@ -166,20 +167,20 @@ ArchNode.include({
             }
         }
     },
-    _text.ArchitecturalSpaceNodePropagation: function () {
+    _architecturalSpaceNodePropagation: function () {
         if (this.__removed || this instanceof text.ArchitecturalSpaceNode) {
             return;
         }
         if (this.parent) {
-            this._addtext.ArchitecturalSpaceNode();
+            this._addArchitecturalSpaceNode();
         }
         if (!(this instanceof TextNode) && !this.ancestor(this.isPre)) {
             this.childNodes.slice().forEach(function (archNode) {
-                archNode._text.ArchitecturalSpaceNodePropagation();
+                archNode._ArchitecturalSpaceNodePropagation();
             });
         }
     },
-    _addtext.ArchitecturalSpaceNode: function () {
+    _addArchitecturalSpaceNode: function () {
         var prev = this.previousSibling();
         if (prev instanceof text.ArchitecturalSpaceNode && this.isText() && this.nodeValue[0] === '\n') {
             console.log(prev.previousSibling());

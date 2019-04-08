@@ -313,14 +313,14 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isText: function () {
-        return this instanceof TextNode;
+        return false;
     },
     /**
      *
      * @returns {Boolean}
      */
     isVirtual: function () {
-        return this instanceof VirtualTextNode || this instanceof FragmentNode || this._isVirtual;
+        return this._isVirtual;
     },
     /**
      * Returns true if the node is a text node with visible text.
@@ -328,7 +328,7 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isVisibleText: function () {
-        return this instanceof VisibleTextNode;
+        return false;
     },
     /**
      * Return true if the given node is a void element (BR, COL, EMBED, HR, IMG, INPUT, ...).
@@ -338,9 +338,6 @@ ArchNode.include({
      */
     isVoid: function () {
         return ['br', 'img', 'hr', 'iframe', 'button', 'input'].indexOf(this.nodeName) !== -1;
-    },
-    isVoidBlock: function () {
-        return this.isVoid();
     },
     /**
      * Return true if the given node is a block quote element (BLOCKQUOTE).
@@ -389,6 +386,17 @@ ArchNode.include({
      */
     _isTextarea: function () {
         return this.nodeName === 'textarea';
+    },
+    isVoidBlock: function () {
+        return (!this.isBR() && this.isVoid()) || this.options.isVoidBlock(this);
+    },
+    isUnbreakable: function () {
+        return ["td", "tr", "tbody", "tfoot", "thead", "table"].indexOf(this.nodeName) !== -1 ||
+            this.isEditable() ||
+            this.tree.options.isUnbreakable(this);
+    },
+    isEditable: function () {
+        return this.tree.options.isEditableNode(this);
     },
 });
 

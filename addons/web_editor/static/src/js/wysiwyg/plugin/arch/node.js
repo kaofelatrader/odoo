@@ -199,7 +199,7 @@ return Class.extend({
     },
 
     //--------------------------------------------------------------------------
-    // Public: Update
+    // Public: Update (to check if private ?)
     //--------------------------------------------------------------------------
 
     append: function (archNode) {
@@ -215,7 +215,7 @@ return Class.extend({
         this._changeParent(archNode, 0);
     },
     empty: function () {
-        if (!this.tree.options.isEditableNode(this)) {
+        if (!this.isEditable()) {
             console.warn("can not empty a non editable node");
             return;
         }
@@ -224,7 +224,7 @@ return Class.extend({
         });
     },
     remove: function () {
-        if (!this.tree.options.isEditableNode(this.parent)) {
+        if (!this.parent.isEditable()) {
             console.warn("can not remove a node in a non editable node");
             return;
         }
@@ -234,6 +234,14 @@ return Class.extend({
         this.tree._removeArchNode(this);
         this.__removed = true;
         this.empty();
+    },
+
+    //--------------------------------------------------------------------------
+    // Public: Update
+    //--------------------------------------------------------------------------
+
+    insert: function (offset, fragment) {
+        return this.parent && this.parent.insert(this.index(), fragment);
     },
     addLine: function (offset) {
         return this.parent && this.parent.addLine(this.index());
@@ -313,11 +321,11 @@ return Class.extend({
             throw new Error("You can't add a node in a void");
         }
 
-        if (!this.tree.options.isEditableNode(this)) {
+        if (!this.isEditable()) {
             console.warn("can not add a node in a non editable node");
             return;
         }
-        if (archNode.parent && !this.tree.options.isEditableNode(archNode.parent)) {
+        if (archNode.parent && !archNode.parent.isEditable()) {
             console.warn("can not remove a node in a non editable node");
             return;
         }
@@ -358,10 +366,10 @@ return Class.extend({
      **/
     _prevNextUntil: function (direction, fn, __closestUnbreakable, __goUp) {
         if (!__closestUnbreakable) {
-            __closestUnbreakable = this.ancestor(this.options.isUnbreakable);
+            __closestUnbreakable = this.ancestor(this.isUnbreakable);
         }
         var next;
-        if (!__goUp && !this.options.isUnbreakable(this)) {
+        if (!__goUp && !this.isUnbreakable()) {
             var deeper = direction === 'next' ? this.firstChild() : this.lastChild();
             if (deeper !== this) {
                 next = deeper;

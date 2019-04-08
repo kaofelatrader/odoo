@@ -58,12 +58,18 @@ var ArchPlugin = AbstractPlugin.extend({
     dependencies: [],
 
     customRules: [
-        // [function (tree, archNode) {},
+        // [function (json) { return json; },
         // ['TEXT']],
     ],
 
-    // must contains parents without other node between (must match at least with one)
-    // null = no needed parent (allow to have for eg: Table > jinja)
+    // children must contains parents without other node between (must match at least with one)
+    //
+    // [parents, children]
+    // parents must be the nodeName or null
+    //    null = no needed parent (allow to have for eg: Table > jinja)
+    // children is the nodeName (or uppercase custom NodeName)
+    //    or a method who receive the export json and return a boolean
+    //    or the "pluginName.methodName" who receive the export json and return a boolean
     parentedRules: [
         // table > tbody
         [
@@ -104,9 +110,9 @@ var ArchPlugin = AbstractPlugin.extend({
         formatTags.concat(['br']),
     ],
 
-    _isVoidBlockList: [],
-    _isUnbreakableNodeList: [],
-    _isEditableNodeList: [],
+    isVoidBlockList: ['Arch._isVoidBlock'],
+    isUnbreakableNodeList: ['Arch._isUnbreakableNode'],
+    isEditableNodeList: ['Arch._isEditableNode'],
 
     init: function (parent, params, options) {
         this._super.apply(this, arguments);
@@ -114,34 +120,66 @@ var ArchPlugin = AbstractPlugin.extend({
         this.parentedRules = this.parentedRules.slice();
         this.orderRules = this.orderRules.slice();
 
-        this._isVoidBlockList = this._isVoidBlockList.slice();
-        this._isVoidBlockList.push(this._isVoidBlock.bind(this));
+        this.isVoidBlockList = this.isVoidBlockList.slice();
+        this.isUnbreakableNodeList = this.isUnbreakableNodeList.slice();
+        this.isEditableNodeList = this.isEditableNodeList.slice();
+
+        if (this.options.customRules) {
+            this.customRules.push.apply(this.customRules, this.options.customRules);
+        }
+        if (this.options.parentedRules) {
+            this.parentedRules.push.apply(this.parentedRules, this.options.parentedRules);
+        }
+        if (this.options.orderRules) {
+            this.orderRules.push.apply(this.orderRules, this.options.orderRules);
+        }
         if (this.options.isVoidBlock) {
-            this._isVoidBlockList.push(this.options.isVoidBlock);
+            this.isVoidBlock.push.apply(this.isVoidBlock, this.options.isVoidBlock);
         }
-        this._isUnbreakableNodeList = this._isUnbreakableNodeList.slice();
-        this._isUnbreakableNodeList.push(this._isUnbreakableNode.bind(this));
         if (this.options.isUnbreakableNode) {
-            this._isUnbreakableNodeList.push(this.options.isUnbreakableNode);
+            this.isUnbreakableNode.push.apply(this.isUnbreakableNode, this.options.isUnbreakableNode);
         }
-        this._isEditableNodeList = this._isEditableNodeList.slice();
-        this._isEditableNodeList.push(this._isEditableNode.bind(this));
         if (this.options.isEditableNode) {
-            this._isEditableNodeList.push(this.options.isEditableNode);
+            this.isEditableNode.push.apply(this.isEditableNode, this.options.isEditableNode);
         }
+
+        var self = this;
+        ['customRules', 'parentedRules', 'orderRules', 'isVoidBlockList', 'isUnbreakableNodeList', 'isEditableNodeList',].forEach(function (name) {
+            self[name].forEach(function (rule) {
+                rule[1].forEach(function (checker) {
+                    if (typeof checker === 'string' && checker.indexOf('.') !== -1) {
+                        checker = checker.split('.');
+                        self.dependencies.push(checker[0]);
+                    }
+                });
+            });
+        });
     },
     setEditorValue: function (value) {
-        this.arch.empty().append(value || '');
+        this.arch.reset().insert(value || '');
         return this.arch.toString();
     },
     start: function () {
         var promise = this._super();
+
+        var self = this;
+        ['customRules', 'parentedRules', 'orderRules', 'isVoidBlockList', 'isUnbreakableNodeList', 'isEditableNodeList',].forEach(function (name) {
+            self[name].forEach(function (rule) {
+                rule[1] = rule[1].map(function (checker) {
+                    if (typeof checker === 'string' && checker.indexOf('.') !== -1) {
+                        checker = checker.split('.');
+                        var Plugin = self.dependencies[checker[0]];
+                        return Plugin[checker[1]].bind(Plugin);
+                    }
+                    return checker;
+                });
+            });
+        });
+
         this.arch = new ArchTree({
             parentedRules: this.parentedRules,
             customRules: this.customRules,
             orderRules: this.orderRules,
-            styleTags: styleTags,
-            formatTags: formatTags,
             isEditableNode: this.isEditableNode.bind(this),
             isUnbreakableNode: this.isUnbreakableNode.bind(this),
         });
@@ -182,18 +220,18 @@ var ArchPlugin = AbstractPlugin.extend({
      * @param {Function (Node)} fn
      */
     addVoidBlockCheck: function (fn) {
-        if (this._isVoidBlockList.indexOf(fn) === -1) {
-            this._isVoidBlockList.push(fn);
+        if (this.isVoidBlockList.indexOf(fn) === -1) {
+            this.isVoidBlockList.push(fn);
         }
     },
     addUnbreakableNodeCheck: function (fn) {
-        if (this._isUnbreakableNodeList.indexOf(fn) === -1) {
-            this._isUnbreakableNodeList.push(fn);
+        if (this.isUnbreakableNodeList.indexOf(fn) === -1) {
+            this.isUnbreakableNodeList.push(fn);
         }
     },
     addEditableNodeCheck: function (fn) {
-        if (this._isEditableNodeList.indexOf(fn) === -1) {
-            this._isEditableNodeList.push(fn);
+        if (this.isEditableNodeList.indexOf(fn) === -1) {
+            this.isEditableNodeList.push(fn);
         }
     },
     /**
@@ -207,9 +245,9 @@ var ArchPlugin = AbstractPlugin.extend({
      * @param {Node} node
      * @returns {Boolean}
      */
-    isVoidBlock: function (node) {
-        for (var i = 0; i < this._isVoidBlockList.length; i++) {
-            if (this._isVoidBlockList[i](node)) {
+    isVoidBlock: function (archNode) {
+        for (var i = 0; i < this.isVoidBlockList.length; i++) {
+            if (this.isVoidBlockList[i](archNode)) {
                 return true;
             }
         }
@@ -225,8 +263,8 @@ var ArchPlugin = AbstractPlugin.extend({
      * @returns {Boolean}
      */
     isUnbreakableNode: function (node) {
-        for (var i = 0; i < this._isUnbreakableNodeList.length; i++) {
-            if (this._isUnbreakableNodeList[i](node)) {
+        for (var i = 0; i < this.isUnbreakableNodeList.length; i++) {
+            if (this.isUnbreakableNodeList[i](node)) {
                 return true;
             }
         }
@@ -239,8 +277,8 @@ var ArchPlugin = AbstractPlugin.extend({
      * @returns {Boolean}
      */
     isEditableNode: function (node) {
-        for (var i = 0; i < this._isEditableNodeList.length; i++) {
-            if (!this._isEditableNodeList[i](node)) {
+        for (var i = 0; i < this.isEditableNodeList.length; i++) {
+            if (!this.isEditableNodeList[i](node)) {
                 return false;
             }
         }
@@ -281,30 +319,15 @@ var ArchPlugin = AbstractPlugin.extend({
     // Public SETTER
     //--------------------------------------------------------------------------
 
-    delete: function (fromId, fromOffset, toId, toOffset) {
-        var fromNode = this.arch.getNode(fromId, fromOffset);
-        var parent = fromNode.parent;
-        var offset = fromNode.index();
-        var toNode = this.arch.getNode(toId, toOffset);
-
-        fromNode.nextUntil(function (prev, next) {
-            prev.remove();
-            if (next === toNode) {
-                next.remove();
-                return true;
-            }
-        });
-        // todo: boundary point takes arch node named archNode instead of dom node
-        return new BoundaryPoint(parent, offset);
+    /**
+     * @param {DOM|null} element (by default, use the range)
+     **/
+    remove: function (element) {
+        return this.arch.remove(element);
     },
     insert: function (DOM, id, offset) {
         var newId = this.arch.getNode(id).insert(DOM, offset);
         // ou var newId = this.arch.getNode(id).children.splice(offset, this._domToArch(arch));
-        this._autoRedraw(newId, DOM);
-    },
-    replace: function (DOM, fromId, fromOffset, toId, toOffset) {
-        var parentPoint = this.delete();
-        var newId = this.insertArch(DOM, parentPoint.archNode.id, parentPoint.offset);
         this._autoRedraw(newId, DOM);
     },
     setRange: function (sc, so, ec, eo) {
@@ -341,20 +364,11 @@ var ArchPlugin = AbstractPlugin.extend({
     // Private from Common
     //--------------------------------------------------------------------------
 
-    _isVoidBlock: function (node) {
-        return (!this.utils.isBR(node) && this.utils.isVoid(node)) ||
-            node.contentEditable === 'false' ||
-            node.classList && node.classList.contains('o_fake_editable');
+    _isVoidBlock: function (archNode) {
+        return archNode.attributes && archNode.attributes.contentEditable === 'false';
     },
-    _isUnbreakableNode: function (node) {
-        node = node && (node.tagName ? node : node.parentNode);
-        if (!node) {
-            return true;
-        }
-        return ["TD", "TR", "TBODY", "TFOOT", "THEAD", "TABLE"].indexOf(node.tagName) !== -1 ||
-                $(node).is(this.editable) ||
-                !this.isEditableNode(node.parentNode) ||
-                !this.isEditableNode(node);
+    _isUnbreakableNode: function (archNode) {
+        return  $(node).is(this.editable) || !this.isEditableNode(node.parentNode);
     },
     _isEditableNode: function (node) {
         node = node && (node.tagName ? node : node.parentNode);

@@ -20,6 +20,9 @@ var FragmentNode = ArchNode.extend({
     applyRules: function () {
         this._applyRulesPropagation();
     },
+    isVirtual: function () {
+        return true;
+    },
     _toNode: function (options) {
         var fragment = document.createDocumentFragment();
         this.childNodes.forEach(function (archNode) {
@@ -61,7 +64,7 @@ var RootNode = FragmentNode.extend({
         var virtualTextNode = new text.VirtualTextNode(this.tree);
         virtualTextNode.parent = this;
         insertMethod(virtualTextNode);
-        if (!this.tree.options.isEditableNode(virtualTextNode) || (fn && !fn.call(this, virtualTextNode))) {
+        if (!virtualTextNode.isEditable() || (fn && !fn.call(this, virtualTextNode))) {
             virtualTextNode.remove();
             return;
         }
