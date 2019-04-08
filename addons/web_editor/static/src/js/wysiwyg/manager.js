@@ -24,7 +24,6 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
         this.options = options || {};
         this.setParent(parent);
         params.plugins.Arch = true;
-        params.plugins.Common = true; // `Common` is a mandatory Plugin, used virtually everywhere
         this._loadPlugins(params, options);
     },
     /**
@@ -148,10 +147,10 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
 
     _afterStartAddDomTools: function () {
         var obj = {};
-        var Common = this._plugins.Common;
-        for (var k in Common) {
-            if (k[0] !== '_' && !this[k] && typeof Common[k] === 'function') {
-                obj[k] = Common[k] = Common[k].bind(Common);
+        var Arch = this._plugins.Arch;
+        for (var k in Arch) {
+            if (k[0] !== '_' && !this[k] && typeof Arch[k] === 'function') {
+                obj[k] = Arch[k] = Arch[k].bind(Arch);
             }
         }
         var options = Object.assign(obj, this.options);

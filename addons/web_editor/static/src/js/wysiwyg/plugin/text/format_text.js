@@ -86,7 +86,7 @@ var TextPlugin = AbstractPlugin.extend({
         var self = this;
         this._splitBeforeApplyFont(range);
         range.getSelectedNodes(function (node) {
-            return self.utils.isVisibleText(node) || self.dependencies.Common.isVoidBlock(node);
+            return self.utils.isVisibleText(node) || self.dependencies.Arch.isVoidBlock(node);
         }).forEach(function (node) {
             // Can we safely get rid of this ? Why was it there ?
             //
@@ -182,10 +182,10 @@ var TextPlugin = AbstractPlugin.extend({
     _cleanRangeAfterStyle: function (range) {
         var self = this;
         this._moveRangeToDeepUntil(range, function (n) {
-            return self.dependencies.Common.isEditableNode(n) && !self.dependencies.Common.isVoidBlock(n);
+            return self.dependencies.Arch.isEditableNode(n) && !self.dependencies.Arch.isVoidBlock(n);
         });
         range.getSelectedNodes(function (node) {
-            return self.utils.isVisibleText(node) || self.dependencies.Common.isVoidBlock(node);
+            return self.utils.isVisibleText(node) || self.dependencies.Arch.isVoidBlock(node);
         }).forEach(function (node) {
             self._cleanNodeAfterStyle(node, range);
         });
@@ -384,7 +384,7 @@ var TextPlugin = AbstractPlugin.extend({
             ancestor = this._getFormattableAncestor(range.sc);
             if (ancestor) {
                 node = this.dom.splitTree(ancestor, range.getStartPoint(), {
-                    isSkipPaddingBlankNode: this.dependencies.Common.isVoidBlock(ancestor),
+                    isSkipPaddingBlankNode: this.dependencies.Arch.isVoidBlock(ancestor),
                 });
             } else {
                 node = range.sc.splitText(range.so);
@@ -657,7 +657,7 @@ var FontStylePlugin = AbstractPlugin.extend({
         _.each(this.utils.filterLeafChildren(nodes), function (node) {
             var ancestor = self.utils.ancestor(node, function (node) {
                 return self.utils.isCell(node) || (
-                    !self.dependencies.Common.isUnbreakableNode(node) &&
+                    !self.dependencies.Arch.isUnbreakableNode(node) &&
                     (self.utils.isFormatNode(node, self.options.styleTags) || self.utils.isNodeBlockType(node))
                 ) && !self.utils.isEditable(node);
             });
@@ -685,7 +685,7 @@ var FontStylePlugin = AbstractPlugin.extend({
             !range ||
             !this.editable.contains(range.sc) ||
             !this.editable.contains(range.ec) ||
-            this.dependencies.Common.isUnbreakableNode(range.sc)
+            this.dependencies.Arch.isUnbreakableNode(range.sc)
         ) {
             return;
         }
@@ -693,7 +693,7 @@ var FontStylePlugin = AbstractPlugin.extend({
             range = range.replace(this.dom.splitTextAtSelection(range));
         }
         var nodes = range.getSelectedNodes(function (node) {
-            return self.utils.isVisibleText(node) || self.dependencies.Common.isVoidBlock(node);
+            return self.utils.isVisibleText(node) || self.dependencies.Arch.isVoidBlock(node);
         });
         nodes = this.filterFormatAncestors(nodes);
         if (!nodes.length) {
@@ -771,9 +771,9 @@ var FontStylePlugin = AbstractPlugin.extend({
             range.replace(this.dom.splitTextAtSelection(range));
         }
         var selectedText = range.getSelectedTextNodes(function (node) {
-            return Common.isEditableNode(node) && (Common.isVoidBlock(node) || self.utils.isVisibleText(node));
+            return Arch.isEditableNode(node) && (Arch.isVoidBlock(node) || self.utils.isVisibleText(node));
         });
-        var selectedVoids = range.getSelectedNodes(Common.isVoidBlock.bind(Common)) || [];
+        var selectedVoids = range.getSelectedNodes(Arch.isVoidBlock.bind(Common)) || [];
         if (!selectedText.length && !selectedVoids.length) {
             return;
         }
@@ -933,7 +933,7 @@ var FontStylePlugin = AbstractPlugin.extend({
         var self = this;
         var Common = this.dependencies.Common;
         var textNodes = range.getSelectedTextNodes(function (node) {
-            return Common.isEditableNode(node) && (Common.isVoidBlock(node) || self.utils.isVisibleText(node));
+            return Arch.isEditableNode(node) && (Arch.isVoidBlock(node) || self.utils.isVisibleText(node));
         });
         return _.all(textNodes, function (textNode) {
             return self.utils.isInTag(textNode, tag);
@@ -956,7 +956,7 @@ var FontStylePlugin = AbstractPlugin.extend({
             return false;
         }
         var isEditableOrAbove = parent && (parent === this.editable || $.contains(parent, this.editable));
-        var isUnbreakable = parent && this.dependencies.Common.isUnbreakableNode(parent);
+        var isUnbreakable = parent && this.dependencies.Arch.isUnbreakableNode(parent);
         var isRemoveFormatCandidate = parent && parent.tagName && this.utils.formatTags.indexOf(parent.tagName.toLowerCase()) !== -1;
         return parent && !isEditableOrAbove && !isUnbreakable && isRemoveFormatCandidate;
     },
@@ -1020,7 +1020,7 @@ var FontStylePlugin = AbstractPlugin.extend({
         var self = this;
         var Common = this.dependencies.Common;
         var textNodes = range.getSelectedTextNodes(function (node) {
-            return Common.isEditableNode(node) && (Common.isVoidBlock(node) || self.utils.isVisibleText(node));
+            return Arch.isEditableNode(node) && (Arch.isVoidBlock(node) || self.utils.isVisibleText(node));
         });
         return _.filter(textNodes, function (textNode) {
             return !self.utils.isInTag(textNode, tag);
@@ -1037,7 +1037,7 @@ var FontStylePlugin = AbstractPlugin.extend({
         var toRemove = [];
         var Common = this.dependencies.Common;
         $(node).siblings().each(function () {
-            if (self.utils.isBlankNode(this, Common.isVoidBlock.bind(Common))) {
+            if (self.utils.isBlankNode(this, Arch.isVoidBlock.bind(Common))) {
                 toRemove.push(this);
             }
         });
@@ -1067,7 +1067,7 @@ var FontStylePlugin = AbstractPlugin.extend({
      */
     _removeFormatAncestors: function (node) {
         while (this._isParentRemoveFormatCandidate(node) &&
-            !this.dependencies.Common.isVoidBlock(node)) {
+            !this.dependencies.Arch.isVoidBlock(node)) {
             this.dom.splitAtNodeEnds(node);
             $(node.parentNode).before(node).remove();
         }
@@ -1203,7 +1203,7 @@ var FontStylePlugin = AbstractPlugin.extend({
         var self = this;
         var Common = this.dependencies.Common;
         var textNodes = range.getSelectedTextNodes(function (node) {
-            return Common.isEditableNode(node) && (Common.isVoidBlock(node) || self.utils.isVisibleText(node));
+            return Arch.isEditableNode(node) && (Arch.isVoidBlock(node) || self.utils.isVisibleText(node));
         });
         return this._unformatText(range, textNodes, tag);
     },
@@ -1246,7 +1246,7 @@ var ParagraphPlugin = AbstractPlugin.extend({
             range.replace(this.dom.splitTextAtSelection(range));
         }
         var nodes = range.getSelectedNodes(function (node) {
-            return self.utils.isVisibleText(node) || self.dependencies.Common.isVoidBlock(node);
+            return self.utils.isVisibleText(node) || self.dependencies.Arch.isVoidBlock(node);
         });
         nodes = this.dependencies.FontStyle.filterFormatAncestors(nodes);
         _.each(nodes, function (node) {

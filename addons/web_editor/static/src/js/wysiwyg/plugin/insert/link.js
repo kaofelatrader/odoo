@@ -130,7 +130,7 @@ var LinkCreate = AbstractPlugin.extend({
     _insertBlankLink: function () {
         var range = this.dependencies.Range.getRange();
         if (range.isCollapsed()) {
-            if (!this.dependencies.Common.isVoidBlock(range.sc)) {
+            if (!this.dependencies.Arch.isVoidBlock(range.sc)) {
                 range.replace({
                     sc: this.utils.firstLeaf(range.sc),
                     so: 0,
@@ -257,7 +257,7 @@ var Link = AbstractPlugin.extend({
     },
 
     fillEmptyLink: function (link) {
-        if (this.dependencies.Common.isEditableNode(link)) {
+        if (this.dependencies.Arch.isEditableNode(link)) {
             link.textContent = this.dependencies.LinkCreate.blankContent;
         }
     },

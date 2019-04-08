@@ -115,7 +115,7 @@ var MediaPlugin = AbstractPlugin.extend({
 
     start: function () {
         var self = this;
-        this.dependencies.Common.addVoidBlockCheck(function (node) {
+        this.dependencies.Arch.addVoidBlockCheck(function (node) {
             return self.isMedia(node);
         });
         return Promise.resolve();
@@ -356,7 +356,7 @@ var MediaPlugin = AbstractPlugin.extend({
             target = target.parentNode;
         }
 
-        if (!this.dependencies.Common.isEditableNode(target)) {
+        if (!this.dependencies.Arch.isEditableNode(target)) {
             if (!target.parentNode) {
                 target = this.editable;
             }
@@ -499,7 +499,7 @@ var ImagePlugin = AbstractMediaPlugin.extend({
     start: function () {
         var self = this;
         this._super.apply(this, arguments);
-        this.dependencies.Common.addVoidBlockCheck(function (node) {
+        this.dependencies.Arch.addVoidBlockCheck(function (node) {
             return self[self.isMediaMethod](node);
         });
         return Promise.resolve();
@@ -601,7 +601,7 @@ var VideoPlugin = AbstractMediaPlugin.extend({
     start: function () {
         var self = this;
         this._super.apply(this, arguments);
-        this.dependencies.Common.addVoidBlockCheck(function (node) {
+        this.dependencies.Arch.addVoidBlockCheck(function (node) {
             return self[self.isMediaMethod](node);
         });
         return Promise.resolve();
@@ -664,7 +664,7 @@ var IconPlugin = AbstractMediaPlugin.extend({
     },
     start: function () {
         var self = this;
-        this.dependencies.Common.addVoidBlockCheck(function (node) {
+        this.dependencies.Arch.addVoidBlockCheck(function (node) {
             return self[self.isMediaMethod](node);
         });
         return this._super.apply(this, arguments);
@@ -704,7 +704,7 @@ var DocumentPlugin = AbstractMediaPlugin.extend({
     start: function () {
         var self = this;
         this._super.apply(this, arguments);
-        this.dependencies.Common.addVoidBlockCheck(function (node) {
+        this.dependencies.Arch.addVoidBlockCheck(function (node) {
             return self[self.isMediaMethod](node);
         });
         return Promise.resolve();

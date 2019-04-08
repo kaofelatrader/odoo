@@ -9,7 +9,7 @@ var _ = require('web_editor._');
 
 
 var RangePlugin = AbstractPlugin.extend({
-    dependencies: ['Arch', 'Common'],
+    dependencies: ['Arch'],
 
     editableDomEvents: {
         'mouseup': '_onMouseUp',
@@ -68,7 +68,7 @@ var RangePlugin = AbstractPlugin.extend({
      * @param {Boolean} left
      */
     setRangeOnVoidBlock: function (target, left) {
-        if (!target || !this.dependencies.Common.isVoidBlock(target)) {
+        if (!target || !this.dependencies.Arch.isVoidBlock(target)) {
             return;
         }
         var range = this._getRange();
@@ -264,7 +264,7 @@ var RangePlugin = AbstractPlugin.extend({
             var point = this._getRange().getStartPoint();
             point = e.keyCode === 37 ? point.prev() : point.next();
             var node = point.node.childNodes[point.offset] || point.node;
-            if (this.dependencies.Common.isVoidBlock(node)) {
+            if (this.dependencies.Arch.isVoidBlock(node)) {
                 this.setRangeOnVoidBlock(node, e.keyCode === 37);
             }
         }

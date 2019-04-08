@@ -307,21 +307,13 @@ var isNode = {
         return !!this.ancestor(this.isList);
     },
     /**
-     * Return true if the given node is a text node that is not visible.
-     *
-     * @returns {Boolean}
-     */
-    isInvisibleText: function () {
-        return this instanceof TextNode && !(this instanceof VisibleTextNode);
-    },
-    /**
      * Return true if the given node is on a left edge (ignoring invisible text).
      *
      * @returns {Boolean}
      */
     isLeftEdge: function () {
         var previousSibling = this.parent.childNodes.slice(0, this.index());
-        while (previousSibling.length && previousSibling[0].isInvisibleText()) {
+        while (previousSibling.length && previousSibling[0] instanceof ArchitecturalSpaceNode) {
             previousSibling.pop();
         }
         return !previousSibling.length;
@@ -386,7 +378,7 @@ var isNode = {
      */
     isRightEdge: function () {
         var nextSibling = this.parent.childNodes.slice(this.index() + 1);
-        while (nextSibling.length && nextSibling[0].isInvisibleText()) {
+        while (nextSibling.length && nextSibling[0] instanceof ArchitecturalSpaceNode) {
             nextSibling.pop();
         }
         return !nextSibling.length;
@@ -615,7 +607,7 @@ var ArchNode = Class.extend(isNode, {
         this._changeParent(archNode, 0);
     },
     empty: function () {
-        if (!this.options.isEditableNode(this)) {
+        if (!this.tree.options.isEditableNode(this)) {
             console.warn("can not empty a non editable node");
             return;
         }
@@ -624,7 +616,7 @@ var ArchNode = Class.extend(isNode, {
         });
     },
     remove: function () {
-        if (!this.options.isEditableNode(this.parent)) {
+        if (!this.tree.options.isEditableNode(this.parent)) {
             console.warn("can not remove a node in a non editable node");
             return;
         }
@@ -649,6 +641,9 @@ var ArchNode = Class.extend(isNode, {
         if (!this.__removed) {
             this._applyRulesPropagation();
         }
+    },
+    addLine: function () {
+        return this.parent && this.parent.addLine();
     },
 
     //--------------------------------------------------------------------------
@@ -744,7 +739,8 @@ var ArchNode = Class.extend(isNode, {
         if (nodeName === 'EDITABLE') {
             return;
         }
-        var newParent = new ArchNode(this.tree, nodeName, []);
+        var Constructor = archNodeByNodeName[nodeName] || ArchNode;
+        var newParent = new Constructor(this.tree, nodeName, []);
         newParent.__applyRulesCheckParentsFlag = true;
         this.parent.insertBefore(newParent, this);
         newParent.append(this);
@@ -898,11 +894,11 @@ var ArchNode = Class.extend(isNode, {
             throw new Error("You can't add a node in a void");
         }
 
-        if (!this.options.isEditableNode(this)) {
+        if (!this.tree.options.isEditableNode(this)) {
             console.warn("can not add a node in a non editable node");
             return;
         }
-        if (archNode.parent && !this.options.isEditableNode(archNode.parent)) {
+        if (archNode.parent && !this.tree.options.isEditableNode(archNode.parent)) {
             console.warn("can not remove a node in a non editable node");
             return;
         }
@@ -928,7 +924,7 @@ var ArchNode = Class.extend(isNode, {
         var VirtualTextNode = new VirtualTextNode(this.tree);
         VirtualTextNode.parent = this;
         insertMethod(VirtualTextNode);
-        if (!this.options.isEditableNode(VirtualTextNode) || (fn && !fn.call(this, VirtualTextNode))) {
+        if (!this.tree.options.isEditableNode(VirtualTextNode) || (fn && !fn.call(this, VirtualTextNode))) {
             VirtualTextNode.remove();
             return;
         }
@@ -1003,6 +999,24 @@ var ArchNode = Class.extend(isNode, {
             node.appendChild(archNode._toNode(options));
         });
         return node;
+    },
+});
+
+//////////////////////////////////////////////////////////////
+
+var archNodeByNodeName = {};
+
+//////////////////////////////////////////////////////////////
+
+archNodeByNodeName.br = ArchNode.extend({
+    insert: function (offset, fragment) {
+        if (fragment.childNodes.length === 1 && fragment.firstChild().nodeName === 'br') {
+            var ancestor = this.ancestor(this.isBlock);
+            var node = this.isRightEdgeOf(ancestor) ? new VirtualTextNode(this.tree) : new archNodeByNodeName.br(this.tree);
+            this.parent.insertAfter(node, this);
+            return node.id;
+        }
+        return this._super.apply(this, arguments);
     },
 });
 
@@ -1459,7 +1473,8 @@ ArchTree.prototype._parseElement = function (element) {
         var attributes = Object.values(element.attributes).map(function (attribute) {
             return [attribute.name, attribute.value];
         });
-        archNode = new ArchNode(this, element.nodeName, attributes);
+        var Constructor = archNodeByNodeName[element.nodeName] || ArchNode;
+        archNode = new Constructor(this, element.nodeName, attributes);
         element.childNodes.forEach(function (child) {
             archNode.append(self._parseElement(child));
         });
