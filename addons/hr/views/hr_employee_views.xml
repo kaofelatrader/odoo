@@ -243,7 +243,7 @@
         </record>
 
         <record id="open_view_employee_list_my" model="ir.actions.act_window">
-            <field name="name">Employees</field>
+            <field name="name">Employees (Manager)</field>
             <field name="res_model">hr.employee</field>
             <field name="view_type">form</field>
             <field name="view_mode">kanban,tree,form,activity</field>

@@ -22,10 +22,23 @@
             sequence="95"/>
 
         <menuitem
-            id="menu_open_view_employee_list_my"
-            action="open_view_employee_list_my"
+            id="menu_hr_employee"
+            name="Employees"
             parent="menu_hr_root"
             sequence="3"/>
+
+            <menuitem
+                id="menu_hr_employee_public"
+                action="hr_employee_public_action"
+                parent="menu_hr_employee"
+                sequence="1"/>
+
+            <menuitem
+                id="menu_hr_employee_user"
+                action="open_view_employee_list_my"
+                parent="menu_hr_employee"
+                groups="group_hr_user"
+                sequence="2"/>
 
         <menuitem
             id="menu_hr_department_tree"

@@ -134,6 +134,38 @@ class HrEmployeePrivate(models.Model):
         ('user_uniq', 'unique (user_id, company_id)', "A user cannot be linked to multiple employees in the same company.")
     ]
 
+    @api.multi
+    def name_get(self):
+        # If user has not rights to read hr.employee, we forward the public name_get
+        if self.check_access_rights('read', raise_exception=False):
+            return super(HrEmployeePrivate, self).name_get()
+        return self.env['hr.employee.public'].browse(self.ids).name_get()
+
+    @api.model
+    def name_search(self, name='', args=None, operator='ilike', limit=100):
+        if self.check_access_rights('read', raise_exception=False):
+            return super(HrEmployeePrivate, self).name_search(name=name, args=args, operator=operator, limit=limit)
+        return self.env['hr.employee.public'].name_search(name=name, args=args, operator=operator, limit=limit)
+
+    @api.model
+    def search_read(self, domain=None, fields=None, offset=0, limit=None, order=None):
+        if self.check_access_rights('read', raise_exception=False):
+            return super(HrEmployeePrivate, self).search_read(domain=domain, fields=fields, offset=offset, limit=limit, order=order)
+        return self.env['hr.employee.public'].search_read(domain=domain, fields=fields, offset=offset, limit=limit, order=order)
+
+    @api.multi
+    def read(self, fields, load='_classic_read'):
+        if self.check_access_rights('read', raise_exception=False):
+            return super(HrEmployeePrivate, self).read(fields, load=load)
+        public_fields = set(self.env['hr.employee.public']._fields.keys()).intersection(fields)
+        return self.env['hr.employee.public'].browse(self.ids).read(public_fields, load=load)
+
+    @api.model
+    def search(self, args, offset=0, limit=None, order=None, count=False):
+        if self.check_access_rights('read', raise_exception=False):
+            return super(HrEmployeePrivate, self).search(args, offset=offset, limit=limit, order=order, count=count)
+        return self.env['hr.employee.public'].search(args, offset=offset, limit=limit, order=order, count=count)
+
     @api.constrains('pin')
     def _verify_pin(self):
         for employee in self:
