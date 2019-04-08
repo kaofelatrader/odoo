@@ -59,8 +59,15 @@
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/abstract.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/common.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/range.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch_tree.js"/>
+
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/node.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/text.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/is.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/rules.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/fragment.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/customNodes.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/ArchManager.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/ArchPlugin.js"/>
 
     <!-- plugins ui -->
 
