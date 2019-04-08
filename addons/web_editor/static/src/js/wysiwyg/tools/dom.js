@@ -359,6 +359,7 @@ var Dom = Class.extend({
      * Split the DOM tree at the node's start and end points.
      *
      * @param {Node} node
+     * @returns {Node} node
      */
     splitAtNodeEnds: function (node) {
         if (!node.parentNode) {
@@ -370,9 +371,10 @@ var Dom = Class.extend({
             isSkipPaddingBlankNode: true,
         };
         this.splitTree(node.parentNode, endPoint, splitOptions);
-        this.splitTree(node.parentNode, startPoint, splitOptions);
+        var nextNode = this.splitTree(node.parentNode, startPoint, splitOptions);
         // Splitting at ends may create blank nodes (because of this.splitTree) so let's clean it up:
         this.removeBlankSiblings(node.parentNode);
+        return nextNode;
     },
     /**
      * Split the text nodes at range start and end points, if any.
@@ -422,44 +424,33 @@ var Dom = Class.extend({
      */
     splitTree: function (root, point, options) {
         var self = this;
-        var next;
-        var nextText;
-        if (options && options.nextText && utils.isText(point.node)) {
-            nextText = point.node.splitText(point.offset);
+        point.enterUntil();
+        var right = point.node;
+        if (utils.isText(right)) {
+            right = point.node.splitText(point.offset);
         }
-        var emptyText = false;
-        if (utils.isText(point.node) && point.node.textContent === "") {
-            emptyText = true;
-            point.node.textContent = utils.char('zeroWidth');
-            point.offset = 1;
+        if (utils.isInvisibleText(right)) {
+            right.textContent = utils.char('zeroWidth');
         }
-        var ancestors = utils.listAncestor(point.node, function (n) {
-            return n === root;
+        var ancestorsUntilRoot = utils.listAncestor(right, function (node) {
+            return node === root;
+        }).filter(function (node) {
+            return !utils.isText(node) &&
+                !self.options.isVoidBlock(node) &&
+                !utils.isVoid(node) &&
+                node !== right;
         });
-        switch (ancestors.length) {
-            case 0:
-                next = null;
-                break;
-            case 1:
-                next = this._splitNode(point, options);
-                break;
-            default:
-                next = ancestors.reduce(function (node, parent) {
-                    node = node === point.node ? self._splitNode(point, options) : node;
-                    var splitPoint = new BoundaryPoint(parent, node ? utils.position(node) : utils.nodeLength(parent));
-                    return self._splitNode(splitPoint, options);
-                });
-                break;
-        }
-        if (emptyText) {
-            point.node.textContent = '';
-        }
-        var result = nextText || next || point.node;
-        var att = nextText ? 'textContent' : 'innerHTML';
-        if (/^\s+([^\s<])/.test(result[att])) {
-            result[att] = result[att].replace(utils.getRegex('startSpace'), utils.char('nbsp'));
-        }
-        return result;
+        var allRight = utils.listNext(right);
+        ancestorsUntilRoot.forEach(function (ancestor) {
+            $(allRight).wrap($(ancestor).clone().empty());
+            allRight.forEach(function (right, index) {
+                allRight[index] = right.parentNode;
+            });
+        });
+        allRight.reverse().forEach(function (right) {
+            self._insertAfter(right, root);
+        });
+        return utils.firstLeaf(allRight[0]);
     },
 
     //--------------------------------------------------------------------------

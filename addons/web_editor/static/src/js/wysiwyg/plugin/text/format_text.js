@@ -914,6 +914,7 @@ var FontStylePlugin = AbstractPlugin.extend({
             $(br).remove();
             range = this.dependencies.Range.setRange({
                 sc: emptyText,
+                so: 0,
             });
         } else {
             range = this.dom.insertTextInline(this.utils.char('zeroWidth'), range);
@@ -1160,7 +1161,7 @@ var FontStylePlugin = AbstractPlugin.extend({
      */
     _unformatTextCollapsed: function (range, tag) {
         range = this._insertFormatPlaceholder(range);
-        this.dom.splitAtNodeEnds(range.sc);
+        range.sc = this.dom.splitAtNodeEnds(range.sc);
         var blankText = range.sc;
         return this._unformatText(range, [blankText], tag);
     },
@@ -1190,6 +1191,7 @@ var FontStylePlugin = AbstractPlugin.extend({
         var endPoint = this.utils.isText(node) ? this.getPoint(node, this.utils.nodeLength(node)) : this.getPoint(node.parentNode, startPoint.offset + 1);
         this.dom.splitTree(root, endPoint, options);
 
+        // todo: ensure the format placeholder is at the right place!
         this._unwrapContents(root);
     },
     /**
