@@ -598,7 +598,8 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _onTextInput: function (ev) {
         ev.preventDefault();
-        return this.dependencies.Arch.insert(ev.data);
+        var point = this.dependencies.Arch.insert(ev.data);
+        this.dependencies.Arch.setRange(point.id, point.offset);
     },
 });
 

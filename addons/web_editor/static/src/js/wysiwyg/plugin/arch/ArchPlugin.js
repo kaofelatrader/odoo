@@ -377,8 +377,8 @@ var ArchPlugin = AbstractPlugin.extend({
         return changedNodes[0];
     },
     setRange: function (sc, so, ec, eo) {
-        sc = this.renderer.whoIsThisNode(sc);
-        ec = this.renderer.whoIsThisNode(ec);
+        sc = typeof sc === 'number' ? sc : this.renderer.whoIsThisNode(sc);
+        ec = typeof ec === 'number' ? ec : this.renderer.whoIsThisNode(ec);
 
         return this.manager.setRange(sc, so, ec, eo);
     },

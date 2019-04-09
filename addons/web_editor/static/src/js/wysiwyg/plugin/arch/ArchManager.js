@@ -190,7 +190,7 @@ ArchManager.prototype = {
             }
         } else {
             this._endRangeID = this._startRangeID;
-            this._endRangeOffset = so ? this._startRangeOffset : start.length();
+            this._endRangeOffset = typeof so === 'number' ? this._startRangeOffset : start.length();
         }
     },
     getRange: function () {
