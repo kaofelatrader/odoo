@@ -38,6 +38,28 @@
             <field name="help">Manage the contact titles you want to have available in your system and the way you want to print them in letters and other documents. Some example: Mr., Mrs. </field>
         </record>
 
+        <!-- Partner country specific base view -->
+        <record id="view_partner_address" model="ir.ui.view">
+            <field name="name">res.partner.form</field>
+            <field name="model">res.partner</field>
+            <field name="priority" eval="100"/>
+            <field name="arch" type="xml">
+                <form string="Partner Address">
+                    <field name="is_company" invisible="1"/>
+                    <field name="type" invisible="1"/>
+                    <field name="parent_id" invisible="1"/>
+                    <div class="o_address_format">
+                        <field name="street" placeholder="Street..." class="o_address_street"/>
+                        <field name="street2" placeholder="Street 2..." class="o_address_street"/>
+                        <field name="zip" placeholder="ZIP" class="o_address_zip"/>
+                        <field name="city" placeholder="City" class="o_address_city"/>
+                        <field name="state_id" class="o_address_state" placeholder="State" options='{"no_open": True}'/>
+                        <field name="country_id" placeholder="Country" class="o_address_country" options='{"no_open": True, "no_create": True}'/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
         <!-- Partner -->
         <record id="view_partner_tree" model="ir.ui.view">
             <field name="name">res.partner.tree</field>
