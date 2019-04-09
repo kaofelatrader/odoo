@@ -194,8 +194,8 @@ ArchManager.prototype = {
         var self = this;
         var fragment = new FragmentNode(this);
 
-        var xml = html.replace(/<((br|img|iframe)[^>/]*)>/g, '<\$1/>');
-        var fragmentDOM = document.createDocumentFragment();
+        var reVoidNodes = /<((br|img|iframe|hr|input)[^>/]*)>/g;
+        var xml = html.replace(reVoidNodes, '<\$1/>');
         var parser = new DOMParser();
         var element = parser.parseFromString("<root>" + xml + "</root>","text/xml");
 

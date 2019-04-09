@@ -338,7 +338,7 @@ ArchNode.include({
     /**
      * Return true if the given node is a void element (BR, COL, EMBED, HR, IMG, INPUT, ...).
      *
-     * @see http://www.w3.org/html/wg/drafts/html/master/syntax.html#void-elements
+     * @see http://w3c.github.io/html/syntax.html#void-elements
      * @returns {Boolean}
      */
     isVoid: function () {
