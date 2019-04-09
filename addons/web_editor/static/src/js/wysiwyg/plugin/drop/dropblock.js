@@ -47,7 +47,7 @@ var DropBlock = AbstractPlugin.extend({
         params.insertBeforeEditable(this._blockContainer);
         params.insertBeforeEditable(this._blockHandle);
 
-        this._triggerDragAndDrop = this._throttled(50, this._triggerDragAndDrop.bind(this));
+        this._dragAndDropMoveSearch = this._throttled(50, this._dragAndDropMoveSearch.bind(this));
     },
     start: function () {
         var self = this;
@@ -212,7 +212,7 @@ var DropBlock = AbstractPlugin.extend({
         this._dragAndDrop.dy = parseInt(this._dragAndDrop.top - ev.clientY - handlePosition.top);
         this._dragAndDropMove(ev);
         this._enabledDropZones = [];
-        this.trigger('drag', Object.assign({}, this._dragAndDrop));
+        this.trigger('drag', this._dragAndDrop.contents.slice());
     },
     _dragAndDropMove: function (ev) {
         if (!this._dragAndDrop) {
@@ -224,6 +224,35 @@ var DropBlock = AbstractPlugin.extend({
         this._dragAndDrop.thumbnail.style.top = (top >= 0 ? '+' : '') + top + 'px';
         this._dragAndDrop.clientX = ev.clientX;
         this._dragAndDrop.clientY = ev.clientY;
+    },
+    _dragAndDropMoveSearch: function () {
+        var editableBox = this._blockHandle.getBoundingClientRect();
+        var originBox = this._origin.getBoundingClientRect();
+        var dragAndDrop = this._dragAndDrop;
+        var top = dragAndDrop.clientY - (this._originBox.top - originBox.top) - editableBox.top;
+        var left = dragAndDrop.clientX - (this._originBox.left - originBox.left) - editableBox.left;
+        if (this.isOpen) {
+            left -= this._blockContainer.getBoundingClientRect().width;
+        }
+
+        var select;
+        this._enabledDropZones.forEach(function (dropzone) {
+            if (top >= (dropzone.box.top - 10) && top <= (dropzone.box.top + dropzone.box.height + 10) &&
+                left >= (dropzone.box.left - 10) && left <= (dropzone.box.left + dropzone.box.width + 10)) {
+                select = dropzone;
+            }
+        });
+
+
+        if (select) {
+            if (this._selectedDragAndDrop !== select.node) {
+                this.trigger('dragAndDrop', this._dragAndDrop.contents.slice(), select.node, this._selectedDragAndDrop);
+                this._selectedDragAndDrop = select.node;
+            }
+        } else if (this._selectedDragAndDrop) {
+            this.trigger('dragAndDrop', this._dragAndDrop.contents.slice(), null, this._selectedDragAndDrop);
+            this._selectedDragAndDrop = null;
+        }
     },
     _dragAndDropEnd: function (ev) {
         if (!this._dragAndDrop) {
@@ -241,7 +270,7 @@ var DropBlock = AbstractPlugin.extend({
             });
         }
 
-        this.trigger('drop', this._dragAndDrop, this._selectedDragAndDrop);
+        this.trigger('drop', this._dragAndDrop.contents.slice(), this._selectedDragAndDrop);
         this._dragAndDrop = null;
         this._selectedDragAndDrop = null;
     },
@@ -305,9 +334,6 @@ var DropBlock = AbstractPlugin.extend({
             return index;
         }
     },
-    _triggerDragAndDrop: function () {
-        this.trigger('dragAndDrop');
-    },
 
     /*
     _insertDropZoneChild: function (parent) {
@@ -368,15 +394,15 @@ var DropBlock = AbstractPlugin.extend({
     // Handle
     //--------------------------------------------------------------------------
 
-    _onDragAndDropEnd: function (dragAndDrop, dropzone) {
+    _onDragAndDropEnd: function (dragAndDropContents, dropzone) {
         if (!dropzone) {
             this._removeDropZones();
             return;
         }
-        var node = dragAndDrop.contents[0];
-        if (dragAndDrop.contents.length > 1) {
+        var node = dragAndDropContents[0];
+        if (dragAndDropContents.length > 1) {
             node = document.createDocumentFragment();
-            dragAndDrop.contents.forEach(function (node) {
+            dragAndDropContents.forEach(function (node) {
                 node.appendChild(node);
             });
         }
@@ -385,42 +411,23 @@ var DropBlock = AbstractPlugin.extend({
         var index = this._removeDropZones(dropzone);
         this.dependencies.Arch.insert(node, parent, index);
     },
-    _onDragAndDropMove: function () {
-        var editableBox = this._blockHandle.getBoundingClientRect();
-        var originBox = this._origin.getBoundingClientRect();
-        var dragAndDrop = this._dragAndDrop;
-        var top = dragAndDrop.clientY - (this._originBox.top - originBox.top) - editableBox.top;
-        var left = dragAndDrop.clientX - (this._originBox.left - originBox.left) - editableBox.left;
-        if (this.isOpen) {
-            left -= this._blockContainer.getBoundingClientRect().width;
+    _onDragAndDropMove: function (dragAndDropContents, dropzone, previousDropzone) {
+        if (previousDropzone) {
+            previousDropzone.style.display = '';
         }
 
-        var select;
-        this._enabledDropZones.forEach(function (dropzone) {
-            if (top >= (dropzone.box.top - 10) && top <= (dropzone.box.top + dropzone.box.height + 10) &&
-                left >= (dropzone.box.left - 10) && left <= (dropzone.box.left + dropzone.box.width + 10)) {
-                select = dropzone;
-            }
-        });
-
-        if (select) {
-            this._dragAndDrop.contents.forEach(function (node) {
-                select.node.parentNode.insertBefore(node, select.node);
+        if (dropzone) {
+            dragAndDropContents.forEach(function (node) {
+                dropzone.parentNode.insertBefore(node, dropzone);
             });
-            if (this._selectedDragAndDrop && this._selectedDragAndDrop !== select.node) {
-                this._selectedDragAndDrop.style.display = '';
-            }
-            this._selectedDragAndDrop = select.node;
-            this._selectedDragAndDrop.style.display = 'none';
-        } else if (this._selectedDragAndDrop) {
-            this._dragAndDrop.contents.forEach(function (node) {
+            dropzone.style.display = 'none';
+        } else {
+            dragAndDropContents.forEach(function (node) {
                 node.parentNode.removeChild(node);
             });
-            this._selectedDragAndDrop.style.display = '';
-            this._selectedDragAndDrop = null;
         }
     },
-    _onDragAndDropStart: function (dragAndDrop) {
+    _onDragAndDropStart: function (dragAndDropContents) {
         this._addDropZone();
     },
     _onMouseDownBlock: function (ev) {
@@ -450,7 +457,7 @@ var DropBlock = AbstractPlugin.extend({
     _onMouseMove: function (ev) {
         if (this._dragAndDrop) {
             this._dragAndDropMove(ev);
-            this._triggerDragAndDrop();
+            this._dragAndDropMoveSearch();
         }
     },
     _onMouseUp: function (ev) {

@@ -65,7 +65,6 @@ var VisibleTextNode = TextNode.extend({
     insert: function (node, offset) {
         var next = this._split(offset);
         this.parent.insert(node, next.index());
-        return [this.id, next.id];
     },
     /**
      * @override
@@ -124,6 +123,9 @@ var VisibleTextNode = TextNode.extend({
         this.nodeValue = this.nodeValue.slice(0, offset);
         var node = new VisibleTextNode(this.tree, text);
         this.after(node);
+
+        this.tree._markChange(node.id, 0);
+        this.tree._markChange(node.id, next.length());
         return node;
     },
 });

@@ -243,8 +243,6 @@ return Class.extend({
     insert: function (fragment, offset) {
         var ref = this.childNodes[offset];
         this.insertBefore(fragment, ref);
-        this.applyRules();
-        // return this.parent && this.parent.insert(this.index(), fragment);
     },
     addLine: function (offset) {
         return this.parent && this.parent.addLine(this.index());
@@ -302,7 +300,7 @@ return Class.extend({
     prevUntil: function (fn) {
         return this._prevNextUntil('prev', fn);
     },
-    length: function (argument) {
+    length: function () {
         return this.childNodes.length;
     },
     path: function (ancestor) {
@@ -353,14 +351,20 @@ return Class.extend({
             return ids;
         }
 
+        this.tree._markChange(archNode.id, archNode.length());
+
         if (archNode.parent) {
-            archNode.parent.childNodes.splice(archNode.parent.childNodes.indexOf(archNode), 1);
+            var i = archNode.parent.childNodes.indexOf(archNode);
+            this.tree._markChange(archNode.parent.id, i);
+            archNode.parent.childNodes.splice(i, 1);
         }
+
         archNode.parent = this;
         this.childNodes.splice(index, 0, archNode);
         this.__removed = false;
         this.tree._addArchNode(archNode);
-        return [archNode.id];
+
+        this.tree._markChange(this.id, index);
     },
     /**
      * Next or previous node, following the leaf

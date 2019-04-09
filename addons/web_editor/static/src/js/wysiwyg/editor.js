@@ -156,17 +156,17 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @returns {String}
      */
     getValue: function () {
-        var $editable = $(this.editable).clone();
-        $editable.find('.o_wysiwyg_to_remove').remove();
-        $editable.find('[contenteditable]').removeAttr('contenteditable');
-        $editable.find('.o_fake_not_editable').removeClass('o_fake_not_editable');
-        $editable.find('.o_fake_editable').removeClass('o_fake_editable');
-        $editable.find('[class=""]').removeAttr('class');
-        $editable.find('[style=""]').removeAttr('style');
-        $editable.find('[title=""]').removeAttr('title');
-        $editable.find('[alt=""]').removeAttr('alt');
-        // $editable.find('a.o_image, span.fa, i.fa').html('');
-        $editable.find('[aria-describedby]').removeAttr('aria-describedby').removeAttr('data-original-title');
+        // var $editable = $(this.editable).clone();
+        // $editable.find('.o_wysiwyg_to_remove').remove();
+        // $editable.find('[contenteditable]').removeAttr('contenteditable');
+        // $editable.find('.o_fake_not_editable').removeClass('o_fake_not_editable');
+        // $editable.find('.o_fake_editable').removeClass('o_fake_editable');
+        // $editable.find('[class=""]').removeAttr('class');
+        // $editable.find('[style=""]').removeAttr('style');
+        // $editable.find('[title=""]').removeAttr('title');
+        // $editable.find('[alt=""]').removeAttr('alt');
+        // // $editable.find('a.o_image, span.fa, i.fa').html('');
+        // $editable.find('[aria-describedby]').removeAttr('aria-describedby').removeAttr('data-original-title');
 
         return this._pluginsManager.getEditorValue();
     },

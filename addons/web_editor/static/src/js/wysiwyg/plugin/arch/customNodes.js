@@ -22,7 +22,9 @@ customNodes.br = ArchNode.extend({
             var ancestor = this.ancestor(this.isBlock);
             var node = this.isRightEdgeOf(ancestor) ? new VirtualTextNode(this.tree) : new archNodeByNodeName.br(this.tree);
             this.after(node);
-            return node.id;
+
+            this.tree._markChange(node.id, 1);
+            this.tree._markChange(this.parent.id, node.index());
         }
         return this._super.apply(this, arguments);
     },

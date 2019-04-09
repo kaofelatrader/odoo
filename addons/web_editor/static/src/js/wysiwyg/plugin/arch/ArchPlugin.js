@@ -356,15 +356,26 @@ var ArchPlugin = AbstractPlugin.extend({
         return this.manager.remove(id);
     },
     insert: function (DOM, element, offset) {
+        var self = this;
         if (typeof DOM !== 'string' && this.renderer.whoIsThisNode(DOM)) {
             DOM = this.renderer.whoIsThisNode(DOM);
         }
         var id = this.renderer.whoIsThisNode(element);
-        var newIds = this.manager.insert(DOM, id, offset);
-        this.renderer.update(this.manager.toJSON({
-            keepVirtual: true,
-        }));
-        return newIds;
+        var changedNodes = this.manager.insert(DOM, id, offset);
+
+        console.log(changedNodes);
+
+        changedNodes.forEach(function (change) {
+            self.renderer.update(self.manager.export(change.id, {
+                keepVirtual: true,
+            }));
+        })
+
+        this.trigger_up('change');
+
+        console.log(changedNodes[0]);
+
+        return changedNodes[0];
     },
     setRange: function (sc, so, ec, eo) {
         sc = this.renderer.whoIsThisNode(sc);

@@ -18,7 +18,6 @@ var RootNode = ArchNode.extend({
             return this._changeParent(fragment, offset + 1);
         }
         this.append(fragment);
-        this.applyRules();
     },
     isContentEditable: function () {
         return true;

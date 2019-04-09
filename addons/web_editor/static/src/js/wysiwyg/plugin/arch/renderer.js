@@ -20,6 +20,7 @@ Renderer.prototype = {
         }
 
         Object.keys(this.changes).forEach(function (id) {
+            console.log(id, self.elements[id]);
             var changes = self.changes[id];
             delete self.changes[id];
             self._redraw(self.jsonById[id], changes, options);

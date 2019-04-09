@@ -17,6 +17,8 @@ function ArchManager (options) {
     this.root.parent = null;
     this._archNodeList[1] = this.root;
 
+    this._changes = [];
+
     this._startRangeID = null;
     this._startRangeOffset = null;
     this._endRangeID = null;
@@ -45,8 +47,11 @@ ArchManager.prototype = {
         }
     },
     remove: function (id) {
+        this._changes = [];
+
         if (id) {
-            return this.getNode(id).remove();
+            this.getNode(id).remove();
+            return this._changes;
         }
 
         var range = this.getRange();
@@ -65,6 +70,8 @@ ArchManager.prototype = {
         });
 
         // todo: rerange
+
+        return this._changes;
     },
     /**
      * Insert a node in the Arch.
@@ -76,6 +83,8 @@ ArchManager.prototype = {
      */
     insert: function (DOM, id, offset) {
         var self = this;
+        this._changes = [];
+
         if (!id) {
             var range = this.getRange();
             id = range.start.id;
@@ -104,16 +113,35 @@ ArchManager.prototype = {
                 fragment.append(self._parseElement(node));
             });
         }
+
         offset = offset || 0;
-        fragment.childNodes.slice().forEach(function (child, index) {
+        var childNodes =  fragment.childNodes.slice();
+        childNodes.reverse();
+        childNodes.forEach(function (child, index) {
             archNode.insert(child, offset);
-            if (archNode.isText()) {
-                offset = child.index() + 1;
-                archNode = archNode.parent;
-            } else {
-                offset++;
+        });
+
+        var changes = [];
+        this._changes.forEach(function (c) {
+            if (c.id) {
+                var toAdd = true;
+                self.getNode(c.id).applyRules();
+                changes.forEach(function (change) {
+                    if (change.id === c.id) {
+                        toAdd = false;
+                        change.offset = c.offset;
+                    }
+                });
+                if (toAdd) {
+                    changes.push({
+                        id: c.id,
+                        offset: c.offset,
+                    });
+                }
             }
         });
+
+        return changes;
     },
     addLine: function () {
         this.remove();
@@ -226,6 +254,9 @@ ArchManager.prototype = {
         });
         return fragment;
     },
+    export: function (id, options) {
+        return (id ? this.getNode(id) : this.root).toJSON(options);
+    },
     /**
      * @param {JSON} json
      * @returns {ArchNode}
@@ -321,6 +352,12 @@ ArchManager.prototype = {
             return;
         }
         return virtualTextNode;
+    },
+    _markChange: function (id, offset) {
+        this._changes.push({
+            id: id,
+            offset: offset,
+        });
     },
     _removeArchNode: function (archNode) {
         var self = this;
