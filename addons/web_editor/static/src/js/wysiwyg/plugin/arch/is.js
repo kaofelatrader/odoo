@@ -20,12 +20,20 @@ ArchNode.include({
             !this.className.contains('o_image');
     },
     /**
+     * Return true if the node is an architectural space node.
+     *
+     * @returns {Boolean}
+     */
+    isArchitecturalSpaceNode: function () {
+        return false;
+    },
+    /**
      * Returns true if the node is a text node containing nothing
      *
      * @returns {Boolean}
      */
     isBlankText: function () {
-        return this instanceof ArchitecturalSpaceNode || this instanceof VirtualTextNode;
+        return false;
     },
     /**
      * Returns true if the node is blank.
@@ -43,9 +51,6 @@ ArchNode.include({
         }
         if (this.isBlankText()) {
             return true;
-        }
-        if (this instanceof TextNode) {
-            return false;
         }
         var isBlankNode = true;
         for (var k = 0; k < this.childNodes.length; k++) {
@@ -116,9 +121,7 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isElement: function () {
-        return !(this instanceof TextNode) &&
-            !(this instanceof FragmentNode) &&
-            !(this instanceof RootNode);
+        return true;
     },
     /**
      * Return true if the given node is empty.
@@ -126,13 +129,10 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isEmpty: function () {
-        if (this instanceof TextNode) {
-            return !(this instanceof VisibleTextNode);
-        }
         if (this.childNodes.length === 0) {
             return true;
         }
-        if (this.childNodes.length === 1 && (this.childNodes[0].isBR() || this.childNodes[0] instanceof VirtualTextNode || this.childNodes[0] instanceof ArchitecturalSpaceNode)) {
+        if (this.childNodes.length === 1 && (this.childNodes[0].isBR() || this.childNodes[0].isText() && this.childNodes[0].isEmpty())) {
             return true;
         }
         return false;
@@ -187,7 +187,7 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isInline: function () {
-        return this instanceof TextNode || this.tree.options.formatTags.indexOf(this.nodeName) !== -1;
+        return this.tree.options.formatTags.indexOf(this.nodeName) !== -1;
          // &&
          //    !this.isCell() && 
          //    !this.isEditable() &&
@@ -214,7 +214,7 @@ ArchNode.include({
      */
     isLeftEdge: function () {
         var previousSibling = this.parent.childNodes.slice(0, this.index());
-        while (previousSibling.length && previousSibling[0] instanceof ArchitecturalSpaceNode) {
+        while (previousSibling.length && previousSibling[0].isArchitecturalSpaceNode()) {
             previousSibling.pop();
         }
         return !previousSibling.length;
@@ -279,7 +279,7 @@ ArchNode.include({
      */
     isRightEdge: function () {
         var nextSibling = this.parent.childNodes.slice(this.index() + 1);
-        while (nextSibling.length && nextSibling[0] instanceof ArchitecturalSpaceNode) {
+        while (nextSibling.length && nextSibling[0].isArchitecturalSpaceNode()) {
             nextSibling.pop();
         }
         return !nextSibling.length;

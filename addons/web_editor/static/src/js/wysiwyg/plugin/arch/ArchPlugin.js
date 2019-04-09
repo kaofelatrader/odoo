@@ -201,6 +201,7 @@ var ArchPlugin = AbstractPlugin.extend({
             orderRules: this.orderRules,
             isEditableNode: this.isEditableNode.bind(this),
             isUnbreakableNode: this.isUnbreakableNode.bind(this),
+            formatTags: formatTags,
         });
         return promise;
     },
@@ -368,12 +369,10 @@ var ArchPlugin = AbstractPlugin.extend({
         return archNode.attributes && archNode.attributes.contentEditable === 'false';
     },
     _isUnbreakableNode: function (archNode) {
-        return false;
         return  node === this.editable || !this.isEditableNode(node.parentNode);
     },
     _isEditableNode: function (node) {
-        return false;
-        node = node && (node.tagName ? node : node.parentNode);
+        node = node && (node.isText() ? node : node.parent);
         if (!node) {
             return false;
         }

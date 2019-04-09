@@ -31,6 +31,30 @@ var TextNode = ArchNode.extend({
     length: function (argument) {
         return this.nodeValue.length;
     },
+    /**
+     * @override
+     */
+    isBlankNode: function () {
+        return false;
+    },
+    /**
+     * @override
+     */
+    isElement: function () {
+        return false;
+    },
+    /**
+     * @override
+     */
+    isEmpty: function () {
+        return true;
+    },
+    /**
+     * @override
+     */
+    isInline: function () {
+        return true;
+    },
     isText: function () {
         return true;
     },
@@ -59,13 +83,16 @@ var regExpSpaceBegin = /^([\s\n\r\t]*)/;
 var regExpSpaceEnd = /([\s\n\r\t]*)$/;
 var regExpSpace = /\s+/g;
 var VisibleTextNode = TextNode.extend({
-    insert: function (fragment, offset) {
-        var self = this;
-        var node = this._split(offset);
-        fragment.childNodes.forEach(function (child) {
-            self.parent.insert(child, node.index());
-        });
-        return [this.id, node.id];
+    insert: function (node, offset) {
+        var next = this._split(offset);
+        this.parent.insert(node, next.index());
+        return [this.id, next.id];
+    },
+    /**
+     * @override
+     */
+    isEmpty: function () {
+        return false;
     },
     _applyRulesArchNode: function () {
         if (this.nodeValue.length && this.ancestor(this.isPre)) {
@@ -148,6 +175,12 @@ var VirtualTextNode = TextNode.extend({
         this.parent.applyRules();
         return changes;
     },
+    /**
+     * @override
+     */
+    isBlankText: function () {
+        return true;
+    },
     isVirtual: function () {
         return true;
     },
@@ -192,6 +225,18 @@ var ArchitecturalSpaceNode = TextNode.extend({
             }
         }
         return space;
+    },
+    /**
+     * @override
+     */
+    isArchitecturalSpaceNode: function () {
+        return true;
+    },
+    /**
+     * @override
+     */
+    isBlankText: function () {
+        return true;
     },
     isVisibleText: function (argument) {
         return false;

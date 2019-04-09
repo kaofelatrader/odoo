@@ -120,7 +120,7 @@ ArchManager.prototype = {
             });
         }
         offset = offset || 0;
-        fragment.forEach(function (child, index) {
+        fragment.childNodes.forEach(function (child, index) {
             archNode.insert(child, offset);
             if (archNode.isText()) {
                 offset = child.index() + 1;

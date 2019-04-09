@@ -19,6 +19,12 @@ var FragmentNode = ArchNode.extend({
     applyRules: function () {
         this._applyRulesPropagation();
     },
+    /**
+     * @override
+     */
+    isElement: function () {
+        return false;
+    },
     isFragment: function () {
         return true;
     },

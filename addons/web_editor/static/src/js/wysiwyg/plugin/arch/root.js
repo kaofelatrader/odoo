@@ -23,6 +23,12 @@ var RootNode = ArchNode.extend({
     isContentEditable: function () {
         return true;
     },
+    /**
+     * @override
+     */
+    isElement: function () {
+        return false;
+    },
     isVirtual: function () {
         return true;
     },
