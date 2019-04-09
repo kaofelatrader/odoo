@@ -369,7 +369,7 @@ var ArchPlugin = AbstractPlugin.extend({
     },
     _isUnbreakableNode: function (archNode) {
         return false;
-        return  $(node).is(this.editable) || !this.isEditableNode(node.parentNode);
+        return  node === this.editable || !this.isEditableNode(node.parentNode);
     },
     _isEditableNode: function (node) {
         return false;
@@ -377,7 +377,7 @@ var ArchPlugin = AbstractPlugin.extend({
         if (!node) {
             return false;
         }
-        return !$(node).is('table, thead, tbody, tfoot, tr');
+        return ['table', 'thead', 'tbody', 'tfoot', 'tr'].indexOf(node.nodeName.toLowerCase()) === -1;
     },
 });
 

@@ -88,13 +88,20 @@ ArchManager.prototype = {
      */
     insert: function (DOM, element, offset) {
         var self = this;
-        var id = element ? this.whoIsThisNode(element) : this.getRange().start.id;
+        var id;
+        if (element) {
+            id = this.whoIsThisNode(element);
+        } else {
+            var range = this.getRange();
+            id = range.start.id;
+            offset = range.start.offset;
+        }
         var archNode = id ? this.getNode(id) : this.root;
         var fragment;
         if (typeof DOM === 'string') {
             fragment = this.parse(DOM);
         } else if (this.whoIsThisNode(DOM)) {
-            var archNode = this.getNode(this.whoIsThisNode(DOM));
+            archNode = this.getNode(this.whoIsThisNode(DOM));
             if (archNode !== this.root && !archNode.isFragment()) {
                 fragment = new FragmentNode(this);
                 fragment.append(archNode);
@@ -102,7 +109,7 @@ ArchManager.prototype = {
                 fragment = archNode;
             }
         } else {
-            var fragment = new FragmentNode(this);
+            fragment = new FragmentNode(this);
             if (DOM.nodeType !== DOM.DOCUMENT_FRAGMENT_NODE) {
                 var dom = document.createDocumentFragment();
                 dom.append(DOM);
@@ -112,7 +119,16 @@ ArchManager.prototype = {
                 fragment.append(self._parseElement(node));
             });
         }
-        return archNode.insert(fragment, offset || 0);
+        offset = offset || 0;
+        fragment.forEach(function (child, index) {
+            archNode.insert(child, offset);
+            if (archNode.isText()) {
+                offset = child.index() + 1;
+                archNode = archNode.parent;
+            } else {
+                offset++;
+            }
+        });
     },
     addLine: function () {
         this.remove();

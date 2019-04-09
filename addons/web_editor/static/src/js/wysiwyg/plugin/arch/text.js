@@ -31,9 +31,6 @@ var TextNode = ArchNode.extend({
     length: function (argument) {
         return this.nodeValue.length;
     },
-    insert: function (fragment, offset) {
-        console.error('todo: implement');
-    },
     isText: function () {
         return true;
     },
@@ -62,6 +59,14 @@ var regExpSpaceBegin = /^([\s\n\r\t]*)/;
 var regExpSpaceEnd = /([\s\n\r\t]*)$/;
 var regExpSpace = /\s+/g;
 var VisibleTextNode = TextNode.extend({
+    insert: function (fragment, offset) {
+        var self = this;
+        var node = this._split(offset);
+        fragment.childNodes.forEach(function (child) {
+            self.parent.insert(child, node.index());
+        });
+        return [this.id, node.id];
+    },
     _applyRulesArchNode: function () {
         if (this.nodeValue.length && this.ancestor(this.isPre)) {
             return this._super();
@@ -107,6 +112,13 @@ var VisibleTextNode = TextNode.extend({
         } else {
             this.remove();
         }
+    },
+    _split: function (offset) {
+        var text = this.nodeValue.slice(offset);
+        this.nodeValue = this.nodeValue.slice(0, offset);
+        var node = new VisibleTextNode(this.tree, text);
+        this.parent.insertAfter(node, this);
+        return node;
     },
 });
 
