@@ -342,7 +342,7 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isVoid: function () {
-        return ['br', 'img', 'hr', 'iframe', 'button', 'input'].indexOf(this.nodeName) !== -1;
+        return this.tree.options.voidTags.concat('button').indexOf(this.nodeName) !== -1;
     },
     isVoidBlock: function () {
         return (!this.isBR() && this.isVoid()) || this.options.isVoidBlock(this);

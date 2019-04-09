@@ -54,6 +54,13 @@ var formatTags = [
     'u',
     'var',
 ];
+var voidTags = [
+    'br',
+    'img',
+    'iframe',
+    'hr',
+    'input'
+];
 
 var ArchPlugin = AbstractPlugin.extend({
     dependencies: [],
@@ -205,6 +212,7 @@ var ArchPlugin = AbstractPlugin.extend({
             isEditableNode: this.isEditableNode.bind(this),
             isUnbreakableNode: this.isUnbreakableNode.bind(this),
             formatTags: formatTags,
+            voidTags: voidTags,
         });
 
         return promise;
