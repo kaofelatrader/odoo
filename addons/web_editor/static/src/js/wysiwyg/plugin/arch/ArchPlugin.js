@@ -353,7 +353,9 @@ var ArchPlugin = AbstractPlugin.extend({
         }
         var id = this.renderer.whoIsThisNode(element);
         var newIds = this.manager.insert(DOM, id, offset);
-        this.renderer.update(this.manager.toJSON());
+        this.renderer.update(this.manager.toJSON({
+            keepVirtual: true,
+        }));
         return newIds;
     },
     setRange: function (sc, so, ec, eo) {
