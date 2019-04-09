@@ -141,29 +141,44 @@ ArchManager.prototype = {
     // Public: range
     //--------------------------------------------------------------------------
 
+    /**
+     * Set the range.
+     * Pass only `scID` to set the range on the whole element.
+     * Pass only `scID` and `so` to collapse the range on the start.
+     *
+     * @param {Number} scID
+     * @param {Number} [so]
+     * @param {Number} [ecID]
+     * @param {Number} [eo] must be given if ecID is given
+     */
     setRange: function (scID, so, ecID, eo) {
         this._startRangeID = scID;
         var start = this.getNode(this._startRangeID);
-        this._startRangeOffset = so;
+        this._startRangeOffset = so || 0;
 
-        var endRangeID = ecID;
-        var end = this.getNode(endRangeID);
-        var node = start;
-        start.nextUntil(function (next) {
-            node = next;
-            return next.id === endRangeID;
-        });
-        this._endRangeID = node.id;
-        if (node.id === endRangeID) {
-            this._endRangeOffset = eo;
-        } else if (!node.contains(end)) {
-            while (node) {
-                var firstChild = node.firstChild();
-                if (firstChild === node) {
-                    break;
+        if (ecID) {
+            var endRangeID = ecID;
+            var end = this.getNode(endRangeID);
+            var node = start;
+            start.nextUntil(function (next) {
+                node = next;
+                return next.id === endRangeID;
+            });
+            this._endRangeID = node.id;
+            if (node.id === endRangeID) {
+                this._endRangeOffset = eo;
+            } else if (!node.contains(end)) {
+                while (node) {
+                    var firstChild = node.firstChild();
+                    if (firstChild === node) {
+                        break;
+                    }
                 }
+                this._endRangeOffset = node.length();
             }
-            this._endRangeOffset = node.length();
+        } else {
+            this._endRangeID = this._startRangeID;
+            this._endRangeOffset = so ? this._startRangeOffset : start.length();
         }
     },
     getRange: function () {
