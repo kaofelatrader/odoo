@@ -32,15 +32,23 @@ var RootNode = ArchNode.extend({
     isVirtual: function () {
         return true;
     },
-    toNode: function (options) {
-        options = options || {};
-        if (options.architecturalSpace) {
-            this._architecturalSpaceNodePropagation();
-        }
-
-        var node = this.tree._createElement(this, this.nodeName);
-        this._redrawChildren(node, options);
-        return node;
+    toJSON: function (options) {
+        var data = {
+            id: this.id,
+        };
+        var childNodes = [];
+        this.childNodes.forEach(function (archNode) {
+            var json = archNode.toJSON(options);
+            if (json) {
+                if (json.nodeName || json.nodeValue) {
+                    childNodes.push(json);
+                } else if (json.childNodes) {
+                    childNodes = childNodes.concat(json.childNodes);
+                }
+            }
+        });
+        data.childNodes = childNodes;
+        return data;
     },
 
     //--------------------------------------------------------------------------

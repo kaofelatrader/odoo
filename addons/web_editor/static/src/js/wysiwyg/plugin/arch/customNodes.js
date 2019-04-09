@@ -21,7 +21,7 @@ customNodes.br = ArchNode.extend({
         if (fragment.childNodes.length === 1 && fragment.firstChild().nodeName === 'br') {
             var ancestor = this.ancestor(this.isBlock);
             var node = this.isRightEdgeOf(ancestor) ? new VirtualTextNode(this.tree) : new archNodeByNodeName.br(this.tree);
-            this.parent.insertAfter(node, this);
+            this.after(node);
             return node.id;
         }
         return this._super.apply(this, arguments);

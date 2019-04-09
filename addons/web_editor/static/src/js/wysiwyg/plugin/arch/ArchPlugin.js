@@ -5,6 +5,7 @@ var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var BoundaryPoint = require('wysiwyg.BoundaryPoint');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 var ArchManager = require('wysiwyg.plugin.arch.ArchManager');
+var Renderer = require('wysiwyg.plugin.arch.renderer');
 
 var $ = require('web_editor.jquery');
 var _ = require('web_editor._');
@@ -164,8 +165,9 @@ var ArchPlugin = AbstractPlugin.extend({
         });
     },
     setEditorValue: function (value) {
-        this.arch.reset().insert(value || '');
-        return this.arch.toString();
+        this.manager.reset(value || '');
+        this.renderer.reset(this.manager.toJSON());
+        return this.manager.toString();
     },
     start: function () {
         var promise = this._super();
@@ -194,8 +196,9 @@ var ArchPlugin = AbstractPlugin.extend({
             });
         });
 
-        this.arch = new ArchManager({
-            editable: this.editable,
+        this.renderer = new Renderer(this.editable);
+
+        this.manager = new ArchManager({
             parentedRules: this.parentedRules,
             customRules: this.customRules,
             orderRules: this.orderRules,
@@ -203,6 +206,7 @@ var ArchPlugin = AbstractPlugin.extend({
             isUnbreakableNode: this.isUnbreakableNode.bind(this),
             formatTags: formatTags,
         });
+
         return promise;
     },
 
@@ -210,11 +214,8 @@ var ArchPlugin = AbstractPlugin.extend({
     // Public
     //--------------------------------------------------------------------------
 
-    getNode: function () {
-        return this.arch.toNode();
-    },
     getValue: function () {
-        var value = this.arch.toString();
+        var value = this.manager.toString();
         console.log(value);
         return value;
     },
@@ -316,12 +317,12 @@ var ArchPlugin = AbstractPlugin.extend({
      **/
     export: function (id) {
         if (id) {
-            return this.arch.getNode(id).toJSON();
+            return this.manager.getNode(id).toJSON();
         }
-        return this.arch.toJSON();
+        return this.manager.toJSON();
     },
     getRange: function () {
-        return this.arch.getRange();
+        return this.manager.getRange();
     },
     /**
      * @param {Int} id
@@ -332,7 +333,7 @@ var ArchPlugin = AbstractPlugin.extend({
      * @returns {string}
      **/
     render: function (id, options) {
-        return this.arch.render(id, options);
+        return this.manager.render(id, options);
     },
 
     //--------------------------------------------------------------------------
@@ -343,15 +344,23 @@ var ArchPlugin = AbstractPlugin.extend({
      * @param {DOM|null} element (by default, use the range)
      **/
     remove: function (element) {
-        return this.arch.remove(element);
+        var id = element && this.renderer.whoIsThisNode(element);
+        return this.manager.remove(id);
     },
     insert: function (DOM, element, offset) {
-        var newIds = this.arch.insert(DOM, element, offset);
-        this.arch.toNode();
+        if (typeof DOM !== 'string' && this.renderer.whoIsThisNode(DOM)) {
+            DOM = this.renderer.whoIsThisNode(DOM);
+        }
+        var id = this.renderer.whoIsThisNode(element);
+        var newIds = this.manager.insert(DOM, id, offset);
+        this.renderer.update(this.manager.toJSON());
         return newIds;
     },
     setRange: function (sc, so, ec, eo) {
-        return this.arch.setRange(sc, so, ec, eo);
+        sc = this.renderer.whoIsThisNode(sc);
+        ec = this.renderer.whoIsThisNode(ec);
+
+        return this.manager.setRange(sc, so, ec, eo);
     },
     addLine: function () {
     },

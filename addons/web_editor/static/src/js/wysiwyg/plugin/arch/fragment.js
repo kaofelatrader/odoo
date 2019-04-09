@@ -9,13 +9,6 @@ var FragmentNode = ArchNode.extend({
         this.nodeName = 'FRAGMENT';
         this.childNodes = [];
     },
-    toNode: function (options) {
-        options = options || {};
-        if (options.architecturalSpace) {
-            this._architecturalSpaceNodePropagation();
-        }
-        return this._toNode(options);
-    },
     applyRules: function () {
         this._applyRulesPropagation();
     },
@@ -30,13 +23,6 @@ var FragmentNode = ArchNode.extend({
     },
     isVirtual: function () {
         return true;
-    },
-    _toNode: function (options) {
-        var fragment = document.createDocumentFragment();
-        this.childNodes.forEach(function (archNode) {
-            fragment.appendChild(archNode._toNode(options));
-        });
-        return fragment;
     },
 });
 

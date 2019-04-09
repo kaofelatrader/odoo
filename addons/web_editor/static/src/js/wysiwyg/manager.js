@@ -83,7 +83,6 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
      */
     setEditorValue: function (value) {
         this._each('setEditorValue', value);
-        return this._plugins.Arch.getNode();
     },
     /**
      *

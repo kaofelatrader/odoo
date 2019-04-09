@@ -13,15 +13,6 @@ var TextNode = ArchNode.extend({
     empty: function () {
         this.nodeValue = '';
     },
-    toJSON: function () {
-        var data = {
-            nodeValue: this.nodeValue,
-        };
-        if (this.id) {
-            data.id = this.id;
-        }
-        return data;
-    },
     toString: function (options) {
         if (this.isVirtual() && !options.keepVirtual) {
             return '';
@@ -63,18 +54,6 @@ var TextNode = ArchNode.extend({
     },
     _applyRulesPropagation: function () {},
     _addArchitecturalSpaceNodePropagation: function () {},
-    _toNode: function (options) {
-        if (this.isVirtual() && !options.keepVirtual) {
-            return document.createDocumentFragment();
-        }
-
-        var text = this.toString(options);
-        var node = this.tree._createTextNode(this);
-        if (node.textContent !== text) {
-            node.textContent = text;
-        }
-        return node;
-    },
 });
 
 //////////////////////////////////////////////////////////////
@@ -144,7 +123,7 @@ var VisibleTextNode = TextNode.extend({
         var text = this.nodeValue.slice(offset);
         this.nodeValue = this.nodeValue.slice(0, offset);
         var node = new VisibleTextNode(this.tree, text);
-        this.parent.insertAfter(node, this);
+        this.after(node);
         return node;
     },
 });
@@ -165,10 +144,9 @@ var VirtualTextNode = TextNode.extend({
 
     insert: function (fragment, offset) {
         var self = this;
-        var parent = this;
         var changes = [];
         fragment.childNodes.forEach(function (archNode) {
-            parent.insertAfter(archNode, self);
+            self.after(archNode);
             changes.push(archNode.id);
         });
         this.remove();
@@ -189,8 +167,11 @@ var VirtualTextNode = TextNode.extend({
     // Public: export
     //--------------------------------------------------------------------------
 
-    toJSON: function () {
-        return null;
+    toJSON: function (options) {
+        if (!options || !options.keepVirtual) {
+            return null;
+        }
+        return this._super(options);
     },
 
     //--------------------------------------------------------------------------
@@ -209,13 +190,16 @@ var ArchitecturalSpaceNode = TextNode.extend({
         this._super.apply(this, arguments);
         this.nodeName = 'TEXT-ARCH';
     },
-    toJSON: function () {
-        return null;
+    toJSON: function (options) {
+        if (!options || !options.architecturalSpace) {
+            return null;
+        }
+        return {
+            id: this.id,
+            nodeValue: this.toString(),
+        };
     },
     toString: function (options) {
-        if (this.isVirtual() && !options.keepVirtual) {
-            return '';
-        }
         var space = '';
         if (options.architecturalSpace) {
             space = '\n';

@@ -10,15 +10,12 @@ var RootNode = require('wysiwyg.plugin.arch.root');
 
 function ArchManager (options) {
     this.options = options;
-    this.editable = options.editable;
     this._archNodeList = {};
-    this._nodeList = {};
     this._id = 1;
     this.root = new RootNode(this);
     this.root.id = 1;
     this.root.parent = null;
     this._archNodeList[1] = this.root;
-    this._nodeList[1] = this.editable;
 
     this._startRangeID = null;
     this._startRangeOffset = null;
@@ -29,35 +26,26 @@ ArchManager.prototype = {
     getNode: function (archNodeId) {
         return this._archNodeList[archNodeId];
     },
-    whoIsThisNode: function (element) {
-        if (element.tagName === 'EDITABLE') {
-            return this.root.id;
-        }
-        for (var k in this._nodeList) {
-            if (this._nodeList[k] === element) {
-                return this._archNodeList[k].id;
-            }
-        }
-    },
 
     //--------------------------------------------------------------------------
     // Public: update
     //--------------------------------------------------------------------------
 
-    reset: function () {
+    reset: function (value) {
         this._archNodeList = {'1':  this.root};
-        this._nodeList = {'1': this.editable};
         this._id = 1;
         this._startRangeID = null;
         this._startRangeOffset = null;
         this._endRangeID = null;
         this._endRangeOffset = null;
         this.root.childNodes = [];
-        return this;
+
+        if (value) {
+            this.insert(value);
+        }
     },
-    remove: function (element) {
-        if (element) {
-            var id = this.whoIsThisNode(element);
+    remove: function (id) {
+        if (id) {
             return this.getNode(id).remove();
         }
 
@@ -86,12 +74,9 @@ ArchManager.prototype = {
      * @param {Number} [offset]
      * @returns {Number}
      */
-    insert: function (DOM, element, offset) {
+    insert: function (DOM, id, offset) {
         var self = this;
-        var id;
-        if (element) {
-            id = this.whoIsThisNode(element);
-        } else {
+        if (!id) {
             var range = this.getRange();
             id = range.start.id;
             offset = range.start.offset;
@@ -100,8 +85,8 @@ ArchManager.prototype = {
         var fragment;
         if (typeof DOM === 'string') {
             fragment = this.parse(DOM);
-        } else if (this.whoIsThisNode(DOM)) {
-            archNode = this.getNode(this.whoIsThisNode(DOM));
+        } else if (typeof DOM === 'number') {
+            archNode = this.getNode(DOM);
             if (archNode !== this.root && !archNode.isFragment()) {
                 fragment = new FragmentNode(this);
                 fragment.append(archNode);
@@ -120,7 +105,7 @@ ArchManager.prototype = {
             });
         }
         offset = offset || 0;
-        fragment.childNodes.forEach(function (child, index) {
+        fragment.childNodes.slice().forEach(function (child, index) {
             archNode.insert(child, offset);
             if (archNode.isText()) {
                 offset = child.index() + 1;
@@ -156,12 +141,12 @@ ArchManager.prototype = {
     // Public: range
     //--------------------------------------------------------------------------
 
-    setRange: function (sc, so, ec, eo) {
-        this._startRangeID = typeof sc === 'number' ? sc : this.whoIsThisNode(sc);
+    setRange: function (scID, so, ecID, eo) {
+        this._startRangeID = scID;
         var start = this.getNode(this._startRangeID);
         this._startRangeOffset = so;
 
-        var endRangeID = typeof ec === 'number' ? ec : this.whoIsThisNode(ec);
+        var endRangeID = ecID;
         var end = this.getNode(endRangeID);
         var node = start;
         start.nextUntil(function (next) {
@@ -174,7 +159,7 @@ ArchManager.prototype = {
         } else if (!node.contains(end)) {
             while (node) {
                 var firstChild = node.firstChild();
-                if (!firstChild === node) {
+                if (firstChild === node) {
                     break;
                 }
             }
@@ -251,11 +236,8 @@ ArchManager.prototype = {
     toString: function (options) {
         return this.root.toString(options || {});
     },
-    toNode: function (options) {
-        return this.root.toNode(options || {});
-    },
-    toJSON: function () {
-        return this.root.toJSON();
+    toJSON: function (options) {
+        return this.root.toJSON(options);
     },
 
     //--------------------------------------------------------------------------
@@ -304,29 +286,11 @@ ArchManager.prototype = {
             return new text.VisibleTextNode(this, param);
         }
     },
-    _createTextNode: function (archNode) {
-        var el = this._nodeList[archNode.id];
-        if (!el) {
-            el = this._nodeList[archNode.id] = document.createTextNode('');
-        }
-        return el;
-    },
-    _createElement: function (archNode, tagName) {
-        var el = this._nodeList[archNode.id];
-        if (!el) {
-            el = this._nodeList[archNode.id] = document.createElement(tagName);
-        }
-        return el;
-    },
     _addArchNode: function (archNode) {
         var self = this;
         if (!archNode.__removed && !archNode.id && archNode.parent && archNode.parent.id) {
             archNode.id = ++this._id;
             this._archNodeList[archNode.id] = archNode;
-            if (archNode.attributes) {
-                archNode.attributes.add('data-archnode-id', archNode.id);
-            }
-
             if (archNode.childNodes) {
                 archNode.childNodes.forEach(function (archNode) {
                     self._addArchNode(archNode);
@@ -335,8 +299,7 @@ ArchManager.prototype = {
         }
     },
     _generateVirtualNode: function (archNode, insertMethod, fn) {
-        var virtualTextNode = new text.VirtualTextNode(this.tree);
-        virtualTextNode.parent = archNode;
+        var virtualTextNode = new text.VirtualTextNode(this);
         insertMethod(virtualTextNode);
         if (!virtualTextNode.isEditable() || (fn && !fn.call(this, virtualTextNode))) {
             virtualTextNode.remove();
@@ -348,7 +311,6 @@ ArchManager.prototype = {
         var self = this;
         if (this._archNodeList[archNode.id]) {
             delete this._archNodeList[archNode.id];
-            delete this._nodeList[archNode.id];
 
             if (archNode.childNodes) {
                 archNode.childNodes.forEach(function (archNode) {

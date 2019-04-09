@@ -65,13 +65,10 @@ Attributes.prototype = {
         }
         delete this[name];
     },
-    toJSON: function (argument) {
+    toJSON: function () {
         var self = this;
         var attributes = [];
         this.__order__.forEach(function (name) {
-            if (name === 'data-archnode-id') {
-                return;
-            }
             var value = self[name].toString();
             if (value.length) {
                 attributes.push([name, value]);
@@ -83,9 +80,6 @@ Attributes.prototype = {
         var self = this;
         var string = '';
         this.__order__.forEach(function (name) {
-            if (name === 'data-archnode-id' && (!options || !options.displayId)) {
-                return;
-            }
             var value = self[name].toString();
             if (!value.length) {
                 return;
@@ -117,52 +111,52 @@ return Class.extend({
     // Public: Export
     //--------------------------------------------------------------------------
 
-    /**
-     * @returns {Document-fragment}
-     **/
-    toNode: function (options) {
-        options = options || {};
-        if (options.architecturalSpace) {
-            this._architecturalSpaceNodePropagation();
-        }
-        var fragment = document.createDocumentFragment();
-        fragment.appendChild(this._toNode(options));
-        return fragment;
-    },
-    toJSON: function () {
+    toJSON: function (options) {
         var data = {};
-        var childNodes = [];
-        this.childNodes.forEach(function (archNode) {
-            var json = archNode.toJSON();
-            if (json) {
-                if (json.nodeName || json.nodeValue) {
-                    childNodes.push(json);
-                } else if (json.childNodes) {
-                    childNodes = childNodes.concat(json.childNodes);
-                }
-            }
-        });
 
-        if (childNodes.length) {
-            data.childNodes = childNodes;
-        }
-
-        if (this.isVirtual()) {
-            return data;
+        if (options && options.architecturalSpace) {
+            this._architecturalSpaceNodePropagation();
         }
 
         if (this.id) {
             data.id = this.id;
         }
+
+        if (this.childNodes) {
+            var childNodes = [];
+            this.childNodes.forEach(function (archNode) {
+                var json = archNode.toJSON();
+                if (json) {
+                    if (json.nodeName || json.nodeValue) {
+                        childNodes.push(json);
+                    } else if (json.childNodes) {
+                        childNodes = childNodes.concat(json.childNodes);
+                    }
+                }
+            });
+            if (childNodes.length) {
+                data.childNodes = childNodes;
+            }
+        }
+
+        if (this.isVirtual()) {
+            data.isVirtual = true;
+            if (!options || !options.keepVirtual) {
+                return data;
+            }
+        }
+
         if (this.nodeName) {
             data.nodeName = this.nodeName;
         }
         if (this.nodeValue) {
             data.nodeValue = this.nodeValue;
         }
-        var attributes = this.attributes.toJSON();
-        if (attributes.length) {
-            data.attributes = attributes;
+        if (this.attributes) {
+            var attributes = this.attributes.toJSON();
+            if (attributes.length) {
+                data.attributes = attributes;
+            }
         }
 
         return data;
@@ -183,7 +177,7 @@ return Class.extend({
             }
             string += '>';
 
-            if (options.architecturalSpace) {
+            if (options && options.architecturalSpace) {
                 options = Object.assign({}, options, {
                     architecturalLevel: (options.architecturalLevel || 0) + 1,
                 });
@@ -202,6 +196,12 @@ return Class.extend({
     // Public: Update (to check if private ?)
     //--------------------------------------------------------------------------
 
+    after: function (archNode) {
+        return this.parent.insertAfter(archNode, this);
+    },
+    before: function (archNode) {
+        return this.parent.insertBefore(archNode, this);
+    },
     append: function (archNode) {
         return this._changeParent(archNode, this.childNodes.length);
     },
@@ -324,6 +324,10 @@ return Class.extend({
             throw new Error("You can't add a node in a void");
         }
 
+        if (!this.childNodes) {
+            throw new Error("You can't add a child in this node");
+        }
+
         if (this.id && !this.isEditable()) { // id is setted only if the node is contains in the root
             console.warn("can not add a node in a non editable node");
             return;
@@ -402,59 +406,6 @@ return Class.extend({
             return next._prevNextUntil(direction, fn, __closestUnbreakable, __goUp);
         }
         return next;
-    },
-    _redrawChildren: function (node, options) {
-        var childNodes = [].slice.call(node.childNodes);
-        this.childNodes.forEach(function (archNode, offset) {
-            var child = archNode._toNode(options);
-            var index = childNodes.indexOf(child);
-
-            if (index !== -1) {
-                childNodes.splice(index, 1);
-                if (index === 0) {
-                    return;
-                }
-            }
-
-            var ref = node.childNodes[offset];
-            if (!ref) {
-                node.appendChild(child);
-            } else {
-                node.insertBefore(child, ref);
-            }
-        });
-        childNodes.forEach(function (node) {
-            node.parentNode.removeChild(node);
-        });
-    },
-    _toNode: function (options) {
-        var node;
-        if (this.isVirtual() && !options.keepVirtual) {
-            node = document.createDocumentFragment();
-        } else {
-            node = this.tree._createElement(this, this.nodeName);
-
-            Object.values(node.attributes).forEach(function (attribute) {
-                node.removeAttribute(attribute.name);
-            });
-            this.attributes.forEach(function (name) {
-                if (name === 'data-archnode-id' && !options.displayId) {
-                    return;
-                }
-                var value = this[name].toString()
-                if (value.length) {
-                    node.setAttribute(name, value);
-                }
-            });
-            if (options.architecturalSpace) {
-                options = Object.assign({}, options, {
-                    architecturalLevel: (options.architecturalLevel || 0) + 1,
-                });
-            }   
-        }
-
-        this._redrawChildren(node, options);
-        return node;
     },
 });
 
