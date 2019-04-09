@@ -125,7 +125,7 @@ var VisibleTextNode = TextNode.extend({
         this.after(node);
 
         this.tree._markChange(node.id, 0);
-        this.tree._markChange(node.id, next.length());
+        this.tree._markChange(this.id, this.length());
         return node;
     },
 });
