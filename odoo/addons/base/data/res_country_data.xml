@@ -82,6 +82,7 @@
             <field name="name">Austria</field>
             <field name="code">at</field>
             <field file="base/static/img/country_flags/at.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(zip)s %(city)s %(state_code)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="EUR" />
             <field eval="43" name="phone_code" />
             <field name="vat_label">VAT</field>
@@ -254,6 +255,7 @@
             <field name="name">Belarus</field>
             <field name="code">by</field>
             <field file="base/static/img/country_flags/by.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(zip)s %(city)s %(state_code)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="BYN" />
             <field eval="375" name="phone_code" />
         </record>
@@ -400,6 +402,7 @@
             <field name="name">Czech Republic</field>
             <field name="code">cz</field>
             <field file="base/static/img/country_flags/cz.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(zip)s %(city)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="CZK" />
             <field eval="420" name="phone_code" />
             <field name="vat_label">VAT</field>
@@ -463,6 +466,7 @@
             <field name="name">Estonia</field>
             <field name="code">ee</field>
             <field file="base/static/img/country_flags/ee.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(zip)s %(city)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="EUR" />
             <field eval="372" name="phone_code" />
             <field name="vat_label">VAT</field>
@@ -635,6 +639,7 @@
             <field name="name">Greece</field>
             <field name="code">gr</field>
             <field file="base/static/img/country_flags/gr.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(zip)s %(city)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="EUR" />
             <field eval="30" name="phone_code" />
             <field name="vat_label">VAT</field>
@@ -699,6 +704,7 @@
             <field name="name">Croatia</field>
             <field name="code">hr</field>
             <field file="base/static/img/country_flags/hr.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(zip)s %(city)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="HRK" />
             <field eval="385" name="phone_code" />
             <field name="vat_label">VAT</field>
@@ -729,6 +735,7 @@
             <field name="name">Ireland</field>
             <field name="code">ie</field>
             <field file="base/static/img/country_flags/ie.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(zip)s %(city)s %(state_code)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="EUR" />
             <field eval="353" name="phone_code" />
             <field name="vat_label">VAT</field>
@@ -737,6 +744,7 @@
             <field name="name">Israel</field>
             <field name="code">il</field>
             <field file="base/static/img/country_flags/il.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(zip)s %(city)s %(state_code)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="ILS" />
             <field eval="972" name="phone_code" />
         </record>
@@ -781,6 +789,7 @@
             <field name="name">Iceland</field>
             <field name="code">is</field>
             <field file="base/static/img/country_flags/is.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(zip)s %(city)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="ISK" />
             <field eval="354" name="phone_code" />
         </record>
@@ -932,6 +941,7 @@
             <field name="name">Sri Lanka</field>
             <field name="code">lk</field>
             <field file="base/static/img/country_flags/lk.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(city)s\n%(state_name)s\n%(zip)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="LKR" />
             <field eval="94" name="phone_code" />
         </record>
@@ -1198,6 +1208,7 @@
             <field name="name">Norway</field>
             <field name="code">no</field>
             <field file="base/static/img/country_flags/no.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(zip)s %(city)s %(state_code)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="NOK" />
             <field eval="47" name="phone_code" />
         </record>
@@ -1276,6 +1287,7 @@
             <field name="name">Pakistan</field>
             <field name="code">pk</field>
             <field file="base/static/img/country_flags/pk.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(city)s\n%(state_name)s\n%(zip)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="PKR" />
             <field eval="92" name="phone_code" />
         </record>
@@ -1319,6 +1331,7 @@
             <field name="name">Portugal</field>
             <field name="code">pt</field>
             <field file="base/static/img/country_flags/pt.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(zip)s %(city)s %(state_code)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="EUR" />
             <field eval="351" name="phone_code" />
             <field name="vat_label">VAT</field>
@@ -1362,6 +1375,7 @@
             <field name="name">Serbia</field>
             <field name="code">rs</field>
             <field file="base/static/img/country_flags/rs.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(zip)s %(city)s %(state_code)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="RSD" />
             <field eval="381" name="phone_code" />
         </record>
@@ -1369,6 +1383,7 @@
             <field name="name">Russian Federation</field>
             <field name="code">ru</field>
             <field file="base/static/img/country_flags/ru.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(city)s\n%(state_name)s\n%(zip)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="RUB" />
             <field eval="7" name="phone_code" />
         </record>
@@ -1448,6 +1463,7 @@
             <field name="name">Slovakia</field>
             <field name="code">sk</field>
             <field file="base/static/img/country_flags/sk.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(zip)s %(city)s %(state_code)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="SKK" />
             <field eval="421" name="phone_code" />
             <field name="vat_label">VAT</field>
@@ -1610,7 +1626,7 @@
             <field name="name">Turkey</field>
             <field name="code">tr</field>
             <field file="base/static/img/country_flags/tr.png" name="image" type="base64" />
-            <field eval="'%(street)s\n%(street2)s\n%(city)s %(state_name)s %(zip)s\n%(country_name)s'" name="address_format" />
+            <field eval="'%(street)s\n%(street2)s\n%(zip)s %(city)s %(state_name)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="TRY" />
             <field eval="90" name="phone_code" />
         </record>
@@ -1645,6 +1661,7 @@
             <field name="name">Ukraine</field>
             <field name="code">ua</field>
             <field file="base/static/img/country_flags/ua.png" name="image" type="base64" />
+            <field eval="'%(street)s\n%(street2)s\n%(city)s\n%(state_name)s\n%(zip)s\n%(country_name)s'" name="address_format" />
             <field name="currency_id" ref="UAH" />
             <field eval="380" name="phone_code" />
         </record>
