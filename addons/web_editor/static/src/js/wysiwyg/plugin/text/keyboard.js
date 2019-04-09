@@ -594,9 +594,9 @@ var KeyboardPlugin = AbstractPlugin.extend({
      *
      * @private
      * @param {TextEvent} ev
-     * @returns {Boolean} true if case is handled and event default must be prevented
      */
     _onTextInput: function (ev) {
+        ev.preventDefault();
         return this.dependencies.Arch.insert(ev.data);
     },
 });

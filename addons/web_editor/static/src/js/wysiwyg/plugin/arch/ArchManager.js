@@ -157,11 +157,11 @@ ArchManager.prototype = {
     //--------------------------------------------------------------------------
 
     setRange: function (sc, so, ec, eo) {
-        this._startRangeID = this.whoIsThisNode(sc);
+        this._startRangeID = typeof sc === 'number' ? sc : this.whoIsThisNode(sc);
         var start = this.getNode(this._startRangeID);
         this._startRangeOffset = so;
 
-        var endRangeID = this.whoIsThisNode(ec);
+        var endRangeID = typeof ec === 'number' ? ec : this.whoIsThisNode(ec);
         var end = this.getNode(endRangeID);
         var node = start;
         start.nextUntil(function (next) {
