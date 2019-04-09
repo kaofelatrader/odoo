@@ -105,6 +105,8 @@ return Class.extend({
         }
         this.className = this.attributes.class;
         this.childNodes = [];
+
+        this.tree._markChange(this, this.length());
     },
 
     //--------------------------------------------------------------------------
