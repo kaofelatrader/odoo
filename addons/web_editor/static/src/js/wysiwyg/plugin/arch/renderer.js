@@ -20,10 +20,11 @@ Renderer.prototype = {
         }
 
         Object.keys(this.changes).forEach(function (id) {
-            console.log(id, self.elements[id]);
             var changes = self.changes[id];
             delete self.changes[id];
-            self._redraw(self.jsonById[id], changes, options);
+            if (self.jsonById[id]) {
+                self._redraw(self.jsonById[id], changes, options);
+            }
         });
     },
     reset: function (json) {
@@ -97,14 +98,15 @@ Renderer.prototype = {
             oldJSON.attributes = newJSON.attributes.slice();
         }
         if (newJSON.childNodes) {
-            var childNodesIds = newJSON.childNodes.map(function (json) { return json.id; })
+            var childNodesIds = newJSON.childNodes.map(function (json) { return json.id; });
+
             if (!oldJSON.childNodes) {
                 changes.childNodes = childNodesIds;
             } else if (oldJSON.childNodes.length !== newJSON.childNodes.length) {
                 changes.childNodes = childNodesIds;
             } else {
-                for (var k = 0; k < newJSON.childNodes.length; k++) {
-                    if (oldJSON.childNodes[k] !== newJSON.childNodes[k]) {
+                for (var k = 0; k < childNodesIds.length; k++) {
+                    if (oldJSON.childNodes[k] !== childNodesIds[k]) {
                         changes.childNodes = childNodesIds;
                         break;
                     }
@@ -216,6 +218,8 @@ Renderer.prototype = {
                 }
             });
         }
+
+        console.log(json.id, node);
 
         return node;
     },

@@ -222,6 +222,7 @@ return Class.extend({
         this.childNodes.slice().forEach(function (archNode) {
             archNode.remove();
         });
+        this.tree._markChange(this, 0);
     },
     remove: function () {
         if (this.parent) {
@@ -229,7 +230,9 @@ return Class.extend({
                 console.warn("can not remove a node in a non editable node");
                 return;
             }
-            this.parent.childNodes.splice(this.index(), 1);
+            var offset = this.index();
+            this.parent.childNodes.splice(offset, 1);
+            this.tree._markChange(this.parent, offset);
         }
         this.tree._removeArchNode(this);
         this.__removed = true;
@@ -351,11 +354,9 @@ return Class.extend({
             return ids;
         }
 
-        this.tree._markChange(archNode.id, archNode.length());
-
         if (archNode.parent) {
             var i = archNode.parent.childNodes.indexOf(archNode);
-            this.tree._markChange(archNode.parent.id, i);
+            this.tree._markChange(archNode.parent, i);
             archNode.parent.childNodes.splice(i, 1);
         }
 
@@ -364,7 +365,7 @@ return Class.extend({
         this.__removed = false;
         this.tree._addArchNode(archNode);
 
-        this.tree._markChange(this.id, index);
+        this.tree._markChange(this, index);
     },
     /**
      * Next or previous node, following the leaf

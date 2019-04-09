@@ -9,6 +9,8 @@ var TextNode = ArchNode.extend({
         this.tree = tree;
         this.nodeName = 'TEXT';
         this.nodeValue = nodeValue;
+
+        this.tree._markChange(this, nodeValue.length);
     },
     empty: function () {
         this.nodeValue = '';
@@ -113,19 +115,22 @@ var VisibleTextNode = TextNode.extend({
         }
 
         if (text.length) {
-            this.nodeValue = text;
+            if (this.nodeValue !== text) {
+                this.nodeValue = text;
+                this.tree._markChange(this, 0);
+            }
         } else {
             this.remove();
         }
     },
     _split: function (offset) {
         var text = this.nodeValue.slice(offset);
-        this.nodeValue = this.nodeValue.slice(0, offset);
         var node = new VisibleTextNode(this.tree, text);
-        this.after(node);
 
-        this.tree._markChange(node.id, 0);
-        this.tree._markChange(this.id, this.length());
+        this.nodeValue = this.nodeValue.slice(0, offset);
+        this.tree._markChange(this, offset);
+
+        this.after(node);
         return node;
     },
 });

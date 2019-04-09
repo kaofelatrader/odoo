@@ -363,7 +363,7 @@ var ArchPlugin = AbstractPlugin.extend({
         var id = this.renderer.whoIsThisNode(element);
         var changedNodes = this.manager.insert(DOM, id, offset);
 
-        console.log(changedNodes);
+        console.log(changedNodes.map(function (r) {return r.id;}));
 
         changedNodes.forEach(function (change) {
             self.renderer.update(self.manager.export(change.id, {

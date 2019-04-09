@@ -23,8 +23,8 @@ customNodes.br = ArchNode.extend({
             var node = this.isRightEdgeOf(ancestor) ? new VirtualTextNode(this.tree) : new archNodeByNodeName.br(this.tree);
             this.after(node);
 
-            this.tree._markChange(node.id, 1);
-            this.tree._markChange(this.parent.id, node.index());
+            this.tree._markChange(node, 1);
+            this.tree._markChange(this.parent, node.index());
         }
         return this._super.apply(this, arguments);
     },

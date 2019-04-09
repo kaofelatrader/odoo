@@ -121,27 +121,11 @@ ArchManager.prototype = {
             archNode.insert(child, offset);
         });
 
-        var changes = [];
         this._changes.forEach(function (c) {
-            if (c.id) {
-                var toAdd = true;
-                self.getNode(c.id).applyRules();
-                changes.forEach(function (change) {
-                    if (change.id === c.id) {
-                        toAdd = false;
-                        change.offset = c.offset;
-                    }
-                });
-                if (toAdd) {
-                    changes.push({
-                        id: c.id,
-                        offset: c.offset,
-                    });
-                }
-            }
+            c.archNode.applyRules();
         });
 
-        return changes;
+        return this._getChanges();
     },
     addLine: function () {
         this.remove();
@@ -255,7 +239,13 @@ ArchManager.prototype = {
         return fragment;
     },
     export: function (id, options) {
-        return (id ? this.getNode(id) : this.root).toJSON(options);
+        var node;
+        if (id) {
+            node = this.getNode(id);
+        } else {
+            node = this.root;
+        }
+        return node ? node.toJSON(options) : {};
     },
     /**
      * @param {JSON} json
@@ -353,9 +343,33 @@ ArchManager.prototype = {
         }
         return virtualTextNode;
     },
-    _markChange: function (id, offset) {
+    _getChanges: function () {
+        var self = this;
+        var changes = [];
+        this._changes.forEach(function (c) {
+            if (!c.archNode.id || !self.getNode(c.archNode.id)) {
+                return;
+            }
+            var toAdd = true;
+            changes.forEach(function (change) {
+                if (change.id === c.archNode.id) {
+                    toAdd = false;
+                    change.offset = c.offset;
+                }
+            });
+            if (toAdd) {
+                changes.push({
+                    id: c.archNode.id,
+                    offset: c.offset,
+                });
+            }
+        });
+
+        return changes;
+    },
+    _markChange: function (archNode, offset) {
         this._changes.push({
-            id: id,
+            archNode: archNode,
             offset: offset,
         });
     },
