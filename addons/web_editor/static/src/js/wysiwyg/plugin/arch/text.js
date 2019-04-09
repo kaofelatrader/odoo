@@ -48,6 +48,12 @@ var TextNode = ArchNode.extend({
     isInline: function () {
         return true;
     },
+    /**
+     * @override
+     */
+    isNodeBlockType: function () {
+        return false;
+    },
     isText: function () {
         return true;
     },

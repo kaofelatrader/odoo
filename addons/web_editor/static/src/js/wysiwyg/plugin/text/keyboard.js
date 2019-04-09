@@ -143,11 +143,12 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _handleEnter: function () {
         var self = this;
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
+        var startArchNode = this.dependencies.Arch.manager.getNode(range.start.id);
 
-        var ancestor = this.utils.ancestor(range.sc, function (node) {
-            return self.utils.isLi(node) || self.dependencies.Arch.isUnbreakableNode(node.parentNode) && node.parentNode !== self.editable ||
-                self.utils.isNodeBlockType(node) && !self.utils.ancestor(node, self.utils.isLi);
+        var ancestor = startArchNode.ancestor(function () {
+            return this.isLi() || this.parent && this.parent.isUnbreakable() && !this.parent.isContentEditable() ||
+                this.isNodeBlockType() && !this.ancestor(this.isLi);
         });
 
         if (

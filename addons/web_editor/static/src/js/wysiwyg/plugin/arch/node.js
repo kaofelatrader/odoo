@@ -43,7 +43,7 @@ function Attributes (attributes) {
     this.__order__ = [];
     attributes.forEach(function (attribute) {
         self.add(attribute[0], attribute[1])
-    })
+    });
 }
 Attributes.prototype = {
     add: function (name, value) {
@@ -345,7 +345,6 @@ return Class.extend({
         }
 
         if (archNode.isFragment()) {
-            var self = this;
             var ids = [];
             archNode.childNodes.slice().forEach(function (archNode) {
                 ids = ids.concat(self._changeParent(archNode, index++));

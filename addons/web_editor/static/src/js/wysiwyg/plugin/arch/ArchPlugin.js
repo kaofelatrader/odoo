@@ -2,7 +2,6 @@ odoo.define('wysiwyg.plugin.arch', function (require) {
 'use strict';
 
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
-var BoundaryPoint = require('wysiwyg.BoundaryPoint');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 var ArchManager = require('wysiwyg.plugin.arch.ArchManager');
 var Renderer = require('wysiwyg.plugin.arch.renderer');
@@ -399,14 +398,18 @@ var ArchPlugin = AbstractPlugin.extend({
         return archNode.attributes && archNode.attributes.contentEditable === 'false';
     },
     _isUnbreakableNode: function (archNode) {
+        console.warn('todo');
+        return false;
         return  node === this.editable || !this.isEditableNode(node.parentNode);
     },
-    _isEditableNode: function (node) {
-        node = node && (node.isText() ? node : node.parent);
-        if (!node) {
+    _isEditableNode: function (archNode) {
+        console.warn('todo');
+        return false;
+        archNode = archNode && (archNode.isText() ? archNode : archNode.parent);
+        if (!archNode) {
             return false;
         }
-        return ['table', 'thead', 'tbody', 'tfoot', 'tr'].indexOf(node.nodeName.toLowerCase()) === -1;
+        return ['table', 'thead', 'tbody', 'tfoot', 'tr'].indexOf(archNode.nodeName.toLowerCase()) === -1;
     },
 });
 

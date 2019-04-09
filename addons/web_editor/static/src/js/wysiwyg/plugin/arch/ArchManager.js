@@ -200,8 +200,8 @@ ArchManager.prototype = {
                 offset: this._startRangeOffset,
             },
             end: {
-                id: this._endRangeID,
-                offset: this._endRangeOffset,
+                id: this._endRangeID || this._startRangeID,
+                offset: this._endRangeID ? this._endRangeOffset : this._startRangeOffset,
             },
             isCollapsed: function () {
                 return this.start.id === this.end.id && this.start.offset === this.end.offset;

@@ -86,6 +86,8 @@ ArchNode.include({
         return ['td', 'th'].indexOf(this.nodeName) !== -1;
     },
     isContentEditable: function () {
+        console.warn("todo: clarify");
+        return !this.tree || !this.tree.root || this === this.tree.root;
         return this.tree.options.isEditableNode(this);
     },
     /**
@@ -256,10 +258,8 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isNodeBlockType: function () {
-        if (this.isText()) {
-            return false;
-        }
         console.warn('todo');
+        return false;
         var display = window.getComputedStyle(node).display;
         // All inline elements have the word 'inline' in their display value, except 'contents'
         return display.indexOf('inline') === -1 && display !== 'contents';
