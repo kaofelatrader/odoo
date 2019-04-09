@@ -16,6 +16,7 @@ odoo.define('web.relational_fields', function (require) {
 var AbstractField = require('web.AbstractField');
 var basicFields = require('web.basic_fields');
 var concurrency = require('web.concurrency');
+var config = require('web.config');
 var ControlPanelView = require('web.ControlPanelView');
 var dialogs = require('web.view_dialogs');
 var core = require('web.core');
@@ -2304,14 +2305,31 @@ var FieldStatus = AbstractField.extend({
      * @private
      */
     _render: function () {
-        var selections = _.partition(this.status_information, function (info) {
-            return (info.selected || !info.fold);
-        });
+        var nb_stages = this._renderStatusbarNbStages();
+        var unfolded_stages = this.status_information.slice(0,nb_stages-1);
+
+        var selected_stage = _.filter(unfolded_stages, function (info) {
+            return info.selected;
+        })
+        if (!selected_stage.length) {
+           var selected_stage =  _.filter(this.status_information, function (info) {
+                return info.selected;
+            })
+            unfolded_stages.push(stage[0])
+        } else {
+            unfolded_stages = this.status_information.slice(0, nb_stages);
+        }
+        var folded_stages = _.filter(this.status_information, function(stage) {return unfolded_stages.indexOf(stage) < 0;});
+
         this.$el.html(qweb.render("FieldStatus.content", {
-            selection_unfolded: selections[0],
-            selection_folded: selections[1],
+            selection_unfolded: unfolded_stages,
+            selection_folded: folded_stages,
             clickable: this.isClickable,
         }));
+    },
+
+    _renderStatusbarNbStages: function () {
+        return [2, 2, 4, 6][config.device.size_class] || 7;
     },
 
     //--------------------------------------------------------------------------
