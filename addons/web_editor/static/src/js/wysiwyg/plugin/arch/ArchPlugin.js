@@ -397,7 +397,6 @@ var ArchPlugin = AbstractPlugin.extend({
      * Select the target media on the right (or left)
      * of the currently selected target media.
      *
-     * @private
      * @param {Node} target
      * @param {Boolean} left
      */
@@ -423,7 +422,6 @@ var ArchPlugin = AbstractPlugin.extend({
             if (targetClosest !== contentEditable) {
                 contentEditable.focus();
             }
-            this.save();
             return;
         }
 
@@ -458,11 +456,23 @@ var ArchPlugin = AbstractPlugin.extend({
         }
     },
     /**
+     * Get the range from the selection in the DOM.
+     *
+     * @private
      * @returns {WrappedRange}
      */
     _getRange: function () {
         return new WrappedRange({}, this.editable.ownerDocument);
     },
+    /**
+     * Set the DOM Range from the given points.
+     *
+     * @private
+     * @param {Node} sc
+     * @param {Number} so
+     * @param {Node} ec
+     * @param {Number} eo
+     */
     _select: function (sc, so, ec, eo) {
         var nativeRange = this._toNativeRange(sc, so, ec, eo);
         var selection = sc.ownerDocument.getSelection();
@@ -471,16 +481,27 @@ var ArchPlugin = AbstractPlugin.extend({
         }
         selection.addRange(nativeRange);
     },
+    /**
+     * Set the range in the DOM, based on the current value of `this.range`.
+     *
+     * @private
+     */
     _setRange: function () {
         var wrappedRange = this.getRange();
         this._select(wrappedRange.sc, wrappedRange.so, wrappedRange.ec, wrappedRange.eo);
     },
+    /**
+     * Set the range from the selection in the DOM.
+     *
+     * @private
+     */
     _setRangeFromDOM: function () {
         this.setRange(this._getRange().getPoints());
     },
     /**
-     * Get the native Range object corresponding to the given range.
+     * Get the native Range object corresponding to the given range points.
      *
+     * @private
      * @returns {Range}
      */
     _toNativeRange: function (sc, so, ec, eo) {
