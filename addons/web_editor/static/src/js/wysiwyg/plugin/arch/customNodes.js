@@ -21,21 +21,21 @@ var customNodes = {
 };
 
 customNodes.br = ArchNode.extend({
+    addLine: function () {
+        this.parent.addLine(this.index() + 1);
+    },
     insert: function (archNode, offset) {
-        if (archNode.isBr()) {
+        if (archNode.isBR()) {
             var ancestor = this.ancestor(this.isBlock);
             var archNode = this.isRightEdgeOf(ancestor) ? new customNodes.VirtualTextNode(this.tree) : archNode;
             this.after(archNode);
         }
         return this._super.apply(this, arguments);
     },
-    addLine: function () {
-        this.parent.addLine(this.index() + 1);
-    },
+    isBr: True,
     split: function () {
         return;
     },
-    isBr: True,
 });
 
 

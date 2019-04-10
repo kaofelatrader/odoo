@@ -486,11 +486,9 @@ var KeyboardPlugin = AbstractPlugin.extend({
                     handled = this._onDelete(e);
                     break;
             }
-            // if (handled) {
-            //     this._preventTextInEditableDiv();
-            //     this.dependencies.Range.save(this.dependencies.Range.getRange());
-            //     e.preventDefault();
-            // }
+            if (handled) {
+                e.preventDefault();
+            }
         }
         if (e.key !== "Dead") {
             this._accented = false;
@@ -601,7 +599,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _onTextInput: function (ev) {
         ev.preventDefault();
-        this.dependencies.Arch.insert(ev.data);
+        this.dependencies.Arch.insert(ev.data.charCodeAt(0) === 10 ? '<br/>' : ev.data);
     },
 });
 

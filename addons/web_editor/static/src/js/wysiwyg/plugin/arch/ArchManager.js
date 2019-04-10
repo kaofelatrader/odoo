@@ -83,9 +83,6 @@ ArchManager.prototype = {
      */
     insert: function (DOM, id, offset) {
         var self = this;
-        this._changes = [];
-
-        //this.remove();
 
         if (!id) {
             var range = this.getRange();
@@ -115,6 +112,8 @@ ArchManager.prototype = {
                 fragment.append(self._parseElement(node));
             });
         }
+
+        this._changes = [];
 
         offset = offset || 0;
         var childNodes =  fragment.childNodes.slice();
