@@ -248,6 +248,10 @@ var ArchPlugin = AbstractPlugin.extend({
     addOrderedList: function (list) {
         this.orderRules.push(list);
     },
+    parentIfText: function (id) {
+        var archNode = this.manager.getNode(id);
+        return archNode.isText() ? archNode.parent.id : archNode.id;
+    },
 
     //--------------------------------------------------------------------------
     // Public from Common
@@ -358,7 +362,7 @@ var ArchPlugin = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     getFocusedNode: function () {
-        return this.renderer.getElement(this.range.scID); // parent if text
+        return this.renderer.getElement(this.parentIfText(this.range.scID));
     },
     /**
      * @returns {WrappedRange}
@@ -385,13 +389,31 @@ var ArchPlugin = AbstractPlugin.extend({
      * @param {Number} [points.eo] must be given if ec is given
      */
     setRange: function (points) {
-        this.range.scID = this.renderer.whoIsThisNode(points.sc);
-        this.range.so = points.so || 0;
-        this.range.ecID = points.ec ? this.renderer.whoIsThisNode(points.ec) : this.range.scID;
-        this.range.eo = points.ec ? points.eo : (typeof points.so === 'number' ? points.so : this.utils.nodeLength(points.sc));
+        var scID = this.renderer.whoIsThisNode(points.sc);
+        var so = points.so || 0;
+        var ec = points.ec || points.sc;
+        var ecID = points.ec ? this.renderer.whoIsThisNode(ec) : scID;
+        var eo = points.ec ? points.eo : (typeof points.so === 'number' ? points.so : this.utils.nodeLength(points.sc));
+
+        var isChangeOffset = so !== this.range.so || eo !== this.range.eo;
+        var isChangeIDs = scID !== this.range.scID || ecID !== this.range.ecID;
+        var isChangeElemIDs = this.parentIfText(scID) !== this.parentIfText(this.range.scID) ||
+            this.parentIfText(ecID) !== this.parentIfText(this.range.ecID);
+        var isChangeNodes = points.sc !== this.renderer.getElement(this.range.scID) ||
+            ec !== this.renderer.getElement(this.range.ecID);
+
+        this.range.scID = scID;
+        this.range.so = so;
+        this.range.ecID = ecID;
+        this.range.eo = eo;
         this._setRange();
-        this.trigger('focus'); // if change of IDs (or of parent ID if text)
-        this.trigger('range'); // if change of offset or of node or of IDs
+
+        if (isChangeOffset || isChangeIDs || isChangeNodes) {
+            this.trigger('range');
+        }
+        if (isChangeElemIDs) {
+            this.trigger('focus', this.getFocusedNode());
+        }
     },
     /**
      * Select the target media on the right (or left)
