@@ -65,7 +65,6 @@
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/fragment.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/root.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/customNodes.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/ArchManager.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/renderer.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/ArchPlugin.js"/>
 

@@ -457,7 +457,7 @@ var keyboardMap = {
     "91": "OS_KEY", // 'left command': Windows Key (Windows) or Command Key (Mac)
     "93": "CONTEXT_MENU", // 'right command'
 };
-_.each(_.range(40, 127), function (keyCode) {
+_.each(_._range(40, 127), function (keyCode) {
     if (!keyboardMap[keyCode]) {
         keyboardMap[keyCode] = String.fromCharCode(keyCode);
     }

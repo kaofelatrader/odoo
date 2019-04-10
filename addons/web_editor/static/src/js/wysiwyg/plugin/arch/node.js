@@ -96,8 +96,8 @@ Attributes.prototype = {
 //////////////////////////////////////////////////////////////
 
 return Class.extend({
-    init: function (tree, nodeName, attributes) {
-        this.tree = tree;
+    init: function (params, nodeName, attributes) {
+        this.params = params;
         this.nodeName = nodeName.toLowerCase();
         this.attributes = new Attributes(attributes);
         if (!this.attributes.class) {
@@ -106,7 +106,7 @@ return Class.extend({
         this.className = this.attributes.class;
         this.childNodes = [];
 
-        this.tree._markChange(this, this.length());
+        this.params.change(this, this.length());
     },
 
     //--------------------------------------------------------------------------
@@ -224,7 +224,7 @@ return Class.extend({
         this.childNodes.slice().forEach(function (archNode) {
             archNode.remove();
         });
-        this.tree._markChange(this, 0);
+        this.params.change(this, 0);
     },
     remove: function () {
         if (this.parent) {
@@ -234,9 +234,9 @@ return Class.extend({
             }
             var offset = this.index();
             this.parent.childNodes.splice(offset, 1);
-            this.tree._markChange(this.parent, offset);
+            this.params.change(this.parent, offset);
         }
-        this.tree._removeArchNode(this);
+        this.params.remove(this);
         this.__removed = true;
         this.empty();
     },
@@ -251,8 +251,8 @@ return Class.extend({
         }
 
         var Constructor = this.constructor;
-        var archNode = new Constructor(this.tree, this.nodeName, this.attributes ? this.attributes.toJSON() : []);
-        this.tree._markChange(archNode, 0);
+        var archNode = new Constructor(this.params, this.nodeName, this.attributes ? this.attributes.toJSON() : []);
+        this.params.change(archNode, 0);
 
         if (this.childNodes) {
             var childNodes = this.childNodes.slice(offset);
@@ -290,7 +290,7 @@ return Class.extend({
 
         var next = this.split(offset);
         if (!next) {
-            this.insert(this.tree._constructNode('br'), offset);
+            this.insert(this.params.create('br'), offset);
             return ;
         }
 
@@ -401,20 +401,20 @@ return Class.extend({
 
         if (archNode.parent) {
             var i = archNode.parent.childNodes.indexOf(archNode);
-            this.tree._markChange(archNode.parent, i);
+            this.params.change(archNode.parent, i);
             archNode.parent.childNodes.splice(i, 1);
         }
 
         archNode.parent = this;
         this.childNodes.splice(index, 0, archNode);
         if (this.__removed) {
-            this.tree._markChange(archNode, 0);
+            this.params.change(archNode, 0);
             this.__removed = false;
         }
 
-        this.tree._addArchNode(archNode);
+        this.params.add(archNode);
 
-        this.tree._markChange(this, index);
+        this.params.change(this, index);
     },
     /**
      * Next or previous node, following the leaf
@@ -454,7 +454,7 @@ return Class.extend({
         }
         if (!next || !__closestUnbreakable.contains(next)) {
             var insertMethod = __closestUnbreakable[direction === 'next' ? 'append' : 'prepend'].bind(__closestUnbreakable);
-            var virtualTextNode = this.tree._constructNode();
+            var virtualTextNode = this.params.create();
             insertMethod(virtualTextNode);
             if (!virtualTextNode.isEditable() || (fn && !fn.call(this, virtualTextNode))) {
                 virtualTextNode.remove();

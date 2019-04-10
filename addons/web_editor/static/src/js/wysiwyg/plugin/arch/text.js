@@ -7,12 +7,12 @@ function False () { return false; };
 
 
 var TextNode = ArchNode.extend({
-    init: function (tree, nodeValue) {
-        this.tree = tree;
+    init: function (root, nodeValue) {
+        this.params = root;
         this.nodeName = 'TEXT';
         this.nodeValue = nodeValue;
 
-        this.tree._markChange(this, nodeValue.length);
+        this.params.change(this, nodeValue.length);
     },
     addLine: function (offset) {
         if (!this.isEditable()) {
@@ -34,7 +34,7 @@ var TextNode = ArchNode.extend({
 
         if (archNode.isText() && archNode.isVisibleText()) {
             this.nodeValue = this.nodeValue.slice(0, offset) + archNode.nodeValue + this.nodeValue.slice(offset);
-            this.tree._markChange(this, offset + archNode.nodeValue.length);
+            this.params.change(this, offset + archNode.nodeValue.length);
             return;
         }
 
@@ -93,18 +93,18 @@ var TextNode = ArchNode.extend({
         var text = this.nodeValue.slice(offset);
 
         if (offset === 0) {
-            this.tree._markChange(this, 0);
-            var archNode = new VirtualTextNode(this.tree);
+            this.params.change(this, 0);
+            var archNode = new VirtualTextNode(this.params);
             this.before(archNode);
             return this;
         }
 
         var Constructor = text.length ? this.constructor : VirtualTextNode;
-        var archNode = new Constructor(this.tree, text);
-        this.tree._markChange(archNode, 0); // set the last change to move range automatically
+        var archNode = new Constructor(this.params, text);
+        this.params.change(archNode, 0); // set the last change to move range automatically
 
         this.nodeValue = this.nodeValue.slice(0, offset);
-        this.tree._markChange(this, offset);
+        this.params.change(this, offset);
 
         this.after(archNode);
         return archNode;
@@ -172,7 +172,7 @@ var VisibleTextNode = TextNode.extend({
         if (text.length) {
             if (this.nodeValue !== text) {
                 this.nodeValue = text;
-                this.tree._markChange(this, 0);
+                this.params.change(this, 0);
             }
         } else {
             this.remove();
@@ -184,8 +184,8 @@ var VisibleTextNode = TextNode.extend({
 
 var VirtualTextNode = TextNode.extend({
     char: '\uFEFF',
-    init: function (tree) {
-        this.tree = tree;
+    init: function (root) {
+        this.params = root;
         this.nodeName = 'TEXT-VIRTUAL';
         this.nodeValue = this.char;
     },
@@ -254,7 +254,7 @@ var VirtualTextNode = TextNode.extend({
     _applyRulesCheckParents: function () {},
     _addArchitecturalSpaceNode: function () {},
     _mutation: function (nodeName, param) {
-        var archNode = this.tree._constructNode(nodeName, param);
+        var archNode = this.params.create(nodeName, param);
         archNode.id = this.id;
         this.before(archNode);
         this.id = null;
@@ -265,7 +265,7 @@ var VirtualTextNode = TextNode.extend({
 //////////////////////////////////////////////////////////////
 
 var ArchitecturalSpaceNode = TextNode.extend({
-    init: function (tree, nodeValue) {
+    init: function (root, nodeValue) {
         this._super.apply(this, arguments);
         this.nodeName = 'TEXT-ARCH';
     },

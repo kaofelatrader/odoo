@@ -30,11 +30,11 @@ ArchNode.include({
     _applyRulesOrder: function () {
     },
     _applyRulesCustom: function () {
-        var rules = this._applyRulesFilterRules(this.tree.options.customRules);
+        var rules = this._applyRulesFilterRules(this.params.customRules);
         var ruleMethod;
         while (ruleMethod = rules.pop()) {
             var json = ruleMethod(this.toJSON());
-            var fragment = this.tree.import(json);
+            var fragment = this.params.import(json);
             if (fragment) {
                 var childNodes = fragment.childNodes.slice();
                 this.parent.insertBefore(fragment, this);
@@ -50,14 +50,14 @@ ArchNode.include({
         if (nodeName === 'EDITABLE') {
             return;
         }
-        var newParent = this.tree._constructNode(nodeName, []);
+        var newParent = this.params._create(nodeName, []);
         newParent.__applyRulesCheckParentsFlag = true;
         this.parent.insertBefore(newParent, this);
         newParent.append(this);
         newParent.applyRules();
     },
     _applyRulesCheckParents: function () {
-        var rules = this.tree.options.parentedRules;
+        var rules = this.params.parentedRules;
         var parentedRule = this._applyRulesFilterRules(rules);
         if (!(!parentedRule.length || parentedRule.indexOf(null) !== -1)) {
 
@@ -192,11 +192,11 @@ ArchNode.include({
         }
 
         if (!(prev instanceof text.ArchitecturalSpaceNode) && (!this.isText() || this.nodeValue[0] !== '\n')) {
-            this.parent.insertBefore(new text.ArchitecturalSpaceNode(this.tree), this);
+            this.parent.insertBefore(new text.ArchitecturalSpaceNode(this.params), this);
         }
 
         if (this.isBlock() && !this.isPre() && !this.isText() && !this.isVoid() && this.childNodes.length) {
-            this.append(new text.ArchitecturalSpaceNode(this.tree), this);
+            this.append(new text.ArchitecturalSpaceNode(this.params), this);
         }
     },
 });

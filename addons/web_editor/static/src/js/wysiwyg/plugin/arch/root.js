@@ -7,8 +7,9 @@ function False () { return false; };
 
 
 var RootNode = ArchNode.extend({
-    init: function (tree) {
-        this.tree = tree;
+    init: function (params) {
+        this.params = params;
+        params.root = this;
         this.nodeName = 'EDITABLE';
         this.childNodes = [];
     },
@@ -20,6 +21,9 @@ var RootNode = ArchNode.extend({
             return this._changeParent(fragment, offset + 1);
         }
         this.append(fragment);
+    },
+    remove: function () {
+        throw new Error("Can not remove the root");
     },
     /**
      * @override

@@ -3,8 +3,12 @@ odoo.define('wysiwyg.plugin.arch', function (require) {
 
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
-var ArchManager = require('wysiwyg.plugin.arch.ArchManager');
+var customNodes = require('wysiwyg.plugin.arch.customNodes');
+var FragmentNode = require('wysiwyg.plugin.arch.fragment');
+var ArchNode = require('wysiwyg.plugin.arch.node');
 var Renderer = require('wysiwyg.plugin.arch.renderer');
+var RootNode = require('wysiwyg.plugin.arch.root');
+var text = require('wysiwyg.plugin.arch.text');
 var WrappedRange = require('wysiwyg.WrappedRange');
 
 var $ = require('web_editor.jquery');
@@ -123,6 +127,9 @@ var ArchPlugin = AbstractPlugin.extend({
         formatTags.concat(['br']),
     ],
 
+    formatTags: formatTags,
+    voidTags: voidTags,
+
     isVoidBlockList: ['Arch._isVoidBlock'],
     isUnbreakableNodeList: ['Arch._isUnbreakableNode'],
     isEditableNodeList: ['Arch._isEditableNode'],
@@ -176,10 +183,10 @@ var ArchPlugin = AbstractPlugin.extend({
             });
         });
     },
+
     setEditorValue: function (value) {
-        this.manager.reset(value || '');
-        this.renderer.reset(this.manager.toJSON());
-        return this.manager.toString();
+        this._reset(value || '');
+        return this._arch.toString({});
     },
     start: function () {
         var promise = this._super();
@@ -208,24 +215,26 @@ var ArchPlugin = AbstractPlugin.extend({
             });
         });
 
-        this.range = {
-            scID: 1,
-            so: 0,
-            ecID: 1,
-            eo: 0,
-        };
+        this.isEditableNode = this.isEditableNode.bind(this);
+        this.isUnbreakableNode = this.isUnbreakableNode.bind(this);
 
-        this.renderer = new Renderer(this.editable);
-
-        this.manager = new ArchManager({
+        this._arch = new RootNode({
             parentedRules: this.parentedRules,
             customRules: this.customRules,
             orderRules: this.orderRules,
-            isEditableNode: this.isEditableNode.bind(this),
-            isUnbreakableNode: this.isUnbreakableNode.bind(this),
             formatTags: formatTags,
             voidTags: voidTags,
+
+            add: this._addToArch.bind(this),
+            create: this._createArchNode.bind(this),
+            change: this._changeArch.bind(this),
+            remove: this._removeFromArch.bind(this),
+
+            isEditableNode: this.isEditableNode.bind(this),
+            isUnbreakableNode: this.isUnbreakableNode.bind(this),
         });
+        this._renderer = new Renderer(this.editable);
+        this._reset();
 
         return promise;
     },
@@ -235,7 +244,7 @@ var ArchPlugin = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     getValue: function () {
-        var value = this.manager.toString();
+        var value = this._arch.toString({});
         console.log(value);
         return value;
     },
@@ -249,7 +258,7 @@ var ArchPlugin = AbstractPlugin.extend({
         this.orderRules.push(list);
     },
     parentIfText: function (id) {
-        var archNode = this.manager.getNode(id);
+        var archNode = this._getNode(id);
         return archNode.isText() ? archNode.parent.id : archNode.id;
     },
 
@@ -335,15 +344,36 @@ var ArchPlugin = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     /**
+     * @param {JSON} json
+     * @returns {ArchNode}
+     **/
+    import: function (json) {
+        var self = this;
+        var fragment = new FragmentNode(this._arch.params);
+        if (!json.childNodes || json.nodeValue || json.nodeName) {
+            json = {
+                childNodes: [json],
+            };
+        }
+        json.childNodes.forEach(function (json) {
+            fragment.append(self._importJSON(json));
+        });
+        return fragment;
+    },
+    /**
      * @param {Int} id
+     * @param {boolean} options.keepVirtual
      * @param {boolean} options.keepArchitecturalSpaces
      * @returns {JSON}
      **/
-    export: function (id) {
+    export: function (id, options) {
+        var archNode;
         if (id) {
-            return this.manager.getNode(id).toJSON();
+            archNode = this._getNode(id);
+        } else {
+            archNode = this._arch;
         }
-        return this.manager.toJSON();
+        return archNode ? archNode.toJSON(options) : {};
     },
     /**
      * @param {Int} id
@@ -354,7 +384,7 @@ var ArchPlugin = AbstractPlugin.extend({
      * @returns {string}
      **/
     render: function (id, options) {
-        return this.manager.render(id, options);
+        return this._manager.render(id, options);
     },
 
     //--------------------------------------------------------------------------
@@ -362,19 +392,19 @@ var ArchPlugin = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     getFocusedNode: function () {
-        return this.renderer.getElement(this.parentIfText(this.range.scID));
+        return this._renderer.getElement(this.parentIfText(this._range.scID));
     },
     /**
      * @returns {WrappedRange}
      */
     getRange: function () {
-        var sc = this.renderer.getElement(this.range.scID);
-        var ec = this.range.scID === this.range.ecID ? sc : this.renderer.getElement(this.range.ecID);
+        var sc = this._renderer.getElement(this._range.scID);
+        var ec = this._range.scID === this._range.ecID ? sc : this._renderer.getElement(this._range.ecID);
         return new WrappedRange({
             sc: sc,
-            so: this.range.so,
+            so: this._range.so,
             ec: ec,
-            eo: this.range.eo,
+            eo: this._range.eo,
         }, this.editable.ownerDocument);
     },
     /**
@@ -389,23 +419,26 @@ var ArchPlugin = AbstractPlugin.extend({
      * @param {Number} [points.eo] must be given if ec is given
      */
     setRange: function (points) {
-        var scID = this.renderer.whoIsThisNode(points.sc);
+        var scID = points.scID || this._renderer.whoIsThisNode(points.sc);
         var so = points.so || 0;
         var ec = points.ec || points.sc;
-        var ecID = points.ec ? this.renderer.whoIsThisNode(ec) : scID;
+        var ecID = points.ecID || points.scID || (points.ec ? this._renderer.whoIsThisNode(ec) : scID);
         var eo = points.ec ? points.eo : (typeof points.so === 'number' ? points.so : this.utils.nodeLength(points.sc));
 
-        var isChangeOffset = so !== this.range.so || eo !== this.range.eo;
-        var isChangeIDs = scID !== this.range.scID || ecID !== this.range.ecID;
-        var isChangeElemIDs = this.parentIfText(scID) !== this.parentIfText(this.range.scID) ||
-            this.parentIfText(ecID) !== this.parentIfText(this.range.ecID);
-        var isChangeNodes = points.sc !== this.renderer.getElement(this.range.scID) ||
-            ec !== this.renderer.getElement(this.range.ecID);
+        var isChangeOffset = so !== this._range.so || eo !== this._range.eo;
+        var isChangeIDs = scID !== this._range.scID || ecID !== this._range.ecID;
+        var isChangeElemIDs = this.parentIfText(scID) !== this.parentIfText(this._range.scID) ||
+            this.parentIfText(ecID) !== this.parentIfText(this._range.ecID);
+        var isChangeNodes = points.sc !== this._renderer.getElement(this._range.scID) ||
+            ec !== this._renderer.getElement(this._range.ecID);
 
-        this.range.scID = scID;
-        this.range.so = so;
-        this.range.ecID = ecID;
-        this.range.eo = eo;
+        this._range.scID = scID;
+        this._range.so = so;
+        this._range.ecID = ecID;
+        this._range.eo = eo;
+
+        // check range
+
         this._setRange();
 
         if (isChangeOffset || isChangeIDs || isChangeNodes) {
@@ -423,7 +456,7 @@ var ArchPlugin = AbstractPlugin.extend({
      * @param {Boolean} left
      */
     setRangeOnVoidBlock: function (target, left) {
-        if (!target || !this.dependencies.Arch.isVoidBlock(target)) {
+        if (!target || !this.isVoidBlock(target)) {
             return;
         }
         var range = this._getRange();
@@ -498,13 +531,13 @@ var ArchPlugin = AbstractPlugin.extend({
     _select: function (sc, so, ec, eo) {
         var nativeRange = this._toNativeRange(sc, so, ec, eo);
         var selection = sc.ownerDocument.getSelection();
-        if (selection.rangeCount > 0) {
+        if (selection._rangeCount > 0) {
             selection.removeAllRanges();
         }
         selection.addRange(nativeRange);
     },
     /**
-     * Set the range in the DOM, based on the current value of `this.range`.
+     * Set the range in the DOM, based on the current value of `this._range`.
      *
      * @private
      */
@@ -541,50 +574,53 @@ var ArchPlugin = AbstractPlugin.extend({
      * @param {DOM|null} element (by default, use the range)
      **/
     remove: function (element) {
-        var id = element && this.renderer.whoIsThisNode(element);
-        return this.manager.remove(id);
+        this._resetChange();
+
+        var id = element && this._renderer.whoIsThisNode(element);
+        if (!id) {
+            this._getNode(id).remove();
+        } else {
+            this._removeFromRange();
+        }
+
+        var changedNodes = this._getChanges();
+        this._applyChangesInRenderer();
     },
     insert: function (DOM, element, offset) {
-        if (typeof DOM !== 'string' && this.renderer.whoIsThisNode(DOM)) {
-            DOM = this.renderer.whoIsThisNode(DOM);
+        if (typeof DOM !== 'string' && this._renderer.whoIsThisNode(DOM)) {
+            DOM = this._renderer.whoIsThisNode(DOM);
         }
-        var id = this.renderer.whoIsThisNode(element);
+        var id = this._renderer.whoIsThisNode(element);
         if (!id) {
-            id = this.range.scID;
-            offset = this.range.so;
+            id = this._range.scID;
+            offset = this._range.so;
         }
-        var changedNodes = this.manager.insert(DOM, id, offset);
-        this._applyChangesInRenderer(changedNodes);
 
-        if (changedNodes.length) {
-            this.dependencies.Arch.setRange({
-                sc: this.renderer.getElement(changedNodes[0].id),
-                so: changedNodes[0].offset,
-            });
-        }
+        this._insert(DOM, id, offset);
+        this._applyChangesInRenderer();
     },
     addLine: function () {
-        var changedNodes = this.manager.addLine(this.range);
-        this._applyChangesInRenderer(changedNodes);
-
-
         var self = this;
-        changedNodes.forEach(function (r) {
-            console.log(r.id, self.renderer.getElement(r.id));
-        });
-
-        if (changedNodes.length) {
-            this.setRange({
-                sc: this.renderer.getElement(changedNodes[0].id),
-                so: changedNodes[0].offset,
-            });
-        }
+        this._resetChange();
+        this._getNode(this._range.scID).addLine(this._range.so);
+        this._applyChangesInRenderer();
     },
     removeLeft: function () {
+        var archNode = this._getNode(this._range.scID);
+        if (this._range.isCollapsed()) {
+            archNode.removeLeft(this._range.so);
+        } else {
+            archNode.remove();
+        }
     },
     removeRight: function () {
+        var archNode = this._getNode(this._range.scID);
+        if (this._range.isCollapsed()) {
+            archNode.removeRight(this._range.so);
+        } else {
+            archNode.remove();
+        }
     },
-
 
     //--------------------------------------------------------------------------
     // Private from Common
@@ -592,19 +628,30 @@ var ArchPlugin = AbstractPlugin.extend({
 
     _applyChangesInRenderer: function (changedNodes) {
         var self = this;
+        var changedNodes = this._getChanges();
+
         if (!changedNodes.length) {
             return;
         }
 
-        console.log(changedNodes.map(function (r) {return r.id;}));
-
         var json = changedNodes.map(function (change) {
-            return self.manager.export(change.id, {
+            return self.export(change.id, {
                 keepVirtual: true,
             });
         });
-        self.renderer.update(json);
+        self._renderer.update(json);
         this.trigger_up('change');
+
+        changedNodes.forEach(function (r) {
+            console.log(r.id, self._renderer.getElement(r.id), r.offset);
+        });
+
+        if (changedNodes.length) {
+            this.setRange({
+                scID: changedNodes[0].id,
+                so: changedNodes[0].offset,
+            });
+        }
     },
     _isVoidBlock: function (archNode) {
         return archNode.attributes && archNode.attributes.contentEditable === 'false';
@@ -621,6 +668,224 @@ var ArchPlugin = AbstractPlugin.extend({
             return false;
         }
         return ['table', 'thead', 'tbody', 'tfoot', 'tr'].indexOf(archNode.nodeName.toLowerCase()) === -1;
+    },
+
+    //--------------------------------------------------------------------------
+    // Private from ArchManager
+    //--------------------------------------------------------------------------
+
+    /**
+     * Insert a node in the Arch.
+     *
+     * @param {string|DOM|FragmentDOM} DOM
+     * @param {DOM} [element]
+     * @param {Number} [offset]
+     * @returns {Number}
+     */
+    _insert: function (DOM, id, offset) {
+        var self = this;
+
+        var archNode = id ? this._getNode(id) : this._arch;
+        var fragment;
+        if (typeof DOM === 'string') {
+            fragment = this._parse(DOM);
+        } else if (typeof DOM === 'number') {
+            archNode = this._getNode(DOM);
+            if (archNode !== this._arch && !archNode.isFragment()) {
+                fragment = new FragmentNode(this._arch.params);
+                fragment.append(archNode);
+            } else {
+                fragment = archNode;
+            }
+        } else {
+            fragment = new FragmentNode(this._arch.params);
+            if (DOM.nodeType !== DOM.DOCUMENT_FRAGMENT_NODE) {
+                var dom = document.createDocumentFragment();
+                dom.append(DOM);
+                DOM = dom;
+            }
+            DOM.childNodes.forEach(function (node) {
+                fragment.append(self._parseElement(node));
+            });
+        }
+
+        this._resetChange();
+
+        offset = offset || 0;
+        var childNodes =  fragment.childNodes.slice();
+        childNodes.reverse();
+        childNodes.forEach(function (child, index) {
+            archNode.insert(child, offset);
+        });
+    },
+    _importJSON: function (json) {
+        var self = this;
+        var archNode;
+        if (json.nodeName) {
+            archNode = this._createArchNode(json.nodeName, json.attributes);
+            json.childNodes.forEach(function (json) {
+                archNode.append(self._importJSON(json));
+            });
+        } else {
+            archNode = this._createArchNode('TEXT', json.nodeValue);
+        }
+        return archNode;
+    },
+    /**
+     * @param {string} xml
+     * @returns {ArchNode}
+     **/
+    _parse: function (html) {
+        var self = this;
+        var fragment = new FragmentNode(this._arch.params);
+
+        var reVoidNodes = new RegExp('<((' + this.voidTags.join('|') + ')[^>/]*)>', 'g');
+        var xml = html.replace(reVoidNodes, '<\$1/>');
+        var parser = new DOMParser();
+        var element = parser.parseFromString("<root>" + xml + "</root>","text/xml");
+
+        if (element.querySelector('parsererror')) {
+            console.error(element);
+            return;
+        }
+
+        var root = element.querySelector('root');
+
+        root.childNodes.forEach(function (element) {
+            fragment.append(self._parseElement(element));
+        });
+        return fragment;
+    },
+    _parseElement: function (element) {
+        var self = this;
+        var archNode;
+        if (element.tagName) {
+            var attributes = Object.values(element.attributes).map(function (attribute) {
+                return [attribute.name, attribute.value];
+            });
+            archNode = this._createArchNode(element.nodeName, attributes);
+            element.childNodes.forEach(function (child) {
+                archNode.append(self._parseElement(child));
+            });
+        } else {
+            archNode = this._createArchNode('TEXT', element.nodeValue);
+        }
+        return archNode;
+    },
+    _removeFromRange: function () {
+        var fromNode = this._getNode(this.scID);
+        // ==> split: this.so
+
+        var toNode = this._getNode(this.ecID);
+        // ==> split: this.eo
+
+        fromNode.nextUntil(function (next) {
+            this.remove();
+            if (next === toNode) {
+                next.remove();
+                return true;
+            }
+        });
+    },
+    _reset: function (value) {
+        this._id = 1;
+        this._arch.id = 1;
+        this._arch.parent = null;
+        this._archNodeList = {'1':  this._arch};
+        this._arch.childNodes = [];
+
+        if (value) {
+            this._insert(value, 1, 0);
+            this._applyRules();
+        }
+
+        this._renderer.reset(this._arch.toJSON({keepVirtual: true}));
+
+        this._range = {
+            scID: 1,
+            so: 0,
+            ecID: 1,
+            eo: 0,
+        };
+
+        this._changes = [];
+    },
+    _addToArch: function (archNode) {
+        var self = this;
+        if (!archNode.__removed && !archNode.id && archNode.parent && archNode.parent.id) {
+            archNode.id = ++this._id;
+            this._archNodeList[archNode.id] = archNode;
+            if (archNode.childNodes) {
+                archNode.childNodes.forEach(function (archNode) {
+                    self._addToArch(archNode);
+                });
+            }
+        }
+    },
+    _applyRules: function () {
+        this._changes.forEach(function (c) {
+            c.archNode.applyRules();
+        });
+    },
+    _createArchNode: function (nodeName, param) {
+        if (!nodeName) {
+            return new text.VirtualTextNode(this);
+        } else if (nodeName !== 'TEXT') {
+            var Constructor = customNodes[nodeName] || ArchNode;
+            return new Constructor(this._arch.params, nodeName, param || []);
+        } else {
+            return new text.VisibleTextNode(this._arch.params, param);
+        }
+    },
+    _changeArch: function (archNode, offset) {
+        this._changes.push({
+            archNode: archNode,
+            offset: offset,
+        });
+    },
+    _getChanges: function () {
+        var self = this;
+        this._applyRules();
+
+        var changes = [];
+        this._changes.forEach(function (c) {
+            if (!c.archNode.id || !self._getNode(c.archNode.id)) {
+                return;
+            }
+            var toAdd = true;
+            changes.forEach(function (change) {
+                if (change.id === c.archNode.id) {
+                    toAdd = false;
+                    change.offset = c.offset;
+                }
+            });
+            if (toAdd) {
+                changes.push({
+                    id: c.archNode.id,
+                    offset: c.offset,
+                });
+            }
+        });
+
+        return changes;
+    },
+    _getNode: function (archNodeId) {
+        return this._archNodeList[archNodeId];
+    },
+    _removeFromArch: function (archNode) {
+        var self = this;
+        if (this._archNodeList[archNode.id]) {
+            delete this._archNodeList[archNode.id];
+
+            if (archNode.childNodes) {
+                archNode.childNodes.forEach(function (archNode) {
+                    self.removeFromRoot(archNode);
+                });
+            }
+        }
+    },
+    _resetChange: function () {
+        this._changes = [];
     },
 
     //--------------------------------------------------------------------------

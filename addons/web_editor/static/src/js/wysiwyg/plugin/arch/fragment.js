@@ -7,8 +7,8 @@ function False () { return false; };
 
 
 var FragmentNode = ArchNode.extend({
-    init: function (tree) {
-        this.tree = tree;
+    init: function (root) {
+        this.params = root;
         this.nodeName = 'FRAGMENT';
         this.childNodes = [];
     },

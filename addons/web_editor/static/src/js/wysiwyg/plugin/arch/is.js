@@ -82,8 +82,7 @@ ArchNode.include({
         return ['td', 'th'].indexOf(this.nodeName) !== -1;
     },
     isContentEditable: function () {  // TODO
-        return !this.tree || !this.tree.root || this === this.tree.root;
-        return this.tree.options.isEditableNode(this);
+        return this === this.params.root || this.params.isEditableNode(this);
     },
     /**
      * Return true if the given node is a data element (DATA).
@@ -144,7 +143,7 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isFormatNode: function (styleTags) {
-        styleTags = styleTags instanceof Array ? styleTags : this.tree.options.formatTags;
+        styleTags = styleTags instanceof Array ? styleTags : this.params.formatTags;
         console.warn('defaultStyleTags ?');
         return styleTags.indexOf(this.nodeName) !== -1;
     },
@@ -181,7 +180,7 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isInline: function () {
-        return this.tree.options.formatTags.indexOf(this.nodeName) !== -1;
+        return this.params.formatTags.indexOf(this.nodeName) !== -1;
          // &&
          //    !this.isCell() && 
          //    !this.isEditable() &&
@@ -308,7 +307,7 @@ ArchNode.include({
     isUnbreakable: function () {
         return ["td", "tr", "tbody", "tfoot", "thead", "table"].indexOf(this.nodeName) !== -1 ||
             this.isContentEditable() ||
-            this.tree.options.isUnbreakableNode(this);
+            this.params.isUnbreakableNode(this);
     },
     /**
      *
@@ -328,10 +327,10 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isVoid: function () {
-        return this.tree.options.voidTags.concat('button').indexOf(this.nodeName) !== -1;
+        return this.params.voidTags.concat('button').indexOf(this.nodeName) !== -1;
     },
     isVoidBlock: function () {
-        return (!this.isBR() && this.isVoid()) || this.tree.options.isVoidBlock(this);
+        return (!this.isBR() && this.isVoid()) || this.params.isVoidBlock(this);
     },
     /**
      * Return true if the given node is a block quote element (BLOCKQUOTE).
