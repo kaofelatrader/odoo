@@ -419,34 +419,13 @@ var ArchPlugin = AbstractPlugin.extend({
      * @param {Number} [points.eo] must be given if ec is given
      */
     setRange: function (points) {
-        var scID = points.scID || this._renderer.whoIsThisNode(points.sc);
-        var so = points.so || 0;
-        var ec = points.ec || points.sc;
-        var ecID = points.ecID || points.scID || (points.ec ? this._renderer.whoIsThisNode(ec) : scID);
-        var eo = points.ec ? points.eo : (typeof points.so === 'number' ? points.so : this.utils.nodeLength(points.sc));
-
-        var isChangeOffset = so !== this._range.so || eo !== this._range.eo;
-        var isChangeIDs = scID !== this._range.scID || ecID !== this._range.ecID;
-        var isChangeElemIDs = this.parentIfText(scID) !== this.parentIfText(this._range.scID) ||
-            this.parentIfText(ecID) !== this.parentIfText(this._range.ecID);
-        var isChangeNodes = points.sc !== this._renderer.getElement(this._range.scID) ||
-            ec !== this._renderer.getElement(this._range.ecID);
-
-        this._range.scID = scID;
-        this._range.so = so;
-        this._range.ecID = ecID;
-        this._range.eo = eo;
-
-        // check range
-
-        this._setRange();
-
-        if (isChangeOffset || isChangeIDs || isChangeNodes) {
-            this.trigger('range');
-        }
-        if (isChangeElemIDs) {
-            this.trigger('focus', this.getFocusedNode());
-        }
+        var pointsWithIDs = {
+            scID: this._renderer.whoIsThisNode(points.sc),
+            so: points.so,
+            ecID: points.ec ? this._renderer.whoIsThisNode(points.ec) : undefined,
+            eo: points.eo,
+        };
+        this._setRangeWithIDs(pointsWithIDs);
     },
     /**
      * Select the target media on the right (or left)
@@ -531,7 +510,7 @@ var ArchPlugin = AbstractPlugin.extend({
     _select: function (sc, so, ec, eo) {
         var nativeRange = this._toNativeRange(sc, so, ec, eo);
         var selection = sc.ownerDocument.getSelection();
-        if (selection._rangeCount > 0) {
+        if (selection.rangeCount > 0) {
             selection.removeAllRanges();
         }
         selection.addRange(nativeRange);
@@ -554,6 +533,48 @@ var ArchPlugin = AbstractPlugin.extend({
         this.setRange(this._getRange().getPoints());
     },
     /**
+     * Set the range.
+     * Pass only `pointsWithIDs.scID` to set the range on the whole element.
+     * Pass only `pointsWithIDs.scID` and `pointsWithIDs.so` to collapse the range on the start.
+     *
+     * @param {Object} pointsWithIDs
+     * @param {Node} pointsWithIDs.scID
+     * @param {Number} [pointsWithIDs.so]
+     * @param {Node} [pointsWithIDs.ecID]
+     * @param {Number} [pointsWithIDs.eo] must be given if ecID is given
+     */
+    _setRangeWithIDs: function (pointsWithIDs) {
+        var scID = pointsWithIDs.scID;
+        var so = pointsWithIDs.so || 0;
+        var ecID = pointsWithIDs.ecID || scID;
+        var eo = pointsWithIDs.eo;
+        if (!pointsWithIDs.ecID) {
+            if (typeof pointsWithIDs.so === 'number') {
+                eo = so;
+            } else {
+                var sc = this._renderer.getElement(scID);
+                eo = this.utils.nodeLength(sc);
+            }
+        }
+
+        var didRangeChange = this._willRangeChange(scID, so, ecID, eo);
+        var isChangeElemIDs = this.parentIfText(scID) !== this.parentIfText(this._range.scID) ||
+            this.parentIfText(ecID) !== this.parentIfText(this._range.ecID);
+
+        this._range.scID = scID;
+        this._range.so = so;
+        this._range.ecID = ecID;
+        this._range.eo = eo;
+        this._setRange();
+
+        if (didRangeChange) {
+            this.trigger('range');
+        }
+        if (isChangeElemIDs) {
+            this.trigger('focus', this.getFocusedNode());
+        }
+    },
+    /**
      * Get the native Range object corresponding to the given range points.
      *
      * @private
@@ -564,6 +585,22 @@ var ArchPlugin = AbstractPlugin.extend({
         nativeRange.setStart(sc, so);
         nativeRange.setEnd(ec, eo);
         return nativeRange;
+    },
+    /**
+     * Return true if the range will change once set to the given points.
+     *
+     * @param {Number} scID
+     * @param {Number} so
+     * @param {Number} ecID
+     * @param {Number} eo
+     * @returns {Boolean}
+     */
+    _willRangeChange: function (scID, so, ecID, eo) {
+        var willOffsetChange = so !== this._range.so || eo !== this._range.eo;
+        var willIDsChange = scID !== this._range.scID || ecID !== this._range.ecID;
+        var willNodesChange = this._renderer.getElement(scID) !== this._renderer.getElement(this._range.scID) ||
+            this._renderer.getElement(ecID) !== this._renderer.getElement(this._range.ecID);
+        return willOffsetChange || willIDsChange || willNodesChange;
     },
 
     //--------------------------------------------------------------------------
@@ -626,7 +663,7 @@ var ArchPlugin = AbstractPlugin.extend({
     // Private from Common
     //--------------------------------------------------------------------------
 
-    _applyChangesInRenderer: function (changedNodes) {
+    _applyChangesInRenderer: function () {
         var self = this;
         var changedNodes = this._getChanges();
 
@@ -647,7 +684,7 @@ var ArchPlugin = AbstractPlugin.extend({
         });
 
         if (changedNodes.length) {
-            this.setRange({
+            this._setRangeWithIDs({
                 scID: changedNodes[0].id,
                 so: changedNodes[0].offset,
             });
