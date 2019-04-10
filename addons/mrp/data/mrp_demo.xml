@@ -6,6 +6,11 @@
             <field eval="[(4, ref('group_mrp_user'))]" name="groups_id"/>
         </record>
 
+        <!-- We want to activate work orders by default -->
+        <record id="base.group_user" model="res.groups">
+            <field name="implied_ids" eval="[(4, ref('mrp.group_mrp_routings'))]"/>
+        </record>
+
         <!-- Resource: res.company -->
         <record id="stock.res_company_1" model="res.company">
             <field eval="1.0" name="manufacturing_lead"/>
