@@ -127,7 +127,7 @@ return Class.extend({
         if (this.childNodes) {
             var childNodes = [];
             this.childNodes.forEach(function (archNode) {
-                var json = archNode.toJSON();
+                var json = archNode.toJSON(options);
                 if (json) {
                     if (json.nodeName || json.nodeValue) {
                         childNodes.push(json);

@@ -194,7 +194,7 @@ Renderer.prototype = {
             }
         }
 
-        if (changes.nodeValue) {
+        if ('nodeValue' in changes) {
             node.textContent = changes.nodeValue;
         }
 
@@ -225,8 +225,6 @@ Renderer.prototype = {
                 }
             });
         }
-
-        console.log(json.id, node);
 
         return node;
     },

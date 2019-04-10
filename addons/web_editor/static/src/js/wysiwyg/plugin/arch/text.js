@@ -85,9 +85,17 @@ var TextNode = ArchNode.extend({
         }
 
         var text = this.nodeValue.slice(offset);
+
+        if (offset === 0) {
+            this.tree._markChange(this, 0);
+            var archNode = new VirtualTextNode(this.tree);
+            this.before(archNode);
+            return this;
+        }
+
         var Constructor = text.length ? this.constructor : VirtualTextNode;
         var archNode = new Constructor(this.tree, text);
-        this.tree._markChange(archNode, 0);
+        this.tree._markChange(archNode, 0); // set the last change to move range automatically
 
         this.nodeValue = this.nodeValue.slice(0, offset);
         this.tree._markChange(this, offset);

@@ -379,6 +379,12 @@ var ArchPlugin = AbstractPlugin.extend({
         var changedNodes = this.manager.addLine();
         this._applyChangesInRenderer(changedNodes);
 
+
+        var self = this;
+        changedNodes.forEach(function (r) {
+            console.log(r.id, self.renderer.getElement(r.id));
+        });
+
         console.log(changedNodes[0]);
         this.dependencies.Range.setRange({
             sc: this.renderer.getElement(changedNodes[0].id),
