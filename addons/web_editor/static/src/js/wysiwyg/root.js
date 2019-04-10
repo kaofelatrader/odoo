@@ -31,10 +31,6 @@ var WysiwygRoot = Widget.extend({
 
         return this._super().then(function () {
             if (!assetsLoaded) {
-                var Wysiwyg = odoo.__DEBUG__.services['web_editor.wysiwyg'];
-                _.each(['getRange', 'setRange'], function (methodName) {
-                    WysiwygRoot[methodName] = Wysiwyg[methodName].bind(Wysiwyg);
-                });
                 assetsLoaded = true;
             }
 

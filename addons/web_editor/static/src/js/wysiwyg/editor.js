@@ -585,15 +585,15 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
     _onCommand: function (ev) {
         var self = this;
         ev.stopPropagation();
-        if (ev.data.disableRange) {
-            this._pluginsManager.call('Range', 'clear');
-        } else {
-            this._pluginsManager.call('Range', 'save');
-        }
+        // if (ev.data.disableRange) {
+        //     this._pluginsManager.call('Range', 'clear');
+        // } else {
+        //     this._pluginsManager.call('Range', 'save');
+        // }
         Promise.all([ev.data.method.apply(null, ev.data.args)]).then(function (result) {
-            if (!ev.data.disableRange) {
-                self._pluginsManager.call('Range', 'restore');
-            }
+            // if (!ev.data.disableRange) {
+            //     self._pluginsManager.call('Range', 'restore');
+            // }
             if (result && result.noChange) {
                 return;
             }

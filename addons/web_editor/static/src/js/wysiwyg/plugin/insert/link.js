@@ -14,7 +14,7 @@ var _ = require('web_editor._');
 
 var LinkCreate = AbstractPlugin.extend({
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_link.xml'],
-    dependencies: ['Range'],
+    dependencies: [],
 
     buttons: {
         template: 'wysiwyg.buttons.link',
@@ -26,7 +26,7 @@ var LinkCreate = AbstractPlugin.extend({
         var self = this;
         return new Promise(function (resolve) {
             range = self._prepareRange(range);
-            self.dependencies.Range.save(range);
+            self.dependencies.Arch.setRange(range);
             var linkDialog = new LinkDialog(self.options.parent, {
                 onClose: self._onCloseDialog.bind(self),
             }, self._getLinkInfo(range));
@@ -128,7 +128,7 @@ var LinkCreate = AbstractPlugin.extend({
         return text.replace(this.utils.getRegex('space', 'g'), ' ');
     },
     _insertBlankLink: function () {
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
         if (range.isCollapsed()) {
             if (!this.dependencies.Arch.isVoidBlock(range.sc)) {
                 range.replace({
@@ -156,7 +156,7 @@ var LinkCreate = AbstractPlugin.extend({
         range.sc.parentNode.insertBefore(anchor, range.sc);
         anchor.appendChild(range.sc);
 
-        this.dependencies.Range.save({
+        this.dependencies.Arch.setRange({
             sc: anchor.firstChild,
             so: 0,
             ec: anchor.lastChild,
@@ -197,7 +197,7 @@ var LinkCreate = AbstractPlugin.extend({
         return range;
     },
     _replaceLink: function (style, isNewWindow) {
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
         var anchor = this.utils.ancestor(range.sc, this.utils.isAnchor);
         if (style) {
             Object.keys(style).forEach (function (key) {
@@ -228,17 +228,17 @@ var LinkCreate = AbstractPlugin.extend({
         if (!anchor.nextSibling) {
             anchor.parentNode.insertBefore(document.createTextNode('\uFEFF'), anchor.nextSibling);
         }
-        var range = this.dependencies.Range.setRange({
+        var range = this.dependencies.Arch.setRange({
             sc: anchor.nextSibling,
             so: 0,
         });
-        this.dependencies.Range.save(range);
+        this.dependencies.Arch.setRange(range);
     },
 });
 
 var Link = AbstractPlugin.extend({
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_link.xml'],
-    dependencies: ['Range', 'LinkCreate'],
+    dependencies: ['LinkCreate'],
 
     buttons: {
         template: 'wysiwyg.popover.link',
@@ -248,7 +248,7 @@ var Link = AbstractPlugin.extend({
     },
 
     get: function (range) {
-        range = range || this.dependencies.Range.getRange();
+        range = range || this.dependencies.Arch.getRange();
         var anchor = this.utils.ancestor(range.sc, this.utils.isAnchor);
         return anchor && range.replace({
             sc: anchor,
@@ -285,13 +285,13 @@ var Link = AbstractPlugin.extend({
 
         var start = contents[0];
         var end = contents[contents.length - 1];
-        range = this.dependencies.Range.setRange({
+        range = this.dependencies.Arch.setRange({
             sc: start,
             so: 0,
             ec: end,
             eo: this.utils.nodeLength(end),
         });
-        this.dependencies.Range.save(range);
+        this.dependencies.Arch.setRange(range);
     },
 
     //--------------------------------------------------------------------------
@@ -302,7 +302,7 @@ var Link = AbstractPlugin.extend({
      * @param {jQueryEvent} e
      */
     _onDblclick: function (e) {
-        return this.showLinkDialog(null, this.dependencies.Range.getRange());
+        return this.showLinkDialog(null, this.dependencies.Arch.getRange());
     },
 });
 

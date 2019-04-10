@@ -6,7 +6,6 @@ var ajax = require('web.ajax');
 var core = require('web.core');
 var session = require('web.session');
 var Widget = require('web.Widget');
-var WrappedRange = require('wysiwyg.WrappedRange');
 var Editor = require('wysiwyg.editor');
 
 var _t = core._t;
@@ -383,46 +382,6 @@ Wysiwyg.prepare = (function () {
         return def;
     };
 })();
-/**
- * @param {Node} node (editable or node inside)
- * @returns {Object}
- * @returns {Node} sc - start container
- * @returns {Number} so - start offset
- * @returns {Node} ec - end container
- * @returns {Number} eo - end offset
- */
-Wysiwyg.getRange = function (node) {
-    return new WrappedRange({}, node.ownerDocument || node);
-};
-/**
- */
-Wysiwyg.setRange = function (range, node) {
-    var isEmpty = _.isEmpty(range);
-    var ownerDocument = node && node.ownerDocument || node || range.sc.ownerDocument;
-    range = new WrappedRange({
-        sc: range.sc || null,
-        so: typeof range.so === 'number' ? range.so : null,
-        ec: range.ec || range.sc || null,
-        eo: range.ec ? range.eo : range.so || null,
-    }, ownerDocument);
-
-    function _select (wrappedRange) {
-        var nativeRange = wrappedRange.toNativeRange();
-        var selection = wrappedRange.getSelection();
-        if (selection.rangeCount > 0) {
-            selection.removeAllRanges();
-        }
-        selection.addRange(nativeRange);
-        var sc = nativeRange.startContainer;
-        if (!isEmpty) {
-            $(sc.tagName ? sc : sc.parentNode).trigger('wysiwyg.range');
-            console.log('wysiwyg.range');
-        }
-        return wrappedRange;
-    }
-
-    return range.sc ? _select(range) : null;
-};
 
 //--------------------------------------------------------------------------
 // jQuery extensions

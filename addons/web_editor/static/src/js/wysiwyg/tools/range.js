@@ -72,9 +72,6 @@ var WrappedRange = Class.extend({
             });
         }
     },
-    copy: function () {
-        return new WrappedRange(this.getPoints(), this.document, this.options);
-    },
     /**
      * Get the common ancestor of the start and end
      * points of the current range.
@@ -400,18 +397,6 @@ var WrappedRange = Class.extend({
                 });
             }
         }
-    },
-    /**
-     * Get the native Range object corresponding to the
-     * current range.
-     *
-     * @returns {Range}
-     */
-    toNativeRange: function () {
-        var nativeRange = this.sc.ownerDocument.createRange();
-        nativeRange.setStart(this.sc, this.so);
-        nativeRange.setEnd(this.ec, this.eo);
-        return nativeRange;
     },
 
     //--------------------------------------------------------------------------

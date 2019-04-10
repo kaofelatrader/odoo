@@ -5,7 +5,7 @@ var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 var KeyboardPlugin = AbstractPlugin.extend({
-    dependencies: ['Range', 'Paragraph', 'Link', 'History', 'Table'], // TODO: Remove dependencies
+    dependencies: ['Paragraph', 'Link', 'History', 'Table'], // TODO: Remove dependencies
 
     editableDomEvents: {
         'keydown': '_onKeydown',
@@ -24,7 +24,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * @param {Boolean} [untab] true for shift+tab
      */
     handleTab: function (untab) {
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
         var point = range.getStartPoint();
         var startSpace = this.utils.getRegex('startSpace');
 
@@ -40,8 +40,8 @@ var KeyboardPlugin = AbstractPlugin.extend({
                 sc: nextText,
                 so: untab ? this.utils.nodeLength(nextText) : 0,
             });
-            this.dependencies.Range.setRange(range);
-            this.dependencies.Range.save();
+            this.dependencies.Arch.setRange(range);
+            this.dependencies.Arch.setRange();
             return;
         }
         // If on left edge point: indent/outdent
@@ -53,13 +53,13 @@ var KeyboardPlugin = AbstractPlugin.extend({
         }
         if (point.isLeftEdgeOfBlock() || this.utils.isEmpty(point.node)) {
             this.dependencies.Paragraph[untab ? 'outdent' : 'indent'](null, range);
-            this.dependencies.Range.getRange().normalize();
+            this.dependencies.Arch.getRange().normalize();
             return;
         }
         // Otherwise insert a tab or do nothing
         if (!untab) {
             this._insertTab();
-            this.dependencies.Range.getRange().normalize();
+            this.dependencies.Arch.getRange().normalize();
         }
     },
 
@@ -103,10 +103,10 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * @returns {Boolean} true if case handled
      */
     _handleDeletion: function (isPrev) {
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
         var didDeleteNodes = !range.isCollapsed();
         var point = this.dom.deleteSelection(range);
-        range = this.dependencies.Range.setRange({
+        range = this.dependencies.Arch.setRange({
             sc: point.node,
             so: point.offset,
         });
@@ -131,7 +131,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
 
         range = this._afterDeletion(range, isPrev, !didDeleteNodes);
 
-        this.dependencies.Range.setRange(range.getPoints()).collapse(isPrev);
+        this.dependencies.Arch.setRange(range.getPoints()).collapse(isPrev);
         this.editable.normalize();
         return didDeleteNodes;
     },
@@ -269,7 +269,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             });
 
             // Move carret to the new button
-            range = this.dependencies.Range.setRange({
+            range = this.dependencies.Arch.setRange({
                 sc: next.firstChild,
                 so: 0
             });
@@ -279,12 +279,12 @@ var KeyboardPlugin = AbstractPlugin.extend({
             this.dependencies.Link.fillEmptyLink(btn);
 
             // Move carret to the new button
-            range = this.dependencies.Range.setRange({
+            range = this.dependencies.Arch.setRange({
                 sc: next.firstChild,
                 so: 0,
             });
         } else {
-            range = this.dependencies.Range.setRange({
+            range = this.dependencies.Arch.setRange({
                 sc: point.node,
                 so: point.offset,
             }).normalize();
@@ -300,7 +300,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _handleShiftEnter: function () {
         var self = this;
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
         var target = range.sc.childNodes[range.so] || range.sc;
         var before;
         if (!this.utils.isText(target)) {
@@ -362,7 +362,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             next.node.textContent = next.node.textContent.replace(reStartSpace, this.utils.char('nbsp'));
         }
 
-        range = this.dependencies.Range.setRange({
+        range = this.dependencies.Arch.setRange({
             sc: next.node,
             so: next.offset,
         });
@@ -377,12 +377,12 @@ var KeyboardPlugin = AbstractPlugin.extend({
     _insertHR: function () {
         var self = this;
         var hr = document.createElement('hr');
-        this.dom.insertBlockNode(hr, this.dependencies.Range.getRange());
+        this.dom.insertBlockNode(hr, this.dependencies.Arch.getRange());
         var point = this.getPoint(hr, 0);
         point = point.nextUntil(function (pt) {
             return pt.node !== hr && !self.dependencies.Arch.isUnbreakableNode(pt.node);
         }) || this.getPoint(hr, 0);
-        this.dependencies.Range.setRange({
+        this.dependencies.Arch.setRange({
             sc: point.node,
             so: point.offset,
         });
@@ -393,9 +393,9 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * @private
      */
     _insertTab: function () {
-        var range = this.dom.insertTextInline(this.tab, this.dependencies.Range.getRange());
-        range = this.dependencies.Range.setRange(range).normalize();
-        this.dependencies.Range.save(range);
+        var range = this.dom.insertTextInline(this.tab, this.dependencies.Arch.getRange());
+        range = this.dependencies.Arch.setRange(range).normalize();
+        this.dependencies.Arch.setRange(range);
     },
     /**
      * Patch for Google Chrome's contenteditable SPAN bug.
@@ -417,7 +417,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _selectAll: function () {
         var self = this;
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
         var unbreakable = this.utils.ancestor(range.sc, this.dependencies.Arch.isUnbreakableNode);
         var $contents = $(unbreakable).contents();
         var startNode = $contents.length ? $contents[0] : unbreakable;
@@ -438,8 +438,8 @@ var KeyboardPlugin = AbstractPlugin.extend({
                 ec: pointB.node,
                 eo: pointB.offset,
             }).normalize();
-            range = this.dependencies.Range.setRange(range.getPoints());
-            this.dependencies.Range.save(range);
+            range = this.dependencies.Arch.setRange(range.getPoints());
+            this.dependencies.Arch.setRange(range);
         }
     },
 
@@ -503,7 +503,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _onBackspace: function (e) {
         var self = this;
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
 
         // Special cases
         if (range.isCollapsed()) {
@@ -536,7 +536,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
             didDelete = this._handleDeletion(true);
         }
         if (!didDelete && needOutdent) {
-            this.dependencies.Range.setRange(range.getPoints());
+            this.dependencies.Arch.setRange(range.getPoints());
             this.dependencies.Paragraph.outdent(null, range);
         }
 
@@ -550,7 +550,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * @returns {Boolean} true if case is handled and event default must be prevented
      */
     _onDelete: function (e) {
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
 
         // Special case
         if (range.isCollapsed()) {
@@ -571,14 +571,6 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * @returns {Boolean} true if case is handled and event default must be prevented
      */
     _onEnter: function (e) {
-        var range = this.dependencies.Range.getRange();
-        var point = this.dom.deleteSelection(range);
-        range = this.dependencies.Range.setRange({
-            sc: point.node,
-            so: point.offset,
-        });
-        this.dependencies.Range.save(range);
-
         if (e.shiftKey) {
             this.dependencies.Arch.insert('<br/>');
             // this._handleShiftEnter();

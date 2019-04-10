@@ -11,7 +11,7 @@ var _ = require('web_editor._');
 var HistoryPlugin = AbstractPlugin.extend({
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg.xml'],
 
-    dependencies: ['Range'],
+    dependencies: [],
 
     buttons: {
         template: 'wysiwyg.buttons.history',
@@ -115,7 +115,7 @@ var HistoryPlugin = AbstractPlugin.extend({
             console.warn("Impossible to do the selection, the DOM does not match");
             return;
         }
-        this.dependencies.Range.save({
+        this.dependencies.Arch.setRange({
             sc: sc,
             so: so,
             ec: ec,
@@ -176,7 +176,7 @@ var HistoryPlugin = AbstractPlugin.extend({
      * @private
      */
     _makeSnapshot: function () {
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
         var snapshot = {
             contents: this.editable.innerHTML,
             bookmark: range ?

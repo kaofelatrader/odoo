@@ -6,7 +6,7 @@ var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 
 var HintPlugin = Plugins.hintPopover.extend({
-    dependencies: ['Range'],
+    dependencies: [],
 
     init: function (context) {
         context.options.hint = (context.options.hint || []).concat(this._hints());
@@ -24,23 +24,21 @@ var HintPlugin = Plugins.hintPopover.extend({
         var self = this;
         var $item = this.$content.find('.note-hint-item.active');
         if ($item.length) {
-            var range = this.dependencies.Range.setRange(this.lastWordRange);
+            var range = this.dependencies.Arch.setRange(this.lastWordRange);
             var point = this.dom.deleteSelection(range, true);
-            range = this.dependencies.Range.setRange({
+            range = this.dependencies.Arch.setRange({
                 sc: point.node,
                 so: point.offset,
             });
-            this.dependencies.Range.save(range);
 
-            range = this.dependencies.Range.getRange();
+            range = this.dependencies.Arch.getRange();
 
             this.nodeFromItem($item).each(function () {
                 $(range.sc).after(this);
                 range.sc = this;
                 range.so = self.utils.nodeLength(this);
             });
-            range = this.dependencies.Range.setRange(range);
-            this.dependencies.Range.save(range);
+            this.dependencies.Arch.setRange(range);
             this.lastWordRange = null;
             this.hide();
             this.context.triggerEvent('change', this.$editable.html(), this.$editable[0]);
@@ -53,7 +51,7 @@ var HintPlugin = Plugins.hintPopover.extend({
     handleKeyup: function (e) {
         var self = this;
         if ([13, 38, 40].indexOf(e.keyCode) === -1) { // enter, up, down
-            var wordRange = this.dependencies.Range.getRange();
+            var wordRange = this.dependencies.Arch.getRange();
             var keyword_1 = wordRange.sc.textContent.slice(0, wordRange.so);
             if (this.hints.length && keyword_1) {
                 this.$content.empty();

@@ -26,7 +26,7 @@ var handleSelector = function (element, selector, callback) {
 
 
 var PopoverPlugin = AbstractPlugin.extend({
-    dependencies: ['Range', 'Position'],
+    dependencies: ['Position'],
 
     editableDomEvents: {
         'keydown': '_onKeyPress',
@@ -45,10 +45,10 @@ var PopoverPlugin = AbstractPlugin.extend({
         this._hidePopovers();
     },
     focusEditor: function () {
-        this._onFocusNode(this.dependencies.Range.getFocusedNode());
+        this._onFocusNode(this.dependencies.Arch.getFocusedNode());
     },
     changeEditorValue: function () {
-        this._onFocusNode(this.dependencies.Range.getFocusedNode());
+        this._onFocusNode(this.dependencies.Arch.getFocusedNode());
     },
     setEditorValue: function (value) {
         this._hidePopovers();
@@ -64,8 +64,8 @@ var PopoverPlugin = AbstractPlugin.extend({
         this._createPopoverButtons();
         this._toggleDropDownEnabled();
         this.dependencies.Position.on('scroll', this, this._onScroll.bind(this));
-        this.dependencies.Range.on('focus', this, this._onFocusNode.bind(this));
-        this.dependencies.Range.on('range', this, this._onRange.bind(this));
+        this.dependencies.Arch.on('focus', this, this._onFocusNode.bind(this));
+        this.dependencies.Arch.on('range', this, this._onRange.bind(this));
         return this._super();
     },
 
@@ -338,7 +338,7 @@ var PopoverPlugin = AbstractPlugin.extend({
         this._updatePositionAvoidOverlap();
     },
     _updatePopover: function (popover, range) {
-        var targetRange = popover.checkMethod(range.copy());
+        var targetRange = popover.checkMethod(range);
         if (!targetRange) {
             popover.targetRange = null;
             return;
@@ -490,7 +490,7 @@ var PopoverPlugin = AbstractPlugin.extend({
             }
         });
         var checkMethod = popover && popover.checkMethod;
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
         if (checkMethod) {
             range = checkMethod(range);
             if (!range) {
@@ -513,7 +513,7 @@ var PopoverPlugin = AbstractPlugin.extend({
      * @private
      */
     _onFocusNode: function (focusNode) {
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
         this._updatePopovers(range);
         this._updatePopoverButtons(focusNode);
     },
@@ -523,7 +523,7 @@ var PopoverPlugin = AbstractPlugin.extend({
      * @private
      */
     _onKeyPress: function () {
-        this._updatePopovers(this.dependencies.Range.getRange());
+        this._updatePopovers(this.dependencies.Arch.getRange());
     },
     /**
      * @private
@@ -531,7 +531,7 @@ var PopoverPlugin = AbstractPlugin.extend({
     _onRange: function () {
         var self = this;
         if (this._hasDisplayedPopoverTargetText) {
-            var range = this.dependencies.Range.getRange();
+            var range = this.dependencies.Arch.getRange();
             this.popovers.forEach(function (popover) {
                 if (popover.targetText) {
                     self._updatePosition(popover, range);
@@ -544,7 +544,7 @@ var PopoverPlugin = AbstractPlugin.extend({
      * @private
      */
     _onScroll: function () {
-        this._updatePositions(this.dependencies.Range.getRange());
+        this._updatePositions(this.dependencies.Arch.getRange());
     },
 });
 

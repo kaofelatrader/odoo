@@ -10,7 +10,7 @@ wysiwygOptions.keyMap.mac['CMD+SHIFT+NUM9'] = 'List.insertList:checklist';
 
 
 var ListPlugin = AbstractPlugin.extend({
-    dependencies: ['Range', 'FontStyle'],
+    dependencies: ['FontStyle'],
 
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_list.xml'],
 
@@ -168,7 +168,7 @@ var ListPlugin = AbstractPlugin.extend({
      */
     insertList: function (type) {
         var self = this;
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
         if (!range) {
             return false;
         }
@@ -189,13 +189,13 @@ var ListPlugin = AbstractPlugin.extend({
         var endLeaf = this.utils.firstLeafUntil(end.node, function (n) {
             return !self.dependencies.Arch.isVoidBlock(n) && self.dependencies.Arch.isEditableNode(n);
         });
-        range = this.dependencies.Range.setRange({
+        range = this.dependencies.Arch.setRange({
             sc: startLeaf,
             so: this.utils.isText(startLeaf) ? start.offset : 0,
             ec: endLeaf,
             eo: this.utils.isText(endLeaf) ? end.offset : this.utils.nodeLength(endLeaf),
         });
-        this.dependencies.Range.save(range);
+        this.dependencies.Arch.setRange(range);
 
         return res;
     },
@@ -228,7 +228,7 @@ var ListPlugin = AbstractPlugin.extend({
      */
     _createList: function (type) {
         var self = this;
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
         if (!range.isCollapsed()) {
             range.replace(this.dom.splitTextAtSelection(range));
         }

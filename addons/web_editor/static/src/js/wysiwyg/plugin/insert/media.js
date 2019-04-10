@@ -100,7 +100,7 @@ Manager.addPlugin('Padding', Padding);
 
 var MediaPlugin = AbstractPlugin.extend({
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_media.xml'],
-    dependencies: ['Range'],
+    dependencies: [],
 
     buttons: {
         template: 'wysiwyg.buttons.media',
@@ -163,7 +163,7 @@ var MediaPlugin = AbstractPlugin.extend({
             so: point.offset,
         };
         // TODO create range + .normalize()
-        this.dependencies.Range.save(rangePoints);
+        this.dependencies.Arch.setRange(rangePoints);
     },
     /**
     * Return true if the node is a media (image, icon, document or video).
@@ -201,7 +201,7 @@ var MediaPlugin = AbstractPlugin.extend({
             }
         }
         this.dom.insertBlockNode(newMedia, range.getPoints());
-        return this.dependencies.Range.getRange();
+        return this.dependencies.Arch.getRange();
     },
     /**
      * Insert or replace an inline media in the DOM.
@@ -246,7 +246,7 @@ var MediaPlugin = AbstractPlugin.extend({
      */
     _insertMedia: function (previous, data) {
         var newMedia = data.media;
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
         this.editable.focus();
         var isMediaBlock = this.utils.isVideo && this.utils.isVideo(newMedia);
         if (isMediaBlock) {
@@ -254,7 +254,7 @@ var MediaPlugin = AbstractPlugin.extend({
         } else {
             range = this._insertInlineMedia(newMedia, range, previous);
         }
-        this.dependencies.Range.save(range);
+        this.dependencies.Arch.setRange(range);
     },
     /**
      * Insert or replace a media inside an element node (point.node).
@@ -315,7 +315,7 @@ var MediaPlugin = AbstractPlugin.extend({
      * @returns {WrappedRange}
      */
     _prepareReplaceMedia: function (oldMedia, newMedia) {
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
         var start = oldMedia.parentNode;
         range.replace({
             sc: start,
@@ -344,7 +344,7 @@ var MediaPlugin = AbstractPlugin.extend({
         if (this.context.isDisabled()) {
             return;
         }
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
         if (!target && range.isCollapsed()) {
             target = range.sc.childNodes[range.so] || range.sc;
         }
@@ -376,7 +376,7 @@ Manager.addPlugin('Media', MediaPlugin);
 //--------------------------------------------------------------------------
 
 var AbstractMediaPlugin = AbstractPlugin.extend({
-    dependencies: ['Media', 'Range'],
+    dependencies: ['Media'],
     editableDomEvents: {
         // 'wysiwyg.Position.mouse': '_onMouseChange',
         // 'wysiwyg.MediaPlugin.focus': '_onFocus',
@@ -400,7 +400,7 @@ var AbstractMediaPlugin = AbstractPlugin.extend({
     },
     getTargetRange: function (target) {
         if (this.isMediaMethod && this[this.isMediaMethod](target)) {
-            return this.dependencies.Range.getRange().replace({
+            return this.dependencies.Arch.getRange().replace({
                 sc: target,
                 so: 0,
             });
@@ -640,7 +640,7 @@ var VideoPlugin = AbstractMediaPlugin.extend({
     getTargetRange: function (target) {
         target = this[this.isMediaMethod](target) && $(target).closest('.media_iframe_video')[0];
         if (target) {
-            var wRange = this.dependencies.Range.getRange();
+            var wRange = this.dependencies.Arch.getRange();
             wRange.sc = range.ec = target;
             wRange.so = range.eo = target;
             return wRange;

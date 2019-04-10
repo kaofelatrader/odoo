@@ -9,7 +9,7 @@ var Manager = require('web_editor.wysiwyg.plugin.manager');
 var _t = core._t;
 
 var DropzonePlugin = Plugins.dropzone.extend({
-    dependencies: ['Range'],
+    dependencies: [],
     //--------------------------------------------------------------------------
     // Public summernote module API
     //--------------------------------------------------------------------------
@@ -41,17 +41,15 @@ var DropzonePlugin = Plugins.dropzone.extend({
         var nodes = this.context.invoke('ClipboardPlugin.prepareClipboardData', html);
 
         // Delete selection
-        var point = this.dom.deleteSelection(this.dependencies.Range.getRange(), true);
-        var range = this.dependencies.Range.setRange({
+        var point = this.dom.deleteSelection(this.dependencies.Arch.getRange(), true);
+        var range = this.dependencies.Arch.setRange({
             sc: point.node,
             so: point.offset,
         });
-        this.dependencies.Range.save(range);
 
         // Insert the nodes
         this.context.invoke('ClipboardPlugin.pasteNodes', nodes, textOnly);
-        range = this.dependencies.Range.getRange().normalize();
-        this.dependencies.Range.save(range);
+        range = this.dependencies.Arch.getRange().normalize();
 
         this.context.invoke('editor.afterCommand');
     },
@@ -64,7 +62,7 @@ var DropzonePlugin = Plugins.dropzone.extend({
     _dropImages: function (files) {
         var self = this;
         this.context.invoke('editor.beforeCommand');
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
 
         var spinners = [];
         var images = [];
@@ -124,11 +122,11 @@ var DropzonePlugin = Plugins.dropzone.extend({
             });
             Promise.all(defs).then(function () {
                 if (images.length === 1) {
-                    var range = self.dependencies.Range.setRange({
+                    var range = self.dependencies.Arch.setRange({
                         sc: _.last(images),
                         so: 0,
                     });
-                    self.dependencies.Range.save(range);
+                    self.dependencies.Arch.setRange(range);
                     self.context.invoke('editor.afterCommand');
                     self.context.invoke('MediaPlugin.updatePopoverAfterEdit', images[0]);
                 } else {
@@ -223,7 +221,7 @@ var DropzonePlugin = Plugins.dropzone.extend({
      * @returns {Boolean}
      */
     _canDropHere: function () {
-        var range = this.dependencies.Range.getRange();
+        var range = this.dependencies.Arch.getRange();
         return this.dependencies.Arch.isEditableNode(range.sc);
     },
 });

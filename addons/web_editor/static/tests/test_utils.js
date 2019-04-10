@@ -396,10 +396,10 @@ function createWysiwyg(params) {
 
     wysiwygOptions.plugins = _.extend({
         TestPlugin: {
-            dependencies: ['Range'],
+            dependencies: [],
             start: function () {
                 wysiwyg.on('testResetRange', this, function () {
-                    this.dependencies.Range.save();
+                    this.dependencies.Arch.setRange();
                 });
             },
         }

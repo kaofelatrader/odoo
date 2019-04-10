@@ -12,7 +12,7 @@ var _ = require('web_editor._');
 //--------------------------------------------------------------------------
 
 var PositionPlugin = AbstractPlugin.extend({
-    dependencies: ['Range'],
+    dependencies: [],
 
     editableDomEvents: {
         'mousedown': '_onMouseDown',
@@ -116,7 +116,7 @@ var PositionPlugin = AbstractPlugin.extend({
 
         // we put the cursor to the left if we click in the first tier of the media
         var left = this.mousePosition.pageX < (clientRect.left + clientRect.width / 3);
-        this.dependencies.Range.setRangeOnVoidBlock(e.target, left);
+        this.dependencies.Arch.setRangeOnVoidBlock(e.target, left);
     },
     /**
      * @private

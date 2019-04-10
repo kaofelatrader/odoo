@@ -43,7 +43,7 @@ ArchManager.prototype = {
         this.root.childNodes = [];
 
         if (value) {
-            this.insert(value);
+            this.insert(value, 1, 0);
         }
     },
     remove: function (id) {
@@ -84,11 +84,6 @@ ArchManager.prototype = {
     insert: function (DOM, id, offset) {
         var self = this;
 
-        if (!id) {
-            var range = this.getRange();
-            id = range.start.id;
-            offset = range.start.offset;
-        }
         var archNode = id ? this.getNode(id) : this.root;
         var fragment;
         if (typeof DOM === 'string') {
@@ -124,91 +119,27 @@ ArchManager.prototype = {
 
         return this._getChanges();
     },
-    addLine: function () {
-        var self = this;
+    addLine: function (range) {
         this._changes = [];
 
         //this.remove();
-        var range = this.getRange();
-        this.getNode(range.start.id).addLine(range.start.offset);
+        this.getNode(range.scID).addLine(range.so);
 
         return this._getChanges();
     },
-    removeLeft: function () {
-        var range = this.getRange();
+    removeLeft: function (range) {
         if (range.isCollapsed()) {
-            this.getNode(range.start.id).removeLeft(range.start.offset);
+            this.getNode(range.scID).removeLeft(range.so);
         } else {
             this.remove();
         }
     },
-    removeRight: function () {
-        var range = this.getRange();
+    removeRight: function (range) {
         if (range.isCollapsed()) {
-            this.getNode(range.start.id).removeRight(range.start.offset);
+            this.getNode(range.scID).removeRight(range.so);
         } else {
             this.remove();
         }
-    },
-
-    //--------------------------------------------------------------------------
-    // Public: range
-    //--------------------------------------------------------------------------
-
-    /**
-     * Set the range.
-     * Pass only `scID` to set the range on the whole element.
-     * Pass only `scID` and `so` to collapse the range on the start.
-     *
-     * @param {Number} scID
-     * @param {Number} [so]
-     * @param {Number} [ecID]
-     * @param {Number} [eo] must be given if ecID is given
-     */
-    setRange: function (scID, so, ecID, eo) {
-        this._startRangeID = scID;
-        var start = this.getNode(this._startRangeID);
-        this._startRangeOffset = so || 0;
-
-        if (ecID && scID !== ecID) {
-            var endRangeID = ecID;
-            var end = this.getNode(endRangeID);
-            var node = start;
-            start.nextUntil(function (next) {
-                node = next;
-                return next.id === endRangeID;
-            });
-            this._endRangeID = node.id;
-            if (node.id === endRangeID) {
-                this._endRangeOffset = eo;
-            } else if (!node.contains(end)) {
-                while (node) {
-                    var firstChild = node.firstChild();
-                    if (firstChild === node) {
-                        break;
-                    }
-                }
-                this._endRangeOffset = node.length();
-            }
-        } else {
-            this._endRangeID = this._startRangeID;
-            this._endRangeOffset = typeof so === 'number' ? this._startRangeOffset : start.length();
-        }
-    },
-    getRange: function () {
-        return {
-            start: {
-                id: this._startRangeID,
-                offset: this._startRangeOffset,
-            },
-            end: {
-                id: this._endRangeID || this._startRangeID,
-                offset: this._endRangeID ? this._endRangeOffset : this._startRangeOffset,
-            },
-            isCollapsed: function () {
-                return this.start.id === this.end.id && this.start.offset === this.end.offset;
-            },
-        };
     },
 
     //--------------------------------------------------------------------------

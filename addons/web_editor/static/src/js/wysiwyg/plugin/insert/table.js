@@ -9,7 +9,7 @@ var _ = require('web_editor._');
 
 var TablePicker = AbstractPlugin.extend({
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_table.xml'],
-    dependencies: ['Range'],
+    dependencies: [],
 
     buttons: {
         template: 'wysiwyg.buttons.tablepicker',
@@ -118,7 +118,7 @@ var TablePicker = AbstractPlugin.extend({
             sc: table.querySelector('td'),
             so: 0,
         });
-        this.dependencies.Range.save(range);
+        this.dependencies.Arch.setRange(range);
     },
 
     //--------------------------------------------------------------------------
@@ -243,7 +243,7 @@ var TablePicker = AbstractPlugin.extend({
 
 var Table = AbstractPlugin.extend({
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_table.xml'],
-    dependencies: ['Range'],
+    dependencies: [],
 
     buttons: {
         template: 'wysiwyg.popover.table',
@@ -327,7 +327,7 @@ var Table = AbstractPlugin.extend({
                 sc: this.utils.firstLeaf(point.node),
                 so: 0,
             });
-            this.dependencies.Range.save(range);
+            this.dependencies.Arch.setRange(range);
         }
     },
     /**
@@ -355,7 +355,7 @@ var Table = AbstractPlugin.extend({
                 sc: this.utils.firstLeaf(point.node),
                 so: 0,
             });
-            this.dependencies.Range.save(range);
+            this.dependencies.Arch.setRange(range);
         }
     },
     /**
@@ -374,7 +374,7 @@ var Table = AbstractPlugin.extend({
             sc: point.node,
             so: point.offset,
         });
-        this.dependencies.Range.save(range);
+        this.dependencies.Arch.setRange(range);
     },
     next: function (value, range) {
         var cell = this.utils.ancestor(range.ec, this.utils.isCell);

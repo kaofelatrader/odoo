@@ -5,6 +5,7 @@ var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 var ArchManager = require('wysiwyg.plugin.arch.ArchManager');
 var Renderer = require('wysiwyg.plugin.arch.renderer');
+var WrappedRange = require('wysiwyg.WrappedRange');
 
 var $ = require('web_editor.jquery');
 var _ = require('web_editor._');
@@ -62,12 +63,17 @@ var voidTags = [
 ];
 
 var ArchPlugin = AbstractPlugin.extend({
-    dependencies: ['Range'],
+    dependencies: [],
 
     customRules: [
         // [function (json) { return json; },
         // ['TEXT']],
     ],
+
+    editableDomEvents: {
+        'mouseup': '_onMouseUp',
+        'keyup': '_onKeyup',
+    },
 
     // children must contains parents without other node between (must match at least with one)
     //
@@ -202,6 +208,13 @@ var ArchPlugin = AbstractPlugin.extend({
             });
         });
 
+        this.range = {
+            scID: 1,
+            so: 0,
+            ecID: 1,
+            eo: 0,
+        };
+
         this.renderer = new Renderer(this.editable);
 
         this.manager = new ArchManager({
@@ -328,9 +341,6 @@ var ArchPlugin = AbstractPlugin.extend({
         }
         return this.manager.toJSON();
     },
-    getRange: function () {
-        return this.manager.getRange();
-    },
     /**
      * @param {Int} id
      * @param {Object} [options]
@@ -341,6 +351,143 @@ var ArchPlugin = AbstractPlugin.extend({
      **/
     render: function (id, options) {
         return this.manager.render(id, options);
+    },
+
+    //--------------------------------------------------------------------------
+    // Range methods
+    //--------------------------------------------------------------------------
+
+    getFocusedNode: function () {
+        return this.renderer.getElement(this.range.scID); // parent if text
+    },
+    /**
+     * @returns {WrappedRange}
+     */
+    getRange: function () {
+        var sc = this.renderer.getElement(this.range.scID);
+        var ec = this.range.scID === this.range.ecID ? sc : this.renderer.getElement(this.range.ecID);
+        return new WrappedRange({
+            sc: sc,
+            so: this.range.so,
+            ec: ec,
+            eo: this.range.eo,
+        }, this.editable.ownerDocument);
+    },
+    /**
+     * Set the range.
+     * Pass only `points.sc` to set the range on the whole element.
+     * Pass only `points.sc` and `points.so` to collapse the range on the start.
+     *
+     * @param {Object} points
+     * @param {Node} points.sc
+     * @param {Number} [points.so]
+     * @param {Node} [points.ec]
+     * @param {Number} [points.eo] must be given if ec is given
+     */
+    setRange: function (points) {
+        this.range.scID = this.renderer.whoIsThisNode(points.sc);
+        this.range.so = points.so || 0;
+        this.range.ecID = points.ec ? this.renderer.whoIsThisNode(points.ec) : this.range.scID;
+        this.range.eo = points.ec ? points.eo : (typeof points.so === 'number' ? points.so : this.utils.nodeLength(points.sc));
+        this._setRange();
+        this.trigger('focus'); // if change of IDs (or of parent ID if text)
+        this.trigger('range'); // if change of offset or of node or of IDs
+    },
+    /**
+     * Select the target media on the right (or left)
+     * of the currently selected target media.
+     *
+     * @private
+     * @param {Node} target
+     * @param {Boolean} left
+     */
+    setRangeOnVoidBlock: function (target, left) {
+        if (!target || !this.dependencies.Arch.isVoidBlock(target)) {
+            return;
+        }
+        var range = this._getRange();
+        var contentEditable;
+        var targetClosest;
+
+        if (
+            range.sc.tagName && target.contains(range.sc) &&
+            range.sc.classList.contains('o_fake_editable') &&
+            left === !range.sc.previousElementSibling
+        ) {
+            contentEditable = this.utils.ancestor(range.sc, function (node) {
+                return node.getAttribute('contentEditable');
+            });
+            targetClosest = this.utils.ancestor(target, function (node) {
+                return node.getAttribute('contentEditable');
+            });
+            if (targetClosest !== contentEditable) {
+                contentEditable.focus();
+            }
+            this.save();
+            return;
+        }
+
+        var next = this.getPoint(target, 0);
+        var method = left ? 'prevUntil' : 'nextUntil';
+        next = next[method](function (point) {
+            return point.node !== target && !target.contains(point.node) ||
+                point.node.contentEditable === 'true' ||
+                point.node.classList && point.node.classList.contains('o_fake_editable');
+        });
+        if (!next || next.node !== target && !target.contains(next.node)) {
+            next = this.getPoint(target, 0);
+        }
+
+        contentEditable = this.utils.ancestor(next.node, function (node) {
+            return node.getAttribute('contentEditable');
+        });
+        targetClosest = this.utils.ancestor(target, function (node) {
+            return node.getAttribute('contentEditable');
+        });
+        if (targetClosest !== contentEditable) {
+            // move the focus only if the new contentEditable is not the same (avoid scroll up)
+            // (like in the case of a video, which uses two contentEditable in the media, so as to write text)
+            contentEditable.focus();
+        }
+
+        if (range.sc !== next.node || range.so !== next.offset) {
+            this.setRange({
+                sc: next.node,
+                so: next.offset,
+            });
+        }
+    },
+    /**
+     * @returns {WrappedRange}
+     */
+    _getRange: function () {
+        return new WrappedRange({}, this.editable.ownerDocument);
+    },
+    _select: function (sc, so, ec, eo) {
+        var nativeRange = this._toNativeRange(sc, so, ec, eo);
+        var selection = sc.ownerDocument.getSelection();
+        if (selection.rangeCount > 0) {
+            selection.removeAllRanges();
+        }
+        selection.addRange(nativeRange);
+    },
+    _setRange: function () {
+        var wrappedRange = this.getRange();
+        this._select(wrappedRange.sc, wrappedRange.so, wrappedRange.ec, wrappedRange.eo);
+    },
+    _setRangeFromDOM: function () {
+        this.setRange(this._getRange().getPoints());
+    },
+    /**
+     * Get the native Range object corresponding to the given range.
+     *
+     * @returns {Range}
+     */
+    _toNativeRange: function (sc, so, ec, eo) {
+        var nativeRange = sc.ownerDocument.createRange();
+        nativeRange.setStart(sc, so);
+        nativeRange.setEnd(ec, eo);
+        return nativeRange;
     },
 
     //--------------------------------------------------------------------------
@@ -359,24 +506,22 @@ var ArchPlugin = AbstractPlugin.extend({
             DOM = this.renderer.whoIsThisNode(DOM);
         }
         var id = this.renderer.whoIsThisNode(element);
+        if (!id) {
+            id = this.range.scID;
+            offset = this.range.so;
+        }
         var changedNodes = this.manager.insert(DOM, id, offset);
         this._applyChangesInRenderer(changedNodes);
 
         if (changedNodes.length) {
-            this.dependencies.Range.setRange({
+            this.dependencies.Arch.setRange({
                 sc: this.renderer.getElement(changedNodes[0].id),
                 so: changedNodes[0].offset,
             });
         }
     },
-    setRange: function (sc, so, ec, eo) {
-        sc = typeof sc === 'number' ? sc : this.renderer.whoIsThisNode(sc);
-        ec = typeof ec === 'number' ? ec : this.renderer.whoIsThisNode(ec);
-
-        return this.manager.setRange(sc, so, ec, eo);
-    },
     addLine: function () {
-        var changedNodes = this.manager.addLine();
+        var changedNodes = this.manager.addLine(this.range);
         this._applyChangesInRenderer(changedNodes);
 
 
@@ -386,7 +531,7 @@ var ArchPlugin = AbstractPlugin.extend({
         });
 
         if (changedNodes.length) {
-            this.dependencies.Range.setRange({
+            this.setRange({
                 sc: this.renderer.getElement(changedNodes[0].id),
                 so: changedNodes[0].offset,
             });
@@ -433,6 +578,27 @@ var ArchPlugin = AbstractPlugin.extend({
             return false;
         }
         return ['table', 'thead', 'tbody', 'tfoot', 'tr'].indexOf(archNode.nodeName.toLowerCase()) === -1;
+    },
+
+    //--------------------------------------------------------------------------
+    // Handlers
+    //--------------------------------------------------------------------------
+
+    /**
+     * @private
+     * @param {jQueryEvent} e
+     */
+    _onKeyup: function (e) {
+        var isNavigationKey = e.keyCode >= 33 && e.keyCode <= 40;
+        if (isNavigationKey) {
+            this._setRangeFromDOM();
+        }
+    },
+    /**
+     * trigger up a range event when receive a mouseup from editable
+     */
+    _onMouseUp: function (ev) {
+        this._setRangeFromDOM();
     },
 });
 

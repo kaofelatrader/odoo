@@ -650,8 +650,9 @@ var SnippetsMenu = Widget.extend({
             $(ev.target).selectContent();
         });
         this.$document.on('keyup.snippets_menu', function () {
-            var range = Wysiwyg.getRange(this);
-            $(range && range.sc).closest('.o_default_snippet_text').removeClass('o_default_snippet_text');
+            console.info('todo');
+            // var range = Wysiwyg.getRange(this);
+            // $(range && range.sc).closest('.o_default_snippet_text').removeClass('o_default_snippet_text');
         });
 
         return Promise.all(defs).then(function () {

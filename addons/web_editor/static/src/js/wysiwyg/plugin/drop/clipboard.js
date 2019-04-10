@@ -6,7 +6,7 @@ var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 
 var ClipboardPlugin = AbstractPlugin.extend({
-    dependencies: ['Range'],
+    dependencies: [],
     editableDomEvents: {
         'paste': '_onPaste',
     },
@@ -35,7 +35,7 @@ var ClipboardPlugin = AbstractPlugin.extend({
         this._insertNodesAt(nodes, point);
 
         var start = nodes[nodes.length - 1];
-        this.dependencies.Range.setRange({
+        this.dependencies.Arch.setRange({
             sc: start,
             so: this.utils.nodeLength(start),
         }).normalize();
@@ -165,7 +165,7 @@ var ClipboardPlugin = AbstractPlugin.extend({
      * @returns {BoundaryPoint}
      */
     _getPastePoint: function () {
-        var point = this.dependencies.Range.getRange().getStartPoint();
+        var point = this.dependencies.Arch.getRange().getStartPoint();
         var offsetChild = point.node.childNodes[point.offset];
         point = offsetChild ? this.getPoint(offsetChild, 0) : point;
         return point.nextUntil(this._isPastePointLegal.bind(this));
@@ -186,7 +186,7 @@ var ClipboardPlugin = AbstractPlugin.extend({
             point.node = point.node.tagName ? point.node : point.node.splitText(point.offset);
             $(point.node).before($fakeParent.contents());
         } else {
-            this.dom.insertBlockNode($fakeParent[0], this.dependencies.Range.getRange());
+            this.dom.insertBlockNode($fakeParent[0], this.dependencies.Arch.getRange());
         }
         $fakeParent.contents().unwrap();
     },
@@ -343,18 +343,16 @@ var ClipboardPlugin = AbstractPlugin.extend({
         }
 
         // Delete selection
-        var point = this.dom.deleteSelection(this.dependencies.Range.getRange(), true);
-        var range = this.dependencies.Range.setRange({
+        var point = this.dom.deleteSelection(this.dependencies.Arch.getRange(), true);
+        var range = this.dependencies.Arch.setRange({
             sc: point.node,
             so: point.offset,
         });
         this.editable.normalize();
-        this.dependencies.Range.save(range);
 
         // Insert the nodes
         this.pasteNodes(clipboardData);
-        range = this.dependencies.Range.getRange().normalize();
-        this.dependencies.Range.save(range);
+        range = this.dependencies.Arch.getRange().normalize();
 
         this.context.invoke('editor.afterCommand');
     },

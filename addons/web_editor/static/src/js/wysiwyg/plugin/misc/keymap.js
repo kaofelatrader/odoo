@@ -9,7 +9,7 @@ var defaultOptions = require('wysiwyg.options');
 
 var keyMapPlugin = AbstractPlugin.extend({
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_help.xml'],
-    dependencies: ['Range'],
+    dependencies: [],
 
     buttons: {
         template: 'wysiwyg.buttons.help',
@@ -201,7 +201,7 @@ var keyMapPlugin = AbstractPlugin.extend({
         var plugin = this.dependencies[item.pluginName];
         this.trigger_up('command', {
             method: plugin[item.methodName].bind(plugin),
-            args: [item.value, this.dependencies.Range.getRange()],
+            args: [item.value, this.dependencies.Arch.getRange()],
             disableRange: plugin.disableRange,
         });
     },

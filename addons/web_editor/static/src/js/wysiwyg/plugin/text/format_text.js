@@ -11,7 +11,7 @@ var Manager = require('web_editor.wysiwyg.plugin.manager');
 //--------------------------------------------------------------------------
 
 var TextPlugin = AbstractPlugin.extend({
-    dependencies: ['Range'],
+    dependencies: [],
 
     //--------------------------------------------------------------------------
     // Public
@@ -47,7 +47,7 @@ var TextPlugin = AbstractPlugin.extend({
         } else {
             this._applyFontToSelection(color, bgcolor, size, range);
         }
-        this.dependencies.Range.save(range);
+        this.dependencies.Arch.setRange(range);
     },
 
     //--------------------------------------------------------------------------
@@ -412,7 +412,7 @@ var TextPlugin = AbstractPlugin.extend({
 
 var ForeColorPlugin = AbstractPlugin.extend({
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_colorpicker.xml'],
-    dependencies: ['Range', 'Text'],
+    dependencies: ['Text'],
 
     buttons: {
         template: 'wysiwyg.buttons.forecolor',
@@ -461,7 +461,6 @@ var ForeColorPlugin = AbstractPlugin.extend({
             $button.attr('data-value', ev.data.cssColor);
             $button.data('value', ev.data.cssColor);
             $button.attr('title', ev.data.cssColor);
-            self.dependencies.Range.restore();
             $button.mousedown();
         }));
         colorPickerDialog.open();
@@ -629,7 +628,7 @@ var FontSizePlugin = AbstractPlugin.extend({
 });
 
 var FontStylePlugin = AbstractPlugin.extend({
-    dependencies: ['Range', 'Media', 'Text'],
+    dependencies: ['Media', 'Text'],
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_format_text.xml'],
 
     buttons: {
@@ -726,7 +725,7 @@ var FontStylePlugin = AbstractPlugin.extend({
                 ec: endNode,
                 eo: this.utils.nodeLength(endNode),
             });
-            this.dependencies.Range.save(range);
+            this.dependencies.Arch.setRange(range);
         }
     },
     /**
@@ -756,7 +755,7 @@ var FontStylePlugin = AbstractPlugin.extend({
             }
         }
 
-        this.dependencies.Range.save(range);
+        this.dependencies.Arch.setRange(range);
     },
     /**
      * Remove format on the current range.
@@ -790,7 +789,7 @@ var FontStylePlugin = AbstractPlugin.extend({
             ec: endNode,
             eo: this.utils.nodeLength(endNode),
         });
-        this.dependencies.Range.save(range);
+        this.dependencies.Arch.setRange(range);
     },
 
     //--------------------------------------------------------------------------
@@ -912,14 +911,14 @@ var FontStylePlugin = AbstractPlugin.extend({
             var emptyText = document.createTextNode(this.utils.char('zeroWidth'));
             $(br || range.sc.splitText(range.so)).before(emptyText);
             $(br).remove();
-            range = this.dependencies.Range.setRange({
+            range = this.dependencies.Arch.setRange({
                 sc: emptyText,
                 so: 0,
             });
         } else {
             range = this.dom.insertTextInline(this.utils.char('zeroWidth'), range);
-            range = this.dependencies.Range.setRange(range).normalize();
-            this.dependencies.Range.save(range);
+            range = this.dependencies.Arch.setRange(range).normalize();
+            this.dependencies.Arch.setRange(range);
         }
         return range;
     },
@@ -1094,13 +1093,13 @@ var FontStylePlugin = AbstractPlugin.extend({
         if (!range.isCollapsed()) {
             return;
         }
-        range = this.dependencies.Range.setRange({
+        range = this.dependencies.Arch.setRange({
             sc: range.sc,
             so: 0,
             ec: range.sc,
             eo: this.utils.nodeLength(range.sc),
         });
-        this.dependencies.Range.save(range);
+        this.dependencies.Arch.setRange(range);
     },
     /**
      * Split the text nodes at both ends of the range, then update the range.
@@ -1224,7 +1223,7 @@ var FontStylePlugin = AbstractPlugin.extend({
 });
 
 var ParagraphPlugin = AbstractPlugin.extend({
-    dependencies: ['Range', 'FontStyle', 'List'],
+    dependencies: ['FontStyle', 'List'],
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_format_text.xml'],
 
     buttons: {
@@ -1410,8 +1409,8 @@ var ParagraphPlugin = AbstractPlugin.extend({
 
         }
 
-        range = this.dependencies.Range.setRange(range.getPoints()).normalize();
-        this.dependencies.Range.save(range);
+        range = this.dependencies.Arch.setRange(range.getPoints()).normalize();
+        this.dependencies.Arch.setRange(range);
 
         return !!nodes.length && nodes;
     },
