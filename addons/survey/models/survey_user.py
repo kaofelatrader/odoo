@@ -141,10 +141,14 @@ class SurveyUserInput(models.Model):
         """ Will send the certification email with attached document if
         - The survey is a certification
         - It has a certification_mail_template_id set
-        - The user succeeded the test """
+        - The user succeeded the test
+        Will also run challenge Cron to give the certification badge if any."""
         for user_input in self:
-            if user_input.survey_id.certificate and user_input.quizz_passed and user_input.survey_id.certification_mail_template_id:
-                user_input.survey_id.certification_mail_template_id.send_mail(user_input.id, notif_layout="mail.mail_notification_light")
+            if user_input.survey_id.certificate and user_input.quizz_passed:
+                if user_input.survey_id.certification_mail_template_id:
+                    user_input.survey_id.certification_mail_template_id.send_mail(user_input.id, notif_layout="mail.mail_notification_light")
+                if user_input.survey_id.certification_give_badge:
+                    self.env['gamification.challenge'].sudo()._cron_update()
 
     @api.multi
     def _get_survey_url(self):
