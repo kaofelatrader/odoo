@@ -6,6 +6,9 @@ function Renderer (editable) {
     this.reset();
 }
 Renderer.prototype = {
+    getElement: function (id) {
+        return this.elements[id];
+    },
     update: function (newJSON) {
         if (newJSON.forEach) {
             newJSON.forEach(this._update.bind(this));

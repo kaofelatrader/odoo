@@ -62,7 +62,7 @@ var voidTags = [
 ];
 
 var ArchPlugin = AbstractPlugin.extend({
-    dependencies: [],
+    dependencies: ['Range'],
 
     customRules: [
         // [function (json) { return json; },
@@ -361,6 +361,12 @@ var ArchPlugin = AbstractPlugin.extend({
         var id = this.renderer.whoIsThisNode(element);
         var changedNodes = this.manager.insert(DOM, id, offset);
         this._applyChangesInRenderer(changedNodes);
+
+        console.log(changedNodes[0]);
+        this.dependencies.Range.setRange({
+            sc: this.renderer.getElement(changedNodes[0].id),
+            so: changedNodes[0].offset,
+        });
         return changedNodes[0];
     },
     setRange: function (sc, so, ec, eo) {
@@ -372,6 +378,12 @@ var ArchPlugin = AbstractPlugin.extend({
     addLine: function () {
         var changedNodes = this.manager.addLine();
         this._applyChangesInRenderer(changedNodes);
+
+        console.log(changedNodes[0]);
+        this.dependencies.Range.setRange({
+            sc: this.renderer.getElement(changedNodes[0].id),
+            so: changedNodes[0].offset,
+        });
         return changedNodes[0];
     },
     removeLeft: function () {
@@ -399,8 +411,6 @@ var ArchPlugin = AbstractPlugin.extend({
         });
         self.renderer.update(json);
         this.trigger_up('change');
-
-        console.log(changedNodes[0]);
     },
     _isVoidBlock: function (archNode) {
         return archNode.attributes && archNode.attributes.contentEditable === 'false';
