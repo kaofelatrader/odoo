@@ -26,14 +26,20 @@ var TextNode = ArchNode.extend({
     empty: function () {
         this.nodeValue = '';
     },
-    insert: function (node, offset) {
+    insert: function (archNode, offset) {
         if (!this.isEditable()) {
             console.warn("can not split a not editable node");
             return;
         }
 
+        if (archNode.isText() && archNode.isVisibleText()) {
+            this.nodeValue = this.nodeValue.slice(0, offset) + archNode.nodeValue + this.nodeValue.slice(offset);
+            this.tree._markChange(this, offset + archNode.nodeValue.length);
+            return;
+        }
+
         var next = this.split(offset);
-        this.parent.insert(node, next.index());
+        this.parent.insert(archNode, next.index());
     },
     toString: function (options) {
         if (this.isVirtual() && !options.keepVirtual) {
@@ -180,7 +186,7 @@ var VirtualTextNode = TextNode.extend({
     char: '\uFEFF',
     init: function (tree) {
         this.tree = tree;
-        this.nodeName = 'TEXT';
+        this.nodeName = 'TEXT-VIRTUAL';
         this.nodeValue = this.char;
     },
 
@@ -228,9 +234,32 @@ var VirtualTextNode = TextNode.extend({
     // Private
     //--------------------------------------------------------------------------
 
-    _applyRulesArchNode: function () {},
+    _applyRulesArchNode: function () {
+        var para = this.ancestor(this._isPara);
+        if (!para) {
+            this.remove();
+            return;
+        }
+
+        if (para.isEmpty()) {
+            this._mutation('br');
+            return;
+        }
+
+        var format = this.ancestor(this.isFormatNode);
+        if (!format || !format.isEmpty()) {
+            this.remove();
+        }
+    },
     _applyRulesCheckParents: function () {},
     _addArchitecturalSpaceNode: function () {},
+    _mutation: function (nodeName, param) {
+        var archNode = this.tree._constructNode(nodeName, param);
+        archNode.id = this.id;
+        this.before(archNode);
+        this.id = null;
+        this.remove();
+    },
 });
 
 //////////////////////////////////////////////////////////////

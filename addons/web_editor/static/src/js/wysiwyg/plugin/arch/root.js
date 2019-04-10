@@ -51,23 +51,6 @@ var RootNode = ArchNode.extend({
         data.childNodes = childNodes;
         return data;
     },
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    _prevNextUntil: function (direction, fn, __closestUnbreakable, __goUp) {
-        if (!__closestUnbreakable) {
-            __closestUnbreakable = this;
-            var next = this._super.apply(this, arguments);
-            if (next) {
-                return next;
-            }
-        }
-
-        var insertMethod = this[direction === 'next' ? 'append' : 'prepend'].bind(this);
-        return this.tree._generateVirtualNode(this, insertMethod, fn);
-    },
 });
 
 return RootNode;

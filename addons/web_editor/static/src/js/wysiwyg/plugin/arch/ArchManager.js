@@ -123,10 +123,6 @@ ArchManager.prototype = {
             archNode.insert(child, offset);
         });
 
-        this._changes.forEach(function (c) {
-            c.archNode.applyRules();
-        });
-
         return this._getChanges();
     },
     addLine: function () {
@@ -175,7 +171,7 @@ ArchManager.prototype = {
         var start = this.getNode(this._startRangeID);
         this._startRangeOffset = so || 0;
 
-        if (ecID) {
+        if (ecID && scID !== ecID) {
             var endRangeID = ecID;
             var end = this.getNode(endRangeID);
             var node = start;
@@ -322,9 +318,11 @@ ArchManager.prototype = {
     //--------------------------------------------------------------------------
 
     _constructNode: function (nodeName, param) {
-        if (nodeName !== 'TEXT') {
+        if (!nodeName) {
+            return new text.VirtualTextNode(this);
+        } else if (nodeName !== 'TEXT') {
             var Constructor = customNodes[nodeName] || ArchNode;
-            return new Constructor(this, nodeName, param);
+            return new Constructor(this, nodeName, param || []);
         } else {
             return new text.VisibleTextNode(this, param);
         }
@@ -341,17 +339,13 @@ ArchManager.prototype = {
             }
         }
     },
-    _generateVirtualNode: function (archNode, insertMethod, fn) {
-        var virtualTextNode = new text.VirtualTextNode(this);
-        insertMethod(virtualTextNode);
-        if (!virtualTextNode.isEditable() || (fn && !fn.call(this, virtualTextNode))) {
-            virtualTextNode.remove();
-            return;
-        }
-        return virtualTextNode;
-    },
     _getChanges: function () {
         var self = this;
+
+        this._changes.forEach(function (c) {
+            c.archNode.applyRules();
+        });
+
         var changes = [];
         this._changes.forEach(function (c) {
             if (!c.archNode.id || !self.getNode(c.archNode.id)) {

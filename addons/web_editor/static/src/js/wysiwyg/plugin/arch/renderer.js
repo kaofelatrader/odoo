@@ -147,13 +147,35 @@ Renderer.prototype = {
             }
         });
     },
-    _getElement: function (id) {
+    _getElement: function (id, target) {
         var json = this.jsonById[id];
         var el = this.elements[json.id];
+        var freeElement = target && target !== el && !this.whoIsThisNode(target) ? target : null;
+
+        if (el && freeElement) {
+            freeElement.parentNode.removeChild(freeElement);
+        }
+        if (!el && freeElement) {
+            el = freeElement;
+        }
+
         if (!el) {
             if (json.nodeValue) {
                 el = document.createTextNode(json.nodeValue);
             } else {
+                el = document.createElement(json.nodeName);
+            }
+        } else { // virtual node can mutate or try to use a free element
+            var isText = 'nodeValue' in json;
+            if (el.tagName && isText) {
+                if (el.parentNode) {
+                    el.parentNode.removeChild(el);
+                }
+                el = document.createTextNode(json.nodeValue);
+            } else if (!isText && json.nodeName && (!el.tagName || el.tagName.toLowerCase() !== json.nodeName)) {
+                if (el.parentNode) {
+                    el.parentNode.removeChild(el);
+                }
                 el = document.createElement(json.nodeName);
             }
         }
@@ -199,6 +221,19 @@ Renderer.prototype = {
         }
 
         if (changes.childNodes) {
+            // sort nodes and add new nodes
+            changes.childNodes.forEach(function (id, index) {
+                id = +id;
+                var childNode = self._getElement(id, node.childNodes[index]);
+                var childIndex = [].indexOf.call(node.childNodes, childNode);
+                if (childIndex !== index) {
+                    if (!node.childNodes[index]) {
+                        node.appendChild(childNode);
+                    } else {
+                        node.insertBefore(childNode, node.childNodes[index]);
+                    }
+                }
+            });
             // remove unknown and removed nodes
             [].slice.call(node.childNodes).forEach(function (childNode) {
                 for (var id in self.elements) {
@@ -209,19 +244,6 @@ Renderer.prototype = {
                 }
                 if (changes.childNodes.indexOf(id) === -1) {
                     childNode.parentNode.removeChild(childNode);
-                }
-            });
-            // sort nodes and add new nodes
-            changes.childNodes.forEach(function (id, index) {
-                id = +id;
-                var childNode = self._getElement(id);
-                var childIndex = [].indexOf.call(node.childNodes, childNode);
-                if (childIndex !== index) {
-                    if (!node.childNodes[index]) {
-                        node.appendChild(childNode);
-                    } else {
-                        node.insertBefore(childNode, node.childNodes[index]);
-                    }
                 }
             });
         }

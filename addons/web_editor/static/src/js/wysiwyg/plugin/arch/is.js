@@ -81,8 +81,7 @@ ArchNode.include({
     isCell: function () {
         return ['td', 'th'].indexOf(this.nodeName) !== -1;
     },
-    isContentEditable: function () {
-        console.warn("todo: clarify");
+    isContentEditable: function () {  // TODO
         return !this.tree || !this.tree.root || this === this.tree.root;
         return this.tree.options.isEditableNode(this);
     },
@@ -128,7 +127,8 @@ ArchNode.include({
         if (this.childNodes.length === 0) {
             return true;
         }
-        if (this.childNodes.length === 1 && (this.childNodes[0].isBR() || this.childNodes[0].isText() && this.childNodes[0].isEmpty())) {
+        var child = this.childNodes[0];
+        if (this.childNodes.length === 1 && (child.isBR() || child.isText() && child.isEmpty())) {
             return true;
         }
         return false;
@@ -144,7 +144,7 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isFormatNode: function (styleTags) {
-        styleTags = styleTags || this.options.defaultStyleTags;
+        styleTags = styleTags instanceof Array ? styleTags : this.tree.options.formatTags;
         console.warn('defaultStyleTags ?');
         return styleTags.indexOf(this.nodeName) !== -1;
     },
@@ -331,7 +331,7 @@ ArchNode.include({
         return this.tree.options.voidTags.concat('button').indexOf(this.nodeName) !== -1;
     },
     isVoidBlock: function () {
-        return (!this.isBR() && this.isVoid()) || this.options.isVoidBlock(this);
+        return (!this.isBR() && this.isVoid()) || this.tree.options.isVoidBlock(this);
     },
     /**
      * Return true if the given node is a block quote element (BLOCKQUOTE).

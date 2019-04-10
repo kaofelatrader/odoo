@@ -362,12 +362,12 @@ var ArchPlugin = AbstractPlugin.extend({
         var changedNodes = this.manager.insert(DOM, id, offset);
         this._applyChangesInRenderer(changedNodes);
 
-        console.log(changedNodes[0]);
-        this.dependencies.Range.setRange({
-            sc: this.renderer.getElement(changedNodes[0].id),
-            so: changedNodes[0].offset,
-        });
-        return changedNodes[0];
+        if (changedNodes.length) {
+            this.dependencies.Range.setRange({
+                sc: this.renderer.getElement(changedNodes[0].id),
+                so: changedNodes[0].offset,
+            });
+        }
     },
     setRange: function (sc, so, ec, eo) {
         sc = typeof sc === 'number' ? sc : this.renderer.whoIsThisNode(sc);
@@ -385,12 +385,12 @@ var ArchPlugin = AbstractPlugin.extend({
             console.log(r.id, self.renderer.getElement(r.id));
         });
 
-        console.log(changedNodes[0]);
-        this.dependencies.Range.setRange({
-            sc: this.renderer.getElement(changedNodes[0].id),
-            so: changedNodes[0].offset,
-        });
-        return changedNodes[0];
+        if (changedNodes.length) {
+            this.dependencies.Range.setRange({
+                sc: this.renderer.getElement(changedNodes[0].id),
+                so: changedNodes[0].offset,
+            });
+        }
     },
     removeLeft: function () {
     },
@@ -421,8 +421,7 @@ var ArchPlugin = AbstractPlugin.extend({
     _isVoidBlock: function (archNode) {
         return archNode.attributes && archNode.attributes.contentEditable === 'false';
     },
-    _isUnbreakableNode: function (archNode) {
-        console.warn('todo');
+    _isUnbreakableNode: function (archNode) { // TODO
         return false;
         return  node === this.editable || !this.isEditableNode(node.parentNode);
     },

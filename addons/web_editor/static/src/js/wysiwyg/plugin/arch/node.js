@@ -279,7 +279,7 @@ return Class.extend({
         this.insertBefore(archNode, ref);
     },
     addLine: function (offset) {
-        if (!this.ancestor(this._isAddLineSplitable)) {
+        if (!this.ancestor(this._isPara)) {
             return;
         }
 
@@ -295,9 +295,6 @@ return Class.extend({
         }
 
         return this.parent.addLine(next.index());
-    },
-    _isAddLineSplitable: function () {
-        return this._isPara() || this.nodeName === 'li';
     },
 
     //--------------------------------------------------------------------------
@@ -455,9 +452,15 @@ return Class.extend({
             __goUp = true;
             next = this.parent;
         }
-        if (!__closestUnbreakable.contains(next)) {
+        if (!next || !__closestUnbreakable.contains(next)) {
             var insertMethod = __closestUnbreakable[direction === 'next' ? 'append' : 'prepend'].bind(__closestUnbreakable);
-            return this.tree._generateVirtualNode(this, insertMethod, fn);
+            var virtualTextNode = this.tree._constructNode();
+            insertMethod(virtualTextNode);
+            if (!virtualTextNode.isEditable() || (fn && !fn.call(this, virtualTextNode))) {
+                virtualTextNode.remove();
+                return;
+            }
+            return virtualTextNode;
         }
         if (fn && !fn.call(this, next)) {
             return next._prevNextUntil(direction, fn, __closestUnbreakable, __goUp);

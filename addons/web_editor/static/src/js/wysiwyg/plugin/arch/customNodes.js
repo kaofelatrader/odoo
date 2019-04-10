@@ -17,13 +17,14 @@ text.TextNode.include = function (argument) {
 var customNodes = {
     ArchNode: ArchNode,
     TEXT: text.TextNode,
+    VirtualTextNode: text.VirtualTextNode,
 };
 
 customNodes.br = ArchNode.extend({
     insert: function (archNode, offset) {
         if (archNode.isBr()) {
             var ancestor = this.ancestor(this.isBlock);
-            var archNode = this.isRightEdgeOf(ancestor) ? new VirtualTextNode(this.tree) : archNode;
+            var archNode = this.isRightEdgeOf(ancestor) ? new customNodes.VirtualTextNode(this.tree) : archNode;
             this.after(archNode);
         }
         return this._super.apply(this, arguments);
