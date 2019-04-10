@@ -2,6 +2,8 @@ odoo.define('wysiwyg.plugin.arch_tree', function (require) {
 'use strict';
 
 var ArchNode = require('wysiwyg.plugin.arch.node');
+function True () { return true; };
+function False () { return false; };
 
 ArchNode.include({
 
@@ -24,17 +26,13 @@ ArchNode.include({
      *
      * @returns {Boolean}
      */
-    isArchitecturalSpaceNode: function () {
-        return false;
-    },
+    isArchitecturalSpaceNode: False,
     /**
      * Returns true if the node is a text node containing nothing
      *
      * @returns {Boolean}
      */
-    isBlankText: function () {
-        return false;
-    },
+    isBlankText: False,
     /**
      * Returns true if the node is blank.
      * In this context, a blank node is understood as
@@ -74,9 +72,7 @@ ArchNode.include({
      *
      * @returns {Boolean}
      */
-    isBR: function () {
-        return this.nodeName === 'br';
-    },
+    isBR: False,
     /**
      * Return true if the given node is a table cell element (TD, TH).
      *
@@ -115,16 +111,14 @@ ArchNode.include({
         return false;
     },
     isEditable: function () {
-        return this.ancestor(this.isContentEditable);
+        return !this.id || this.ancestor(this.isContentEditable);
     },
     /**
      * Return true if the given node's type is element (1).
      *
      * @returns {Boolean}
      */
-    isElement: function () {
-        return true;
-    },
+    isElement: True,
     /**
      * Return true if the given node is empty.
      *
@@ -139,9 +133,7 @@ ArchNode.include({
         }
         return false;
     },
-    isFragment: function () {
-        return false;
-    },
+    isFragment: False,
     /**
      * Returns true if the node is a "format" node.
      * In this context, a "format" node is understood as
@@ -312,9 +304,7 @@ ArchNode.include({
      *
      * @returns {Boolean}
      */
-    isText: function () {
-        return false;
-    },
+    isText: False,
     isUnbreakable: function () {
         return ["td", "tr", "tbody", "tfoot", "thead", "table"].indexOf(this.nodeName) !== -1 ||
             this.isContentEditable() ||
@@ -324,17 +314,13 @@ ArchNode.include({
      *
      * @returns {Boolean}
      */
-    isVirtual: function () {
-        return this._isVirtual;
-    },
+    isVirtual: False,
     /**
      * Returns true if the node is a text node with visible text.
      *
      * @returns {Boolean}
      */
-    isVisibleText: function () {
-        return false;
-    },
+    isVisibleText: False,
     /**
      * Return true if the given node is a void element (BR, COL, EMBED, HR, IMG, INPUT, ...).
      *

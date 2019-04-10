@@ -2,6 +2,8 @@ odoo.define('wysiwyg.plugin.arch.text', function (require) {
 'use strict';
 
 var ArchNode = require('wysiwyg.plugin.arch.node');
+function True () { return true; };
+function False () { return false; };
 
 
 var TextNode = ArchNode.extend({
@@ -12,8 +14,26 @@ var TextNode = ArchNode.extend({
 
         this.tree._markChange(this, nodeValue.length);
     },
+    addLine: function (offset) {
+        if (!this.isEditable()) {
+            console.warn("can not split a not editable node");
+            return;
+        }
+
+        var next = this.split(offset);
+        return this.parent.addLine(next.index());
+    },
     empty: function () {
         this.nodeValue = '';
+    },
+    insert: function (node, offset) {
+        if (!this.isEditable()) {
+            console.warn("can not split a not editable node");
+            return;
+        }
+
+        var next = this.split(offset);
+        this.parent.insert(node, next.index());
     },
     toString: function (options) {
         if (this.isVirtual() && !options.keepVirtual) {
@@ -27,39 +47,59 @@ var TextNode = ArchNode.extend({
     /**
      * @override
      */
-    isBlankNode: function () {
-        return false;
-    },
+    isBlankNode: False,
     /**
      * @override
      */
-    isElement: function () {
-        return false;
-    },
+    isBlankText: False,
+    /**
+     * @override
+     */
+    isElement: False,
     /**
      * @override
      */
     isEmpty: function () {
-        return true;
+        return !!this.nodeValue.length;
     },
     /**
      * @override
      */
-    isInline: function () {
-        return true;
-    },
+    isInline: True,
     /**
      * @override
      */
-    isNodeBlockType: function () {
-        return false;
+    isNodeBlockType: False,
+    /**
+     * @override
+     */
+    isText: True,
+    /**
+     * @override
+     */
+    isVisibleText: True,
+    split: function (offset) {
+        if (!this.isEditable()) {
+            console.warn("can not split a not editable node");
+            return;
+        }
+
+        var text = this.nodeValue.slice(offset);
+        var Constructor = text.length ? this.constructor : VirtualTextNode;
+        var archNode = new Constructor(this.tree, text);
+        this.tree._markChange(archNode, 0);
+
+        this.nodeValue = this.nodeValue.slice(0, offset);
+        this.tree._markChange(this, offset);
+
+        this.after(archNode);
+        return archNode;
     },
-    isText: function () {
-        return true;
-    },
-    isVisibleText: function (argument) {
-        return true;
-    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
     _applyRulesPropagation: function () {},
     _addArchitecturalSpaceNodePropagation: function () {},
 });
@@ -70,16 +110,11 @@ var regExpSpaceBegin = /^([\s\n\r\t]*)/;
 var regExpSpaceEnd = /([\s\n\r\t]*)$/;
 var regExpSpace = /\s+/g;
 var VisibleTextNode = TextNode.extend({
-    insert: function (node, offset) {
-        var next = this._split(offset);
-        this.parent.insert(node, next.index());
-    },
-    /**
-     * @override
-     */
-    isEmpty: function () {
-        return false;
-    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
     _applyRulesArchNode: function () {
         if (this.nodeValue.length && this.ancestor(this.isPre)) {
             return this._super();
@@ -129,16 +164,6 @@ var VisibleTextNode = TextNode.extend({
             this.remove();
         }
     },
-    _split: function (offset) {
-        var text = this.nodeValue.slice(offset);
-        var node = new VisibleTextNode(this.tree, text);
-
-        this.nodeValue = this.nodeValue.slice(0, offset);
-        this.tree._markChange(this, offset);
-
-        this.after(node);
-        return node;
-    },
 });
 
 //////////////////////////////////////////////////////////////
@@ -155,26 +180,30 @@ var VirtualTextNode = TextNode.extend({
     // Public
     //--------------------------------------------------------------------------
 
-    insert: function (fragment, offset) {
-        var self = this;
-        var changes = [];
-        fragment.childNodes.forEach(function (archNode) {
-            self.after(archNode);
-            changes.push(archNode.id);
-        });
+    insert: function (node, offset) {
+        this.parent.insert(node, this.index());
         this.remove();
-        this.parent.applyRules();
-        return changes;
     },
     /**
      * @override
      */
-    isBlankText: function () {
-        return true;
-    },
-    isVirtual: function () {
-        return true;
-    },
+    isBlankNode: True,
+    /**
+     * @override
+     */
+    isBlankText: True,
+    /**
+     * @override
+     */
+    isEmpty: True,
+    /**
+     * @override
+     */
+    isVirtual: True,
+    /**
+     * @override
+     */
+    split: False,
 
     //--------------------------------------------------------------------------
     // Public: export
@@ -203,6 +232,9 @@ var ArchitecturalSpaceNode = TextNode.extend({
         this._super.apply(this, arguments);
         this.nodeName = 'TEXT-ARCH';
     },
+    insert: function (node, offset) {
+        this.parent.insert(node, this.index());
+    },
     toJSON: function (options) {
         if (!options || !options.architecturalSpace) {
             return null;
@@ -226,18 +258,27 @@ var ArchitecturalSpaceNode = TextNode.extend({
     /**
      * @override
      */
-    isArchitecturalSpaceNode: function () {
-        return true;
-    },
+    isArchitecturalSpaceNode: True,
     /**
      * @override
      */
-    isBlankText: function () {
-        return true;
-    },
-    isVisibleText: function (argument) {
-        return false;
-    },
+    isBlankNode: True,
+    /**
+     * @override
+     */
+    isBlankText: True,
+    /**
+     * @override
+     */
+    isEmpty: True,
+    /**
+     * @override
+     */
+    isVisibleText: False,
+    /**
+     * @override
+     */
+    split: False,
 
     //--------------------------------------------------------------------------
     // Private

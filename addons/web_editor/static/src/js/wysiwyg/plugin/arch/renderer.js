@@ -7,7 +7,11 @@ function Renderer (editable) {
 }
 Renderer.prototype = {
     update: function (newJSON) {
-        this._update(newJSON);
+        if (newJSON.forEach) {
+            newJSON.forEach(this._update.bind(this));
+        } else {
+            this._update(newJSON);
+        }
         this._clean();
         this.redraw();
     },

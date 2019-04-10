@@ -2,6 +2,9 @@ odoo.define('wysiwyg.plugin.arch.fragment', function (require) {
 'use strict';
 
 var ArchNode = require('wysiwyg.plugin.arch.node');
+function True () { return true; };
+function False () { return false; };
+
 
 var FragmentNode = ArchNode.extend({
     init: function (tree) {
@@ -15,15 +18,9 @@ var FragmentNode = ArchNode.extend({
     /**
      * @override
      */
-    isElement: function () {
-        return false;
-    },
-    isFragment: function () {
-        return true;
-    },
-    isVirtual: function () {
-        return true;
-    },
+    isElement: False,
+    isFragment: True,
+    isVirtual: True,
 });
 
 return FragmentNode;

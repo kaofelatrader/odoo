@@ -355,25 +355,12 @@ var ArchPlugin = AbstractPlugin.extend({
         return this.manager.remove(id);
     },
     insert: function (DOM, element, offset) {
-        var self = this;
         if (typeof DOM !== 'string' && this.renderer.whoIsThisNode(DOM)) {
             DOM = this.renderer.whoIsThisNode(DOM);
         }
         var id = this.renderer.whoIsThisNode(element);
         var changedNodes = this.manager.insert(DOM, id, offset);
-
-        console.log(changedNodes.map(function (r) {return r.id;}));
-
-        changedNodes.forEach(function (change) {
-            self.renderer.update(self.manager.export(change.id, {
-                keepVirtual: true,
-            }));
-        })
-
-        this.trigger_up('change');
-
-        console.log(changedNodes[0]);
-
+        this._applyChangesInRenderer(changedNodes);
         return changedNodes[0];
     },
     setRange: function (sc, so, ec, eo) {
@@ -383,6 +370,9 @@ var ArchPlugin = AbstractPlugin.extend({
         return this.manager.setRange(sc, so, ec, eo);
     },
     addLine: function () {
+        var changedNodes = this.manager.addLine();
+        this._applyChangesInRenderer(changedNodes);
+        return changedNodes[0];
     },
     removeLeft: function () {
     },
@@ -394,6 +384,24 @@ var ArchPlugin = AbstractPlugin.extend({
     // Private from Common
     //--------------------------------------------------------------------------
 
+    _applyChangesInRenderer: function (changedNodes) {
+        var self = this;
+        if (!changedNodes.length) {
+            return;
+        }
+
+        console.log(changedNodes.map(function (r) {return r.id;}));
+
+        var json = changedNodes.map(function (change) {
+            return self.manager.export(change.id, {
+                keepVirtual: true,
+            });
+        });
+        self.renderer.update(json);
+        this.trigger_up('change');
+
+        console.log(changedNodes[0]);
+    },
     _isVoidBlock: function (archNode) {
         return archNode.attributes && archNode.attributes.contentEditable === 'false';
     },

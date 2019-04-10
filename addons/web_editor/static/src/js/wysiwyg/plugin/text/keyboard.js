@@ -486,11 +486,11 @@ var KeyboardPlugin = AbstractPlugin.extend({
                     handled = this._onDelete(e);
                     break;
             }
-            if (handled) {
-                this._preventTextInEditableDiv();
-                this.dependencies.Range.save(this.dependencies.Range.getRange());
-                e.preventDefault();
-            }
+            // if (handled) {
+            //     this._preventTextInEditableDiv();
+            //     this.dependencies.Range.save(this.dependencies.Range.getRange());
+            //     e.preventDefault();
+            // }
         }
         if (e.key !== "Dead") {
             this._accented = false;
@@ -582,11 +582,14 @@ var KeyboardPlugin = AbstractPlugin.extend({
         this.dependencies.Range.save(range);
 
         if (e.shiftKey) {
-            this._handleShiftEnter();
+            this.dependencies.Arch.insert('<br/>');
+            // this._handleShiftEnter();
         } else if (e.ctrlKey) {
-            this._insertHR();
+            this.dependencies.Arch.insert('<hr/>');
+            // this._insertHR();
         } else {
-            this._handleEnter();
+            this.dependencies.Arch.addLine();
+            // this._handleEnter();
         }
         return true;
     },

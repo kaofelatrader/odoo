@@ -4,6 +4,9 @@ odoo.define('wysiwyg.plugin.arch.customNodes', function (require) {
 var ArchNode = require('wysiwyg.plugin.arch.node');
 var text = require('wysiwyg.plugin.arch.text');
 
+function True () { return true; };
+function False () { return false; };
+
 ArchNode.include = function (argument) {
     throw new Error("Can not use include on ArchNode");
 };
@@ -17,18 +20,23 @@ var customNodes = {
 };
 
 customNodes.br = ArchNode.extend({
-    insert: function (offset, fragment) {
-        if (fragment.childNodes.length === 1 && fragment.firstChild().nodeName === 'br') {
+    insert: function (archNode, offset) {
+        if (archNode.isBr()) {
             var ancestor = this.ancestor(this.isBlock);
-            var node = this.isRightEdgeOf(ancestor) ? new VirtualTextNode(this.tree) : new archNodeByNodeName.br(this.tree);
-            this.after(node);
-
-            this.tree._markChange(node, 1);
-            this.tree._markChange(this.parent, node.index());
+            var archNode = this.isRightEdgeOf(ancestor) ? new VirtualTextNode(this.tree) : archNode;
+            this.after(archNode);
         }
         return this._super.apply(this, arguments);
     },
+    addLine: function () {
+        this.parent.addLine(this.index() + 1);
+    },
+    split: function () {
+        return;
+    },
+    isBr: True,
 });
+
 
 return customNodes;
 

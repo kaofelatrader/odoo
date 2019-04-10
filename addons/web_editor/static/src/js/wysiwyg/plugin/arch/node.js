@@ -217,7 +217,7 @@ return Class.extend({
         return this._changeParent(archNode, 0);
     },
     empty: function () {
-        if (this.id && !this.isEditable()) {
+        if (!this.isEditable()) {
             console.warn("can not empty a non editable node");
             return;
         }
@@ -228,7 +228,7 @@ return Class.extend({
     },
     remove: function () {
         if (this.parent) {
-            if (this.id && !this.parent.isEditable()) {
+            if (!this.parent.isEditable()) {
                 console.warn("can not remove a node in a non editable node");
                 return;
             }
@@ -240,17 +240,64 @@ return Class.extend({
         this.__removed = true;
         this.empty();
     },
+    split: function (offset) {
+        if (this.isUnbreakable()) {
+            console.warn("can not split an unbreakable");
+            return;
+        }
+        if (!this.isEditable()) {
+            console.warn("can not split a not editable node");
+            return;
+        }
+
+        var Constructor = this.constructor;
+        var archNode = new Constructor(this.tree, this.nodeName, this.attributes ? this.attributes.toJSON() : []);
+        this.tree._markChange(archNode, 0);
+
+        if (this.childNodes) {
+            var childNodes = this.childNodes.slice(offset);
+            while (childNodes.length) {
+                archNode.prepend(childNodes.pop());            
+            }
+        }
+
+        this.after(archNode);
+        return archNode;
+    },
 
     //--------------------------------------------------------------------------
     // Public: Update
     //--------------------------------------------------------------------------
 
-    insert: function (fragment, offset) {
+    insert: function (archNode, offset) {
+        if (!this.isEditable()) {
+            console.warn("can not split a not editable node");
+            return;
+        }
+
         var ref = this.childNodes[offset];
-        this.insertBefore(fragment, ref);
+        this.insertBefore(archNode, ref);
     },
     addLine: function (offset) {
-        return this.parent && this.parent.addLine(this.index());
+        if (!this.ancestor(this._isAddLineSplitable)) {
+            return;
+        }
+
+        if (!this.isEditable()) {
+            console.warn("can not split a not editable node");
+            return;
+        }
+
+        var next = this.split(offset);
+        if (!next) {
+            this.insert(this.tree._constructNode('br'), offset);
+            return ;
+        }
+
+        return this.parent.addLine(next.index());
+    },
+    _isAddLineSplitable: function () {
+        return this._isPara() || this.nodeName === 'li';
     },
 
     //--------------------------------------------------------------------------
@@ -331,11 +378,11 @@ return Class.extend({
             throw new Error("You can't add a child in this node");
         }
 
-        if (this.id && !this.isEditable()) { // id is setted only if the node is contains in the root
+        if (!this.isEditable()) { // id is setted only if the node is contains in the root
             console.warn("can not add a node in a non editable node");
             return;
         }
-        if (archNode.parent && archNode.parent.id && !archNode.parent.isEditable()) {
+        if (archNode.parent && !archNode.parent.isEditable()) {
             console.warn("can not remove a node in a non editable node");
             return;
         }
@@ -363,7 +410,11 @@ return Class.extend({
 
         archNode.parent = this;
         this.childNodes.splice(index, 0, archNode);
-        this.__removed = false;
+        if (this.__removed) {
+            this.tree._markChange(archNode, 0);
+            this.__removed = false;
+        }
+
         this.tree._addArchNode(archNode);
 
         this.tree._markChange(this, index);

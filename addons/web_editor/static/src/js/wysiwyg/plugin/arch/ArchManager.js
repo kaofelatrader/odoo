@@ -85,6 +85,8 @@ ArchManager.prototype = {
         var self = this;
         this._changes = [];
 
+        //this.remove();
+
         if (!id) {
             var range = this.getRange();
             id = range.start.id;
@@ -128,9 +130,14 @@ ArchManager.prototype = {
         return this._getChanges();
     },
     addLine: function () {
-        this.remove();
+        var self = this;
+        this._changes = [];
+
+        //this.remove();
         var range = this.getRange();
         this.getNode(range.start.id).addLine(range.start.offset);
+
+        return this._getChanges();
     },
     removeLeft: function () {
         var range = this.getRange();

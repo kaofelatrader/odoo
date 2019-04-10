@@ -2,6 +2,8 @@ odoo.define('wysiwyg.plugin.arch.root', function (require) {
 'use strict';
 
 var ArchNode = require('wysiwyg.plugin.arch.node');
+function True () { return true; };
+function False () { return false; };
 
 
 var RootNode = ArchNode.extend({
@@ -19,18 +21,18 @@ var RootNode = ArchNode.extend({
         }
         this.append(fragment);
     },
-    isContentEditable: function () {
-        return true;
-    },
     /**
      * @override
      */
-    isElement: function () {
-        return false;
-    },
-    isVirtual: function () {
-        return true;
-    },
+    isContentEditable: True,
+    /**
+     * @override
+     */
+    isElement: False,
+    /**
+     * @override
+     */
+    isVirtual: True,
     toJSON: function (options) {
         var data = {
             id: this.id,

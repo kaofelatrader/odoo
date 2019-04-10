@@ -98,9 +98,12 @@ OdooClass.extend = function() {
 
     // The dummy class constructor
     function Class() {
-        if(this.constructor !== OdooClass){
+        if(!(this instanceof OdooClass)){
             throw new Error("You can only instanciate objects with the 'new' operator");
         }
+
+        this.constructor = Class;
+
         // All construction is actually done in the init method
         this._super = null;
         if (!initializing && this.init) {
