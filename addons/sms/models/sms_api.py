@@ -14,7 +14,9 @@ class SmsApi(models.AbstractModel):
 
     @api.model
     def _send_sms(self, numbers, message):
-        """ Send sms
+        """ Send sms using IAP
+            :param numbers: List of numbers to which the message must be sent
+            :param message: Message to send
         """
         account = self.env['iap.account'].get('sms')
         params = {
@@ -23,5 +25,5 @@ class SmsApi(models.AbstractModel):
             'message': message,
         }
         endpoint = self.env['ir.config_parameter'].sudo().get_param('sms.endpoint', DEFAULT_ENDPOINT)
-        r = iap.jsonrpc(endpoint + '/iap/message_send', params=params)
+        iap.jsonrpc(endpoint + '/iap/message_send', params=params)
         return True
