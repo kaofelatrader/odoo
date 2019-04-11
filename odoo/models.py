@@ -173,14 +173,31 @@ class MetaModel(api.Meta):
 
 class NewId(object):
     """ Pseudo-ids for new records, encapsulating an optional reference. """
-    __slots__ = ['ref']
+    __slots__ = ['ref', 'origin']
 
-    def __init__(self, ref=None):
+    def __init__(self, ref=None, origin=None):
         self.ref = ref
+        self.origin = origin
 
     def __bool__(self):
         return False
-    __nonzero__ = __bool__
+
+    def __eq__(self, other):
+        return isinstance(other, NewId) and (
+            (self.ref and other.ref and self.ref == other.ref) or
+            (self.origin and other.origin and self.origin == other.origin)
+        )
+
+    def __hash__(self):
+        return hash(self.ref or self.origin or id(self))
+
+    def __repr__(self):
+        return (
+            "<NewId ref=%r>" % self.ref if self.ref else
+            "<NewId origin=%r>" % self.origin if self.origin else
+            "<NewId 0x%x>" % id(self)
+        )
+
 
 IdType = (int, str, NewId)
 
@@ -2512,6 +2529,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 _logger.warning('Field definition for _inherits reference "%s" in "%s" must be marked as "required" with ondelete="cascade" or "restrict", forcing it to required + cascade.', field_name, self._name)
                 field.required = True
                 field.ondelete = "cascade"
+            field.delegate = True
 
         # reflect fields with delegate=True in dictionary self._inherits
         for field in self._fields.values():
@@ -4954,30 +4972,44 @@ Fields:
     #
 
     @api.model
-    def new(self, values={}, ref=None):
-        """ new([values]) -> record
+    def new(self, values={}, ref=None, origin=None):
+        """ new([values], [ref], [origin]) -> record
 
         Return a new record instance attached to the current environment and
         initialized with the provided ``value``. The record is *not* created
         in database, it only exists in memory.
 
-        One can pass a reference value to identify the record among other new
+        One can pass a ``ref`` value to identify the record among other new
         records. The reference is encapsulated in the ``id`` of the record.
+
+        One can also pass an ``origin`` record, which corresponds to the actual
+        record behind the result. It is retrieved as ``record._origin``. Two new
+        records with the same origin are considered equal.
         """
-        record = self.browse([NewId(ref)])
+        if origin is not None:
+            origin = origin.id
+        record = self.browse([NewId(ref, origin)])
         record._cache.update(record._convert_to_cache(values, update=True))
 
-        if record.env.in_onchange:
-            # The cache update does not set inverse fields, so do it manually.
-            # This is useful for computing a function field on secondary
-            # records, if that field depends on the main record.
-            for name in values:
-                field = self._fields.get(name)
-                if field:
+        # set inverse fields on new records in the comodel
+        for name in values:
+            field = self._fields.get(name)
+            if field and field.relational:
+                inv_recs = record[name].filtered(lambda r: not r.id)
+                if inv_recs:
                     for invf in self._field_inverses[field]:
-                        invf._update(record[name], record)
+                        invf._update(inv_recs, record)
 
         return record
+
+    @property
+    def _origin(self):
+        """ Return the actual records corresponding to ``self``. """
+        return self.browse([
+            id_ or id_.origin
+            for id_ in self._ids
+            if id_ or id_.origin
+        ])
 
     #
     # Dirty flags, to mark record fields modified (in draft mode)
@@ -5433,10 +5465,11 @@ Fields:
                 # put record in dict to include it when comparing snapshots
                 super(Snapshot, self).__init__({'<record>': record, '<tree>': tree})
                 for name, subnames in tree.items():
+                    field = record._fields[name]
                     # x2many fields are serialized as a list of line snapshots
                     self[name] = (
                         [Snapshot(line, subnames) for line in record[name]]
-                        if subnames else record[name]
+                        if field.type in ('one2many', 'many2many') else record[name]
                     )
 
             def diff(self, other):
@@ -5448,14 +5481,15 @@ Fields:
                 for name, subnames in self['<tree>'].items():
                     if (name == 'id') or (other.get(name) == self[name]):
                         continue
-                    if not subnames:
-                        field = record._fields[name]
+                    field = record._fields[name]
+                    if field.type not in ('one2many', 'many2many'):
                         result[name] = field.convert_to_onchange(self[name], record, {})
                     else:
                         # x2many fields: serialize value as commands
                         result[name] = commands = [(5,)]
                         for line_snapshot in self[name]:
                             line = line_snapshot['<record>']
+                            line = line._origin or line
                             if not line.id:
                                 # new line: send diff from scratch
                                 line_diff = line_snapshot.diff({})
@@ -5479,20 +5513,25 @@ Fields:
         for name, subnames in nametree.items():
             if subnames and values.get(name):
                 # retrieve all ids in commands, and read the expected fields
-                line_ids = []
+                line_ids = set()
                 for cmd in values[name]:
                     if cmd[0] in (1, 4):
-                        line_ids.append(cmd[1])
+                        line_ids.add(cmd[1])
                     elif cmd[0] == 6:
-                        line_ids.extend(cmd[2])
+                        line_ids.update(cmd[2])
                 lines = self.browse()[name].browse(line_ids)
                 lines.read(list(subnames), load='_classic_write')
+                # copy values from lines to new lines
+                for line in lines:
+                    new_line = line.new(origin=line)
+                    new_line._cache.update({
+                        subname: line._cache[subname]
+                        for subname in subnames
+                    })
 
         # create a new record with values, and attach ``self`` to it
         with env.do_in_onchange():
-            record = self.new(values)
-            # attach ``self`` with a different context (for cache consistency)
-            record._origin = self.with_context(__onchange=True)
+            record = self.new(values, origin=self)
 
         # make a snapshot based on the initial values of record
         with env.do_in_onchange():
