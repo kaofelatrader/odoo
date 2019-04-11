@@ -1119,12 +1119,15 @@ class Field(MetaField('DummyField', (object,), {})):
     def determine_draft_value(self, record):
         """ Determine the value of ``self`` for the given draft ``record``. """
         if self.compute:
-            fields = record._field_computed[self]
-            with record.env.protecting(fields, record):
-                self._compute_value(record)
-        else:
-            null = self.convert_to_cache(False, record, validate=False)
-            record.env.cache.set_special(record, self, lambda: null)
+            return self.compute_value(record)
+
+        defaults = record.default_get([self.name])
+        if self.name in defaults:
+            value = self.convert_to_cache(defaults[self.name], record)
+            return record.env.cache.set(record, self, value)
+
+        null = self.convert_to_cache(False, record, validate=False)
+        return record.env.cache.set_special(record, self, lambda: null)
 
     def determine_inverse(self, records):
         """ Given the value of ``self`` on ``records``, inverse the computation. """

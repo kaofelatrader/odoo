@@ -928,25 +928,27 @@ class TestFields(common.TransactionCase):
         with self.assertRaises(AccessError):
             cat1.name
 
-    def test_40_new(self):
-        """ test new records. """
+    def test_40_new_defaults(self):
+        """ Test new records with defaults. """
+        user = self.env.user
         discussion = self.env.ref('test_new_api.discussion_0')
 
-        # create a new message
-        message = self.env['test_new_api.message'].new()
-        self.assertFalse(message.id)
+        # create a new message; fields have their default value if not given
+        new_msg = self.env['test_new_api.message'].new({'body': "XXX"})
+        self.assertFalse(new_msg.id)
+        self.assertEqual(new_msg.body, "XXX")
+        self.assertEqual(new_msg.author, user)
 
         # assign some fields; should have no side effect
-        message.discussion = discussion
-        message.body = BODY = "May the Force be with you."
-        self.assertEqual(message.discussion, discussion)
-        self.assertEqual(message.body, BODY)
-        self.assertFalse(message.author)
-        self.assertNotIn(message, discussion.messages)
+        new_msg.discussion = discussion
+        new_msg.body = "YYY"
+        self.assertEqual(new_msg.discussion, discussion)
+        self.assertEqual(new_msg.body, "YYY")
+        self.assertNotIn(new_msg, discussion.messages)
 
         # check computed values of fields
-        self.assertEqual(message.name, "[%s] %s" % (discussion.name, ''))
-        self.assertEqual(message.size, len(BODY))
+        self.assertEqual(new_msg.name, "[%s] %s" % (discussion.name, user.name))
+        self.assertEqual(new_msg.size, 3)
 
     @mute_logger('odoo.addons.base.models.ir_model')
     def test_41_new_related(self):
