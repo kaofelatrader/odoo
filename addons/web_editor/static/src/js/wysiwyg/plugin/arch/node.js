@@ -207,6 +207,18 @@ return Class.extend({
     append: function (archNode) {
         return this._changeParent(archNode, this.childNodes.length);
     },
+    deleteEdge: function (isLeft) {
+        var next = this[isLeft ? 'previousSibling' : 'nextSibling']();
+        if (!next) {
+            return;
+        }
+        if (this.nodeName === next.nodeName) {
+            this.childNodes.forEach(function (node) {
+                next[isLeft ? 'append' : 'prepend'](node);
+            });
+            this.remove();
+        }
+    },
     insertAfter: function (archNode, ref) {
         return this._changeParent(archNode, ref.index() + 1);
     },

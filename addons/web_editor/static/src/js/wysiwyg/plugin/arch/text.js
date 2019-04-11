@@ -127,6 +127,9 @@ var TextNode = ArchNode.extend({
         if (isLeft && offset <= 0 || !isLeft && offset >= this.length()) {
             var next = this[isLeft ? 'previousSibling' : 'nextSibling']();
             if (!next) {
+                if (this.parent[isLeft ? 'previousSibling' : 'nextSibling']()) {
+                    this.parent.deleteEdge(isLeft);
+                }
                 return;
             }
             next[isLeft ? 'removeLeft' : 'removeRight'](0);
