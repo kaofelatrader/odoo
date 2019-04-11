@@ -23,6 +23,7 @@ class TestVariantsSearch(TransactionCase):
         return res
 
     def test_attribute_line_search(self):
+        import pudb; pudb.set_trace()
         search_not_to_be_found = self.env['product.template'].search(
             [('attribute_line_ids', '=', 'M')]
         )

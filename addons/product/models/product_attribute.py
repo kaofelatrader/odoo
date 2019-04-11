@@ -73,7 +73,7 @@ class ProductAttribute(models.Model):
         if invalidate_cache:
             # prefetched o2m have to be resequenced
             # (eg. product.template: attribute_line_ids)
-            self.invalidate_cache()
+            self.env['product.template'].invalidate_cache(fnames=['attribute_line_ids'])
         return res
 
     @api.multi
