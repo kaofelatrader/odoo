@@ -92,6 +92,9 @@ var TextNode = ArchNode.extend({
             }
             previousSibling.removeLeft(0);
         } else if (this.length() === 1) {
+            if (!this.previousSibling() || !this.nextSibling()) {
+                this.after(new VirtualTextNode(this.params));
+            }
             this.remove();
         } else {
             this.nodeValue = this.nodeValue.slice(0, offset - 1) + this.nodeValue.slice(offset, this.length());
@@ -106,6 +109,9 @@ var TextNode = ArchNode.extend({
             }
             nextSibling.removeRight(0);
         } else if (this.length() === 1) {
+            if (!this.previousSibling() || !this.nextSibling()) {
+                this.after(new VirtualTextNode(this.params));
+            }
             this.remove();
         } else {
             this.nodeValue = this.nodeValue.slice(0, offset) + this.nodeValue.slice(offset + 1, this.length());

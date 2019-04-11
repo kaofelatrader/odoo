@@ -75,7 +75,7 @@ Renderer.prototype = {
             changes.nodeValue = newJSON.nodeValue;
             oldJSON.nodeValue = newJSON.nodeValue;
         }
-        if (newJSON.attributes) {
+        if (newJSON.attributes || oldJSON.attributes) {
             if (!oldJSON.attributes) {
                 changes.attributes = newJSON.attributes.slice();
             } else {
@@ -88,7 +88,7 @@ Renderer.prototype = {
                     }
                     attributes.push([attribute[0], false]);
                 });
-                newJSON.attributes.slice().forEach(function (attribute) {
+                (newJSON.attributes || []).slice().forEach(function (attribute) {
                     for (var k = 0; k < oldJSON.attributes.length; k++) {
                         if (oldJSON.attributes[k][0] === attribute[0]) {
                             if (oldJSON.attributes[k][1] === attribute[1]) {
@@ -104,7 +104,8 @@ Renderer.prototype = {
             }
             oldJSON.attributes = newJSON.attributes.slice();
         }
-        if (newJSON.childNodes) {
+        if (newJSON.childNodes || oldJSON.childNodes) {
+            newJSON.childNodes = newJSON.childNodes || [];
             var childNodesIds = newJSON.childNodes.map(function (json) { return json.id; });
 
             if (!oldJSON.childNodes) {
