@@ -298,74 +298,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * @returns {Boolean} true if case handled
      */
     _handleShiftEnter: function () {
-        var self = this;
-        var range = this.dependencies.Arch.getRange();
-        var target = range.sc.childNodes[range.so] || range.sc;
-        var before;
-        if (!this.utils.isText(target)) {
-            if (target.tagName === "BR") {
-                before = target;
-            } else if (target === range.sc) {
-                if (range.so) {
-                    before = range.sc.childNodes[range.so - 1];
-                } else {
-                    before = this.document.createTextNode('');
-                    $(range.sc).append(before);
-                }
-            }
-        } else {
-            before = target;
-            var after = target.splitText(target === range.sc ? range.so : 0);
-            if (
-                !after.nextSibling && after.textContent === '' &&
-                this.utils.isNodeBlockType(after.parentNode)
-            ) {
-                after.textContent = this.utils.char('zeroWidth');
-            }
-            if (!after.tagName && (!after.previousSibling || after.previousSibling.tagName === "BR")) {
-                after.textContent = after.textContent.replace(startSpace, this.utils.char('nbsp'));
-            }
-        }
-
-        if (!before) {
-            return true;
-        }
-
-        var br = document.createElement('br');
-        $(before).after(br);
-        var next = this.getPoint(br, 0);
-        var reStartSpace = /^ +/;
-
-        if (this.utils.isText(before)) {
-            next = next.next();
-            var nextNode = this.utils.firstLeafUntil(next.node.childNodes[next.offset] || next.node, function (n) {
-                return !self.dependencies.Arch.isVoidBlock(n) && self.dependencies.Arch.isEditableNode(n);
-            });
-            if (this.utils.isText(nextNode)) {
-                next.node = nextNode;
-                next.offset = 0;
-            }
-        }
-
-        if (
-            next.node.tagName === "BR" && next.node.nextSibling &&
-            !next.node.nextSibling.tagName && !this.utils.ancestor(next.node, this.utils.isPre)
-        ) {
-            next.node.nextSibling.textContent = next.node.nextSibling.textContent.replace(reStartSpace, this.utils.char('nbsp'));
-        }
-        if (
-            this.utils.isText(next.node) &&
-            (!next.node.previousSibling || next.node.previousSibling.tagName === "BR") &&
-            !this.utils.ancestor(next.node, this.utils.isPre)
-        ) {
-            next.node.textContent = next.node.textContent.replace(reStartSpace, this.utils.char('nbsp'));
-        }
-
-        range = this.dependencies.Arch.setRange({
-            sc: next.node,
-            so: next.offset,
-        });
-
+        this.dependencies.Arch.insert('<br/>');
         return true;
     },
     /**
