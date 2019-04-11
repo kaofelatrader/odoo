@@ -19,7 +19,7 @@ _logger = logging.getLogger(__name__)
 
 
 def load_script(path, module_name):
-    full_path = get_resource_path(*path.split(os.path.sep))
+    full_path = get_resource_path(*path.split(os.path.sep)) if not os.path.isabs(path) else path
     spec = importlib.util.spec_from_file_location(module_name, full_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -58,6 +58,12 @@ class MigrationManager(object):
         self._get_files()
 
     def _get_files(self):
+        def _get_migrations_path(pkg):
+            migration_path = opj(tools.config['migrations_path'], pkg)
+            if os.path.exists(migration_path):
+                return migration_path
+            return None
+
         def get_scripts(path):
             if not path:
                 return {}
@@ -75,6 +81,7 @@ class MigrationManager(object):
             self.migrations[pkg.name] = {
                 'module': get_scripts(get_resource_path(pkg.name, 'migrations')),
                 'maintenance': get_scripts(get_resource_path('base', 'maintenance', 'migrations', pkg.name)),
+                'migrations': get_scripts(_get_migrations_path(pkg.name)),
             }
 
     def migrate_module(self, pkg, stage):
@@ -112,6 +119,7 @@ class MigrationManager(object):
             mapping = {
                 'module': opj(pkg.name, 'migrations'),
                 'maintenance': opj('base', 'maintenance', 'migrations', pkg.name),
+                'migrations': opj(tools.config['migrations_path'], pkg.name),
             }
 
             for x in mapping:
