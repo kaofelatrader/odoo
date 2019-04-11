@@ -84,6 +84,34 @@ var TextNode = ArchNode.extend({
      * @override
      */
     isVisibleText: True,
+    removeLeft: function (offset) {
+        if (offset <= 0) {
+            var previousSibling = this.previousSibling();
+            if (!previousSibling) {
+                return;
+            }
+            previousSibling.removeLeft(0);
+        } else if (this.length() === 1) {
+            this.remove();
+        } else {
+            this.nodeValue = this.nodeValue.slice(0, offset - 1) + this.nodeValue.slice(offset, this.length());
+            this.params.change(this, offset - 1);
+        }
+    },
+    removeRight: function (offset) {
+        if (offset >= this.length()) {
+            var nextSibling = this.nextSibling();
+            if (!nextSibling) {
+                return;
+            }
+            nextSibling.removeRight(0);
+        } else if (this.length() === 1) {
+            this.remove();
+        } else {
+            this.nodeValue = this.nodeValue.slice(0, offset) + this.nodeValue.slice(offset + 1, this.length());
+            this.params.change(this, offset);
+        }
+    },
     split: function (offset) {
         if (!this.isEditable()) {
             console.warn("can not split a not editable node");

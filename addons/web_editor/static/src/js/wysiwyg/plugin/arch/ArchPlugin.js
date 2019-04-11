@@ -654,19 +654,21 @@ var ArchPlugin = AbstractPlugin.extend({
     },
     removeLeft: function () {
         var archNode = this._getNode(this._range.scID);
-        if (this._range.isCollapsed()) {
+        if (this.getRange().isCollapsed()) {
             archNode.removeLeft(this._range.so);
         } else {
             archNode.remove();
         }
+        this._applyChangesInRenderer();
     },
     removeRight: function () {
         var archNode = this._getNode(this._range.scID);
-        if (this._range.isCollapsed()) {
+        if (this.getRange().isCollapsed()) {
             archNode.removeRight(this._range.so);
         } else {
             archNode.remove();
         }
+        this._applyChangesInRenderer();
     },
 
     //--------------------------------------------------------------------------

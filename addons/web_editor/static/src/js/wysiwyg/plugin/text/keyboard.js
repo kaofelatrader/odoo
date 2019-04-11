@@ -102,6 +102,8 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * @returns {Boolean} true if case handled
      */
     _handleDeletion: function (isPrev) {
+        this.dependencies.Arch[isPrev ? 'removeLeft' : 'removeRight']();
+        return true;
         var range = this.dependencies.Arch.getRange();
         var didDeleteNodes = !range.isCollapsed();
         var point = this.dom.deleteSelection(range);
