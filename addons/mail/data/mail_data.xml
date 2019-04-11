@@ -262,7 +262,7 @@
                     <t t-esc="access_name"/>
                 </a>
             </div>
-            <div style="margin: 0px; padding: 0px; font-size:13px;">
+            <div t-if="record.user_id" style="margin: 0px; padding: 0px; font-size:13px;">
                 Best regards,
             </div>
             <div>&amp;nbsp;</div>
