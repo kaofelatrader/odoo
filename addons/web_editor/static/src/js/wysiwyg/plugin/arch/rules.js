@@ -33,7 +33,7 @@ ArchNode.include({
         var rules = this._applyRulesFilterRules(this.params.customRules);
         var ruleMethod;
         while (ruleMethod = rules.pop()) {
-            var json = ruleMethod(this.toJSON());
+            var json = ruleMethod(this.toJSON({keepVirtual: true}));
             var fragment = this.params.import(json);
             if (fragment) {
                 var childNodes = fragment.childNodes.slice();
@@ -133,7 +133,7 @@ ArchNode.include({
             var children = rules[k][1];
             for (var i = 0; i < children.length; i++) {
                 var check = children[i];
-                if ((typeof check === 'function' && check(this.toJSON())) || this.nodeName === check) {
+                if ((typeof check === 'function' && check(this.toJSON({keepVirtual: true}))) || this.nodeName === check) {
                     selectedRules = selectedRules.concat(rules[k][0]);
                     break;
                 }

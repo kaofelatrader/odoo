@@ -113,7 +113,7 @@ var ArchPlugin = AbstractPlugin.extend({
         // H1 > i
         // b > i
         [
-            styleTags.concat(formatTags),
+            styleTags.concat(formatTags).concat(['a']),
             formatTags.concat(['TEXT']),
         ],
         [
@@ -229,6 +229,7 @@ var ArchPlugin = AbstractPlugin.extend({
             create: this._createArchNode.bind(this),
             change: this._changeArch.bind(this),
             remove: this._removeFromArch.bind(this),
+            import: this.import.bind(this),
 
             isEditableNode: this.isEditableNode.bind(this),
             isUnbreakableNode: this.isUnbreakableNode.bind(this),
@@ -348,6 +349,9 @@ var ArchPlugin = AbstractPlugin.extend({
     import: function (json) {
         var self = this;
         var fragment = new FragmentNode(this._arch.params);
+        return fragment;
+
+        // TODO
         if (!json.childNodes || json.nodeValue || json.nodeName) {
             json = {
                 childNodes: [json],
@@ -633,7 +637,6 @@ var ArchPlugin = AbstractPlugin.extend({
             this._removeFromRange();
         }
 
-        var changedNodes = this._getChanges();
         this._applyChangesInRenderer();
     },
     insert: function (DOM, element, offset) {
@@ -644,6 +647,16 @@ var ArchPlugin = AbstractPlugin.extend({
         if (!id) {
             id = this._range.scID;
             offset = this._range.so;
+
+            if (this._range.scID !== this._range.ecID || this._range.so !== this._range.eo) {
+                this._resetChange();
+                this._removeFromRange();
+                var changedNodes = this._getChanges();
+                if (changedNodes.length) {
+                    id = changedNodes[0].id;
+                    offset = changedNodes[0].offset;
+                }
+            }
         }
 
         this._insert(DOM, id, offset);
@@ -703,9 +716,9 @@ var ArchPlugin = AbstractPlugin.extend({
         self._renderer.update(json);
         this.trigger_up('change');
 
-        changedNodes.forEach(function (r) {
-            console.log(r.id, self._renderer.getElement(r.id), r.offset);
-        });
+        // changedNodes.forEach(function (r) {
+        //     console.log(r.id, self._renderer.getElement(r.id), r.offset);
+        // });
 
         if (changedNodes.length) {
             this._setRangeWithIDs({
@@ -758,6 +771,9 @@ var ArchPlugin = AbstractPlugin.extend({
             } else {
                 fragment = archNode;
             }
+        } else if (DOM instanceof ArchNode) {
+            fragment = new FragmentNode(this._arch.params);
+            fragment.append(DOM);
         } else {
             fragment = new FragmentNode(this._arch.params);
             if (DOM.nodeType !== DOM.DOCUMENT_FRAGMENT_NODE) {
@@ -804,12 +820,12 @@ var ArchPlugin = AbstractPlugin.extend({
         var reTags = '(' + this.voidTags.join('|') + ')';
         var reAttribute = '(\\s[^>/]+((=\'[^\']*\')|(=\"[^\"]*\"))?)*';
         var reVoidNodes = new RegExp('<(' + reTags + reAttribute + ')>', 'g');
-        var xml = html.replace(reVoidNodes, '<\$1/>');
+        var xml = html.replace(reVoidNodes, '<\$1/>').replace(/&/g, '&amp;');
         var parser = new DOMParser();
         var element = parser.parseFromString("<root>" + xml + "</root>","text/xml");
 
         if (element.querySelector('parsererror')) {
-            console.error(element);
+            console.error(element.firstChild);
             return fragment;
         }
 
@@ -838,10 +854,13 @@ var ArchPlugin = AbstractPlugin.extend({
         return archNode;
     },
     _removeFromRange: function () {
-        var fromNode = this._getNode(this.scID);
+        // TODO mon grand ;-)
+        return;
+
+        var fromNode = this._getNode(this._range.scID);
         // ==> split: this.so
 
-        var toNode = this._getNode(this.ecID);
+        var toNode = this._getNode(this._range.ecID);
         // ==> split: this.eo
 
         fromNode.nextUntil(function (next) {
@@ -894,7 +913,7 @@ var ArchPlugin = AbstractPlugin.extend({
     },
     _createArchNode: function (nodeName, param) {
         if (!nodeName) {
-            return new text.VirtualTextNode(this);
+            return new text.VirtualTextNode(this._arch.params);
         } else if (nodeName !== 'TEXT') {
             var Constructor = customNodes[nodeName] || ArchNode;
             return new Constructor(this._arch.params, nodeName, param || []);

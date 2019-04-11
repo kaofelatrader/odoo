@@ -60,9 +60,6 @@ var TestKeyboard = AbstractPlugin.extend({
      * @param {string} [keyboardTests.steps.end] default: steps.start
      * @param {string} keyboardTests.steps.key
      * @param {object} keyboardTests.test
-     * @param {string} [keyboardTests.test.content]
-     * @param {string} [keyboardTests.test.start]
-     * @param {string} [keyboardTests.test.end] default: steps.start
      */
     test: function (assert, keyboardTests) {
         var self = this;
@@ -77,9 +74,9 @@ var TestKeyboard = AbstractPlugin.extend({
                 return new Promise(function (resolve) {
                     if (step.start) {
                         try {
-                            self._selectText(assert, step.start, step.end);
+                            self._selectText(test.name, assert, step.start, step.end);
                         } catch (e) {
-                            assert.notOk(e.message, "Should set the new range");
+                            assert.notOk(e.message, test.name);
                         }
                         if (!self.dependencies.Arch.getRange()) {
                             throw 'Wrong range! \n' +
@@ -128,7 +125,7 @@ var TestKeyboard = AbstractPlugin.extend({
                                         metaKey: !!step.metaKey,
                                     });
                                 } else {
-                                    assert.ok(target, "Should have a target to trigger the keyup");
+                                    assert.notOk("Should have a target to trigger the keyup", test.name);
                                 }
                             }
                             setTimeout(resolve);
@@ -141,63 +138,10 @@ var TestKeyboard = AbstractPlugin.extend({
             }
 
             return def.then(function () {
-                if (!test.test) {
-                    return;
-                }
-
                 // test content
-                if (test.test.content) {
-                    var value = self.dependencies.Arch.getValue();
-                    var allInvisible = /\uFEFF/g;
-                    value = value.replace(allInvisible, '&#65279;');
-                    var result = test.test.content.replace(allInvisible, '&#65279;');
-                    assert.strictEqual(value, result, test.name);
-
-                    if (test.test.start && value !== result) {
-                        assert.notOk("Wrong DOM (see previous assert)", test.name + " (carret position)");
-                        return;
-                    }
-                }
-
-                // test carret position
-                if (test.test.start) {
-                    var start = self._select(assert, test.test.start);
-                    var range = self.dependencies.Arch.getRange();
-                    if ((range.sc !== range.ec || range.so !== range.eo) && !test.test.end) {
-                        assert.ok(false, test.name + ": the carret is not colapsed and the 'end' selector in test is missing");
-                        return;
-                    }
-                    var end = test.test.end ? self._select(assert, test.test.end) : start;
-                    if (start.node && end.node) {
-                        range = self.dependencies.Arch.getRange();
-                        var startPoint = self._endOfAreaBetweenTwoNodes(range.getStartPoint());
-                        var endPoint = self._endOfAreaBetweenTwoNodes(range.getEndPoint());
-                        var sameDOM = (startPoint.node.outerHTML || startPoint.node.textContent) === (start.node.outerHTML || start.node.textContent);
-                        var stringify = function (obj) {
-                            if (!sameDOM) {
-                                delete obj.sameDOMsameNode;
-                            }
-                            return JSON.stringify(obj, null, 2)
-                                .replace(/"([^"\s-]+)":/g, "\$1:")
-                                .replace(/([^\\])"/g, "\$1'")
-                                .replace(/\\"/g, '"');
-                        };
-                        assert.deepEqual(stringify({
-                                startNode: startPoint.node.outerHTML || startPoint.node.textContent,
-                                startOffset: startPoint.offset,
-                                endPoint: endPoint.node.outerHTML || endPoint.node.textContent,
-                                endOffset: endPoint.offset,
-                                sameDOMsameNode: sameDOM && startPoint.node === start.node,
-                            }),
-                            stringify({
-                                startNode: start.node.outerHTML || start.node.textContent,
-                                startOffset: start.offset,
-                                endPoint: end.node.outerHTML || end.node.textContent,
-                                endOffset: end.offset,
-                                sameDOMsameNode: true,
-                            }),
-                            test.name + " (carret position)");
-                    }
+                if (test.test) {
+                    var value = self.dependencies.Test.getValue();
+                    assert.strictEqual(value, test.test, test.name);
                 }
             });
         }
@@ -222,8 +166,6 @@ var TestKeyboard = AbstractPlugin.extend({
         }
         keyPress.keyCode = keyPress.keyCode;
         var promise = this.dependencies.Test.triggerNativeEvents(target, 'keydown', keyPress).then(function (events) {
-            var promise = self.dependencies.Test.triggerNativeEvents(target, 'keydown', keyPress)
-
             var event = events[0]; // (only one event was triggered)
             if (!event.defaultPrevented) {
                 if (keyPress.key.length === 1) {
@@ -265,17 +207,49 @@ var TestKeyboard = AbstractPlugin.extend({
             document.execCommand("insertText", 0, ev.data);
         }
     },
-    _select: function (assert, selector) {
+    _querySelectorAllWithEq: function(selector, document) {
+        var remainingSelector = selector;
+        var baseElement = document;
+        var firstEqIndex = remainingSelector.indexOf(':eq(');
+
+        while (firstEqIndex !== -1) {
+            var leftSelector = remainingSelector.substring(0, firstEqIndex);
+            var rightBracketIndex = remainingSelector.indexOf(')', firstEqIndex);
+            var eqNum = remainingSelector.substring(firstEqIndex + 4, rightBracketIndex);
+            eqNum = parseInt(eqNum, 10);
+
+            var selectedElements = baseElement.querySelectorAll(leftSelector);
+            if (eqNum >= selectedElements.length) {
+               return [];
+            }
+            baseElement = selectedElements[eqNum];
+
+            remainingSelector = remainingSelector.substring(rightBracketIndex + 1).trim();
+            // Note - for now we just ignore direct descendants:
+            // 'a:eq(0) > i' gets transformed into 'a:eq(0) i'; we could maybe use :scope
+            // to fix this later but support is iffy
+            if (remainingSelector.charAt(0) === '>') {
+                remainingSelector = remainingSelector.substring(1).trim();
+            }
+
+            firstEqIndex = remainingSelector.indexOf(':eq(');
+        }
+
+        if (remainingSelector !== '') {
+            return Array.from(baseElement.querySelectorAll(remainingSelector));
+        }
+
+        return [baseElement];
+    },
+    _querySelectorAllWithContents: function (testName, assert, selector) {
         // eg: ".class:contents()[0]->1" selects the first contents of the 'class' class, with an offset of 1
         var sel = selector.match(reDOMSelection);
         try {
-            var node = this.editable.querySelectorAll(sel[1]);
+            var node = this._querySelectorAllWithEq(sel[1], this.editable)
+            // var node = this.editable.querySelectorAll(sel[1]);
         } catch (e) {
-            assert.ok(false, e.message);
+            assert.notOk(e.message, testName);
             var node = $(sel[1], this.editable);
-        }
-        if (node.length > 1) {
-            assert.notOk("More of one node are found: '" + sel[1] + "'");
         }
         node = node[0];
         var point = new BoundaryPoint(
@@ -283,17 +257,17 @@ var TestKeyboard = AbstractPlugin.extend({
             sel[5] ? +sel[6] : 0
         );
         if (!point.node || point.offset > (point.node.tagName ? point.node.childNodes : point.node.textContent).length) {
-            assert.notOk("Node not found: '" + selector + "' " + (point.node ? "(container: '" + (point.node.outerHTML || point.node.textContent) + "')" : ""));
+            assert.notOk("Node not found: '" + selector + "' " + (point.node ? "(container: '" + (node.outerHTML || node.textContent) + "')" : ""), testName);
         }
         return point;
     },
-    _selectText: function (assert, start, end) {
-        start = this._select(assert, start);
+    _selectText: function (testName, assert, start, end) {
+        start = this._querySelectorAllWithContents(testName, assert, start);
         var target = start.node;
         target = target.tagName ? target : target.parentNode;
         this.dependencies.Test.triggerNativeEvents(target, 'mousedown');
         if (end) {
-            end = this._select(assert, end);
+            end = this._querySelectorAllWithContents(testName, assert, end);
             this.dependencies.Arch.setRange({
                 sc: start.node,
                 so: start.offset,

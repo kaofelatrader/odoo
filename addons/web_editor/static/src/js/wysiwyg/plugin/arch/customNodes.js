@@ -32,7 +32,7 @@ customNodes.br = ArchNode.extend({
             this.after(archNode);
             return;
         }
-        if (archNode.isText()) {
+        if (archNode.isText() && !archNode.isVirtual()) {
             this.params.change(archNode, archNode.length());
             this.before(archNode);
             this.remove();

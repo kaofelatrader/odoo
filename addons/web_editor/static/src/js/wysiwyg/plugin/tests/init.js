@@ -3,7 +3,23 @@ odoo.define('web_editor.wysiwyg.plugin.tests.init', function (require) {
 
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
+var customNodes = require('wysiwyg.plugin.arch.customNodes');
 
+customNodes.TEST = customNodes.VirtualTextNode.extend({
+    rangeColaspsed: '\u25C6',
+    rangeStart: '\u25B6',
+    rangeEnd: '\u25C0',
+
+    init: function (params, nodeValue) {
+        this._super.apply(this, arguments);
+        this.nodeName = 'TEST';
+        this.nodeValue = nodeValue;
+    },
+    toString: function (options) {
+        return this.nodeValue;
+    },
+    _applyRulesArchNode: function () {},
+});
 
 function deepEqual (v1, v2) {
     if (v1 === v2) {
@@ -28,7 +44,7 @@ function log (result, testName, value) {
     if (result === true) {
         console.info('TEST: ', testName);
     } else if (result === false) {
-        console.error('TEST: ', testName, value);
+        console.error('TEST: ', testName, '=>', value);
     }
 }
 /**
@@ -55,6 +71,7 @@ function _eventType(eventName) {
     });
     return type;
 }
+
 
 var TestPlugin = AbstractPlugin.extend({
     dependencies: ['Arch'],
@@ -107,6 +124,12 @@ var TestPlugin = AbstractPlugin.extend({
             },
         };
     },
+    start: function () {
+        var self = this;
+        var promise = this._super();
+        //this.dependencies.Arch.addCustomRule(this._createTestingVirtualNode.bind(this), [this._isTestingVirtualNode.bind(this)]);
+        return promise;
+    },
     setEditorValue: function () {
         this._super.apply(this, arguments);
         if (!this._allPluginsAreReady) {
@@ -130,6 +153,21 @@ var TestPlugin = AbstractPlugin.extend({
 
     add: function (plugin) {
         this._plugins.push(plugin);
+    },
+    getValue: function () {
+        var params = this.dependencies.Arch._arch.params; // TODO: Remove access private (=> apply customRules on parsing !, and after changes)
+        var range = this.dependencies.Arch.getRange();
+        var proto = customNodes.TEST.prototype;
+        if (range.isCollapsed()) {
+            var archNode = new customNodes.TEST(params, proto.rangeColaspsed);
+            this.dependencies.Arch.insert(archNode);
+        } else {
+            var archNode = new customNodes.TEST(params, proto.rangeEnd);
+            this.dependencies.Arch.insert(archNode, range.ec, range.eo);
+            var archNode = new customNodes.TEST(params, proto.rangeStart);
+            this.dependencies.Arch.insert(archNode, range.sc, range.so);
+        }
+        return this.dependencies.Arch.getValue();
     },
     test: function (assert) {
         var test = false;
@@ -187,6 +225,21 @@ var TestPlugin = AbstractPlugin.extend({
     // Private
     //--------------------------------------------------------------------------
 
+    _createTestingVirtualNode: function (json) {
+        if (json.nodeName === 'TEST') {
+            return json;
+        }
+        return {
+            nodeName: 'TEST',
+            nodeValue: json.nodeValue,
+        };
+    },
+    _isTestingVirtualNode: function (json) {
+        var proto = customNodes.TEST.prototype;
+        return  proto.rangeColaspsed === json.nodeValue ||
+                proto.rangeStart === json.nodeValue ||
+                proto.rangeEnd === json.nodeValue;
+    },
     _loadTest: function (plugin) {
         if (this._isDestroyed) {
             return Promise.resolve();

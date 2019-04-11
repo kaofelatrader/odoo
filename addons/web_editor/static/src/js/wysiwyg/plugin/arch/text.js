@@ -20,7 +20,7 @@ var TextNode = ArchNode.extend({
             return;
         }
 
-        var next = this.split(offset);
+        var next = this.split(offset) || this.nextSibling() || this;
         return this.parent.addLine(next.index());
     },
     empty: function () {

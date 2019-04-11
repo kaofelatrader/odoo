@@ -47,9 +47,9 @@ var JinjaPlugin = AbstractPlugin.extend({
             return json;
         }
         return {
-            childNodes: archNode.nodeValue.split('\n').map(function (line) {
+            childNodes: json.nodeValue.split('\n').map(function (line) {
                 return {
-                    nodeName: isJinjaLineExp.test(archNode.nodeValue) ? 'JINJA' : 'TEXT',
+                    nodeName: isJinjaLineExp.test(json.nodeValue) ? 'JINJA' : 'TEXT',
                     nodeValue: '\n' + line,
                 };
             }),
