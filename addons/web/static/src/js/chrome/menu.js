@@ -224,9 +224,18 @@ var Menu = Widget.extend({
             return;
         }
         var $target = $(ev.currentTarget);
-        var $opened = $target.siblings('.show');
+        var $opened = this.$('.o_menu_sections > li.show');
+        var isVisible = $opened.hasClass('show');
+        if (isVisible) {
+            $opened.removeClass('show');
+            $opened.find('div.dropdown-menu').removeClass('show');
+        }
         if ($opened.length) {
-            $target.find('[data-toggle="dropdown"]').dropdown('toggle');
+            if ($target.find('[data-toggle="dropdown"]').length){
+                $target.find('[data-toggle="dropdown"]').dropdown('toggle');
+            } else {
+                $target.addClass('show');
+            }
         }
     },
 });
