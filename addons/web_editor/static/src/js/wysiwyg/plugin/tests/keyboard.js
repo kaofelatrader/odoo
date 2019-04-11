@@ -63,12 +63,11 @@ var TestKeyboard = AbstractPlugin.extend({
      * @param {string} [keyboardTests.test.content]
      * @param {string} [keyboardTests.test.start]
      * @param {string} [keyboardTests.test.end] default: steps.start
-     * @param {function} [keyboardTests.test.check]
      */
     test: function (assert, keyboardTests) {
         var self = this;
         var defPollTest = Promise.resolve();
-        keyboardTests = (keyboardTests || []).slice();
+        keyboardTests = JSON.parse(JSON.stringify(keyboardTests || []));
 
         function pollTest(test) {
             var def = Promise.resolve();
@@ -144,10 +143,6 @@ var TestKeyboard = AbstractPlugin.extend({
             return def.then(function () {
                 if (!test.test) {
                     return;
-                }
-
-                if (test.test.check) {
-                    test.test.check();
                 }
 
                 // test content
