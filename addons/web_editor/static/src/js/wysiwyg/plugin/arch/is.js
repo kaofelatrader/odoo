@@ -144,7 +144,7 @@ ArchNode.include({
      */
     isFormatNode: function (styleTags) {
         styleTags = styleTags instanceof Array ? styleTags : this.params.formatTags;
-        console.warn('defaultStyleTags ?');
+        // console.warn('defaultStyleTags ?');
         return styleTags.indexOf(this.nodeName) !== -1;
     },
     /**
@@ -249,7 +249,7 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isNodeBlockType: function () {
-        console.warn('todo');
+        // console.warn('todo');
         return false;
         var display = window.getComputedStyle(node).display;
         // All inline elements have the word 'inline' in their display value, except 'contents'

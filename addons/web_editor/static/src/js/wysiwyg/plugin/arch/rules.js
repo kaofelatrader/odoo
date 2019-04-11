@@ -50,7 +50,7 @@ ArchNode.include({
         if (nodeName === 'EDITABLE') {
             return;
         }
-        var newParent = this.params._create(nodeName, []);
+        var newParent = this.params.create(nodeName, []);
         newParent.__applyRulesCheckParentsFlag = true;
         this.parent.insertBefore(newParent, this);
         newParent.append(this);
@@ -145,7 +145,7 @@ ArchNode.include({
         for (var k = 0; k < newParents.length; k++) {
             var item = newParents[k];
             var prev = item.previousSibling(function (n) {
-                return !(n instanceof VirtualTextNode) && !(n instanceof text.ArchitecturalSpaceNode);
+                return !(n instanceof text.VirtualTextNode) && !(n instanceof text.ArchitecturalSpaceNode);
             });
             if (prev && prev.nodeName === item.nodeName && newParents.indexOf(prev) !== -1 && item.attributes.toString() === prev.attributes.toString()) {
                 item.childNodes.slice().forEach(function (node) {
@@ -156,7 +156,7 @@ ArchNode.include({
             }
 
             var next = item.previousSibling(function (n) {
-                return !(n instanceof VirtualTextNode) && !(n instanceof text.ArchitecturalSpaceNode);
+                return !(n instanceof text.VirtualTextNode) && !(n instanceof text.ArchitecturalSpaceNode);
             });
             if (next && next.nodeName === item.nodeName && newParents.indexOf(next) !== -1 && item.attributes.toString() === next.attributes.toString()) {
                 item.childNodes.slice().forEach(function (node) {

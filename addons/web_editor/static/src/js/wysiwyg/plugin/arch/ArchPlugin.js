@@ -722,7 +722,7 @@ var ArchPlugin = AbstractPlugin.extend({
         return  node === this.editable || !this.isEditableNode(node.parentNode);
     },
     _isEditableNode: function (archNode) {
-        console.warn('todo');
+        // console.warn('todo');
         return false;
         archNode = archNode && (archNode.isText() ? archNode : archNode.parent);
         if (!archNode) {
@@ -773,7 +773,8 @@ var ArchPlugin = AbstractPlugin.extend({
         this._resetChange();
 
         offset = offset || 0;
-        var childNodes =  fragment.childNodes.slice();
+
+        var childNodes = fragment.childNodes.slice();
         childNodes.reverse();
         childNodes.forEach(function (child, index) {
             archNode.insert(child, offset);
@@ -800,14 +801,16 @@ var ArchPlugin = AbstractPlugin.extend({
         var self = this;
         var fragment = new FragmentNode(this._arch.params);
 
-        var reVoidNodes = new RegExp('<((' + this.voidTags.join('|') + ')[^>/]*)>', 'g');
+        var reTags = '(' + this.voidTags.join('|') + ')';
+        var reAttribute = '(\\s[^>/]+((=\'[^\']*\')|(=\"[^\"]*\"))?)*';
+        var reVoidNodes = new RegExp('<(' + reTags + reAttribute + ')>', 'g');
         var xml = html.replace(reVoidNodes, '<\$1/>');
         var parser = new DOMParser();
         var element = parser.parseFromString("<root>" + xml + "</root>","text/xml");
 
         if (element.querySelector('parsererror')) {
             console.error(element);
-            return;
+            return fragment;
         }
 
         var root = element.querySelector('root');
@@ -815,6 +818,7 @@ var ArchPlugin = AbstractPlugin.extend({
         root.childNodes.forEach(function (element) {
             fragment.append(self._parseElement(element));
         });
+
         return fragment;
     },
     _parseElement: function (element) {

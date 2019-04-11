@@ -31,6 +31,30 @@ function log (result, testName, value) {
         console.error('TEST: ', testName, value);
     }
 }
+/**
+ * Get the event type based on its name.
+ *
+ * @private
+ * @param {string} eventName
+ * @returns string
+ *  'mouse' | 'keyboard' | 'unknown'
+ */
+function _eventType(eventName) {
+    var types = {
+        mouse: ['click', 'mouse', 'pointer', 'contextmenu', 'select', 'wheel'],
+        keyboard: ['key'],
+    };
+    var type = 'unknown';
+    Object.keys(types).forEach(function (key, index) {
+        var isType = types[key].some(function (str) {
+            return eventName.indexOf(str) !== -1;
+        });
+        if (isType) {
+            type = key;
+        }
+    });
+    return type;
+}
 
 var TestPlugin = AbstractPlugin.extend({
     dependencies: ['Arch'],
@@ -117,6 +141,47 @@ var TestPlugin = AbstractPlugin.extend({
         assert.ok(test, 'Should find "TestAutoInstall" plugin');
         return Promise.resolve();
     },
+    /**
+     * Trigger events natively (as opposed to the jQuery way)
+     * on the specified target.
+     *
+     * @param {node} el
+     * @param {string []} events
+     * @param {object} [options]
+     * @returns Promise <Event []>
+     */
+    triggerNativeEvents: function (el, events, options) {
+        options = _.defaults(options || {}, {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+        });
+        if (typeof events === 'string') {
+            events = [events];
+        }
+        var triggeredEvents = []
+        events.forEach(function (eventName) {
+            var event;
+            switch (_eventType(eventName)) {
+                case 'mouse':
+                    event = new MouseEvent(eventName, options);
+                    break;
+                case 'keyboard':
+                    event = new KeyboardEvent(eventName, options);
+                    break;
+                default:
+                    event = new Event(eventName, options);
+                    break;
+            }
+            el.dispatchEvent(event);
+            triggeredEvents.push(event);
+        });
+        return new Promise(function (resolve) {
+            setTimeout(function (argument) {
+                resolve(triggeredEvents);
+            }, 0);
+        });
+    },
 
     //--------------------------------------------------------------------------
     // Private
@@ -160,6 +225,7 @@ var TestAutoInstall = AbstractPlugin.extend({
         return Promise.resolve();
     },
 });
+
 
 Manager.addPlugin('Test', TestPlugin);
 Manager.addPlugin('TestAutoInstall', TestAutoInstall);

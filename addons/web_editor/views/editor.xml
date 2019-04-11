@@ -106,6 +106,8 @@
     <!-- Tests -->
 
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/tests/init.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/tests/keyboard.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/tests/keyboardChar.js"/>
 
     <!-- additional plugins -->
 
