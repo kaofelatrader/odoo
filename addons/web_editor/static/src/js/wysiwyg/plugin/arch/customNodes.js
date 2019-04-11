@@ -28,9 +28,17 @@ customNodes.br = ArchNode.extend({
         if (archNode.isBR()) {
             var ancestor = this.ancestor(this.isBlock);
             var archNode = this.isRightEdgeOf(ancestor) ? new customNodes.VirtualTextNode(this.params) : archNode;
+            this.params.change(archNode, archNode.length());
             this.after(archNode);
+            return;
         }
-        return this._super.apply(this, arguments);
+        if (archNode.isText()) {
+            this.params.change(archNode, archNode.length());
+            this.before(archNode);
+            this.remove();
+            return;
+        }
+        this.parent.insert(archNode, this.index() + 1);
     },
     isBr: True,
     split: function () {

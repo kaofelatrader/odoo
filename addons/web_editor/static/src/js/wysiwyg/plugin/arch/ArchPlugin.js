@@ -259,7 +259,7 @@ var ArchPlugin = AbstractPlugin.extend({
     },
     parentIfText: function (id) {
         var archNode = this._getNode(id);
-        return archNode.isText() ? archNode.parent.id : archNode.id;
+        return archNode && (archNode.isText() ? archNode.parent.id : archNode.id);
     },
 
     //--------------------------------------------------------------------------
@@ -419,12 +419,23 @@ var ArchPlugin = AbstractPlugin.extend({
      * @param {Number} [points.eo] must be given if ec is given
      */
     setRange: function (points) {
+        // getDeepeset range
+        while (points.sc.childNodes[points.so]) {
+            points.sc = points.sc.childNodes[points.so];
+            points.so = 0;
+        }
+        while (points.ec.childNodes[points.eo]) {
+            points.ec = points.ec.childNodes[points.eo];
+            points.eo = 0;
+        }
+
         var pointsWithIDs = {
             scID: this._renderer.whoIsThisNode(points.sc),
             so: points.so,
             ecID: points.ec ? this._renderer.whoIsThisNode(points.ec) : undefined,
             eo: points.eo,
         };
+
         this._setRangeWithIDs(pointsWithIDs);
     },
     /**

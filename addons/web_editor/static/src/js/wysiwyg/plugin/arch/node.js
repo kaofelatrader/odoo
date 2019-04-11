@@ -276,7 +276,11 @@ return Class.extend({
         }
         this.params.change(archNode, archNode.length());
         var ref = this.childNodes[offset];
-        this.insertBefore(archNode, ref);
+        if (ref) {
+            this.insertBefore(archNode, ref);
+        } else {
+            this.append(archNode);
+        }
     },
     addLine: function (offset) {
         if (!this.ancestor(this._isPara)) {
