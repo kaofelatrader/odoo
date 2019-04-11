@@ -637,7 +637,6 @@ var ArchPlugin = AbstractPlugin.extend({
         this._applyChangesInRenderer();
     },
     addLine: function () {
-        var self = this;
         this._resetChange();
         this._getNode(this._range.scID).addLine(this._range.so);
         this._applyChangesInRenderer();

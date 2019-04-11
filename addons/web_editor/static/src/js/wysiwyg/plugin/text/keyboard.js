@@ -59,7 +59,6 @@ var KeyboardPlugin = AbstractPlugin.extend({
         // Otherwise insert a tab or do nothing
         if (!untab) {
             this._insertTab();
-            this.dependencies.Arch.getRange().normalize();
         }
     },
 
@@ -393,9 +392,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * @private
      */
     _insertTab: function () {
-        var range = this.dom.insertTextInline(this.tab, this.dependencies.Arch.getRange());
-        range = this.dependencies.Arch.setRange(range).normalize();
-        this.dependencies.Arch.setRange(range);
+        this.dependencies.Arch.insert(this.tab);
     },
     /**
      * Patch for Google Chrome's contenteditable SPAN bug.
