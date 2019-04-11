@@ -5,6 +5,7 @@ var AbstractAction = require('web.AbstractAction');
 var ReconciliationModel = require('account.ReconciliationModel');
 var ReconciliationRenderer = require('account.ReconciliationRenderer');
 var core = require('web.core');
+var QWeb = core.qweb;
 
 
 /**
@@ -12,10 +13,12 @@ var core = require('web.core');
  */
 var StatementAction = AbstractAction.extend({
     hasControlPanel: true,
+    withSearchBar: true,
     title: core._t('Bank Reconciliation'),
     contentTemplate: 'reconciliation',
     custom_events: {
         change_mode: '_onAction',
+        toggle_panel: '_onActionTogglePanel',
         change_filter: '_onAction',
         change_offset: '_onAction',
         change_partner: '_onAction',
@@ -27,13 +30,12 @@ var StatementAction = AbstractAction.extend({
         quick_create_proposition: '_onAction',
         partial_reconcile: '_onAction',
         validate: '_onValidate',
-        change_name: '_onChangeName',
         close_statement: '_onCloseStatement',
         load_more: '_onLoadMore',
         reload: 'reload',
     },
     events: {
-        'change .reconciliation_search_input': '_onSearch',
+        'change .o_searchview_input': '_onSearch',
     },
     config: _.extend({}, AbstractAction.prototype.config, {
         // used to instantiate the model
@@ -88,15 +90,24 @@ var StatementAction = AbstractAction.extend({
         var self = this;
         var def = this.model.load(this.params.context).then(this._super.bind(this));
         return def.then(function () {
-                var title = self.model.bank_statement_id  && self.model.bank_statement_id.display_name;
-                self._setTitle(title);
-                self.renderer = new self.config.ActionRenderer(self, self.model, {
-                    'bank_statement_id': self.model.bank_statement_id,
-                    'valuenow': self.model.valuenow,
-                    'valuemax': self.model.valuemax,
-                    'defaultDisplayQty': self.model.defaultDisplayQty,
-                    'title': title,
-                });
+                if (!self.model.context || !self.model.context.active_id) {
+                    self.model.context = {'active_id': self.params.context.active_id};
+                }
+                return self._rpc({
+                        model: 'account.journal',
+                        method: 'read',
+                        args: [self.model.context.active_id, ['name']],
+                    }).then(function (result) {
+                        var title = result[0] ? result[0]['name'] : ''
+                        self._setTitle(title);
+                        self.renderer = new self.config.ActionRenderer(self, self.model, {
+                            'bank_statement_id': self.model.bank_statement_id,
+                            'valuenow': self.model.valuenow,
+                            'valuemax': self.model.valuemax,
+                            'defaultDisplayQty': self.model.defaultDisplayQty,
+                            'title': title,
+                        });
+                    });
             });
     },
 
@@ -110,9 +121,29 @@ var StatementAction = AbstractAction.extend({
         this.model.reload()
             .then(function() {
                 self.$('.o_reconciliation_lines').html('');
-                self._renderLines();
-                self._openFirstLine();
+                return self._renderLinesOrRainbow();
             });
+    },
+
+    _renderLinesOrRainbow: function() {
+        var self = this;
+        return self._renderLines().then(function() {
+            var initialState = self.renderer._initialState;
+            var valuenow = self.model.statement ? self.model.statement.value_min : initialState.valuenow;
+            var valuemax = self.model.statement ? self.model.statement.value_max : initialState.valuemax;
+            // No more lines to reconcile, trigger the rainbowman.
+            if(valuenow === valuemax){
+                initialState.valuenow = valuenow;
+                initialState.context = self.model.getContext();
+                self.renderer.showRainbowMan(initialState);
+            }else{
+                // Create a notification if some lines has been reconciled automatically.
+                if(initialState.valuenow > 0)
+                    self.renderer._renderNotifications(self.model.statement.notifications);
+                self._openFirstLine();
+            }
+            self.renderer.$('[data-toggle="tooltip"]').tooltip()
+        });
     },
 
     /**
@@ -126,19 +157,8 @@ var StatementAction = AbstractAction.extend({
         var sup = this._super;
 
         return this.renderer.prependTo(self.$('.o_form_sheet')).then(function() {
-            return self._renderLines().then(function() {
-                // No more lines to reconcile, trigger the rainbowman.
-                var initialState = self.renderer._initialState;
-                if(initialState.valuenow === initialState.valuemax){
-                    initialState.context = self.model.getContext();
-                    self.renderer.showRainbowMan(initialState);
-                }else{
-                    // Create a notification if some lines has been reconciled automatically.
-                    if(initialState.valuenow > 0)
-                        self.renderer._renderNotifications(self.model.statement.notifications);
-                    self._openFirstLine();
-                }
-
+            return self._renderLinesOrRainbow().then(function() {
+                self.do_show()
                 return sup.apply(self, args);
             });
         });
@@ -152,11 +172,16 @@ var StatementAction = AbstractAction.extend({
     do_show: function () {
         this._super.apply(this, arguments);
         if (this.action_manager) {
-            this.updateControlPanel({clear: true});
-            this.action_manager.do_push_state({
-                action: this.params.tag,
-                active_id: this.params.res_id,
+            this.$pager = $(QWeb.render('reconciliation.control.pager', {widget: this.renderer}));
+            this.$buttons = $(QWeb.render('reconciliation.control.buttons', {}));
+            this.updateControlPanel({
+                clear: true,
+                cp_content: {
+                    $pager: this.$pager,
+                    $buttons: this.$buttons,
+                },
             });
+            this.renderer.$progress = this.$pager;
         }
     },
 
@@ -260,6 +285,11 @@ var StatementAction = AbstractAction.extend({
         });
     },
 
+    _onActionTogglePanel: function(event) {
+        this.$('.o_notebook').toggleClass('d-none', true);
+        event.target.$el.find('.o_notebook')[0].classList.remove('d-none');
+    },
+
     /**
      * @private
      * @param {OdooEvent} ev
@@ -267,6 +297,7 @@ var StatementAction = AbstractAction.extend({
     _onSearch: function (ev) {
         var self = this;
         ev.stopPropagation();
+        this.model.search_str = $('.o_searchview_input').val();
         this.reload();
     },
 
@@ -278,25 +309,6 @@ var StatementAction = AbstractAction.extend({
         self._getWidget(handle).updatePartialAmount(event.data.data, amount);
     },
 
-    /**
-     * call 'changeName' model method
-     *
-     * @private
-     * @param {OdooEvent} event
-     */
-    _onChangeName: function (event) {
-        var self = this;
-        var title = event.data.data;
-        this.model.changeName(title).then(function () {
-            self.title = title;
-            self.set("title", title);
-            self.renderer.update({
-                'valuenow': self.model.valuenow,
-                'valuemax': self.model.valuemax,
-                'title': title,
-            });
-        });
-    },
     /**
      * call 'closeStatement' model method
      *
@@ -368,6 +380,7 @@ var StatementAction = AbstractAction.extend({
  */
 var ManualAction = StatementAction.extend({
     title: core._t('Journal Items to Reconcile'),
+    withSearchBar: false,
     config: _.extend({}, StatementAction.prototype.config, {
         Model: ReconciliationModel.ManualModel,
         ActionRenderer: ReconciliationRenderer.ManualRenderer,

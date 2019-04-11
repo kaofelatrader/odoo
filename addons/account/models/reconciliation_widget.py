@@ -3,7 +3,7 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 from odoo.osv import expression
-from odoo.tools.misc import formatLang
+from odoo.tools.misc import formatLang, format_date
 
 
 class AccountReconciliation(models.AbstractModel):
@@ -31,22 +31,22 @@ class AccountReconciliation(models.AbstractModel):
         ctx = dict(self._context, force_price_include=False)
 
         processed_moves = self.env['account.move']
-        for st_line, datum in zip(st_lines, data):
-            payment_aml_rec = AccountMoveLine.browse(datum.get('payment_aml_ids', []))
-
-            for aml_dict in datum.get('counterpart_aml_dicts', []):
-                aml_dict['move_line'] = AccountMoveLine.browse(aml_dict['counterpart_aml_id'])
-                del aml_dict['counterpart_aml_id']
-
-            if datum.get('partner_id') is not None:
-                st_line.write({'partner_id': datum['partner_id']})
-
-            ctx['default_to_check'] = datum.get('to_check')
-            moves = st_line.with_context(ctx).process_reconciliation(
-                datum.get('counterpart_aml_dicts', []),
-                payment_aml_rec,
-                datum.get('new_aml_dicts', []))
-            processed_moves = (processed_moves | moves)
+        # for st_line, datum in zip(st_lines, data):
+        #     payment_aml_rec = AccountMoveLine.browse(datum.get('payment_aml_ids', []))
+        #
+        #     for aml_dict in datum.get('counterpart_aml_dicts', []):
+        #         aml_dict['move_line'] = AccountMoveLine.browse(aml_dict['counterpart_aml_id'])
+        #         del aml_dict['counterpart_aml_id']
+        #
+        #     if datum.get('partner_id') is not None:
+        #         st_line.write({'partner_id': datum['partner_id']})
+        #
+        #     ctx['default_to_check'] = datum.get('to_check')
+        #     moves = st_line.with_context(ctx).process_reconciliation(
+        #         datum.get('counterpart_aml_dicts', []),
+        #         payment_aml_rec,
+        #         datum.get('new_aml_dicts', []))
+        #     processed_moves = (processed_moves | moves)
         return {'moves': processed_moves}
 
     @api.model
@@ -65,6 +65,7 @@ class AccountReconciliation(models.AbstractModel):
             :param limit: number of the result to search
         """
         st_line = self.env['account.bank.statement.line'].browse(st_line_id)
+        print(st_line_id, partner_id, excluded_ids, search_str, offset, limit)
 
         # Blue lines = payment on bank account not assigned to a statement yet
         aml_accounts = [
@@ -77,7 +78,7 @@ class AccountReconciliation(models.AbstractModel):
 
         domain = self._domain_move_lines_for_reconciliation(st_line, aml_accounts, partner_id, excluded_ids=excluded_ids, search_str=search_str)
         recs_count = self.env['account.move.line'].search_count(domain)
-        aml_recs = self.env['account.move.line'].search(domain, offset=offset, limit=limit, order="date_maturity desc, id desc")
+        aml_recs = self.env['account.move.line'].search(domain, offset=offset, limit=limit, order="date_maturity asc, id asc")
         target_currency = st_line.currency_id or st_line.journal_id.currency_id or st_line.journal_id.company_id.currency_id
         return self._prepare_move_lines(aml_recs, target_currency=target_currency, target_date=st_line.date, recs_count=recs_count)
 
@@ -434,7 +435,7 @@ class AccountReconciliation(models.AbstractModel):
             '|', ('account_id.code', 'ilike', search_str),
             '|', ('move_id.name', 'ilike', search_str),
             '|', ('move_id.ref', 'ilike', search_str),
-            '|', ('date_maturity', 'like', search_str),
+            '|', ('date_maturity', 'like', search_str),  # TODO accept user format
             '&', ('name', '!=', '/'), ('name', 'ilike', search_str)
         ]
 
@@ -575,8 +576,8 @@ class AccountReconciliation(models.AbstractModel):
                 'account_code': line.account_id.code,
                 'account_name': line.account_id.name,
                 'account_type': line.account_id.internal_type,
-                'date_maturity': line.date_maturity,
-                'date': line.date,
+                'date_maturity': format_date(self.env, line.date_maturity),
+                'date': format_date(self.env, line.date),
                 'journal_id': [line.journal_id.id, line.journal_id.display_name],
                 'partner_id': line.partner_id.id,
                 'partner_name': line.partner_id.name,
@@ -671,7 +672,7 @@ class AccountReconciliation(models.AbstractModel):
             'ref': st_line.ref,
             'note': st_line.note or "",
             'name': st_line.name,
-            'date': st_line.date,
+            'date': format_date(self.env, st_line.date),
             'amount': amount,
             'amount_str': amount_str,  # Amount in the statement line currency
             'currency_id': st_line.currency_id.id or statement_currency.id,

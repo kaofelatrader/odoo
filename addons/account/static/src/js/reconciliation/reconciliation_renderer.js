@@ -19,11 +19,9 @@ var _t = core._t;
 var StatementRenderer = Widget.extend(FieldManagerMixin, {
     template: 'reconciliation.statement',
     events: {
-        'click div:first h1.statement_name': '_onClickStatementName',
+        'click button.import_to_suspense': '_onClickImportStatement',
         "click *[rel='do_action']": "_onDoAction",
         'click button.js_load_more': '_onLoadMore',
-        'blur .statement_name_edition > input': '_onValidateName',
-        'keyup .statement_name_edition > input': '_onKeyupInput'
     },
     /**
      * @override
@@ -42,7 +40,7 @@ var StatementRenderer = Widget.extend(FieldManagerMixin, {
         var self = this;
         var defs = [this._super.apply(this, arguments)];
         this.time = Date.now();
-        this.$progress = this.$('.progress');
+        this.$progress = $('');
         this.clickStatementName = this._initialState.bank_statement_id ? true : false;
 
         if (this._initialState.bank_statement_id) {
@@ -56,18 +54,12 @@ var StatementRenderer = Widget.extend(FieldManagerMixin, {
                 self.name = new basic_fields.FieldChar(self,
                     'name', self.model.get(self.handleNameRecord),
                     {mode: 'edit'});
-
-                self.name.appendTo(self.$('.statement_name_edition')).then(function () {
-                    self.name.$el.addClass('o_required_modifier');
-                });
-                self.$('.statement_name').text(self._initialState.bank_statement_id.display_name);
             });
             defs.push(def);
         }
 
-        this.$('h1.statement_name').text(this._initialState.title || _t('No Title'));
         if (this.model.context && this.model.context.args && this.model.context.args.search) {
-            this.$('.reconciliation_search_input').val(self.model.context.args.search);
+            $('.o_searchview_input').val(self.model.context.args.search);
         }
         return Promise.all(defs);
     },
@@ -100,6 +92,7 @@ var StatementRenderer = Widget.extend(FieldManagerMixin, {
             'timePerTransaction': Math.round(dt/1000/state.valuemax),
             'context': state.context,
         }));
+        $done.find('*').addClass('o_reward_subcontent');
         $done.find('.button_close_statement').click(this._onCloseBankStatement.bind(this));
         $done.find('.button_back_to_statement').click(this._onGoToBankStatement.bind(this));
         this.$el.children().hide();
@@ -140,9 +133,6 @@ var StatementRenderer = Widget.extend(FieldManagerMixin, {
         if (state.notifications) {
             this._renderNotifications(state.notifications);
         }
-
-        this.$('.statement_name, .statement_name_edition').toggle();
-        this.$('h1.statement_name').text(state.title || _t('No Title'));
     },
 
     //--------------------------------------------------------------------------
@@ -166,13 +156,20 @@ var StatementRenderer = Widget.extend(FieldManagerMixin, {
     //--------------------------------------------------------------------------
 
     /**
+     * on click on the "import to suspense account" this method open the wizard.
+     * When the wizard close, reload the main view to shows the rainbowman.
      * @private
      */
-    _onClickStatementName: function () {
-        if (this._initialState.bank_statement_id) {
-            this.$('.statement_name, .statement_name_edition').toggle();
-            this.$('.statement_name_edition input').focus();
-        }
+    _onClickImportStatement: function(){
+        var self = this;
+        this.do_action("account.action_account_bank_statement_to_suspense", {
+            additional_context: {
+                res_ids: _.map(this.model.statement.lines, function(o){ return o.st_line.id })
+            },
+            on_close: function() {
+                self.trigger_up('reload');
+            }
+        });
     },
     /**
      * @private
@@ -230,24 +227,6 @@ var StatementRenderer = Widget.extend(FieldManagerMixin, {
     _onLoadMore: function (e) {
         this.trigger_up('load_more');
     },
-    /**
-     * @private
-     */
-    _onValidateName: function () {
-        var name = this.$('.statement_name_edition input').val().trim();
-        this.trigger_up('change_name', {'data': name});
-    },
-    /**
-     * Save title on enter key pressed
-     *
-     * @private
-     * @param {KeyboardEvent} event
-     */
-    _onKeyupInput: function (event) {
-        if (event.which === $.ui.keyCode.ENTER) {
-            this.$('.statement_name_edition input').blur();
-        }
-    },
 });
 
 
@@ -259,8 +238,8 @@ var LineRenderer = Widget.extend(FieldManagerMixin, {
     template: "reconciliation.line",
     events: {
         'click .accounting_view caption .o_buttons button': '_onValidate',
-        'click .accounting_view thead td': '_onTogglePanel',
-        'click .accounting_view tfoot td:not(.cell_left,.cell_right)': '_onShowPanel',
+        'click .accounting_view': '_onTogglePanel',
+        'click .o_notebook li a': '_onChangeTab',
         'click .cell': '_onEditAmount',
         'change input.filter': '_onFilterChange',
         'click .match .load-more a': '_onLoadMore',
@@ -302,7 +281,7 @@ var LineRenderer = Widget.extend(FieldManagerMixin, {
                     self.model.get(recordID), {
                         mode: 'edit',
                         attrs: {
-                            placeholder: self._initialState.st_line.communication_partner_name || '',
+                            placeholder: self._initialState.st_line.communication_partner_name || _t('Select Partner'),
                         }
                     }
                 )
@@ -317,7 +296,7 @@ var LineRenderer = Widget.extend(FieldManagerMixin, {
             'placement': 'left',
             'container': this.$el,
             'html': true,
-            // disable bootstrap sanitizer because we use a table that has been 
+            // disable bootstrap sanitizer because we use a table that has been
             // rendered using qweb.render so it is safe and also because sanitizer escape table by default.
             'sanitize': false,
             'trigger': 'hover',
@@ -409,7 +388,6 @@ var LineRenderer = Widget.extend(FieldManagerMixin, {
         });
         this.$('.match div.load-more').toggle(remaining > 0);
         this.$('.match div.load-more span').text(remaining);
-        this.$('.match').css('max-height', !stateMvLines.length && !state.filter.length ? '0px' : '');
 
         // balance
         this.$('.popover').remove();
@@ -470,7 +448,7 @@ var LineRenderer = Widget.extend(FieldManagerMixin, {
                                 }
                             }
                         });
-                        return true; 
+                        return true;
                     });
                 });
         }
@@ -711,15 +689,18 @@ var LineRenderer = Widget.extend(FieldManagerMixin, {
      * @private
      */
     _onTogglePanel: function () {
-        var mode = this.$el.data('mode') === 'inactive' ? 'match' : 'inactive';
-        this.trigger_up('change_mode', {'data': mode});
+        this.trigger_up('change_mode', {'data': 'match'});
+        this.trigger_up('toggle_panel');
     },
     /**
      * @private
      */
-    _onShowPanel: function () {
-        var mode = (this.$el.data('mode') === 'inactive' || this.$el.data('mode') === 'match') ? 'create' : 'match';
-        this.trigger_up('change_mode', {'data': mode});
+    _onChangeTab: function(event) {
+        if (event.target.getAttribute('href').includes('misc')) {
+            this.trigger_up('change_mode', {'data': 'create'});
+        } else if (event.target.getAttribute('href').includes('matching')) {
+            this.trigger_up('change_mode', {'data': 'match'});
+        }
     },
     /**
      * @private
@@ -904,10 +885,10 @@ var ManualLineRenderer = LineRenderer.extend({
 
             return Promise.all(defs).then(function () {
                 if (!self.fields.title_account_id) {
-                    return self.fields.partner_id.prependTo(self.$('.accounting_view thead td:eq(1) span:first'));
+                    return self.fields.partner_id.prependTo(self.$('.accounting_view thead td:eq(0) span:first'));
                 } else {
                     self.fields.partner_id.destroy();
-                    return self.fields.title_account_id.appendTo(self.$('.accounting_view thead td:eq(1) span:first'));
+                    return self.fields.title_account_id.appendTo(self.$('.accounting_view thead td:eq(0) span:first'));
                 }
             });
         });

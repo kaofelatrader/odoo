@@ -49,6 +49,16 @@ var RainbowMan = Widget.extend({
         setTimeout(function () {
             core.bus.on('click', self, function (ev) {
                 if (ev.originalEvent && ev.target.className.indexOf('o_reward') === -1) {
+                // var target = ev.target;
+                // var destroy = true;
+                // while (destroy && target) {
+                //     if (target.className.indexOf('o_reward') !== -1) {
+                //         destroy = false;
+                //     } else {
+                //         target = target.parentElement;
+                //     }
+                // }
+                // if (destroy) {
                     this.destroy();
                 }
             });
