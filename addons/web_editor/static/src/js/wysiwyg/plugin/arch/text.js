@@ -188,11 +188,14 @@ var VisibleTextNode = TextNode.extend({
                 }
             }
             if (after.length || !text.length) {
+                var isRegularSpace = /^ +$/.test(after);
                 after = '';
                 var next = this.nextSibling();
                 if (!next && !this.isRightEdge(ancestor)) {
                     after = ' ';
                 } else if (next && next.isInline() && (!(next instanceof TextNode) || next.isVisibleText())) {
+                    after = ' ';
+                } else if (isRegularSpace) {
                     after = ' ';
                 }
             }
