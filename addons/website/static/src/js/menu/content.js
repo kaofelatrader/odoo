@@ -453,6 +453,7 @@ var EditMenuDialog = weWidgets.Dialog.extend({
         'click a.js_add_menu': '_onAddMenuButtonClick',
         'click button.js_delete_menu': '_onDeleteMenuButtonClick',
         'click button.js_edit_menu': '_onEditMenuButtonClick',
+        'click button.js_convert_mega_menu': '_onConvertMegaMenuButtonClick',
     }),
 
     /**
@@ -595,6 +596,7 @@ var EditMenuDialog = weWidgets.Dialog.extend({
                 parent_id: false,
                 sequence: 0,
                 children: [],
+                is_mega_menu: false,
             };
             self.flat[new_menu.id] = new_menu;
             self.$('.oe_menu_editor').append(
@@ -641,6 +643,41 @@ var EditMenuDialog = weWidgets.Dialog.extend({
             dialog.open();
         } else {
             Dialog.alert(null, "Could not find menu entry");
+        }
+    },
+    /**
+     * @private
+     */
+    _onConvertMegaMenuButtonClick: function (ev) {
+        var $menu = $(ev.currentTarget).closest('[data-menu-id]');
+        var menuID = $menu.data('menu-id') | 0;
+        if (menuID === 0) {
+            menuID = $(ev.currentTarget).closest('li').data('menu-id');
+            this.flat[menuID].is_mega_menu = !this.flat[menuID].is_mega_menu;
+            renderMenu(this.flat[menuID]);
+        } else {
+            this._rpc({
+                model: 'website.menu',
+                method: 'toggle_mega_menu',
+                args: [this.flat[menuID].id, null],
+            }).then(function (response) {
+                renderMenu(response);
+            });
+        }
+
+        function renderMenu(data) {
+            var menuData = {
+                id: data.id,
+                name: data.name,
+                url: data.url,
+                new_window: data.new_window,
+                parent_id: false,
+                sequence: 0,
+                children: [],
+                is_mega_menu: data.is_mega_menu,
+            };
+            $(ev.currentTarget).closest('.input-group')
+                .replaceWith(qweb.render('website.contentMenu.dialog.submenu', { submenu: menuData }));
         }
     },
 });
