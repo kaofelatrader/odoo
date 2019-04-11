@@ -419,16 +419,6 @@ var ArchPlugin = AbstractPlugin.extend({
      * @param {Number} [points.eo] must be given if ec is given
      */
     setRange: function (points) {
-        // getDeepeset range
-        while (points.sc.childNodes[points.so]) {
-            points.sc = points.sc.childNodes[points.so];
-            points.so = 0;
-        }
-        while (points.ec.childNodes[points.eo]) {
-            points.ec = points.ec.childNodes[points.eo];
-            points.eo = 0;
-        }
-
         var pointsWithIDs = {
             scID: this._renderer.whoIsThisNode(points.sc),
             so: points.so,
@@ -568,6 +558,20 @@ var ArchPlugin = AbstractPlugin.extend({
             }
         }
 
+        // getDeepeset range
+        var archSc = this._getNode(scID);
+        while (archSc.childNodes && archSc.childNodes.length > so) {
+            archSc = archSc.childNodes[so];
+            so = 0;
+            scID = archSc.id;
+        }
+        var archEc = this._getNode(ecID);
+        while (archEc.childNodes && archEc.childNodes.length > eo) {
+            archEc = archEc.childNodes[eo];
+            eo = 0;
+            ecID = archEc.id;
+        }
+
         var didRangeChange = this._willRangeChange(scID, so, ecID, eo);
         var isChangeElemIDs = this.parentIfText(scID) !== this.parentIfText(this._range.scID) ||
             this.parentIfText(ecID) !== this.parentIfText(this._range.ecID);
@@ -653,18 +657,28 @@ var ArchPlugin = AbstractPlugin.extend({
         this._applyChangesInRenderer();
     },
     removeLeft: function () {
-        var archNode = this._getNode(this._range.scID);
-        if (this.getRange().isCollapsed()) {
-            archNode.removeLeft(this._range.so);
-        } else {
-            archNode.remove();
-        }
-        this._applyChangesInRenderer();
+        this._removeSide(true);
     },
     removeRight: function () {
+        this._removeSide(false);
+    },
+    _removeSide: function (isLeft) {
         var archNode = this._getNode(this._range.scID);
         if (this.getRange().isCollapsed()) {
-            archNode.removeRight(this._range.so);
+            var offset = this._range.so;
+            var next = archNode[isLeft ? 'previousSibling' : 'nextSibling']();
+            while (next && archNode.isVirtual()) {
+                archNode = next;
+                offset = archNode.length();
+                next = archNode[isLeft ? 'previousSibling' : 'nextSibling']();
+            }
+            var child = archNode[isLeft ? 'lastChild' : 'firstChild']();
+            while (child && !archNode.isText()) {
+                archNode = child;
+                offset = isLeft ? archNode.length() : 0;
+                child = archNode[isLeft ? 'lastChild' : 'firstChild']();
+            }
+            archNode[isLeft ? 'removeLeft' : 'removeRight'](offset);
         } else {
             archNode.remove();
         }
