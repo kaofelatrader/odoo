@@ -246,11 +246,6 @@ var VirtualTextNode = TextNode.extend({
             this._mutation('br');
             return;
         }
-
-        var format = this.ancestor(this.isFormatNode);
-        if (!format || !format.isEmpty()) {
-            this.remove();
-        }
     },
     _applyRulesCheckParents: function () {},
     _addArchitecturalSpaceNode: function () {},

@@ -274,7 +274,7 @@ return Class.extend({
             console.warn("can not split a not editable node");
             return;
         }
-
+        this.params.change(archNode, archNode.length());
         var ref = this.childNodes[offset];
         this.insertBefore(archNode, ref);
     },
