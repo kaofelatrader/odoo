@@ -85,38 +85,10 @@ var TextNode = ArchNode.extend({
      */
     isVisibleText: True,
     removeLeft: function (offset) {
-        if (offset <= 0) {
-            var previousSibling = this.previousSibling();
-            if (!previousSibling) {
-                return;
-            }
-            previousSibling.removeLeft(0);
-        } else if (this.length() === 1) {
-            if (!this.previousSibling() || !this.nextSibling()) {
-                this.after(new VirtualTextNode(this.params));
-            }
-            this.remove();
-        } else {
-            this.nodeValue = this.nodeValue.slice(0, offset - 1) + this.nodeValue.slice(offset, this.length());
-            this.params.change(this, offset - 1);
-        }
+        this._removeSide(offset, true);
     },
     removeRight: function (offset) {
-        if (offset >= this.length()) {
-            var nextSibling = this.nextSibling();
-            if (!nextSibling) {
-                return;
-            }
-            nextSibling.removeRight(0);
-        } else if (this.length() === 1) {
-            if (!this.previousSibling() || !this.nextSibling()) {
-                this.after(new VirtualTextNode(this.params));
-            }
-            this.remove();
-        } else {
-            this.nodeValue = this.nodeValue.slice(0, offset) + this.nodeValue.slice(offset + 1, this.length());
-            this.params.change(this, offset);
-        }
+        this._removeSide(offset, false);
     },
     split: function (offset) {
         if (!this.isEditable()) {
@@ -151,6 +123,24 @@ var TextNode = ArchNode.extend({
 
     _applyRulesPropagation: function () {},
     _addArchitecturalSpaceNodePropagation: function () {},
+    _removeSide: function (offset, isLeft) {
+        if (isLeft && offset <= 0 || !isLeft && offset >= this.length()) {
+            var next = this[isLeft ? 'previousSibling' : 'nextSibling']();
+            if (!next) {
+                return;
+            }
+            next[isLeft ? 'removeLeft' : 'removeRight'](0);
+        } else if (this.length() === 1) {
+            if (!this.previousSibling() || !this.nextSibling()) {
+                this.after(new VirtualTextNode(this.params));
+            }
+            this.remove();
+        } else {
+            offset = isLeft ? offset - 1 : offset;
+            this.nodeValue = this.nodeValue.slice(0, offset) + this.nodeValue.slice(offset + 1, this.length());
+            this.params.change(this, offset);
+        }
+    },
 });
 
 //////////////////////////////////////////////////////////////
