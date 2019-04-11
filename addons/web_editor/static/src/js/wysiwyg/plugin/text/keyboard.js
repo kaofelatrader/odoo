@@ -374,17 +374,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * @private
      */
     _insertHR: function () {
-        var self = this;
-        var hr = document.createElement('hr');
-        this.dom.insertBlockNode(hr, this.dependencies.Arch.getRange());
-        var point = this.getPoint(hr, 0);
-        point = point.nextUntil(function (pt) {
-            return pt.node !== hr && !self.dependencies.Arch.isUnbreakableNode(pt.node);
-        }) || this.getPoint(hr, 0);
-        this.dependencies.Arch.setRange({
-            sc: point.node,
-            so: point.offset,
-        });
+        this.dependencies.Arch.insert('<hr/>');
     },
     /**
      * Insert a TAB (4 non-breakable spaces).
