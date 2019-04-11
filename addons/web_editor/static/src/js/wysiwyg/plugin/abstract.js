@@ -25,6 +25,8 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
 
     promise: null,
 
+    autoInstall: false,
+
     /**
      * Use this prop if you want to extend a summernote plugin.
      *

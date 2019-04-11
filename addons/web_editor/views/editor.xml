@@ -103,6 +103,10 @@
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/misc/transform.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/misc/codeview_jinja.js"/>
 
+    <!-- Tests -->
+
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/tests/init.js"/>
+
     <!-- additional plugins -->
 
     <script type="text/javascript" src="/web_editor/static/src/js/backend/convert_inline.js"/>
@@ -182,7 +186,6 @@
             });
         </script>
         <t t-call="web_editor.compiled_assets_wysiwyg"/>
-
         <script type="text/javascript" src="/web_editor/static/tests/test_utils.js"/>
         <script type="text/javascript" src="/web_editor/static/tests/field_html_tests.js"/>
         <script type="text/javascript" src="/web_editor/static/tests/wysiwyg_tests.js"/>

@@ -244,9 +244,7 @@ var ArchPlugin = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     getValue: function () {
-        var value = this._arch.toString({});
-        console.log(value);
-        return value;
+        return this._arch.toString({});
     },
     addCustomRule: function (callback, children) {
         this.customRules.push([callback, children]);

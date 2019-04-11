@@ -203,6 +203,22 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
             Object.freeze(self._plugins);
         });
     },
+    _getPluginConstructor: function (params, pluginName) {
+        var Plugin = params.plugins[pluginName];
+        if (typeof Plugin === 'object') {
+            if (pluginsRegistry[pluginName]) {
+                return pluginsRegistry[pluginName].extend(Plugin);
+            } else {
+                return AbstractPlugin.extend(Plugin);
+            }
+        } else if (typeof Plugin !== 'function') {
+            return pluginsRegistry[pluginName];
+        }
+        if (!Plugin) {
+            throw new Error("The plugin '" + pluginName + "' is unknown or couldn't be loaded.");
+        }
+        return Plugin;
+    },
     /*
      * sort with the deepest dependencies in first
      */
@@ -231,9 +247,21 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
     },
     _createPluginInstance: function (params, options) {
         var pluginNames = [];
+
         Object.keys(params.plugins).forEach(function (pluginName) {
             if (params.plugins[pluginName]) {
                 pluginNames.push(pluginName);
+            }
+        });
+
+        var autoInstallPlugins = [];
+        Object.keys(pluginsRegistry).forEach(function (pluginName) {
+            var proto = pluginsRegistry[pluginName].prototype;
+            if (proto.autoInstall && pluginNames.indexOf(pluginName) === -1) {
+                autoInstallPlugins.push({
+                    name: pluginName,
+                    dependencies: proto.dependencies.slice(),
+                });
             }
         });
 
@@ -243,22 +271,11 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
         var pluginInstances = {};
         for (var i = 0; i < pluginNames.length; i++) {
             var pluginName = pluginNames[i];
-            var Plugin = params.plugins[pluginName];
-            if (typeof Plugin === 'object') {
-                if (pluginsRegistry[pluginName]) {
-                    Plugin = pluginsRegistry[pluginName].extend(Plugin);
-                } else {
-                    Plugin = AbstractPlugin.extend(Plugin);
-                }
-            } else if (typeof Plugin !== 'function') {
-                Plugin = pluginsRegistry[pluginName];
-            }
-
-            if (!Plugin) {
-                throw new Error("The plugin '" + pluginName + "' is unknown or couldn't be loaded.");
-            }
+            var Plugin = this._getPluginConstructor(params, pluginName);
             var pluginInstance = new Plugin(this, params, options);
             pluginInstance.pluginName = pluginName;
+
+            // add dependencies
 
             for (var k = 0; k < pluginInstance.dependencies.length; k++) {
                 var pName = pluginInstance.dependencies[k];
@@ -267,6 +284,22 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
                 }
             }
             pluginInstances[pluginName] = pluginInstance;
+
+            // add autoInstall plugins
+
+            for (var k = autoInstallPlugins.length - 1; k >= 0 ; k--) {
+                var autoInstall = autoInstallPlugins[k];
+                var index;
+                while ((index = autoInstall.dependencies.indexOf(pluginName)) !== -1) {
+                    autoInstall.dependencies.splice(index, 1);
+                }
+                if (!autoInstall.dependencies.length) {
+                    if (pluginNames.indexOf(autoInstall.name) === -1) {
+                        pluginNames.push(autoInstall.name);
+                    }
+                    autoInstallPlugins.splice(k, 1);
+                }
+            }
         }
         return pluginInstances;
     },
