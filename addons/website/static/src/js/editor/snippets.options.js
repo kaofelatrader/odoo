@@ -1539,4 +1539,75 @@ options.registry.anchorName = options.Class.extend({
         this.$target.trigger('content_changed');
     },
 });
+
+options.registry.megaMenu = options.Class.extend({
+    xmlDependencies: ['/website/static/src/xml/website.editor.xml'],
+
+    /**
+     * @override
+     */
+    start: function () {
+        this.megaMenuDropdownID = this.$target.closest('.dropdown_mega_menu').data('oe-id');
+        this.$navLink = this.$target.closest('.dropdown_mega_menu').siblings('a');
+    },
+
+    //--------------------------------------------------------------------------
+    // Options
+    //--------------------------------------------------------------------------
+
+    /**
+     * @see this.selectClass for parameters
+     */
+    openMegaMenuDialog: function (previewMode, value, $opt) {
+        var self = this;
+        new Dialog(this, {
+            title: _t("Mega Menu"),
+            $content: $(qweb.render('website.dialog.megaMenu', {
+                currentAlignment: self.$target.attr('data-dropdown-alignment'),
+                currentWidth: self.$target.attr('data-dropdown-width'),
+            })),
+            buttons: [
+                {
+                    text: _t("Save"),
+                    classes: 'btn-primary',
+                    click: function () {
+                        var $dropdownContentAlignment = $('[name="dropdown_content_alignment"]');
+                        var $dropdownWidth = $('[name="dropdown_width"]');
+                        var $dropdownMenu = self.$target.parent();
+                        var $megaMenuContent = self.$target.find('.s_mega_menu_content');
+                        var containerWidth = $dropdownWidth.val() === 'container';
+
+                        $dropdownMenu.toggleClass('position-static', !containerWidth);
+                        $megaMenuContent
+                            .removeClass('text-center').removeClass('text-left').removeClass('text-right')
+                            .addClass($dropdownContentAlignment.val())
+                            .toggleClass('container', !containerWidth)
+                            .toggleClass('container-fluid', containerWidth)
+                            .toggleClass('mega_menu_max_content', containerWidth);
+                        self.$target
+                            .toggleClass('dropdown-menu-right', containerWidth)
+                            .toggleClass('w-100', !containerWidth)
+                            .attr({
+                                'data-dropdown-alignment': $dropdownContentAlignment.val(),
+                                'data-dropdown-width': $dropdownWidth.val(),
+                            });
+                        $dropdownMenu.trigger('content_changed');
+                        this.close();
+                    }
+                },
+                {
+                    text: _t("Discard"),
+                    close: true,
+                },
+            ],
+        }).open();
+    },
+
+    /**
+     * @see this.selectClass for parameters
+     */
+    toggleTextMute: function (previewMode, value, $opt) {
+        this.$target.find('p').toggleClass('text-muted');
+    },
+});
 });

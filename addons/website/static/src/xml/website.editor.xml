@@ -103,4 +103,27 @@
             </div>
         </div>
     </div>
+    <!-- Mega Menu option dialog -->
+    <div t-name="website.dialog.megaMenu">
+        <div class="form-group">
+            <label for="alignment">Dropdown Content Alignment</label>
+            <select id="dropdown_aligment" class="custom-select" name="dropdown_content_alignment">
+                <option t-att-selected="currentAlignment == 'text-left' ? 'selected' : undefined" value="text-left">Left</option>
+                <option t-att-selected="currentAlignment == 'text-center' ? 'selected' : undefined" value="text-center">Center</option>
+                <option t-att-selected="currentAlignment == 'text-right' ? 'selected' : undefined" value="text-right">Right</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="width">Dropdown Width</label>
+            <select id="dropdown_width" class="custom-select" name="dropdown_width">
+                <option t-att-selected="currentWidth == 'full' ? 'selected' : undefined" value="full">Full-width</option>
+                <option t-att-selected="currentWidth == 'container' ? 'selected' : undefined" value="container">Container-width</option>
+            </select>
+        </div>
+    </div>
+    <!-- delete Mega Menu dialog -->
+    <div t-name="website.remove_mega_menu_dialog">
+        <p>Are you sure to delete this mega menu ?</p>
+        <p class="text-muted">If you remove it, you won't be able to recover it later.</p>
+    </div>
 </templates>
