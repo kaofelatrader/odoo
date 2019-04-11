@@ -511,7 +511,15 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _onTextInput: function (ev) {
         ev.preventDefault();
-        this.dependencies.Arch.insert(ev.data.charCodeAt(0) === 10 ? '<br/>' : ev.data);
+        var text;
+        if (ev.data === ' ') {
+            text = this.utils.char('nbsp');
+        } else if (ev.data.charCodeAt(0) === 10) {
+            text = '<br/>';
+        } else {
+            text = ev.data;
+        }
+        this.dependencies.Arch.insert(text);
     },
 });
 

@@ -91,16 +91,17 @@ var TextNode = ArchNode.extend({
         }
 
         var text = this.nodeValue.slice(offset);
+        var archNode;
 
         if (offset === 0) {
             this.params.change(this, 0);
-            var archNode = new VirtualTextNode(this.params);
+            archNode = new VirtualTextNode(this.params);
             this.before(archNode);
             return this;
         }
 
         var Constructor = text.length ? this.constructor : VirtualTextNode;
-        var archNode = new Constructor(this.params, text);
+        archNode = new Constructor(this.params, text);
         this.params.change(archNode, 0); // set the last change to move range automatically
 
         this.nodeValue = this.nodeValue.slice(0, offset);
@@ -120,9 +121,9 @@ var TextNode = ArchNode.extend({
 
 //////////////////////////////////////////////////////////////
 
-var regExpSpaceBegin = /^([\s\n\r\t]*)/;
-var regExpSpaceEnd = /([\s\n\r\t]*)$/;
-var regExpSpace = /\s+/g;
+var regExpSpaceBegin = /^([ \n\r\t\uFEFF]*)/;
+var regExpSpaceEnd = /([ \n\r\t\uFEFF]*)$/;
+var regExpSpace = /[ \t\r\n\uFEFF]+/g;
 var VisibleTextNode = TextNode.extend({
 
     //--------------------------------------------------------------------------
