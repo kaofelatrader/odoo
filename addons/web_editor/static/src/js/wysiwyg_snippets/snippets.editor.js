@@ -6,6 +6,7 @@ var dom = require('web.dom');
 var Widget = require('web.Widget');
 var options = require('web_editor.snippets.options');
 var Wysiwyg = require('web_editor.wysiwyg');
+var Dialog = require('web.Dialog');
 
 var _t = core._t;
 
@@ -30,6 +31,7 @@ var SnippetEditor = Widget.extend({
     custom_events: {
         cover_update: '_onCoverUpdate',
         option_update: '_onOptionUpdate',
+        remove_mega_menu: '_onRemoveMegaMenu',
     },
 
     /**
@@ -343,6 +345,40 @@ var SnippetEditor = Widget.extend({
 
         return Promise.all(defs);
     },
+    /**
+     * Called when a Mega Menu is removed
+     *
+     * @private
+     */
+    _removeMegaMenu: function () {
+        var $dropdownMegaMenu = this.$target.closest('.dropdown_mega_menu');
+        var self = this;
+        new Dialog(this, {
+            title: _t("Confirmation"),
+            $content: $(core.qweb.render('website.remove_mega_menu_dialog')),
+            buttons: [
+                {
+                    text: _t("Delete this mega menu"),
+                    classes: 'btn-primary',
+                    click: function () {
+                        self.trigger_up('add_mega_menu_to_remove', {
+                            id: $dropdownMegaMenu.data('oe-id'),
+                        });
+                        $dropdownMegaMenu.siblings('a').removeClass('dropdown-toggle');
+                        $dropdownMegaMenu.closest('.nav-item').removeClass('dropdown position-static');
+                        self.trigger_up('cover_will_change');
+                        self.trigger_up('request_history_undo_record', {$target: self.$target});
+                        self.removeSnippet();
+                        this.close();
+                    }
+                },
+                {
+                    text: _t("Discard"),
+                    close: true,
+                },
+            ]
+        }).open();
+    },
 
     //--------------------------------------------------------------------------
     // Handlers
@@ -555,10 +591,14 @@ var SnippetEditor = Widget.extend({
      * @param {Event} ev
      */
     _onRemoveClick: function (ev) {
-        ev.preventDefault();
-        this.trigger_up('cover_will_change');
-        this.trigger_up('request_history_undo_record', {$target: this.$target});
-        this.removeSnippet();
+        if (this.$target.hasClass('s_mega_menu') || this.$target.hasClass('dropdown_mega_menu')) {
+            this._removeMegaMenu();
+        } else {
+            ev.preventDefault();
+            this.trigger_up('cover_will_change');
+            this.trigger_up('request_history_undo_record', {$target: this.$target});
+            this.removeSnippet();
+        }
     },
 });
 
@@ -578,6 +618,7 @@ var SnippetsMenu = Widget.extend({
         remove_snippet: '_onRemoveSnippet',
         snippet_removed: '_onSnippetRemoved',
         reload_snippet_dropzones: '_disableUndroppableSnippets',
+        toggle_mega_menu_snippets: '_toggleMegaMenuSnippets',
     },
 
     /**
@@ -1442,6 +1483,15 @@ var SnippetsMenu = Widget.extend({
             .filter(function () {
                 return this.nodeType === 3 && this.textContent.match(/\S/);
             }).parent().addClass('o_default_snippet_text');
+    },
+    /**
+     * Toggle visibility of Mega Menu snippets when a mega menu dropdown is shown/hidden
+     *
+     * @private
+     * @param {Boolean} visibility
+     */
+    _toggleMegaMenuSnippets: function (show) {
+        this.$('#snippet_mega_menu').toggleClass('d-none', !show);
     },
 
     //--------------------------------------------------------------------------

@@ -185,6 +185,7 @@ var EditPageMenu = websiteNavbarData.WebsiteNavbarActionWidget.extend({
      * @param {OdooEvent} ev
      */
     _onEditionWillStop: function (ev) {
+        $('.dropdown_mega_menu').dropdown('hide');
         this.$editorMessageElements.removeAttr('data-editor-message');
         this.trigger_up('widgets_stop_request', {
             $target: this._targetForEdition(),

@@ -24,6 +24,7 @@ var EditorMenu = Widget.extend({
     },
     custom_events: {
         request_save: '_onSnippetRequestSave',
+        add_mega_menu_to_remove: '_onAddMegaMenuToRemove',
     },
 
     /**
@@ -47,6 +48,7 @@ var EditorMenu = Widget.extend({
     start: function () {
         var self = this;
         this.$el.css({width: '100%'});
+        this.megaMenuToRemove = [];
         return this._super().then(function () {
             self.trigger_up('edit_mode');
             self.$el.css({width: ''});
@@ -111,6 +113,13 @@ var EditorMenu = Widget.extend({
      */
     save: function (reload) {
         var self = this;
+        _.each(this.megaMenuToRemove, function (menuID) {
+            self._rpc({
+                model: 'website.menu',
+                method: 'toggle_mega_menu',
+                args: [menuID, null],
+            });
+        });
         this.trigger_up('edition_will_stopped');
         return this.wysiwyg.save().then(function (result) {
             var $wrapwrap = $('#wrapwrap');
@@ -216,6 +225,12 @@ var EditorMenu = Widget.extend({
      */
     _onSaveClick: function () {
         this.save();
+    },
+    /**
+     * @private
+     */
+    _onAddMegaMenuToRemove: function (result) {
+        this.megaMenuToRemove.push(result.data.id);
     },
 });
 
