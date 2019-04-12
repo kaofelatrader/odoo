@@ -2134,8 +2134,8 @@ class MailThread(models.AbstractModel):
     @api.multi
     def _notify_record(self, message, msg_vals, model_description=False, mail_auto_delete=True):
         # Can be overide to intercept and postpone notification mecanism
-        message._notify(
-            self, msg_vals,
+        self._notify_message(
+            message, msg_vals,
             force_send=self.env.context.get('mail_notify_force_send', True),
             model_description=model_description,
             mail_auto_delete=mail_auto_delete,
@@ -2147,7 +2147,7 @@ class MailThread(models.AbstractModel):
 
 
     @api.multi
-    def _notify(self, record, msg_vals, force_send=False, model_description=False, mail_auto_delete=True):
+    def _notify_message(self, message, msg_vals, force_send=False, model_description=False, mail_auto_delete=True):
         """ Main notification method. This method basically does two things
 
          * call ``_notify_compute_recipients`` that computes recipients to
@@ -2167,14 +2167,14 @@ class MailThread(models.AbstractModel):
         """
 
         msg_vals = msg_vals if msg_vals else {}
-        rdata = self._notify_compute_recipients(record, msg_vals)
+        rdata = self._notify_compute_recipients(message, msg_vals)
         return self._notify_recipients(
-            rdata, record, msg_vals,
+            rdata, message, msg_vals,
             force_send=force_send,
             model_description=model_description, mail_auto_delete=mail_auto_delete)
 
     @api.multi
-    def _notify_recipients(self, rdata, record, msg_vals,
+    def _notify_recipients(self, rdata, message, msg_vals,
                            force_send=False, model_description=False, mail_auto_delete=True):
         """ Main method implementing the notification process.
 
@@ -2186,7 +2186,7 @@ class MailThread(models.AbstractModel):
             ('email' for mailing list otherwise 'inbox'), type (channel_type)
         }
         """
-        self.ensure_one()
+        message.ensure_one()
 
         email_cids = [r['id'] for r in rdata['channels'] if r['notif'] == 'email']
         inbox_pids = [r['id'] for r in rdata['partners'] if r['notif'] == 'inbox']
@@ -2196,15 +2196,15 @@ class MailThread(models.AbstractModel):
             message_values['channel_ids'] = [(6, 0, [r['id'] for r in rdata['channels']])]
         if rdata['partners']:
             message_values['needaction_partner_ids'] = [(6, 0, [r['id'] for r in rdata['partners']])]
-        if message_values and record and hasattr(record, '_notify_customize_recipients'):
-            message_values.update(record._notify_customize_recipients(self, message_values, rdata))
+        if message_values and self and hasattr(self, '_notify_customize_recipients'):
+            message_values.update(self._notify_customize_recipients(message, msg_vals, rdata))
         if message_values:
-            self.write(message_values)
+            message.write(message_values)
 
         # notify partners and channels
         if email_cids:
-            author_id = msg_vals.get('author_id') or self.author_id.id
-            email_from = msg_vals.get('email_from') or self.email_from
+            author_id = msg_vals.get('author_id') or message.author_id.id
+            email_from = msg_vals.get('email_from') or message.email_from
             exept_partner = [r['id'] for r in rdata['partners']]
             if author_id:
                 exept_partner.append(author_id)
@@ -2218,21 +2218,21 @@ class MailThread(models.AbstractModel):
 
         partner_email_rdata = [r for r in rdata['partners'] if r['notif'] == 'email']
         if partner_email_rdata:
-            self.env['res.partner']._notify(self, partner_email_rdata, record, force_send=force_send, model_description=model_description, mail_auto_delete=mail_auto_delete)
+            self.env['res.partner']._notify(message, partner_email_rdata, self, force_send=force_send, model_description=model_description, mail_auto_delete=mail_auto_delete)
 
         if inbox_pids:
-            self.env['res.partner'].browse(inbox_pids)._notify_by_chat(self)
+            self.env['res.partner'].browse(inbox_pids)._notify_by_chat(message)
 
         if rdata['channels']:
-            self.env['mail.channel'].sudo().browse([r['id'] for r in rdata['channels']])._notify(self)
+            self.env['mail.channel'].sudo().browse([r['id'] for r in rdata['channels']])._notify(message)
 
         return True
 
     @api.multi
-    def _notify_compute_recipients(self, record, msg_vals):
+    def _notify_compute_recipients(self, message, msg_vals):
         """ Compute recipients to notify based on subtype and followers. This
         method returns data structured as expected for ``_notify_recipients``. """
-        msg_sudo = self.sudo()
+        msg_sudo = message.sudo()
         # get values from msg_vals or from message if msg_vals doen't exists
         pids = msg_vals.get('partner_ids', []) if msg_vals else msg_sudo.partner_ids.ids
         cids = msg_vals.get('channel_ids', []) if msg_vals else msg_sudo.channel_ids.ids
@@ -2243,10 +2243,10 @@ class MailThread(models.AbstractModel):
             'channels': [],
         }
         res = []
-        res = self.env['mail.followers']._get_recipient_data(record, subtype_id, pids, cids)
-        author_id = msg_vals.get('author_id') or self.author_id.id if res else False
+        res = self.env['mail.followers']._get_recipient_data(self, subtype_id, pids, cids)
+        author_id = msg_vals.get('author_id') or message.author_id.id if res else False
         for pid, cid, active, pshare, ctype, notif, groups in res:
-            if pid and pid == author_id and not self.env.context.get('mail_notify_author'):  # do not notify the author of its own messages
+            if pid and pid == author_id and not message.env.context.get('mail_notify_author'):  # do not notify the author of its own messages
                 continue
             if pid:
                 if active is False:
