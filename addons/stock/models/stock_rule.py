@@ -57,6 +57,9 @@ class StockRule(models.Model):
     propagate = fields.Boolean(
         'Propagate cancel and split', default=True,
         help="When ticked, if the move is splitted or cancelled, the next move will be too.")
+    previous_move_propagate = fields.Boolean(
+        'Cancel previous move', default=False,
+        help="When ticked, if the move is splitted or cancelled, the previous move will be too.")
     warehouse_id = fields.Many2one('stock.warehouse', 'Warehouse')
     propagate_warehouse_id = fields.Many2one(
         'stock.warehouse', 'Warehouse to Propagate',
@@ -163,6 +166,7 @@ class StockRule(models.Model):
             'picking_id': False,
             'picking_type_id': self.picking_type_id.id,
             'propagate': self.propagate,
+            'previous_move_propagate': self.previous_move_propagate,
             'warehouse_id': self.warehouse_id.id,
         }
         return new_move_vals
@@ -227,6 +231,7 @@ class StockRule(models.Model):
             'warehouse_id': self.propagate_warehouse_id.id or self.warehouse_id.id,
             'date': date_expected,
             'date_expected': date_expected,
+            'previous_move_propagate': self.previous_move_propagate,
             'propagate': self.propagate,
             'description_picking': product_id._get_description(self.picking_type_id),
             'priority': values.get('priority', "1"),
