@@ -805,14 +805,14 @@ class Post(models.Model):
         return super(Post, self).message_post(message_type=message_type, **kwargs)
 
     @api.multi
-    def _notify_customize_recipients(self, message, msg_vals, recipients_vals):
+    def _notify_customize_recipients(self, message, msg_vals):
         """ Override to avoid keeping all notified recipients of a comment.
         We avoid tracking needaction on post comments. Only emails should be
         sufficient. """
         msg_type = msg_vals.get('message_type') or message.message_type
         if msg_type == 'comment':
             return {'needaction_partner_ids': [], 'partner_ids': []}
-        return {}
+        return super(Post, self)._notify_customize_recipients(message, msg_vals)
 
 
 class PostReason(models.Model):

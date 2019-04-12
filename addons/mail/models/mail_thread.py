@@ -2178,8 +2178,8 @@ class MailThread(models.AbstractModel):
             # (could also be interresting for, we could add partners with r['notif'] = 'ocn_client' and r['needaction']=False)
             # then overide a notify_recipients (as it was before) to effectively send ocn notifications.
             # enveloppe will contain more needaction, those for the member of a email channel. 
-        if message_values and self and hasattr(self, '_notify_customize_recipients'):
-            message_values.update(self._notify_customize_recipients(message, msg_vals, rdata))
+        if message_values and self:
+            message_values.update(self._notify_customize_recipients(message, msg_vals))
         if message_values:
             message.write(message_values)
 
@@ -2427,6 +2427,10 @@ class MailThread(models.AbstractModel):
                 recipient_data['partners'].append({'id': partner.id, 'share': True, 'active': True, 'notif': 'email', 'type': 'channel_email', 'groups': []})
 
         return recipient_data
+
+    @api.multi
+    def _notify_customize_recipients(self, message, msg_vals):
+        return {}
 
     @api.multi
     def message_post_with_view(self, views_or_xmlid, **kwargs):
