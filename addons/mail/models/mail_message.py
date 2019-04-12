@@ -1129,13 +1129,12 @@ class Message(models.Model):
                 pdata = {'id': pid, 'active': active, 'share': pshare, 'groups': groups}
                 if notif == 'inbox':
                     recipient_data['partners'].append(dict(pdata, notif=notif, type='user'))
-                else:
-                    if not pshare and notif:  # has an user and is not shared, is therefore user
-                        recipient_data['partners'].append(dict(pdata, notif='email', type='user'))
-                    elif pshare and notif:  # has an user but is shared, is therefore portal
-                        recipient_data['partners'].append(dict(pdata, notif='email', type='portal'))
-                    else:  # has no user, is therefore customer
-                        recipient_data['partners'].append(dict(pdata, notif='email', type='customer'))
+                elif not pshare and notif:  # has an user and is not shared, is therefore user
+                    recipient_data['partners'].append(dict(pdata, notif='email', type='user'))
+                elif pshare and notif:  # has an user but is shared, is therefore portal
+                    recipient_data['partners'].append(dict(pdata, notif='email', type='portal'))
+                else:  # has no user, is therefore customer
+                    recipient_data['partners'].append(dict(pdata, notif='email', type='customer'))
             elif cid:
                 recipient_data['channels'].append({'id': cid, 'notif': notif, 'type': ctype})
         return recipient_data
