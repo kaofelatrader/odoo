@@ -346,7 +346,7 @@ class Channel(models.Model):
         return super(Channel, self).message_receive_bounce(email, partner, mail_id=mail_id)
 
     @api.multi
-    def _notify_email_recipients(self, recipient_ids):
+    def _notify_email_recipient_values(self, recipient_ids):
         # Excluded Blacklisted
         whitelist = self.env['res.partner'].sudo().browse(recipient_ids).filtered(lambda p: not p.is_blacklisted)
         # real mailing list: multiple recipients (hidden by X-Forge-To)
@@ -355,7 +355,7 @@ class Channel(models.Model):
                 'email_to': ','.join(formataddr((partner.name, partner.email_normalized)) for partner in whitelist if partner.email_normalized),
                 'recipient_ids': [],
             }
-        return super(Channel, self)._notify_email_recipients(whitelist.ids)
+        return super(Channel, self)._notify_email_recipient_values(whitelist.ids)
 
     def _extract_moderation_values(self, message_type, **kwargs):
         """ This method is used to compute moderation status before the creation

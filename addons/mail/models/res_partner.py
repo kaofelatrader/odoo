@@ -151,14 +151,19 @@ class Partner(models.Model):
 
             # send email
             for email_chunk in split_every(50, group_tpl_values['recipients']):
-                recipient_values = self.env['mail.thread']._notify_email_recipients_on_records(email_chunk, records=record)
+                recipient_values = record._notify_email_recipient_values(email_chunk)
+                email_to = recipient_values['email_to']
+                recipient_ids = recipient_values['recipient_ids']
+
                 create_values = {
                     'body_html': mail_body,
                     'subject': mail_subject,
+                    'recipient_ids': [(4, pid) for pid in recipient_ids],
                 }
-                create_values.update(base_mail_values)
-                create_values.update(recipient_values)
-                recipient_ids = [r[1] for r in create_values.get('recipient_ids', [])]
+                if email_to:
+                    create_values['email_to'] = email_to
+                create_values.update(base_mail_values)  # mail_message_id, mail_server_id, auto_delete, references, headers
+
                 email = Mail.create(create_values)
 
                 if email and recipient_ids:

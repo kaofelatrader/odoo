@@ -922,7 +922,7 @@ class MailThread(models.AbstractModel):
         })}
 
     @api.multi
-    def _notify_email_recipients(self, recipient_ids):
+    def _notify_email_recipient_values(self, recipient_ids):
         """ Format email notification recipient values to store on the notification
         mail.mail. Basic method just set the recipient partners as mail_mail
         recipients. Override to generate other mail values like email_to or
@@ -931,17 +931,9 @@ class MailThread(models.AbstractModel):
         :param recipient_ids: res.partner recordset to notify
         """
         return {
-            'recipient_ids': [(4, pid) for pid in recipient_ids]
+            'email_to': False,
+            'recipient_ids': recipient_ids,
         }
-
-    @api.model
-    def _notify_email_recipients_on_records(self, recipient_ids, records=None):
-        """ Generic wrapper on ``_notify_email_recipients`` checking mail.thread
-        inheritance and allowing to call model-specific implementation in a one liner.
-        This method should not be overridden. """
-        if records and hasattr(records, '_notify_email_recipients'):
-            return records._notify_email_recipients(recipient_ids)
-        return self._notify_email_recipients(recipient_ids)
 
     # ------------------------------------------------------
     # Mail gateway
