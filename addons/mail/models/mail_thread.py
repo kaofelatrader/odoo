@@ -747,6 +747,31 @@ class MailThread(models.AbstractModel):
 
         :param message: mail.message record about to be notified
         :param recipients: res.partner recordset to notify UPDATE ME
+
+        return example:
+        {
+            'customer': {
+                'actions': [],
+                'button_access': {'title': 'View Simple Chatter Model',
+                                    'url': '/mail/view?model=mail.test.simple&res_id=1497'},
+                'has_button_access': False,
+                'recipients': [11]
+            },
+            'portal': {
+                'actions': [],
+                'button_access': {'title': 'View Simple Chatter Model',
+                                'url': '/mail/view?model=mail.test.simple&res_id=1497'},
+                'has_button_access': False,
+                'recipients': []
+            },
+            'user': {
+                'actions': [],
+                'button_access': {'title': 'View Simple Chatter Model',
+                                    'url': '/mail/view?model=mail.test.simple&res_id=1497'},
+                'has_button_access': True,
+                'recipients': []
+            }
+        }
         """
         result = {}
 

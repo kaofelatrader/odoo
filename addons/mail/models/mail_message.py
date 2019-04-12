@@ -1053,7 +1053,7 @@ class Message(models.Model):
         if vals.get('attachment_ids'):
             for mail in self:
                 mail.attachment_ids.check(mode='read')
-        if 'notification_ids' in vals or self.is_thread_message(vals):
+        if 'notification_ids' in vals or self.is_thread_message(vals): # todo xdo looks weird, should be and or is_thread_message should be enough
             self._invalidate_documents()
         return res
 
