@@ -386,8 +386,7 @@ class TestHeavyMailPerformance(TransactionCase):
             'recipient_ids': [(4, pid) for pid in self.partners.ids],
         })
         mail_ids = mail.ids
-
-        with self.assertQueryCount(__system__=14, emp=21):  # test_mail only: 14 - 21
+        with self.assertQueryCount(__system__=16, emp=22):  # test_mail only: 16 - 22
             self.env['mail.mail'].browse(mail_ids).send()
 
         self.assertEqual(mail.body_html, '<p>Test</p>')
@@ -533,7 +532,7 @@ class TestHeavyMailPerformance(TransactionCase):
         })
         self.assertEqual(rec.message_partner_ids, self.user_portal.partner_id | self.env.user.partner_id)
         self.assertEqual(len(rec.message_ids), 1)
-        with self.assertQueryCount(__system__=99, emp=122):  # com runbot: 99 - 122 // test_mail only: 99 - 119
+        with self.assertQueryCount(__system__=100, emp=123):  # com runbot: 100 - 123 // test_mail only: 100 - 120
             rec.write({
                 'name': 'Test2',
                 'umbrella_id': self.umbrella.id,
@@ -754,7 +753,7 @@ class TestMailPerformancePost(TransactionCase):
         ]
         self.attachements = self.env['ir.attachment'].sudo(self.env.user).create(self.vals) #-> 163-> 165 query 
         attachement_ids = self.attachements.ids
-        with self.assertQueryCount(emp=248): # test_mail only: 210
+        with self.assertQueryCount(emp=248): # test_mail only: 164
             self.cr.sql_log = self.warm and self.cr.sql_log_count
             #record.with_context({'mail_post_autofollow':True}).message_post(
             record.with_context({}).message_post(

@@ -11,7 +11,7 @@ from collections import defaultdict
 import uuid
 
 from odoo import api, fields, models, tools, SUPERUSER_ID, _
-from odoo.exceptions import AccessError, ValidationError
+from odoo.exceptions import AccessError, ValidationError, MissingError
 from odoo.tools import config, human_size, ustr, html_escape
 from odoo.tools.mimetypes import guess_mimetype
 
@@ -315,7 +315,8 @@ class IrAttachment(models.Model):
         # ir.http's dispatch exception handling
         if self.env.user._is_admin(): # this should be done in check(write), use a constrains for access right?
             return
-        if self.type == 'binary' and self.url:
+        if self.type == 'binary' and self.url: # if readed on sudo, read twice, one for contraints, one for _inverse_datas as user
+            # check with rco 
             has_group = self.env.user.has_group
             if not any([has_group(g) for g in self.get_serving_groups()]):
                 raise ValidationError("Sorry, you are not allowed to write on this document")
@@ -326,14 +327,14 @@ class IrAttachment(models.Model):
         In the 'document' module, it is overriden to relax this hard rule, since
         more complex ones apply there.
         """
+        if self.env.user.id == SUPERUSER_ID: #-> 170 -> 164
+            return True
         # collect the records to check (by model)
         model_ids = defaultdict(set)            # {model_name: set(ids)}
         require_employee = False
-        #todo add return if sudo
         if self:
-            # use cache values of sudo instead()?
-            self._cr.execute('SELECT res_model, res_id, create_uid, public, res_field FROM ir_attachment WHERE id IN %s', [tuple(self.ids)])
-            for res_model, res_id, create_uid, public, res_field in self._cr.fetchall():
+            for record_sudo in self.sudo(): 
+                res_model, res_id, create_uid, public, res_field = record_sudo.res_model, record_sudo.res_id, record_sudo.create_uid.id, record_sudo.public, record_sudo.res_field
                 if self.env.user.id != SUPERUSER_ID and not self.env.user._is_system() and res_field:
                     raise AccessError(_("Sorry, you are not allowed to access this document."))
                 if public and mode == 'read':
@@ -359,13 +360,15 @@ class IrAttachment(models.Model):
                 # e.g. in the case of a user inserting an image into his image signature
                 # we need to bypass this check which would needlessly throw us away
                 continue
-            records = self.env[res_model].browse(res_ids).exists()
-            if len(records) < len(res_ids):
-                require_employee = True
+            records = self.env[res_model].browse(res_ids)
             # For related models, check if we can write to the model, as unlinking
             # and creating attachments can be seen as an update to the model
             records.check_access_rights('write' if mode in ('create', 'unlink') else mode)
-            records.check_access_rule(mode)
+            try:
+                records.check_access_rule(mode)
+            except MissingError:
+                require_employee = True
+            
 
         if require_employee:
             if not (self.env.user._is_admin() or self.env.user.has_group('base.group_user')):

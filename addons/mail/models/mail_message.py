@@ -861,6 +861,15 @@ class Message(models.Model):
             author_ids = [mid for mid, message in message_values.items()
                           if not self.is_thread_message(message)]
 
+        # Moderator condition: allow to WRITE, UNLINK if moderator of a pending message
+        moderator_ids = []
+        if operation in ['write', 'unlink']:
+            moderator_ids = [mid for mid, message in message_values.items() if message.get('moderator_id')]
+
+        other_ids = set(self.ids).difference(set(author_ids), set(moderator_ids))
+        if not other_ids:
+            return
+
         # Parent condition, for create (check for received notifications for the created message parent)
         notified_ids = []
         if operation == 'create':
@@ -881,13 +890,11 @@ class Message(models.Model):
             notified_ids += [mid for mid, message in message_values.items()
                              if message.get('parent_id') in not_parent_ids]
 
-        # Moderator condition: allow to WRITE, UNLINK if moderator of a pending message
-        moderator_ids = []
-        if operation in ['write', 'unlink']:
-            moderator_ids = [mid for mid, message in message_values.items() if message.get('moderator_id')]
+        other_ids = set(self.ids).difference(set(notified_ids))
+        if not other_ids:
+            return
 
         # Recipients condition, for read and write (partner_ids) and create (message_follower_ids)
-        other_ids = set(self.ids).difference(set(author_ids), set(notified_ids), set(moderator_ids))
         model_record_ids = _generate_model_record_ids(message_values, other_ids)
         if operation in ['read', 'write']:
             notified_ids = [mid for mid, message in message_values.items() if message.get('notified')]
@@ -905,17 +912,22 @@ class Message(models.Model):
                                  message.get('message_type') != 'user_notification'
                                  ]
 
-        # CRUD: Access rights related to the document
         other_ids = other_ids.difference(set(notified_ids))
+        if not other_ids:
+            return
+
+         # CRUD: Access rights related to the document
         model_record_ids = _generate_model_record_ids(message_values, other_ids)
         document_related_ids = []
         for model, doc_ids in model_record_ids.items():
             DocumentModel = self.env[model]
-            mids = DocumentModel.browse(doc_ids).exists()
-            if hasattr(DocumentModel, 'check_mail_message_access'):
-                DocumentModel.check_mail_message_access(mids.ids, operation)  # ?? mids ?
+            if hasattr(DocumentModel, 'get_mail_message_access'):
+                check_operation = DocumentModel.get_mail_message_access(doc_ids, operation)
             else:
-                self.env['mail.thread'].check_mail_message_access(mids.ids, operation, model_name=model)
+                check_operation = self.env['mail.thread'].get_mail_message_access(doc_ids, operation, model_name=model)
+            records = DocumentModel.browse(doc_ids)
+            records.check_access_rights(check_operation)
+            mids = records.browse(doc_ids)._filter_access_rules(check_operation)
             document_related_ids += [
                 mid for mid, message in message_values.items()
                 if (message.get('model') == model and
@@ -924,9 +936,12 @@ class Message(models.Model):
                     (message.get('moderation_status') != 'pending_moderation' or
                     operation not in ['write', 'unlink']))]
 
-        # Calculate remaining ids: if not void, raise an error
         other_ids = other_ids.difference(set(document_related_ids))
-        if not (other_ids and self.browse(other_ids).exists()):
+
+        if not other_ids:
+            return
+
+        if not self.browse(other_ids).exists():
             return
         raise AccessError(
             _('The requested operation cannot be completed due to security restrictions. Please contact your system administrator.\n\n(Document type: %s, Operation: %s)') %
@@ -967,17 +982,19 @@ class Message(models.Model):
         return message_id
 
     @api.multi
-    def _invalidate_documents(self):
+    def _invalidate_documents(self, model=None, res_id=None):
         """ Invalidate the cache of the documents followed by ``self``. """
         for record in self:
-            if record.is_thread_message() and 'message_ids' in self.env[record.model]:
-                self.env[record.model].invalidate_cache(fnames=[
+            model = model or record.model
+            res_id = res_id or record.res_id
+            if 'message_ids' in self.env[model]:
+                self.env[model].invalidate_cache(fnames=[
                     'message_ids',
                     'message_unread',
                     'message_unread_counter',
                     'message_needaction',
                     'message_needaction_counter',
-                ], ids=[record.res_id])
+                ], ids=[res_id])
 
     @api.model
     def create(self, values):
@@ -995,8 +1012,7 @@ class Message(models.Model):
             values['record_name'] = self._get_record_name(values)
 
         if 'attachment_ids' not in values:
-            values.setdefault('attachment_ids', [])
-
+            values['attachment_ids'] = []
         # extract base64 images
         if 'body' in values:
             Attachments = self.env['ir.attachment']
@@ -1034,7 +1050,7 @@ class Message(models.Model):
                 message.sudo().write({'tracking_value_ids': tracking_values_cmd})
 
         if message.is_thread_message(values):
-            message._invalidate_documents()
+            message._invalidate_documents(values.get('model'), values.get('res_id'))
 
         return message
 
@@ -1047,6 +1063,7 @@ class Message(models.Model):
 
     @api.multi
     def write(self, vals):
+        # todo complete check write invalidation
         if self.is_thread_message(vals):
             self._invalidate_documents()
         res = super(Message, self).write(vals)
@@ -1067,7 +1084,9 @@ class Message(models.Model):
         self.mapped('attachment_ids').filtered(
             lambda attach: attach.res_model == self._name and (attach.res_id in self.ids or attach.res_id == 0)
         ).unlink()
-        self._invalidate_documents()
+        for elem in self:
+            if elem.is_thread_message():
+                elem._invalidate_documents()
         return super(Message, self).unlink()
 
     # --------------------------------------------------

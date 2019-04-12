@@ -221,6 +221,8 @@ class TestMessagePost(BaseFunctionalTest, MockEmails, TestRecipients):
         self.assertNotIn(new_notification, self.test_record.message_ids)
 
 
+    # todo xdo add test message_notify on thread with followers and stuff
+    
 class TestComposer(BaseFunctionalTest, MockEmails, TestRecipients):
 
     def setUp(self):

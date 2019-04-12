@@ -489,19 +489,14 @@ class MailThread(models.AbstractModel):
         return True
 
     @api.model
-    def check_mail_message_access(self, res_ids, operation, model_name=None):
+    def get_mail_message_access(self, res_ids, operation, model_name=None):
         """ mail.message check permission rules for related document. This method is
             meant to be inherited in order to implement addons-specific behavior.
             A common behavior would be to allow creating messages when having read
             access rule on the document, for portal document such as issues. """
-        if model_name:
-            DocModel = self.env[model_name]
-        else:
-            DocModel = self
-        if hasattr(DocModel, '_mail_post_access'):
-            create_allow = DocModel._mail_post_access
-        else:
-            create_allow = 'write'
+
+        DocModel = self.env[model_name] if model_name else self
+        create_allow = getattr(DocModel, '_mail_post_access', 'write')
 
         if operation in ['write', 'unlink']:
             check_operation = 'write'
@@ -511,9 +506,7 @@ class MailThread(models.AbstractModel):
             check_operation = 'write'
         else:
             check_operation = operation
-
-        DocModel.check_access_rights(check_operation)
-        DocModel.browse(res_ids).check_access_rule(check_operation)
+        return check_operation
 
     @api.multi
     def message_change_thread(self, new_thread):
@@ -1888,10 +1881,9 @@ class MailThread(models.AbstractModel):
 
         m2m_attachment_ids = []
         if attachment_ids:
-            filtered_attachment_ids = self.env['ir.attachment'].sudo().search([
-                ('res_model', '=', 'mail.compose.message'),
-                ('create_uid', '=', self._uid),
-                ('id', 'in', attachment_ids)])
+            # taking advantage of cache looks better in this case, to check
+            filtered_attachment_ids = self.env['ir.attachment'].sudo().browse(attachment_ids).filtered(
+                lambda a: a.res_model == 'mail.compose.message' and a.create_uid.id == self._uid)
             if filtered_attachment_ids:
                 filtered_attachment_ids.write({'res_model': model, 'res_id': res_id})
             m2m_attachment_ids += [(4, id) for id in attachment_ids]
@@ -1957,7 +1949,7 @@ class MailThread(models.AbstractModel):
 
     @api.multi
     @api.returns('mail.message', lambda value: value.id)
-    def message_post(self, body='', subject=None, subtype_id=False,
+    def message_post(self, body='', subject=None, subtype_id=False, email_from=False,
                      message_type='notification', subtype=None, author_id=None, partner_ids=None, channel_ids=None,
                      parent_id=False, attachments=None, attachment_ids=None, model=False,
                      add_sign=True, model_description=False,
@@ -1991,9 +1983,7 @@ class MailThread(models.AbstractModel):
         if model == 'mail.thread' or not res_id or message_type == 'user_notification':
             raise ValueError('message_post should only be call to post message on record. Use message_notify instead')
 
-        # Find the message's author, because we need it for private discussion
-        if author_id is None:  # keep False values
-            author_id = self.env['mail.message']._get_default_author().id # self.env.user.partner_id
+        record_name = self.display_name
 
         partner_ids = set(partner_ids or [])
         channel_ids = set(channel_ids or [])
@@ -2001,6 +1991,13 @@ class MailThread(models.AbstractModel):
         for pc_id in partner_ids | channel_ids:
             if not isinstance(pc_id, int):
                 raise ValueError('message_post partner_ids and channel_ids must be integer list, not commands')
+
+        # Find the message's author, because we need it for private discussion
+        if author_id is None:  # keep False values
+            author_id = self.env['mail.message']._get_default_author().id # self.env.user.partner_id
+
+        author = self.env['res.partner'].browse(author_id) # 1 query prefetch author
+        email_from = email_from or (formataddr((author.name, author.email)) if author else self.env['mail.message']._get_default_from())
 
         if not subtype_id:
             subtype = subtype or 'mt_note'
@@ -2042,6 +2039,8 @@ class MailThread(models.AbstractModel):
             'partner_ids': partner_ids,
             'channel_ids': channel_ids,
             'add_sign': add_sign,
+            'record_name': record_name,
+            'email_from': email_from,
         })
         attachments = attachments or []
         attachment_ids = attachment_ids or []
