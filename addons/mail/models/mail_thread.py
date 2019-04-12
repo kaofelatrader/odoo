@@ -1980,19 +1980,12 @@ class MailThread(models.AbstractModel):
         if author_id is None:  # keep False values
             author_id = self.env['mail.message']._get_default_author().id
 
-        # 2: Private message: add recipients (recipients and author of parent message) - current author
-        #   + legacy-code management (! we manage only 4 and 6 commands)
-        partner_ids = set()
-        kwargs_partner_ids = kwargs.pop('partner_ids', [])
-        for partner_id in kwargs_partner_ids:
-            if isinstance(partner_id, (list, tuple)) and partner_id[0] == 4 and len(partner_id) == 2:
-                partner_ids.add(partner_id[1])
-            if isinstance(partner_id, (list, tuple)) and partner_id[0] == 6 and len(partner_id) == 3:
-                partner_ids |= set(partner_id[2])
-            elif isinstance(partner_id, int):
-                partner_ids.add(partner_id)
-            else:
-                pass  # we do not manage anything else
+
+        partner_ids = set(kwargs.pop('partner_ids', []))
+
+        for partner_id in partner_ids:
+            assert isinstance(partner_id, int)
+
         if parent_id and not model:
             parent_message = self.env['mail.message'].browse(parent_id)
             private_followers = set([partner.id for partner in parent_message.partner_ids])
