@@ -4,7 +4,7 @@ odoo.define('web_editor.wysiwyg.plugin.tests.keyboardEnter', function (require) 
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 
-var TestKeyboardChar = AbstractPlugin.extend({
+var TestKeyboardEnter = AbstractPlugin.extend({
     autoInstall: true,
     dependencies: ['Test', 'TestKeyboard'],
 
@@ -964,6 +964,6 @@ var TestKeyboardChar = AbstractPlugin.extend({
     },
 });
 
-Manager.addPlugin('TestKeyboardEnter', TestKeyboardChar);
+Manager.addPlugin('TestKeyboardEnter', TestKeyboardEnter);
 
 });

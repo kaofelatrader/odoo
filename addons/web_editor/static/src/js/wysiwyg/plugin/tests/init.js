@@ -41,8 +41,10 @@ function deepEqual (v1, v2) {
     }
 }
 function log (result, testName, value) {
-    if (result === true) {
-        console.info('TEST: ', testName);
+    if (testName.startsWith('<')) {
+        console.info('%cTEST: ' + testName, 'background-color: grey; color: black; padding: 2px;');
+    } else if (result === true) {
+        console.info('%cTEST: ' + testName, 'color: green;');
     } else if (result === false) {
         console.error('TEST: ', testName, '=>', value);
     }
@@ -98,34 +100,41 @@ var TestPlugin = AbstractPlugin.extend({
                 if (self.options.testAssertObject) {
                     self.options.testAssertObject.ok(value, testName);
                 } else {
-                    log(!!value, testName, value);
+                    var didPass = !!value;
+                    log(didPass, testName, value);
+                    return didPass;
                 }
             },
             notOk: function (value, testName) {
                 if (self.options.testAssertObject) {
                     self.options.testAssertObject.notOk(value, testName);
                 } else {
+                    var didPass = !value;
                     log(!value, testName, value);
+                    return didPass;
                 }
             },
             strictEqual: function (value, expectedValue, testName) {
                 if (self.options.testAssertObject) {
                     self.options.testAssertObject.strictEqual(value, expectedValue, testName);
                 } else {
-                    log(value === expectedValue, testName, value);
+                    var didPass = value === expectedValue;
+                    log(didPass, testName, value);
+                    return didPass;
                 }
             },
             deepEqual: function (value, expectedValue, testName) {
                 if (self.options.testAssertObject) {
                     self.options.testAssertObject.deepEqual(value, expectedValue, testName);
                 } else {
-                    log(deepEqual(value, expectedValue), testName, value);
+                    var didPass = deepEqual(value, expectedValue);
+                    log(didPass, testName, value);
+                    return didPass;
                 }
             },
         };
     },
     start: function () {
-        var self = this;
         var promise = this._super();
         //this.dependencies.Arch.addCustomRule(this._createTestingVirtualNode.bind(this), [this._isTestingVirtualNode.bind(this)]);
         return promise;
@@ -175,7 +184,7 @@ var TestPlugin = AbstractPlugin.extend({
             if (plugin.pluginName === 'TestAutoInstall') {
                 test = true;
             }
-        })
+        });
         assert.ok(test, 'Should find "TestAutoInstall" plugin');
         return Promise.resolve();
     },

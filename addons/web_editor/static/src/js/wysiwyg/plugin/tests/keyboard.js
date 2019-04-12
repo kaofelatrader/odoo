@@ -63,6 +63,8 @@ var TestKeyboard = AbstractPlugin.extend({
      */
     test: function (assert, keyboardTests) {
         var self = this;
+        var nTests = keyboardTests.length;
+        var nOKTests = 0;
         var defPollTest = Promise.resolve();
         keyboardTests = JSON.parse(JSON.stringify(keyboardTests || []));
 
@@ -141,7 +143,9 @@ var TestKeyboard = AbstractPlugin.extend({
                 // test content
                 if (test.test) {
                     var value = self.dependencies.Test.getValue();
-                    assert.strictEqual(value, test.test, test.name);
+                    if (assert.strictEqual(value, test.test, test.name)) {
+                        nOKTests += 1;
+                    }
                 }
             });
         }
@@ -149,11 +153,15 @@ var TestKeyboard = AbstractPlugin.extend({
             defPollTest = defPollTest.then(pollTest.bind(null, keyboardTests.shift()));
         }
 
-        return defPollTest;
+
+        return defPollTest.then(function () {
+            console.info('%cResult: ' + nOKTests + '/' + nTests + ' passed. ' + (nTests - nOKTests) + ' to go.',
+                'background-color: yellow; color: black');
+        });
     },
     keydown: function (target, keyPress) {
         var self = this;
-        var target = target.tagName ? target : target.parentNode;
+        target = target.tagName ? target : target.parentNode;
         if (!keyPress.keyCode) {
             for (var keyCode in keyboardMap) {
                 if (keyboardMap[keyCode] === keyPress.key) {
@@ -165,7 +173,7 @@ var TestKeyboard = AbstractPlugin.extend({
             keyPress.key = keyboardMap[keyPress.keyCode] || String.fromCharCode(keyPress.keyCode);
         }
         keyPress.keyCode = keyPress.keyCode;
-        var promise = this.dependencies.Test.triggerNativeEvents(target, 'keydown', keyPress).then(function (events) {
+        this.dependencies.Test.triggerNativeEvents(target, 'keydown', keyPress).then(function (events) {
             var event = events[0]; // (only one event was triggered)
             if (!event.defaultPrevented) {
                 if (keyPress.key.length === 1) {
