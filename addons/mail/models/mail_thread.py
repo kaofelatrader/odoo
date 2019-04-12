@@ -2070,10 +2070,10 @@ class MailThread(models.AbstractModel):
         new_message = MailMessage.create(values)
         values['canned_response_ids'] = canned_response_ids
         record = self.env['mail.thread'] if user_notification else self
-        record._message_post_after_hook(new_message, values, model_description=model_description, mail_auto_delete=mail_auto_delete)
+        record._message_post_after_hook(new_message, values, model_description, mail_auto_delete)
         return new_message
 
-    def _message_post_after_hook(self, message, msg_vals, model_description=False, mail_auto_delete=True):
+    def _message_post_after_hook(self, message, msg_vals, model_description, mail_auto_delete):
         """ Hook to add custom behavior after having posted the message. Both
         message and computed value are given, to try to lessen query count by
         using already-computed values instead of having to rebrowse things."""
