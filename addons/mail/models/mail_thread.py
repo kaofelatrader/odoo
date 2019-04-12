@@ -2630,19 +2630,16 @@ class MailThread(models.AbstractModel):
         :param default_subtype_ids: coming from ``_get_auto_subscription_subtypes``
         """
         fnames = []
-        for name, field in self._fields.items():
-            if name == 'user_id' and updated_values.get(name) and (getattr(field, 'track_visibility', False) or getattr(field, 'tracking', False)):
-                if field.comodel_name == 'res.users':
-                    fnames.append(name)
-
-        new_subscriptions = []
-        user_ids = [updated_values[fname] for fname in fnames if updated_values[fname]]
-        if user_ids:
-            new_pids = self.env['res.partner'].sudo().search([('user_ids', 'in', user_ids), ('active', '=', True)]).ids
-            for new_pid in new_pids:
-                new_subscriptions.append((new_pid, default_subtype_ids, 'mail.message_user_assigned' if new_pid != self.env.user.partner_id.id else False))
-
-        return new_subscriptions
+        field = self._fields.get('user_id')
+        user_id = updated_values.get('user_id')
+        if field and user_id and field.comodel_name == 'res.users' and (getattr(field, 'track_visibility', False) or getattr(field, 'tracking', False)):
+            user = self.env['res.users'].sudo().browse(user_id)
+            try: # avoid to make an exists, lets be optimistic and try to read it.
+                if user.active:
+                    return [(user.partner_id.id, default_subtype_ids, 'mail.message_user_assigned' if user != self.env.user else False)]
+            except:
+                pass
+        return []
 
     @api.multi
     def _message_auto_subscribe_notify(self, partner_ids, template):
