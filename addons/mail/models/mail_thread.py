@@ -1371,16 +1371,20 @@ class MailThread(models.AbstractModel):
 
             # replies to internal message are considered as notes, but parent message
             # author is added in recipients to ensure he is notified of a private answer
+            parent_message = False
+            if message_dict.get('parent_id'):
+                parent_message = self.env['mail.message'].sudo().browse(message_dict['parent_id'])
             partner_ids = []
             if not subtype_id:
                 if message_dict.pop('internal', False):
                     subtype_id = self.env['ir.model.data'].xmlid_to_res_id('mail.mt_note')
-                    if message_dict.get('parent_id'):
-                        parent_message = self.env['mail.message'].sudo().browse(message_dict['parent_id'])
-                        if parent_message and parent_message.author_id:
-                            partner_ids = [parent_message.author_id.id]
+                    if parent_message and parent_message.author_id:
+                        partner_ids = [parent_message.author_id.id]
                 else:
                     subtype_id = self.env['ir.model.data'].xmlid_to_res_id('mail.mt_comment')
+
+            if not thread and parent_message and parent_message.is_thread_message():
+                thread = self.env[parent_message.model].browse(parent_message.res_id)
 
             post_params = dict(subtype_id=subtype_id, partner_ids=partner_ids, **message_dict)
             new_msg = False
