@@ -2193,26 +2193,6 @@ class MailThread(models.AbstractModel):
         return True
 
     def _notify_partners(self, message, partners_data, msg_vals=False, model_description=False, mail_auto_delete=True, send_after_commit=False):
-        recipients = self._notify_classify_recipients(message, partners_data)
-        if not recipients:
-            return True
-
-        specific_values = self._notify_specific_email_values(message)
-        force_send = self.env.context.get('mail_notify_force_send', True)
-
-        self._partner_notify(
-            message,
-            msg_vals,
-            recipients,
-            specific_values=specific_values,  # check this for other calls
-            force_send=force_send,
-            model_description=model_description,
-            mail_auto_delete=mail_auto_delete,
-            send_after_commit=send_after_commit)
-        return True
-
-    @api.model
-    def _partner_notify(self, message, msg_values, recipients, specific_values=None, force_send=False, send_after_commit=True, model_description=False, mail_auto_delete=True):
         """ Method to send email linked to notified messages. The recipients are
         the recordset on which this method is called.
 
@@ -2227,7 +2207,14 @@ class MailThread(models.AbstractModel):
           notification templates);
         :param mail_auto_delete: delete notification emails once sent;
         """
-        base_template_ctx = self._notify_prepare_template_context(message, msg_values, model_description=model_description)
+        recipients = self._notify_classify_recipients(message, partners_data)
+        if not recipients:
+            return True
+
+        specific_values = self._notify_specific_email_values(message)
+        force_send = self.env.context.get('mail_notify_force_send', True)
+
+        base_template_ctx = self._notify_prepare_template_context(message, msg_vals, model_description=model_description)
 
         template_xmlid = message.layout if message.layout else 'mail.message_notification_email'
         try:
