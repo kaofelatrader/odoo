@@ -9,58 +9,58 @@ class TestSplitMove(TestStockCommon):
     def setUp(self):
         super(TestSplitMove, self).setUp()
         self.stock_location = self.env.ref('stock.stock_location_stock')
-        self.warehouse_1 = self.env['stock.warehouse'].search([('company_id', '=', self.env.user.id)], limit=1)
+        self.stock_warehouse = self.env['stock.warehouse'].search([('company_id', '=', self.env.user.company_id.id)], limit=1)
 
     def test_split_mto_mts_00(self):
         """ Internal Transfer of Product in MTO:
-        - Create 2 internal Locations -> Location 1 and Location 2.
-        - Create a route - Internal Transfers and add a rule - Internal location 2 -> Internal location 1.
+        - Create 2 internal Locations -> Destination Location and Source Location.
+        - Create a route - Internal Transfers and add a rule - Internal Source Location -> Internal Destination Location.
         - Add this route to the product.
-        - Create an Internal Transfer(Picking 1) for 10 units from Location 1 -> Stock.
+        - Create an Internal Transfer(Picking 1) for 10 units from Destination Location -> Stock.
         - In the Origin move (Picking 2), change quantity from 10 to 8 and transfer products.
         - In the Picking 1, split the stock move into two, one of 8 in MTO, one of 2 in MTS.
         - Update quants and products should be reserved in the Picking 1, then mark as done.
         This test ensure that when initial demand is decreased, the initial demand in destination move should be splitted into two -> one in   MTO and one in MTS.
         """
-        new_location1 = self.env['stock.location'].create({
+        destination_location = self.env['stock.location'].create({
             'location_id': self.stock_location.location_id.id,
-            'name': 'location 1',
+            'name': 'Destination Location',
         })
-        new_location2 = self.env['stock.location'].create({
+        source_location = self.env['stock.location'].create({
             'location_id': self.stock_location.location_id.id,
-            'name': 'location 2',
+            'name': 'Source Location',
         })
-        procurement_group0 = self.env['procurement.group'].create({'name': 'xyz'})
+        procurement_group = self.env['procurement.group'].create({'name': 'xyz'})
 
-        # Create a route and add rule - Internal location 2 -> Internal location 1
+        # Create a route and add rule - Internal Source Location -> Internal Destination Location
         route = self.env['stock.location.route'].create({
             'name': 'Internal Transfers',
             'sequence': 1,
             'product_selectable': True,
-            'warehouse_ids': [(4, self.warehouse_1.id)],
+            'warehouse_ids': [(4, self.stock_warehouse.id)],
             'rule_ids': [(0, 0, {
-                'name': 'Internal location 2 -> Internal location 1 rule',
-                'location_src_id': new_location2.id,
-                'location_id': new_location1.id,
+                'name': 'Internal Source Location -> Internal Destination Location rule',
+                'location_src_id': source_location.id,
+                'location_id': destination_location.id,
                 'company_id': self.env.user.company_id.id,
                 'action': 'pull',
                 'picking_type_id': self.env.ref('stock.picking_type_internal').id,
                 'procure_method': 'make_to_stock',
-                'warehouse_id': self.warehouse_1.id,
+                'warehouse_id': self.stock_warehouse.id,
             })],
         })
         # Add this route to product
-        self.env.ref('product.product_product_3').write({
-             'route_ids': [(4, route.id)]})
         product = self.env.ref('product.product_product_3')
+        product.write({
+             'route_ids': [(4, route.id)]})
 
-        # Create an Internal Transfer from Location 1 - Stock
+        # Create an Internal Transfer from Destination Location - Stock
         picking_1 = self.PickingObj.create({
-            'location_id': new_location1.id,
+            'location_id': destination_location.id,
             'location_dest_id': self.stock_location.id,
             'partner_id': self.partner_agrolite_id,
             'picking_type_id': self.ref('stock.picking_type_internal'),
-            'group_id': procurement_group0.id,
+            'group_id': procurement_group.id,
         })
         move1 = self.MoveObj.create({
             'name': product.name,
@@ -68,19 +68,19 @@ class TestSplitMove(TestStockCommon):
             'product_uom_qty': 10,
             'product_uom': product.uom_id.id,
             'picking_id': picking_1.id,
-            'location_id': new_location1.id,
+            'location_id': destination_location.id,
             'location_dest_id': self.stock_location.id,
             'procure_method': 'make_to_order',
-            'group_id': procurement_group0.id,
+            'group_id': procurement_group.id,
         })
         # Confirm Internal Transfer.
         picking_1.action_confirm()
         # Check that the origin move is correctly set
         orig_move = picking_1.move_lines.move_orig_ids
-        self.assertEqual(orig_move.location_dest_id.id, new_location1.id, 'Wrong destination location.')
+        self.assertEqual(orig_move.location_dest_id.id, destination_location.id, 'Wrong destination location.')
 
         # find newly created picking
-        picking_2 = self.PickingObj.search([('group_id', '=', procurement_group0.id), ('location_dest_id', '=', new_location1.id)])
+        picking_2 = self.PickingObj.search([('group_id', '=', procurement_group.id), ('location_dest_id', '=', destination_location.id)])
         # check that move1 is the destination move of the move in picking 2
         self.assertEqual(picking_2.move_lines.move_dest_ids, move1, 'Wrong move line in destination move.')
         picking_2.action_confirm()
@@ -96,7 +96,7 @@ class TestSplitMove(TestStockCommon):
             line.write({'product_uom_qty': 8.0})
 
         # make some quants
-        self.StockQuantObj._update_available_quantity(product, new_location2, 8.0)
+        self.StockQuantObj._update_available_quantity(product, source_location, 8.0)
         picking_2.action_assign()
         for line in picking_2.move_lines:
             line.write({'quantity_done': 8.0})
@@ -121,7 +121,7 @@ class TestSplitMove(TestStockCommon):
         self.assertEqual(picking_1.move_lines[1].product_uom_qty, 2.0, 'Wrong product quantity.')
 
         # Make some quants
-        self.StockQuantObj._update_available_quantity(product, new_location1, 2.0)
+        self.StockQuantObj._update_available_quantity(product, destination_location, 2.0)
         picking_1.action_assign()
         self.assertEqual(picking_1.state, 'assigned', 'products must be assigned to the picking.')
         # Validate Picking 1
@@ -147,7 +147,7 @@ class TestSplitMove(TestStockCommon):
             'location_id': self.stock_location.location_id.id,
             'name': 'location',
         })
-        procurement_group0 = self.env['procurement.group'].create({'name': 'abc'})
+        procurement_group = self.env['procurement.group'].create({'name': 'abc'})
         # Create rule from Stock -> Output (MTS)
         vals1 = {
                 'name': 'Stock -> Output rule',
@@ -156,7 +156,7 @@ class TestSplitMove(TestStockCommon):
                 'location_src_id': self.stock_location.id,
                 'location_id': output_location.id,
                 'procure_method': 'make_to_stock',
-                'warehouse_id': self.warehouse_1.id,
+                'warehouse_id': self.stock_warehouse.id,
         }
         # Create rule from Output -> Customer (MTO)
         vals2 = {
@@ -166,14 +166,14 @@ class TestSplitMove(TestStockCommon):
                 'location_src_id': output_location.id,
                 'location_id': self.customer_location,
                 'procure_method': 'make_to_order',
-                'warehouse_id': self.warehouse_1.id,
+                'warehouse_id': self.stock_warehouse.id,
         }
         # Create route and add rules to it
         route = self.env['stock.location.route'].create({
             'name': 'Deliver in 2 steps',
             'sequence': 2,
             'product_selectable': True,
-            'warehouse_ids': [(4, self.warehouse_1.id)],
+            'warehouse_ids': [(4, self.stock_warehouse.id)],
             'rule_ids': [(0, 0, vals1), (0, 0, vals2)],
         })
         # Add route in product
@@ -187,7 +187,7 @@ class TestSplitMove(TestStockCommon):
             'location_dest_id': self.customer_location,
             'partner_id': self.partner_agrolite_id,
             'picking_type_id': self.picking_type_out,
-            'group_id': procurement_group0.id,
+            'group_id': procurement_group.id,
         })
         move1 = self.MoveObj.create({
             'name': 'Delivery order for procurement',
@@ -198,7 +198,7 @@ class TestSplitMove(TestStockCommon):
             'location_id': output_location.id,
             'location_dest_id': self.customer_location,
             'procure_method': 'make_to_order',
-            'group_id': procurement_group0.id,
+            'group_id': procurement_group.id,
         })
         # Confirm picking_1
         picking_1.action_confirm()
@@ -207,7 +207,7 @@ class TestSplitMove(TestStockCommon):
 
         # find newly created picking - Pick (picking_2)
         picking_2 = self.PickingObj.search([
-            ('group_id', '=', procurement_group0.id),
+            ('group_id', '=', procurement_group.id),
             ('location_dest_id', '=', output_location.id),
         ])
         # check that move1 is the destination move of the move in picking_2

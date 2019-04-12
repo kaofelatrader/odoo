@@ -14,35 +14,24 @@ class TestSplitMove(TestPurchase):
         - Update quants and products should be reserved in the Picking, then mark as done.
         This test ensure that when initial demand is decreased, the initial demand in destination move should be splitted into two -> one in        MTO and one in MTS.
         """
-        stock_location = self.env.ref('stock.stock_location_stock')
-        cust_location = self.env.ref('stock.stock_location_customers')
-        seller = self.env['product.supplierinfo'].create({
-            'name': self.partner_1.id,
-            'price': 100.0,
-        })
-        # Create a product - Product A with route - Buy and MTO and set the vendor.
-        product = self.env['product.product'].create({
-            'name': 'Product A',
-            'type': 'product',
-            'route_ids': [(4, self.route_mto), (4, self.route_buy)],
-            'seller_ids': [(6, 0, [seller.id])],
-            'categ_id': self.env.ref('product.product_category_all').id,
-        })
+
+        self.stock_location = self.env.ref('stock.stock_location_stock')
+        self.cust_location = self.env.ref('stock.stock_location_customers')
         # Create a Picking Out for Product A with quantity = 10
         picking_out = self.env['stock.picking'].create({
-            'location_id': stock_location.id,
-            'location_dest_id': cust_location.id,
+            'location_id': self.stock_location.id,
+            'location_dest_id': self.cust_location.id,
             'partner_id': self.partner_1.id,
             'picking_type_id': self.ref('stock.picking_type_out'),
         })
         move1 = self.env['stock.move'].create({
-            'name': product.name,
-            'product_id': product.id,
+            'name': self.product_1.name,
+            'product_id': self.product_1.id,
             'product_uom_qty': 10,
-            'product_uom': product.uom_id.id,
+            'product_uom': self.product_1.uom_id.id,
             'picking_id': picking_out.id,
-            'location_id': stock_location.id,
-            'location_dest_id': cust_location.id,
+            'location_id': self.stock_location.id,
+            'location_dest_id': self.cust_location.id,
             'procure_method': 'make_to_order',
         })
         move1._action_confirm()
@@ -100,7 +89,7 @@ class TestSplitMove(TestPurchase):
         self.assertEqual(picking_out.move_lines[1].product_uom_qty, 5.0, 'Wrong product quantity.')
 
         # Update quants and Validate the Picking OUT.
-        self.env['stock.quant']._update_available_quantity(product, stock_location, 5.0)
+        self.env['stock.quant']._update_available_quantity(self.product_1, self.stock_location, 5.0)
         picking_out.action_assign()
         self.assertEqual(picking_out.state, 'assigned', 'products must be assigned to the picking.')
 
