@@ -103,213 +103,6 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _handleDeletion: function (isPrev) {
         this.dependencies.Arch[isPrev ? 'removeLeft' : 'removeRight']();
-        return true;
-        var range = this.dependencies.Arch.getRange();
-        var didDeleteNodes = !range.isCollapsed();
-        var point = this.dom.deleteSelection(range);
-        range = this.dependencies.Arch.setRange({
-            sc: point.node,
-            so: point.offset,
-        });
-        var wasOnStartOfBR = isPrev && !range.so && range.sc.tagName === 'BR';
-
-        this._removeNextEmptyUnbreakable(range.sc);
-        var temp = this._beforeDeletion(range, isPrev, didDeleteNodes);
-        didDeleteNodes = temp.didDeleteNodes;
-        range = temp.range;
-        isPrev = temp.isPrev;
-
-        if (!didDeleteNodes) {
-            var rangePoint = this._performDeletion(range, isPrev, wasOnStartOfBR);
-            didDeleteNodes = !!rangePoint;
-            if (didDeleteNodes) {
-                range.replace({
-                    sc: rangePoint.node,
-                    so: rangePoint.offset,
-                });
-            }
-        }
-
-        range = this._afterDeletion(range, isPrev, !didDeleteNodes);
-
-        this.dependencies.Arch.setRange(range.getPoints()).collapse(isPrev);
-        this.editable.normalize();
-        return didDeleteNodes;
-    },
-    /**
-     * Handle ENTER.
-     *
-     * @private
-     * @returns {Boolean} true if case handled
-     */
-    _handleEnter: function () {
-        var self = this;
-        var range = this.dependencies.Arch.getRange();
-        var startArchNode = this.dependencies.Arch.manager.getNode(range.start.id);
-
-        var ancestor = startArchNode.ancestor(function () {
-            return this.isLi() || this.parent && this.parent.isUnbreakable() && !this.parent.isContentEditable() ||
-                this.isNodeBlockType() && !this.ancestor(this.isLi);
-        });
-
-        if (
-            this.utils.isLi(ancestor) && !$(ancestor.parentNode).hasClass('list-group') &&
-            this.utils.getRegexBlank({
-                space: true,
-                newline: true,
-            }).test(ancestor.textContent) &&
-            $(ancestor).find('br').length <= 1 &&
-            !$(ancestor).find('.fa, img').length
-        ) {
-            // double enter in a list make oudent
-            this.dependencies.Paragraph.outdent(null, range);
-            return true;
-        }
-
-        var btn = this.utils.ancestor(range.sc, function (n) {
-            return $(n).hasClass('btn');
-        });
-
-        var point = range.getStartPoint();
-
-        if (this.utils.isText(point.node) && this.dependencies.Arch.isUnbreakableNode(point.node.parentNode)) {
-            return this._handleShiftEnter();
-        }
-
-        if (!this.utils.isText(point.node) && point.node.childNodes[point.offset] && point.node.childNodes[point.offset].tagName === "BR") {
-            point = point.next();
-        }
-        if (point.node.tagName === "BR") {
-            point = point.next();
-        }
-
-        var isSkipPaddingBlankNode = this.utils.isEditable(ancestor) ||
-            (!this.utils.isNodeBlockType(point.node.parentNode) && !!point.node.parentNode.nextSibling);
-        var next = this.dom.splitTree(ancestor, point, {
-            isSkipPaddingBlankNode: isSkipPaddingBlankNode,
-        });
-        while (next.firstChild) {
-            next = next.firstChild;
-        }
-
-        // if there is no block in the split parents, then we add a br between the two node
-        var hasSplitBlock = false;
-        var node = next;
-        var lastChecked = node;
-        while (node && node !== ancestor && node !== this.editable) {
-            if (this.utils.isNodeBlockType(node)) {
-                hasSplitBlock = true;
-                break;
-            }
-            lastChecked = node;
-            node = node.parentNode;
-        }
-        if (!hasSplitBlock && !this.utils.isText(lastChecked)) {
-            $(lastChecked).before(document.createElement('br'));
-        }
-
-        if (this.utils.isText(next)) {
-            this.dom.secureExtremeSingleSpace(next);
-        }
-        if (next.tagName !== "BR" && next.innerHTML === "") {
-            next.innerHTML = this.utils.char('zeroWidth');
-        }
-        if (ancestor && !this.utils.isEditable(ancestor)) {
-            var firstChild = this.utils.firstLeafUntil(ancestor, function (n) {
-                return !self.dependencies.Arch.isVoidBlock(n) && self.dependencies.Arch.isEditableNode(n);
-            });
-            var lastChild = this.utils.lastLeafUntil(ancestor, function (n) {
-                return !self.dependencies.Arch.isVoidBlock(n) && self.dependencies.Arch.isEditableNode(n);
-            });
-            if (this.utils.isBlankNode(ancestor, this.dependencies.Arch.isVoidBlock)) {
-                firstChild = this.utils.isText(firstChild) ? firstChild.parentNode : firstChild;
-                $(firstChild).contents().remove();
-                $(firstChild).append(document.createElement('br'));
-            }
-            if (lastChild.tagName === 'BR' && lastChild.previousSibling) {
-                $(lastChild).after(this.document.createTextNode(this.utils.char('zeroWidth')));
-            }
-        }
-
-        // move to next editable area
-        point = this.getPoint(next, 0);
-        if (
-            (!this.utils.isText(point.node) && point.node.tagName !== 'BR') ||
-            this.utils.isInvisibleText(point.node)
-        ) {
-            point = point.nextUntil(function (pt) {
-                if (pt.node === point.node) {
-                    return false;
-                }
-                return (
-                        pt.node.tagName === "BR" ||
-                        self.utils.isVisibleText(pt.node)
-                    ) &&
-                    self.dependencies.Arch.isEditableNode(pt.node);
-            });
-            point = point || this.getPoint(next, 0);
-            if (point.node.tagName === "BR") {
-                point = point.next();
-            }
-        }
-
-        // if the left part of the split node ends with a space, replace that space with nbsp
-        if (range.sc.textContent) {
-            var endSpace = this.utils.getRegex('endSpace');
-            range.sc.textContent = range.sc.textContent.replace(endSpace,
-                function (trailingSpaces) {
-                    return Array(trailingSpaces.length + 1).join(self.utils.char('nbsp'));
-                }
-            );
-        }
-
-        // On buttons, we want to split the button and move to the beginning of it
-        if (btn) {
-            next = this.utils.ancestor(point.node, function (n) {
-                return $(n).hasClass('btn');
-            });
-
-            // Move carret to the new button
-            range = this.dependencies.Arch.setRange({
-                sc: next.firstChild,
-                so: 0
-            });
-
-            // Force content in empty buttons, the carret can be moved there
-            this.dependencies.Link.fillEmptyLink(next);
-            this.dependencies.Link.fillEmptyLink(btn);
-
-            // Move carret to the new button
-            range = this.dependencies.Arch.setRange({
-                sc: next.firstChild,
-                so: 0,
-            });
-        } else {
-            range = this.dependencies.Arch.setRange({
-                sc: point.node,
-                so: point.offset,
-            }).normalize();
-        }
-
-        return true;
-    },
-    /**
-     * Handle SHIFT+ENTER.
-     * 
-     * @private
-     * @returns {Boolean} true if case handled
-     */
-    _handleShiftEnter: function () {
-        this.dependencies.Arch.insert('<br/>');
-        return true;
-    },
-    /**
-     * Insert a Horizontal Rule element (hr).
-     *
-     * @private
-     */
-    _insertHR: function () {
-        this.dependencies.Arch.insert('<hr/>');
     },
     /**
      * Insert a TAB (4 non-breakable spaces).
@@ -495,13 +288,10 @@ var KeyboardPlugin = AbstractPlugin.extend({
     _onEnter: function (e) {
         if (e.shiftKey) {
             this.dependencies.Arch.insert('<br/>');
-            // this._handleShiftEnter();
         } else if (e.ctrlKey) {
             this.dependencies.Arch.insert('<hr/>');
-            // this._insertHR();
         } else {
             this.dependencies.Arch.addLine();
-            // this._handleEnter();
         }
         return true;
     },
@@ -513,6 +303,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
      */
     _onTextInput: function (ev) {
         ev.preventDefault();
+        this._handleCharInputHistory(ev.data);
         var text;
         if (ev.data === ' ') {
             text = this.utils.char('nbsp');

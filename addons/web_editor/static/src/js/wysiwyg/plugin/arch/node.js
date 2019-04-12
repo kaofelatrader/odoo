@@ -358,16 +358,22 @@ return Class.extend({
         }
         return !!parent;
     },
+    next: function () {
+        return this._prevNextUntil(false);
+    },
     /**
      * @param {function} fn called on this and get the next point as param
      *          return true if the next node is available
      * @returns {ArchNode}
      **/
     nextUntil: function (fn) {
-        return this._prevNextUntil('next', fn);
+        return this._prevNextUntil(false, fn);
+    },
+    prev: function () {
+        return this._prevNextUntil(true);
     },
     prevUntil: function (fn) {
-        return this._prevNextUntil('prev', fn);
+        return this._prevNextUntil(true, fn);
     },
     length: function () {
         return this.childNodes.length;
@@ -447,33 +453,39 @@ return Class.extend({
      * if begin in an unbreakable, stop before go out this unbreakable and before stop
      * try to insert a virtual node and check it.
      *
-     * @param {function} fn called on this and get the next point as param
+     * @param {boolean} isPrev true to get the previous node, false for the next node
+     * @param {function} [fn] called on this and get the next point as param
      *          return true if the next node is available
      * @param {boolean} __closestUnbreakable: internal flag
      * @param {boolean} __goUp: internal flag
      * @returns {ArchNode}
      **/
-    _prevNextUntil: function (direction, fn, __closestUnbreakable, __goUp) {
+    _prevNextUntil: function (isPrev, fn, __closestUnbreakable, __goUp) {
         if (!__closestUnbreakable) {
             __closestUnbreakable = this.ancestor(this.isUnbreakable);
         }
         var next;
         if (!__goUp && !this.isUnbreakable()) {
-            var deeper = direction === 'next' ? this.firstChild() : this.lastChild();
+            var deeper = isPrev ? this.lastChild() : this.firstChild();
             if (deeper !== this) {
                 next = deeper;
             }
         }
         __goUp = false;
         if (!next) {
-            next = this.parent.childNodes[this.index() + (direction === 'next' ? 1 : -1)];
+            var index = this.index();
+            index += isPrev ? -1 : 1;
+            next = this.parent.childNodes[index];
         }
         if (!next) {
             __goUp = true;
-            next = this.parent;
+            next = this.parent[isPrev ? 'previousSibling' : 'nextSibling']();
+            if (next) {
+                next = next[isPrev ? 'lastChild' : 'firstChild']();
+            }
         }
         if (!next || !__closestUnbreakable.contains(next)) {
-            var insertMethod = __closestUnbreakable[direction === 'next' ? 'append' : 'prepend'].bind(__closestUnbreakable);
+            var insertMethod = __closestUnbreakable[this.lastChild() ? 'prepend' : 'append'].bind(__closestUnbreakable);
             var virtualTextNode = this.params.create();
             insertMethod(virtualTextNode);
             if (!virtualTextNode.isEditable() || (fn && !fn.call(this, virtualTextNode))) {
@@ -483,7 +495,7 @@ return Class.extend({
             return virtualTextNode;
         }
         if (fn && !fn.call(this, next)) {
-            return next._prevNextUntil(direction, fn, __closestUnbreakable, __goUp);
+            return next._prevNextUntil(isPrev, fn, __closestUnbreakable, __goUp);
         }
         return next;
     },

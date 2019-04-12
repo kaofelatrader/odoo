@@ -854,22 +854,33 @@ var ArchPlugin = AbstractPlugin.extend({
         return archNode;
     },
     _removeFromRange: function () {
-        // TODO mon grand ;-)
-        return;
-
+        var areSameNode = this._range.scID === this._range.ecID;
         var fromNode = this._getNode(this._range.scID);
-        // ==> split: this.so
+        fromNode = fromNode.split(this._range.so) || fromNode;
 
         var toNode = this._getNode(this._range.ecID);
-        // ==> split: this.eo
+        if (areSameNode) {
+            var newToNode = toNode.nextUntil(function (next) {
+                return next !== toNode;
+            });
+            this._range.eo -= toNode.length();
+            toNode = newToNode;
+        }
+        toNode.split(this._range.eo);
 
-        fromNode.nextUntil(function (next) {
-            this.remove();
-            if (next === toNode) {
-                next.remove();
-                return true;
-            }
-        });
+        if (areSameNode) {
+            toNode.remove();
+        } else {
+            fromNode.nextUntil(function (next) {
+                this.remove();
+                if (next === toNode) {
+                    next.remove();
+                    return true;
+                }
+            });
+        }
+
+        this._applyChangesInRenderer();
     },
     _reset: function (value) {
         this._id = 1;
@@ -963,7 +974,7 @@ var ArchPlugin = AbstractPlugin.extend({
 
             if (archNode.childNodes) {
                 archNode.childNodes.forEach(function (archNode) {
-                    self.removeFromRoot(archNode);
+                    self._removeFromArch(archNode);
                 });
             }
         }
