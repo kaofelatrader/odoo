@@ -1980,11 +1980,14 @@ class MailThread(models.AbstractModel):
         if author_id is None:  # keep False values
             author_id = self.env['mail.message']._get_default_author().id
 
-
         partner_ids = set(kwargs.pop('partner_ids', []))
+        channel_ids = set(kwargs.pop('channel_ids', []))
 
         for partner_id in partner_ids:
             assert isinstance(partner_id, int)
+
+        for channel_id in channel_ids:
+            assert isinstance(channel_id, int)
 
         if parent_id and not model:
             parent_message = self.env['mail.message'].browse(parent_id)
@@ -2039,7 +2042,7 @@ class MailThread(models.AbstractModel):
             'parent_id': parent_id,
             'subtype_id': subtype_id,
             'partner_ids': [(4, pid) for pid in partner_ids],
-            'channel_ids': kwargs.get('channel_ids', []),
+            'channel_ids': [(4, cid) for cid in channel_ids],
             'add_sign': add_sign
         })
         if notif_layout:
