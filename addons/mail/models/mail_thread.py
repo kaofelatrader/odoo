@@ -2089,7 +2089,6 @@ class MailThread(models.AbstractModel):
             message._notify(
                 self, msg_vals,
                 force_send=self.env.context.get('mail_notify_force_send', True),
-                send_after_commit=True,
                 model_description=model_description,
                 mail_auto_delete=mail_auto_delete,
             )
