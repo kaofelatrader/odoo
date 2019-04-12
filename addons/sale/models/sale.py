@@ -642,11 +642,11 @@ class SaleOrder(models.Model):
         return super(SaleOrder, self.with_context(mail_post_autofollow=True)).message_post(**kwargs)
 
     @api.multi
-    def send_order_confirmation_mail(self):
+    def _send_order_confirmation_mail(self):
         confirmation_template = self.env['ir.config_parameter'].sudo().get_param('sale.default_confirmation_template', False)
         if confirmation_template:
             for order in self:
-                order.with_context(is_online=True, force_send=True).message_post_with_template(int(confirmation_template), composition_mode='comment', notif_layout="mail.mail_notification_paynow")
+                order.with_context(confirmation_mail=True, force_send=True).message_post_with_template(int(confirmation_template), composition_mode='comment', notif_layout="mail.mail_notification_paynow")
 
     @api.multi
     def force_quotation_send(self):
@@ -676,9 +676,6 @@ class SaleOrder(models.Model):
             This method should be extended when the confirmation should generated
             other documents. In this method, the SO are in 'sale' state (not yet 'done').
         """
-        if self.env.context.get('send_email'):
-            self.force_quotation_send()
-
         # create an analytic account if at least an expense product
         for order in self:
             if any([expense_policy not in [False, 'no'] for expense_policy in order.order_line.mapped('product_id.expense_policy')]):

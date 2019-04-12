@@ -58,7 +58,7 @@
     <data noupdate="1">
         <template id="mail_notification_paynow_online" inherit_id="mail.mail_notification_paynow" name="oezirhgoi">
             <xpath expr="//t[@t-set='access_name']" position="after">
-                <t t-if="record._name == 'sale.order' and not record._context.get('is_online')">
+                <t t-if="record._name == 'sale.order' and not record._context.get('confirmation_mail')">
                     <t t-if="record.has_to_be_signed(include_draft=True)">
                         <t t-if="record.has_to_be_paid()" t-set="access_name">Sign &amp; Pay Quotation</t>
                         <t t-else="" t-set="access_name">Accept &amp; Sign Quotation</t>

@@ -62,15 +62,13 @@ class PaymentTransaction(models.Model):
 
         for record in self:
             sales_orders = record.sale_order_ids.filtered(lambda so: so.state in ['draft', 'sent'])
-            # set quote as sent when transaction is pending
-            # but do not send mail because mail will be send based on configuration in setting.
-            sales_orders.with_context(tracking_disable=True).write({'state': 'sent'})
+            sales_orders.filtered(lambda so: so.state == 'draft').with_context(tracking_disable=True).write({'state': 'sent'})
 
             if record.acquirer_id.provider == 'transfer':
                 for so in record.sale_order_ids:
                     so.reference = record._compute_sale_order_reference(so)
             # send order confirmation mail
-            sales_orders.send_order_confirmation_mail()
+            sales_orders._send_order_confirmation_mail()
 
     @api.multi
     def _set_transaction_authorized(self):
@@ -83,7 +81,7 @@ class PaymentTransaction(models.Model):
             so.action_confirm()
 
         # send order confirmation mail
-        sales_orders.send_order_confirmation_mail()
+        sales_orders._send_order_confirmation_mail()
 
     @api.multi
     def _reconcile_after_transaction_done(self):
@@ -94,7 +92,7 @@ class PaymentTransaction(models.Model):
             # For loop because some override of action_confirm are ensure_one.
             so.action_confirm()
         # send order confirmation mail
-        sales_orders.send_order_confirmation_mail()
+        sales_orders._send_order_confirmation_mail()
         # invoice the sale orders if needed
         self._invoice_sale_orders()
         res = super(PaymentTransaction, self)._reconcile_after_transaction_done()
