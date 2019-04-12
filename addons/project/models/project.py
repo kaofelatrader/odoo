@@ -770,12 +770,12 @@ class Task(models.Model):
         return super(Task, self)._track_subtype(init_values)
 
     @api.multi
-    def _notify_get_groups(self, groups):
+    def _notify_get_groups(self):
         """ Handle project users and managers recipients that can assign
         tasks and create new one directly from notification emails. Also give
         access button to portal users and portal customers. If they are notified
         they should probably have access to the document. """
-        groups = super(Task, self)._notify_get_groups(groups)
+        groups = super(Task, self)._notify_get_groups()
 
         self.ensure_one()
 
@@ -794,9 +794,8 @@ class Task(models.Model):
         groups = [new_group] + groups
 
         for group_name, group_method, group_data in groups:
-            if group_name == 'customer':
-                continue
-            group_data['has_button_access'] = True
+            if group_name != 'customer':
+                group_data['has_button_access'] = True
 
         return groups
 

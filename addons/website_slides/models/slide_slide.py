@@ -337,12 +337,13 @@ class Slide(models.Model):
         return super(Slide, self).get_access_action(access_uid)
 
     @api.multi
-    def _notify_get_groups(self, groups):
+    def _notify_get_groups(self):
         """ Add access button to everyone if the document is active. """
-        groups = super(Slide, self)._notify_get_groups(groups)
+        groups = super(Slide, self)._notify_get_groups()
 
         if self.website_published:
             for group_name, group_method, group_data in groups:
+                # todo xdo no check here ?
                 group_data['has_button_access'] = True
 
         return groups

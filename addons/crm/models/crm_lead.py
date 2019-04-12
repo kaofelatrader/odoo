@@ -1117,10 +1117,10 @@ class Lead(models.Model):
         return super(Lead, self)._track_subtype(init_values)
 
     @api.multi
-    def _notify_get_groups(self, groups):
+    def _notify_get_groups(self):
         """ Handle salesman recipients that can convert leads into opportunities
         and set opportunities as won / lost. """
-        groups = super(Lead, self)._notify_get_groups(groups)
+        groups = super(Lead, self)._notify_get_groups()
 
         self.ensure_one()
         if self.type == 'lead':

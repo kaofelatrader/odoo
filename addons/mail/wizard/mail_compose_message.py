@@ -277,8 +277,8 @@ class MailComposer(models.TransientModel):
                             notif_layout=notif_layout,
                             add_sign=not bool(wizard.template_id),
                             mail_auto_delete=wizard.template_id.auto_delete if wizard.template_id else False,
-                            model_description=model_description,
-                            **mail_values)
+                            model_description=model_description)
+                        post_params.update(mail_values)
                         if ActiveModel._name == 'mail.thread':
                             if wizard.model:
                                 post_params['model'] = wizard.model

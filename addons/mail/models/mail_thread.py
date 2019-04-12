@@ -709,7 +709,7 @@ class MailThread(models.AbstractModel):
         return link
 
     @api.multi
-    def _notify_get_groups(self, groups):
+    def _notify_get_groups(self):
         """ Return groups used to classify recipients of a notification email.
         Groups is a list of tuple containing of form (group_name, group_func,
         group_data) where
@@ -735,7 +735,21 @@ class MailThread(models.AbstractModel):
         Groups has a default value that you can find in mail_thread
         ``_notify_classify_recipients`` method.
         """
-        return groups
+        return [
+            (
+                'user',
+                lambda pdata: pdata['type'] == 'user',
+                {}
+            ), (
+                'portal',
+                lambda pdata: pdata['type'] == 'portal',
+                {'has_button_access': False}
+            ), (
+                'customer',
+                lambda pdata: True,
+                {'has_button_access': False}
+            )
+        ]
 
     @api.multi
     def _notify_classify_recipients(self, recipient_data, model_name):
@@ -773,6 +787,8 @@ class MailThread(models.AbstractModel):
         only return groups with recipients
         """
 
+        groups = self._notify_get_groups()
+
         access_link = self._notify_get_action_link('view')
 
         if model_name:
@@ -780,26 +796,16 @@ class MailThread(models.AbstractModel):
         else:
             view_title = _('View')
 
-        default_groups = [
-            ('user', lambda pdata: pdata['type'] == 'user', {}),
-            ('portal', lambda pdata: pdata['type'] == 'portal', {
-                'has_button_access': False,
-            }),
-            ('customer', lambda pdata: True, {
-                'has_button_access': False,
-            })
-        ]
-
-        groups = self._notify_get_groups(default_groups)
-
+        # fill group_data with default_values if they are not complete
         for group_name, group_func, group_data in groups:
             group_data.setdefault('has_button_access', True)
-            group_data.setdefault('button_access', {
-                'url': access_link,
-                'title': view_title})
+            group_button_access = group_data.setdefault('button_access', {})
+            group_button_access.setdefault('url', access_link)
+            group_button_access.setdefault('title', view_title)
             group_data.setdefault('actions', list())
             group_data.setdefault('recipients', list())
 
+        # classify recipients in each group
         for recipient in recipient_data:
             for group_name, group_func, group_data in groups:
                 if group_func(recipient):
@@ -2247,7 +2253,6 @@ class MailThread(models.AbstractModel):
                 mail_body = message.body
             mail_body = self._replace_local_links(mail_body)
             mail_subject = message.subject or (message.record_name and 'Re: %s' % message.record_name)
-
             # send email
             for email_chunk in split_every(recipients_max, recipients_group_data['recipients']):
                 recipient_values = self._notify_email_recipient_values(email_chunk)
@@ -2261,7 +2266,7 @@ class MailThread(models.AbstractModel):
                 }
                 if email_to:
                     create_values['email_to'] = email_to
-                create_values.update(base_mail_values)  # mail_message_id, mail_server_id, auto_delete, references, headers
+                create_values.update(base_mail_values)  # mail_message_id, mail_server_id, auto_delete, references, headers 
 
                 email = Mail.create(create_values)
 
@@ -2307,7 +2312,6 @@ class MailThread(models.AbstractModel):
     @api.model
     def _notify_prepare_template_context(self, message, msg_vals, model_description=False, mail_auto_delete=True):
         # compute send user and its related signature
-
         signature = ''
         user = self.env.user
         if message.author_id and message.author_id.user_ids:
