@@ -72,7 +72,7 @@ class PortalMixin(models.AbstractModel):
         return '%s?%s' % ('/mail/view' if redirect else self.access_url, url_encode(params))
 
     @api.multi
-    def _notify_get_groups(self, message, groups):
+    def _notify_get_groups(self, groups):
         access_token = self._portal_ensure_token()
         customer = self['partner_id']
 
@@ -94,7 +94,7 @@ class PortalMixin(models.AbstractModel):
             ]
         else:
             new_group = []
-        return super(PortalMixin, self)._notify_get_groups(message, new_group + groups)
+        return super(PortalMixin, self)._notify_get_groups(new_group + groups)
 
     @api.multi
     def get_access_action(self, access_uid=None):

@@ -709,7 +709,7 @@ class MailThread(models.AbstractModel):
         return link
 
     @api.multi
-    def _notify_get_groups(self, message, groups):
+    def _notify_get_groups(self, groups):
         """ Return groups used to classify recipients of a notification email.
         Groups is a list of tuple containing of form (group_name, group_func,
         group_data) where
@@ -738,7 +738,7 @@ class MailThread(models.AbstractModel):
         return groups
 
     @api.multi
-    def _notify_classify_recipients(self, message, recipient_data):
+    def _notify_classify_recipients(self, recipient_data, model_name):
         """ Classify recipients to be notified of a message in groups to have
         specific rendering depending on their group. For example users could
         have access to buttons customers should not have in their emails.
@@ -746,41 +746,36 @@ class MailThread(models.AbstractModel):
         Module-specific grouping should be done by overriding ``_notify_get_groups``
         method defined here-under.
 
-        :param message: mail.message record about to be notified
-        :param recipients: res.partner recordset to notify UPDATE ME
+        :param recipient_data:todo xdo UPDATE ME
 
         return example:
-        {
-            'customer': {
-                'actions': [],
-                'button_access': {'title': 'View Simple Chatter Model',
-                                    'url': '/mail/view?model=mail.test.simple&res_id=1497'},
-                'has_button_access': False,
-                'recipients': [11]
-            },
-            'portal': {
-                'actions': [],
-                'button_access': {'title': 'View Simple Chatter Model',
+        [{
+            'actions': [],
+            'button_access': {'title': 'View Simple Chatter Model',
                                 'url': '/mail/view?model=mail.test.simple&res_id=1497'},
-                'has_button_access': False,
-                'recipients': []
-            },
-            'user': {
-                'actions': [],
-                'button_access': {'title': 'View Simple Chatter Model',
-                                    'url': '/mail/view?model=mail.test.simple&res_id=1497'},
-                'has_button_access': True,
-                'recipients': []
-            }
-        }
+            'has_button_access': False,
+            'recipients': [11]
+        },
+        {
+            'actions': [],
+            'button_access': {'title': 'View Simple Chatter Model',
+                            'url': '/mail/view?model=mail.test.simple&res_id=1497'},
+            'has_button_access': False,
+            'recipients': [4, 5, 6] 
+        },
+        {
+            'actions': [],
+            'button_access': {'title': 'View Simple Chatter Model',
+                                'url': '/mail/view?model=mail.test.simple&res_id=1497'},
+            'has_button_access': True,
+            'recipients': [10, 11, 12]
+        }]
+        only return groups with recipients
         """
-        result = {}
 
         access_link = self._notify_get_action_link('view')
 
-        if message.model:
-            model = self.with_lang().env['ir.model']
-            model_name = model._get(message.model).display_name
+        if model_name:
             view_title = _('View %s') % model_name
         else:
             view_title = _('View')
@@ -795,7 +790,7 @@ class MailThread(models.AbstractModel):
             })
         ]
 
-        groups = self._notify_get_groups(message, default_groups)
+        groups = self._notify_get_groups(default_groups)
 
         for group_name, group_func, group_data in groups:
             group_data.setdefault('has_button_access', True)
@@ -811,8 +806,10 @@ class MailThread(models.AbstractModel):
                     group_data['recipients'].append(recipient['id'])
                     break
 
+        result = []
         for group_name, group_method, group_data in groups:
-            result[group_name] = group_data
+            if group_data['recipients']:
+                result.append(group_data)
 
         return result
 
@@ -2193,22 +2190,21 @@ class MailThread(models.AbstractModel):
         return True
 
     def _notify_partners(self, message, partners_data, msg_vals=False, model_description=False, mail_auto_delete=True, send_after_commit=False):
-        """ Method to send email linked to notified messages. The recipients are
-        the recordset on which this method is called.
-
+        """ Method to send email linked to notified messages.
         :param message: mail.message record to notify;
-        :param recipients: classified recipient (from notify_classify_recipients)
-        :param record: optional record on which the message was posted;
-        :param force_send: tells whether to send notification emails within the
-          current transaction or to use the email queue;
+        :param partners_data: partner to notify by email coming from _notify_compute_recipients
+        :param msg_vals: message creation values if available
         :param send_after_commit: if force_send, tells whether to send emails after
           the transaction has been committed using a post-commit hook;
         :param model_description: optional data used in notification process (see
           notification templates);
         :param mail_auto_delete: delete notification emails once sent;
         """
-        recipients = self._notify_classify_recipients(message, partners_data)
-        if not recipients:
+        model = msg_vals.get('model') if msg_vals else message.model
+        model_name = model_description or (self.with_lang().env['ir.model']._get(model).display_name if model else False)
+        recipients_groups_data = self._notify_classify_recipients(partners_data, model_name)
+
+        if not recipients_groups_data:
             return True
 
         specific_values = self._notify_specific_email_values(message)
@@ -2238,20 +2234,21 @@ class MailThread(models.AbstractModel):
         email_pids = set()
 
         # loop on groups (customer, portal, user,  ... + model specific like group_sale_salesman)
-        for group_tpl_values in [group for group in recipients.values() if group['recipients']]:
+        recipients_max = 50
+        for recipients_group_data in recipients_groups_data:
             # generate notification email content
-            template_ctx = {**base_template_ctx, **group_tpl_values}
+            template_ctx = {**base_template_ctx, **recipients_group_data} # todo xdo do we need recipients in template_ctx ?
             # {company, is_discussion, lang, message, model_description, record, record_name, signature, subtype, tracking_values, website_url}
             # {actions, button_access, has_button_access, recipients}
             if base_template:
                 mail_body = base_template.render(template_ctx, engine='ir.qweb', minimal_qcontext=True)
             else:
                 mail_body = message.body
-            mail_body = self.env['mail.thread']._replace_local_links(mail_body)
+            mail_body = self._replace_local_links(mail_body)
             mail_subject = message.subject or (message.record_name and 'Re: %s' % message.record_name)
 
             # send email
-            for email_chunk in split_every(50, group_tpl_values['recipients']):
+            for email_chunk in split_every(recipients_max, recipients_group_data['recipients']):
                 recipient_values = self._notify_email_recipient_values(email_chunk)
                 email_to = recipient_values['email_to']
                 recipient_ids = recipient_values['recipient_ids']
@@ -2287,7 +2284,6 @@ class MailThread(models.AbstractModel):
         #      to prevent sending email during a simple update of the database
         #      using the command-line.
         test_mode = getattr(threading.currentThread(), 'testing', False)
-        recipients_max = 50
         if force_send and len(emails) < recipients_max and (not self.pool._init or test_mode):
             email_ids = emails.ids
             dbname = self.env.cr.dbname
