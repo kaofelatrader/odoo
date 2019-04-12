@@ -145,7 +145,10 @@ class Partner(models.Model):
             template_ctx = {**base_template_ctx, **group_tpl_values}
             # {company, is_discussion, lang, message, model_description, record, record_name, signature, subtype, tracking_values, website_url}
             # {actions, button_access, has_button_access, recipients}
-            mail_body = base_template.render(template_ctx, engine='ir.qweb', minimal_qcontext=True)
+            if base_template:
+                mail_body = base_template.render(template_ctx, engine='ir.qweb', minimal_qcontext=True)
+            else:
+                mail_body = message.body
             mail_body = self.env['mail.thread']._replace_local_links(mail_body)
             mail_subject = message.subject or (message.record_name and 'Re: %s' % message.record_name)
 
