@@ -61,25 +61,36 @@ class StockProductionLot(models.Model):
         # if the alert_date is in the past and the lot is linked to an internal quant
         # log a next activity on the next.production.lot
         alert_lot_ids = self.env['stock.production.lot'].search([('alert_date', '<=', fields.Date.today())])
-        mail_activity_type = self.env.ref('product_expiry.mail_activity_type_alert_date_reached').id
-        # VFE FIXME will crash if user deletes activity type...
+        mail_activity_type = self.env.ref('product_expiry.mail_activity_type_alert_date_reached', raise_if_not_found=False)
+        if mail_activity_type:
+            def has_been_reminded(lot):
+                return (
+                    self.env['mail.activity'].search_count([
+                        ('res_model', '=', 'stock.production.lot'),
+                        ('res_id', '=', lot.id),
+                        ('activity_type_id', '=', mail_activity_type.id)])
+                    or self.env['mail.message'].search_count([
+                        ('model', '=', 'stock.production.lot'),
+                        ('res_id', '=', lot.id),
+                        ('subtype_id', '=', self.env.ref('mail.mt_activities').id),
+                        ('mail_activity_type_id', '=', mail_activity_type.id)]))
+            # VFE FIXME : do we need the search on the mail.message?
+            # Isn't the search on activities sufficient to avoid spamming the user ?
+        else:
+            def has_been_reminded(lot):
+                return self.env['mail.activity'].search_count([
+                        ('res_model', '=', 'stock.production.lot'),
+                        ('res_id', '=', lot.id),
+                        ('note', '=', _("The alert date has been reached for this lot/serial number"))])
+
         stock_quants = self.env['stock.quant'].search([
             ('lot_id', 'in', alert_lot_ids.ids),
-            ('quantity', '>', 0)]).filtered(lambda quant: quant.location_id.usage == 'internal' )
+            ('quantity', '>', 0)]).filtered(lambda quant: quant.location_id.usage == 'internal')
         lots = stock_quants.mapped('lot_id')
 
         # only for lots that do not have already an activity
         # or that do not have a done alert activity, i.e. a mail.message
-        lots = lots.filtered(lambda lot:
-            not self.env['mail.activity'].search_count([
-                ('res_model', '=', 'stock.production.lot'),
-                ('res_id', '=', lot.id),
-                ('activity_type_id','=', mail_activity_type)])
-            and not self.env['mail.message'].search_count([
-                ('model', '=', 'stock.production.lot'),
-                ('res_id', '=', lot.id),
-                ('subtype_id', '=', self.env.ref('mail.mt_activities').id),
-                ('mail_activity_type_id','=', mail_activity_type)]))
+        lots = lots.filtered(lambda lot: not has_been_reminded(lot))
         for lot in lots:
             lot.activity_schedule(
                 'product_expiry.mail_activity_type_alert_date_reached',
