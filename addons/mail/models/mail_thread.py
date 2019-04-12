@@ -1353,7 +1353,7 @@ class MailThread(models.AbstractModel):
                     if message_dict.get('parent_id'):
                         parent_message = self.env['mail.message'].sudo().browse(message_dict['parent_id'])
                         if parent_message.author_id:
-                            partner_ids = [(4, parent_message.author_id.id)]
+                            partner_ids = [parent_message.author_id.id]
                 else:
                     subtype_id = self.env['ir.model.data'].xmlid_to_res_id('mail.mt_comment')
 
@@ -1654,8 +1654,7 @@ class MailThread(models.AbstractModel):
         msg_dict['to'] = tools.decode_smtp_header(message.get('to'))
         msg_dict['cc'] = tools.decode_smtp_header(message.get('cc'))
         msg_dict['email_from'] = tools.decode_smtp_header(message.get('from'))
-        partner_ids = self._message_find_partners(message, ['To', 'Cc'])
-        msg_dict['partner_ids'] = [(4, partner_id) for partner_id in partner_ids]
+        msg_dict['partner_ids'] = self._message_find_partners(message, ['To', 'Cc'])
 
         if message.get('Date'):
             try:
@@ -2369,7 +2368,7 @@ class MailThread(models.AbstractModel):
             record.message_notify(
                 subject=_('You have been assigned to %s') % record.display_name,
                 body=assignation_msg,
-                partner_ids=[(4, pid) for pid in partner_ids],
+                partner_ids=partner_ids,
                 record_name=record.display_name,
                 notif_layout='mail.mail_notification_light',
                 model_description=model_description,
