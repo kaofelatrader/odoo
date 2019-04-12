@@ -2214,11 +2214,12 @@ class MailThread(models.AbstractModel):
 
         force_send = self.env.context.get('mail_notify_force_send', True)
 
-        base_template_ctx = self._notify_prepare_template_context(message, msg_vals, model_description=model_description)
+        template_values = self._notify_prepare_template_context(message, msg_vals, model_description=model_description)
 
-        template_xmlid = message.email_layout_xmlid if message.email_layout_xmlid else 'mail.message_notification_email'
+        email_layout_xmlid = msg_vals.get('email_layout_xmlid') if msg_vals else message.email_layout_xmlid
+        template_xmlid = email_layout_xmlid if email_layout_xmlid else 'mail.message_notification_email'
         try:
-            base_template = self.env.ref(template_xmlid, raise_if_not_found=True).with_context(lang=base_template_ctx['lang'])
+            base_template = self.env.ref(template_xmlid, raise_if_not_found=True).with_context(lang=template_values['lang'])
         except ValueError:
             _logger.warning('QWeb template %s not found when sending notification emails. Sending without layouting.' % (template_xmlid))
             base_template = False
@@ -2236,24 +2237,25 @@ class MailThread(models.AbstractModel):
 
         Mail = self.env['mail.mail'].sudo()
         emails = self.env['mail.mail'].sudo()
-        email_pids = set()
 
         # loop on groups (customer, portal, user,  ... + model specific like group_sale_salesman)
         recipients_max = 50
         for recipients_group_data in recipients_groups_data:
             # generate notification email content
-            template_ctx = {**base_template_ctx, **recipients_group_data} # todo xdo do we need recipients in template_ctx ?
+            recipients_ids = recipients_group_data.pop('recipients')
+            render_values = {**template_values, **recipients_group_data} # todo xdo do we need recipients in template_ctx ?
             # {company, is_discussion, lang, message, model_description, record, record_name, signature, subtype, tracking_values, website_url}
             # {actions, button_access, has_button_access, recipients}
+
             if base_template:
-                mail_body = base_template.render(template_ctx, engine='ir.qweb', minimal_qcontext=True)
+                mail_body = base_template.render(render_values, engine='ir.qweb', minimal_qcontext=True)
             else:
                 mail_body = message.body
             mail_body = self._replace_local_links(mail_body)
             mail_subject = message.subject or (message.record_name and 'Re: %s' % message.record_name)
             # send email
-            for email_chunk in split_every(recipients_max, recipients_group_data['recipients']):
-                recipient_values = self._notify_email_recipient_values(email_chunk)
+            for recipients_ids_chunk in split_every(recipients_max, recipients_ids):
+                recipient_values = self._notify_email_recipient_values(recipients_ids_chunk)
                 email_to = recipient_values['email_to']
                 recipient_ids = recipient_values['recipient_ids']
 
@@ -2271,7 +2273,11 @@ class MailThread(models.AbstractModel):
                 if email and recipient_ids:
                     notifications = self.env['mail.notification'].sudo().search([
                         ('mail_message_id', '=', email.mail_message_id.id),
-                        ('res_partner_id', 'in', list(recipient_ids))
+                        ('res_partner_id', 'in', list(recipient_ids)) # not sure to check. 
+                        # what if recipient_ids are empty because of _notify_email_recipient_values
+                        # should we use recipients_ids_chunk?
+                        # should we unlink recipients_ids_chunk - recipient_ids ?
+                        # should we avoid to create needation? by calling _notify_email_recipient_values at the same place _notify_customize_recipients does? (but no chubnk at this step)
                     ])
                     notifications.write({
                         'is_email': True,
@@ -2280,7 +2286,6 @@ class MailThread(models.AbstractModel):
                         'email_status': 'ready',
                     })
                 emails |= email
-                email_pids.update(recipient_ids)
 
         # NOTE:
         #   1. for more than 50 followers, use the queue system
@@ -2289,13 +2294,12 @@ class MailThread(models.AbstractModel):
         #      using the command-line.
         test_mode = getattr(threading.currentThread(), 'testing', False)
         if force_send and len(emails) < recipients_max and (not self.pool._init or test_mode):
-            email_ids = emails.ids
-            dbname = self.env.cr.dbname
-            _context = self._context
-
             # unless asked specifically, send emails after the transaction to
             # avoid side effects due to emails being sent while the transaction fails
             if not test_mode and send_after_commit:
+                email_ids = emails.ids
+                dbname = self.env.cr.dbname
+                _context = self._context
                 def send_notifications():
                     db_registry = registry(dbname)
                     with api.Environment.manage(), db_registry.cursor() as cr:
@@ -2312,13 +2316,20 @@ class MailThread(models.AbstractModel):
         # compute send user and its related signature
         signature = ''
         user = self.env.user
-        if message.author_id and message.author_id.user_ids:
-            user = message.author_id.user_ids[0]
-            if message.add_sign:
+        author = message.env['res.partner'].browse(msg_vals.get('author_id')) if msg_vals else message.author_id
+        model = msg_vals.get('model') if msg_vals else message.model
+        add_sign = msg_vals.get('add_sign') if msg_vals else message.add_sign
+        subtype_id =  msg_vals.get('subtype_id') if msg_vals else message.subtype_id.id
+        message_id = message.id
+        record_name = msg_vals.get('record_name') if msg_vals else message.record_name
+
+        if author and author.user_ids:
+            user = author.user_ids[0]
+            if add_sign:
                 signature = user.signature
         else:
-            if message.add_sign:
-                signature = "<p>-- <br/>%s</p>" % message.author_id.name
+            if add_sign:
+                signature = "<p>-- <br/>%s</p>" % author.name
 
         company = self.company_id.sudo() if self and 'company_id' in self else user.company_id
         if company.website:
@@ -2334,25 +2345,20 @@ class MailThread(models.AbstractModel):
             if template and template.lang:
                 lang = template._render_template(template.lang, self.env.context['default_model'], self.env.context['default_res_id'])
 
-        if not model_description and message.model:
-            model_description = self.env['ir.model'].with_context(lang=lang)._get(message.model).display_name
+        if not model_description and model:
+            model_description = self.env['ir.model'].with_context(lang=lang)._get(model).display_name
 
         tracking = []
-        # we could try to avoid to search all the time: if we have msg_vals from message post,
-        # we should have tracking_value_ids if it is a tracking.
-        # unfortunately the only test breaking if we completely remove tracking values is test_notify_track_groups
-        # we may want a test that break if email has no tracking values and after a message_track
-        # or any other scalar field
-        could_be_tracking = msg_vals.get('tracking_value_ids') if msg_vals else bool(self)
+        could_be_tracking = msg_vals.get('tracking_value_ids', True) if msg_vals else bool(self)
         if could_be_tracking:
-            for tracking_value in self.env['mail.tracking.value'].sudo().search([('mail_message_id', '=', message.id)]):
+            for tracking_value in self.env['mail.tracking.value'].sudo().search([('mail_message_id', '=', message_id)]):
                 groups = tracking_value.groups
                 if not groups or self.user_has_groups(groups):
                     tracking.append((tracking_value.field_desc,
                                     tracking_value.get_old_display_value()[0],
                                     tracking_value.get_new_display_value()[0]))
 
-        is_discussion = message.subtype_id.id == self.env['ir.model.data'].xmlid_to_res_id('mail.mt_comment')
+        is_discussion = subtype_id == self.env['ir.model.data'].xmlid_to_res_id('mail.mt_comment')
 
         return {
             'message': message,
@@ -2361,7 +2367,7 @@ class MailThread(models.AbstractModel):
             'company': company,
             'model_description': model_description,
             'record': self,
-            'record_name': message.record_name,
+            'record_name': record_name,
             'tracking_values': tracking,
             'is_discussion': is_discussion,
             'subtype': message.subtype_id,
