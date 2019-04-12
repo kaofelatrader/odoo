@@ -587,7 +587,7 @@ class Challenge(models.Model):
                     challenge.id)
 
                 # send message only to users, not on the challenge
-                self.env['gamification.challenge'].message_post(
+                self.env['gamification.challenge'].message_notify(
                     body=body_html,
                     partner_ids=[user.partner_id.id],
                     subtype='mail.mt_comment',
