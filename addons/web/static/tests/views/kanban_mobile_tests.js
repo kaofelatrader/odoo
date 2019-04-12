@@ -195,8 +195,8 @@ QUnit.module('Views', {
         kanban.destroy();
     });
 
-    QUnit.test('kanban with searchpanel: there should be no searchpanel in mobile', async function (assert) {
-        assert.expect(3);
+    QUnit.test('kanban with searchpanel: rendering in mobile', async function (assert) {
+        assert.expect(4);
 
         var kanban = await createView({
             View: KanbanView,
@@ -218,8 +218,11 @@ QUnit.module('Views', {
             },
         });
 
-        assert.containsNone(kanban, '.o_search_panel');
-        assert.verifySteps(['/web/dataset/search_read']);
+        assert.containsOnce(kanban, '.o_search_panel');
+        assert.verifySteps([
+            'search_panel_select_range',
+            '/web/dataset/search_read',
+        ]);
 
         kanban.destroy();
     });

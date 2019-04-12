@@ -6,6 +6,7 @@ odoo.define('web.SearchPanel', function (require) {
  * filter/manage data easily.
  */
 
+var config = require('web.config');
 var core = require('web.core');
 var Domain = require('web.Domain');
 var Widget = require('web.Widget');
@@ -552,6 +553,87 @@ var SearchPanel = Widget.extend({
         this._render();
     },
 });
+
+if (config.device.isMobile) {
+    SearchPanel.include({
+        tagName: 'details',
+        summaryTemplate: 'SearchPanel.MobileSummary',
+        events: _.extend({}, SearchPanel.prototype.events, {
+            'click .o_search_panel_mobile_bottom_close': '_onClickClose',
+        }),
+
+        close: function () {
+            this.el.removeAttribute('open');
+        },
+
+        _getCategorySelection: function () {
+            var self = this;
+            return Object.keys(this.categories).reduce(function (selection, categoryId) {
+                var category = self.categories[categoryId];
+                if (category.activeValueId) {
+                    var ancestorIds = [category.activeValueId].concat(self._getAncestorValueIds(category, category.activeValueId));
+                    var values = ancestorIds.map(function (valueId) {
+                        return category.values[valueId].display_name;
+                    });
+                    selection.push({ values: values, icon: category.icon, color: category.color});
+                }
+                return selection;
+            }, []);
+        },
+
+        _getFilterSelection: function () {
+            var self = this;
+
+            function nameOfCheckedValues(values) {
+                return Object.keys(values).filter(function (valueId) {
+                    return values[valueId].checked;
+                }).map(function (valueId) {
+                    return values[valueId].name;
+                });
+            }
+
+            return Object.keys(this.filters).reduce(function (selection, filterId) {
+                var filter = self.filters[filterId];
+                var values = [];
+                if (filter.groups) {
+                    values = _.flatten(Object.keys(filter.groups).map(function (groupId) {
+                        return nameOfCheckedValues(filter.groups[groupId].values);
+                    }));
+                } else if (filter.values) {
+                    values = nameOfCheckedValues(filter.values);
+                }
+                if (values.length) {
+                    selection.push({values: values, icon: filter.icon, color: filter.color});
+                }
+                return selection;
+            }, []);
+        },
+
+        _render: function () {
+            this._super.apply(this, arguments);
+            this.$el.prepend(qweb.render(this.summaryTemplate, {
+                categories: this._getCategorySelection(),
+                filters: this._getFilterSelection(),
+            }));
+        },
+
+        _onCategoryValueClicked: function (ev) {
+            this._super.apply(this, arguments);
+            this._onToggleFoldCategory(ev);
+        },
+
+        _onClickClose: function () {
+            this.close();
+        },
+
+        _onToggleFoldCategory: function (ev) {
+            var $item = $(ev.currentTarget).closest('.o_search_panel_category_value');
+            if ($item.data('id')) {
+                this._super.apply(this, arguments);
+            }
+        },
+    });
+}
 
 return SearchPanel;
 

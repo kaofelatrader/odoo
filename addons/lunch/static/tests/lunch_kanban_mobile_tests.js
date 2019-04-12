@@ -29,6 +29,14 @@ QUnit.module('LunchKanbanView Mobile', {
                     return Promise.resolve();
                 },
             },
+            'lunch.product.category': {
+                fields: {},
+                records: [],
+            },
+            'lunch.supplier': {
+                fields: {},
+                records: [],
+            },
             'ir.model.data': {
                 fields: {},
                 xmlid_to_res_id() {
