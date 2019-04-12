@@ -2200,11 +2200,10 @@ class MailThread(models.AbstractModel):
         specific_values = self._notify_specific_email_values(message)
         force_send = self.env.context.get('mail_notify_force_send', True)
 
-        self.env['res.partner']._notify(
+        self._partner_notify(
             message,
             msg_vals,
             recipients,
-            self,
             specific_values=specific_values,  # check this for other calls
             force_send=force_send,
             model_description=model_description,
@@ -2213,7 +2212,7 @@ class MailThread(models.AbstractModel):
         return True
 
     @api.model
-    def _notify(self, message, msg_values, recipients, record, specific_values=None, force_send=False, send_after_commit=True, model_description=False, mail_auto_delete=True):
+    def _partner_notify(self, message, msg_values, recipients, specific_values=None, force_send=False, send_after_commit=True, model_description=False, mail_auto_delete=True):
         """ Method to send email linked to notified messages. The recipients are
         the recordset on which this method is called.
 
@@ -2228,8 +2227,7 @@ class MailThread(models.AbstractModel):
           notification templates);
         :param mail_auto_delete: delete notification emails once sent;
         """
-
-        base_template_ctx = self._notify_prepare_template_context(message, msg_values, record, model_description=model_description)
+        base_template_ctx = self._notify_prepare_template_context(message, msg_values, model_description=model_description)
 
         template_xmlid = message.layout if message.layout else 'mail.message_notification_email'
         try:
@@ -2267,7 +2265,7 @@ class MailThread(models.AbstractModel):
 
             # send email
             for email_chunk in split_every(50, group_tpl_values['recipients']):
-                recipient_values = record._notify_email_recipient_values(email_chunk)
+                recipient_values = self._notify_email_recipient_values(email_chunk)
                 email_to = recipient_values['email_to']
                 recipient_ids = recipient_values['recipient_ids']
 
@@ -2323,7 +2321,7 @@ class MailThread(models.AbstractModel):
         return True
 
     @api.model
-    def _notify_prepare_template_context(self, message, msg_vals, record, model_description=False, mail_auto_delete=True):
+    def _notify_prepare_template_context(self, message, msg_vals, model_description=False, mail_auto_delete=True):
         # compute send user and its related signature
 
         signature = ''
@@ -2336,7 +2334,7 @@ class MailThread(models.AbstractModel):
             if message.add_sign:
                 signature = "<p>-- <br/>%s</p>" % message.author_id.name
 
-        company = record.company_id.sudo() if record and 'company_id' in record else user.company_id
+        company = self.company_id.sudo() if self and 'company_id' in self else user.company_id
         if company.website:
             website_url = 'http://%s' % company.website if not company.website.lower().startswith(('http:', 'https:')) else company.website
         else:
@@ -2359,7 +2357,7 @@ class MailThread(models.AbstractModel):
         # unfortunately the only test breaking if we completely remove tracking values is test_notify_track_groups
         # we may want a test that break if email has no tracking values and after a message_track
         # or any other scalar field
-        could_be_tracking = msg_vals.get('tracking_value_ids') if msg_vals else bool(record)
+        could_be_tracking = msg_vals.get('tracking_value_ids') if msg_vals else bool(self)
         if could_be_tracking:
             for tracking_value in self.env['mail.tracking.value'].sudo().search([('mail_message_id', '=', message.id)]):
                 groups = tracking_value.groups
@@ -2376,7 +2374,7 @@ class MailThread(models.AbstractModel):
             'website_url': website_url,
             'company': company,
             'model_description': model_description,
-            'record': record,
+            'record': self,
             'record_name': message.record_name,
             'tracking_values': tracking,
             'is_discussion': is_discussion,
