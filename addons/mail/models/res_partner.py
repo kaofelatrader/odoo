@@ -38,15 +38,16 @@ class Partner(models.Model):
         return dict((res_id, {'partner_ids': [res_id], 'email_to': False, 'email_cc': False}) for res_id in self.ids)
 
     @api.model
-    def _notify_prepare_template_context(self, message, record, model_description=False, mail_auto_delete=True):
+    def _notify_prepare_template_context(self, message, msg_vals, record, model_description=False, mail_auto_delete=True):
         # compute send user and its related signature
+
         signature = ''
+        user = self.env.user
         if message.author_id and message.author_id.user_ids:
             user = message.author_id.user_ids[0]
             if message.add_sign:
                 signature = user.signature
         else:
-            user = self.env.user
             if message.add_sign:
                 signature = "<p>-- <br/>%s</p>" % message.author_id.name
 
@@ -68,12 +69,19 @@ class Partner(models.Model):
             model_description = self.env['ir.model'].with_context(lang=lang)._get(message.model).display_name
 
         tracking = []
-        for tracking_value in self.env['mail.tracking.value'].sudo().search([('mail_message_id', '=', message.id)]):
-            groups = tracking_value.groups
-            if not groups or self.user_has_groups(groups):
-                tracking.append((tracking_value.field_desc,
-                                tracking_value.get_old_display_value()[0],
-                                tracking_value.get_new_display_value()[0]))
+        # we could try to avoid to search all the time: if we have msg_vals from message post,
+        # we should have tracking_value_ids if it is a tracking.
+        # unfortunately the only test breaking if we completely remove tracking values is test_notify_track_groups
+        # we may want a test that break if email has no tracking values and after a message_track
+        # or any other scalar field
+        could_be_tracking = msg_vals.get('tracking_value_ids') if msg_vals else bool(record)
+        if could_be_tracking:
+            for tracking_value in self.env['mail.tracking.value'].sudo().search([('mail_message_id', '=', message.id)]):
+                groups = tracking_value.groups
+                if not groups or self.user_has_groups(groups):
+                    tracking.append((tracking_value.field_desc,
+                                    tracking_value.get_old_display_value()[0],
+                                    tracking_value.get_new_display_value()[0]))
 
         is_discussion = message.subtype_id.id == self.env['ir.model.data'].xmlid_to_res_id('mail.mt_comment')
 
@@ -92,12 +100,12 @@ class Partner(models.Model):
         }
 
     @api.model
-    def _notify(self, message, rdata, record, force_send=False, send_after_commit=True, model_description=False, mail_auto_delete=True):
+    def _notify(self, message, msg_values, recipients, record, specific_values=None, force_send=False, send_after_commit=True, model_description=False, mail_auto_delete=True):
         """ Method to send email linked to notified messages. The recipients are
         the recordset on which this method is called.
 
         :param message: mail.message record to notify;
-        :param rdata: recipient data (see mail.message _notify);
+        :param recipients: classified recipient (from notify_classify_recipients)
         :param record: optional record on which the message was posted;
         :param force_send: tells whether to send notification emails within the
           current transaction or to use the email queue;
@@ -107,10 +115,9 @@ class Partner(models.Model):
           notification templates);
         :param mail_auto_delete: delete notification emails once sent;
         """
-        if not rdata:
-            return True
 
-        base_template_ctx = self._notify_prepare_template_context(message, record, model_description=model_description)
+        base_template_ctx = self._notify_prepare_template_context(message, msg_values, record, model_description=model_description)
+        
         template_xmlid = message.layout if message.layout else 'mail.message_notification_email'
         try:
             base_template = self.env.ref(template_xmlid, raise_if_not_found=True).with_context(lang=base_template_ctx['lang'])
@@ -125,19 +132,19 @@ class Partner(models.Model):
             'auto_delete': mail_auto_delete,
             'references': message.parent_id.message_id if message.parent_id else False
         }
-        if record:
-            base_mail_values.update(self.env['mail.thread']._notify_specific_email_values_on_records(message, records=record))
-
-        # classify recipients: actions / no action
-        recipients = self.env['mail.thread']._notify_classify_recipients_on_records(message, rdata, records=record)
+        if specific_values:
+            base_mail_values.update(specific_values)
 
         Mail = self.env['mail.mail'].sudo()
         emails = self.env['mail.mail'].sudo()
         email_pids = set()
-        recipients_nbr, recipients_max = 0, 50
+
+        # loop on groups (customer, portal, user,  ... + model specific like group_sale_salesman)
         for group_tpl_values in [group for group in recipients.values() if group['recipients']]:
             # generate notification email content
             template_ctx = {**base_template_ctx, **group_tpl_values}
+            # {company, is_discussion, lang, message, model_description, record, record_name, signature, subtype, tracking_values, website_url}
+            # {actions, button_access, has_button_access, recipients}
             mail_body = base_template.render(template_ctx, engine='ir.qweb', minimal_qcontext=True)
             mail_body = self.env['mail.thread']._replace_local_links(mail_body)
             mail_subject = message.subject or (message.record_name and 'Re: %s' % message.record_name)
@@ -165,7 +172,6 @@ class Partner(models.Model):
                         'is_read': True,  # handle by email discards Inbox notification
                         'email_status': 'ready',
                     })
-
                 emails |= email
                 email_pids.update(recipient_ids)
 
@@ -175,21 +181,20 @@ class Partner(models.Model):
         #      to prevent sending email during a simple update of the database
         #      using the command-line.
         test_mode = getattr(threading.currentThread(), 'testing', False)
-        if force_send and len(emails) < recipients_max and \
-                (not self.pool._init or test_mode):
+        recipients_max = 50
+        if force_send and len(emails) < recipients_max and (not self.pool._init or test_mode):
             email_ids = emails.ids
             dbname = self.env.cr.dbname
             _context = self._context
 
-            def send_notifications():
-                db_registry = registry(dbname)
-                with api.Environment.manage(), db_registry.cursor() as cr:
-                    env = api.Environment(cr, SUPERUSER_ID, _context)
-                    env['mail.mail'].browse(email_ids).send()
-
             # unless asked specifically, send emails after the transaction to
             # avoid side effects due to emails being sent while the transaction fails
             if not test_mode and send_after_commit:
+                def send_notifications():
+                    db_registry = registry(dbname)
+                    with api.Environment.manage(), db_registry.cursor() as cr:
+                        env = api.Environment(cr, SUPERUSER_ID, _context)
+                        env['mail.mail'].browse(email_ids).send()
                 self._cr.after('commit', send_notifications)
             else:
                 emails.send()

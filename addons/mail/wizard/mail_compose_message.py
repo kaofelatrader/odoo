@@ -336,7 +336,9 @@ class MailComposer(models.TransientModel):
 
             # mass mailing: rendering override wizard static values
             if mass_mail_mode and self.model:
-                mail_values.update(self.env['mail.thread']._notify_specific_email_values_on_records(False, records=self.env[self.model].browse(res_id)))
+                if issubclass(self.pool[self.model], self.pool['mail.thread']):
+                    thread = self.env[self.model].browse(res_id) 
+                    mail_values.update(thread._notify_specific_email_values(False))
                 # keep a copy unless specifically requested, reset record name (avoid browsing records)
                 mail_values.update(notification=not self.auto_delete_message, model=self.model, res_id=res_id, record_name=False)
                 # auto deletion of mail_mail

@@ -815,14 +815,6 @@ class MailThread(models.AbstractModel):
 
         return result
 
-    def _notify_classify_recipients_on_records(self, message, recipient_data, records=None):
-        """ Generic wrapper on ``_notify_classify_recipients`` checking mail.thread
-        inheritance and allowing to call model-specific implementation in a one liner.
-        This method should not be overridden. """
-        if records and hasattr(records, '_notify_classify_recipients'):
-            return records._notify_classify_recipients(message, recipient_data)
-        return self._notify_classify_recipients(message, recipient_data)
-
     @api.multi
     def _notify_get_reply_to(self, default=None, records=None, company=None, doc_names=None):
         """ Returns the preferred reply-to email address when replying to a thread
@@ -928,15 +920,6 @@ class MailThread(models.AbstractModel):
         return {'headers': repr({
             'X-Odoo-Objects': "%s-%s" % (self._name, self.id),
         })}
-
-    @api.model
-    def _notify_specific_email_values_on_records(self, message, records=None):
-        """ Generic wrapper on ``_notify_specific_email_values`` checking mail.thread
-        inheritance and allowing to call model-specific implementation in a one liner.
-        This method should not be overridden. """
-        if records and hasattr(records, '_notify_specific_email_values'):
-            return records._notify_specific_email_values(message)
-        return self._notify_specific_email_values(message)
 
     @api.multi
     def _notify_email_recipients(self, recipient_ids):
@@ -2161,30 +2144,17 @@ class MailThread(models.AbstractModel):
         pass
 
     @api.multi
-    def _notify_record(self, message, msg_vals, model_description=False, mail_auto_delete=True):
-        # Can be overide to intercept and postpone notification mecanism
-        self._notify_message(
-            message, msg_vals,
-            force_send=self.env.context.get('mail_notify_force_send', True),
-            model_description=model_description,
-            mail_auto_delete=mail_auto_delete,
-        )
-
-    #------------------------------------------------------
-    # Messaging API
-    #------------------------------------------------------
-
-
-    @api.multi
-    def _notify_message(self, message, msg_vals, force_send=False, model_description=False, mail_auto_delete=True):
+    def _notify_record(self, message, msg_vals=False, model_description=False, mail_auto_delete=True):
         """ Main notification method. This method basically does two things
 
          * call ``_notify_compute_recipients`` that computes recipients to
            notify based on message record or message creation values if given
            (to optimize performance if we already have data computed);
-         * call ``_notify_recipients`` that performs the notification process;
+         * performs the notification process;
 
-        :param record: record on which the message is posted, if any;
+        Can be overridden to intercept and postpone notification mecanism (mail.channel moderation)
+
+        :param message: posted message;
         :param msg_vals: dictionary of values used to create the message. If given
           it is used instead of accessing ``self`` to lesen query count in some
           simple cases where no notification is actually required;
@@ -2197,64 +2167,56 @@ class MailThread(models.AbstractModel):
 
         msg_vals = msg_vals if msg_vals else {}
         rdata = self._notify_compute_recipients(message, msg_vals)
-        return self._notify_recipients(
-            rdata, message, msg_vals,
-            force_send=force_send,
-            model_description=model_description, mail_auto_delete=mail_auto_delete)
-
-    @api.multi
-    def _notify_recipients(self, rdata, message, msg_vals,
-                           force_send=False, model_description=False, mail_auto_delete=True):
-        """ Main method implementing the notification process.
-
-        :param rdata: dict containing recipients data: {
-            'partners': list of dict containing partner data: id, share status (boolean),
-            notification type ('email' or 'inbox'), type (main classification group used
-            in notification process), groups (user groups)
-            'channels': list of dict containing channel data: id, notification type
-            ('email' for mailing list otherwise 'inbox'), type (channel_type)
-        }
-        """
-        message.ensure_one()
-
-        email_cids = [r['id'] for r in rdata['channels'] if r['notif'] == 'email']
-        inbox_pids = [r['id'] for r in rdata['partners'] if r['notif'] == 'inbox']
+        if not rdata:
+            return False
 
         message_values = {}
         if rdata['channels']:
             message_values['channel_ids'] = [(6, 0, [r['id'] for r in rdata['channels']])]
         if rdata['partners']:
-            message_values['needaction_partner_ids'] = [(6, 0, [r['id'] for r in rdata['partners']])]
+            message_values['needaction_partner_ids'] = [(6, 0, [r['id'] for r in rdata['partners'] if rdata['partners'] != 'channel_email'])] 
+            # change of behaviour to check: since email_cids partner are added in _notify_compute_recipients,
+            # they will be added to needaction_partner_ids to. 
+            # we may want to filter them (example with channel_email, a cleaner solution may be great)
+            # -> instead of using _notify_customize_recipients, we could add a flag on rdata 
+            # (would work for needactions,  not if we want to erase partner_ids, ids)
+            # (could also be interresting for, we could add partners with r['notif'] = 'ocn_client' and r['needaction']=False)
+            # then overide a notify_recipients (as it was before) to effectively send ocn notifications.
+            # enveloppe will contain more needaction, those for the member of a email channel. 
         if message_values and self and hasattr(self, '_notify_customize_recipients'):
             message_values.update(self._notify_customize_recipients(message, msg_vals, rdata))
         if message_values:
             message.write(message_values)
 
-        # notify partners and channels
-        if email_cids:
-            author_id = msg_vals.get('author_id') or message.author_id.id
-            email_from = msg_vals.get('email_from') or message.email_from
-            exept_partner = [r['id'] for r in rdata['partners']]
-            if author_id:
-                exept_partner.append(author_id)
-            new_pids = self.env['res.partner'].sudo().search([
-                ('id', 'not in', exept_partner),
-                ('channel_ids', 'in', email_cids),
-                ('email', 'not in', [email_from]),
-            ])
-            for partner in new_pids:
-                rdata['partners'].append({'id': partner.id, 'share': True, 'active': True, 'notif': 'email', 'type': 'customer', 'groups': []})
-
+        inbox_pids = [r['id'] for r in rdata['partners'] if r['notif'] == 'inbox']
         partner_email_rdata = [r for r in rdata['partners'] if r['notif'] == 'email']
         if partner_email_rdata:
-            self.env['res.partner']._notify(message, partner_email_rdata, self, force_send=force_send, model_description=model_description, mail_auto_delete=mail_auto_delete)
-
+            self._notify_partners(message, partner_email_rdata, msg_vals=msg_vals, model_description=model_description, mail_auto_delete=mail_auto_delete)
         if inbox_pids:
             self.env['res.partner'].browse(inbox_pids)._notify_by_chat(message)
-
         if rdata['channels']:
+            # send a notification on bus to update channel
             self.env['mail.channel'].sudo().browse([r['id'] for r in rdata['channels']])._notify(message)
+        return True
 
+    def _notify_partners(self, message, partners_data, msg_vals=False, model_description=False, mail_auto_delete=True, send_after_commit=False):
+        recipients = self._notify_classify_recipients(message, partners_data)
+        if not recipients:
+            return True
+
+        specific_values = self._notify_specific_email_values(message)
+        force_send = self.env.context.get('mail_notify_force_send', True)
+
+        self.env['res.partner']._notify(
+            message,
+            msg_vals,
+            recipients,
+            self,
+            specific_values=specific_values,  # check this for other calls
+            force_send=force_send,
+            model_description=model_description,
+            mail_auto_delete=mail_auto_delete,
+            send_after_commit=send_after_commit)
         return True
 
     @api.multi
@@ -2271,15 +2233,16 @@ class MailThread(models.AbstractModel):
             'partners': [],
             'channels': [],
         }
-        res = []
         res = self.env['mail.followers']._get_recipient_data(self, subtype_id, pids, cids)
-        author_id = msg_vals.get('author_id') or message.author_id.id if res else False
+        if not res:
+            return recipient_data
+
+        author_id = msg_vals.get('author_id') or message.author_id.id
         for pid, cid, active, pshare, ctype, notif, groups in res:
-            if pid and pid == author_id and not message.env.context.get('mail_notify_author'):  # do not notify the author of its own messages
+            if pid and pid == author_id and not self.env.context.get('mail_notify_author'):  # do not notify the author of its own messages
                 continue
             if pid:
                 if active is False:
-                    # avoid to notify inactive partner by email (odoobot)
                     continue
                 pdata = {'id': pid, 'active': active, 'share': pshare, 'groups': groups}
                 if notif == 'inbox':
@@ -2292,6 +2255,28 @@ class MailThread(models.AbstractModel):
                     recipient_data['partners'].append(dict(pdata, notif='email', type='customer'))
             elif cid:
                 recipient_data['channels'].append({'id': cid, 'notif': notif, 'type': ctype})
+
+        # add partner ids in email channels
+        email_cids = [r['id'] for r in recipient_data['channels'] if r['notif'] == 'email']
+        if email_cids:
+            # we are doing a similar search in ocn_client
+            # Could be interresting to make everything in a single query.
+            # ocn_client: (searching all partners linked to channels of type chat).
+            # here      : (searching all partners linked to channels with notif email if email is not the author one)
+            email_from = msg_vals.get('email_from') or message.email_from
+            exept_partner = [r['id'] for r in recipient_data['partners']]
+            if author_id:
+                exept_partner.append(author_id)
+            new_pids = self.env['res.partner'].sudo().search([
+                ('id', 'not in', exept_partner),
+                ('channel_ids', 'in', email_cids),
+                ('email', 'not in', [email_from]),
+            ])
+            for partner in new_pids:
+                # caution: side effect, if user has notif type inbox, will receive en email anyway?
+                # ocn_client: will add partners to recipient recipient_data. more ocn notifications. We neeed to filter them maybe
+                recipient_data['partners'].append({'id': partner.id, 'share': True, 'active': True, 'notif': 'email', 'type': 'channel_email', 'groups': []})
+
         return recipient_data
 
     @api.multi
@@ -2359,9 +2344,7 @@ class MailThread(models.AbstractModel):
         access rights and perform the message creation as sudo to speedup
         the log process. This method should be called within methods where
         access rights are already granted to avoid privilege escalation. """
-        if len(self.ids) > 1:
-            raise exceptions.Warning(_('Invalid record set: should be called as model (without records) or on single-record recordset'))
-
+        self.ensure_one()
         if author_id:
             author = self.env['res.partner'].sudo().browse(author_id)
         else:
@@ -2383,10 +2366,11 @@ class MailThread(models.AbstractModel):
             'subtype_id': self.env['ir.model.data'].xmlid_to_res_id('mail.mt_note'),
             'record_name': False,
             'reply_to': self.env['mail.thread']._notify_get_reply_to(default=email_from, records=None)[False],
-            'message_id': tools.generate_tracking_message_id('message-notify'),
+            'message_id': tools.generate_tracking_message_id('message-notify'),  # why? this is all but a notify
         }
         message_values.update(kwargs)
-        message = self.env['mail.message'].sudo().create(message_values)
+        # todo xdo use _message create
+        message = self.sudo()._message_create(message_values)
         return message
 
     # ------------------------------------------------------
