@@ -301,7 +301,7 @@ class Channel(models.Model):
         if not self.email_send:
             notification = _('<div class="o_mail_notification">left <a href="#" class="o_channel_redirect" data-oe-id="%s">#%s</a></div>') % (self.id, self.name,)
             # post 'channel left' message as root since the partner just unsubscribed from the channel
-            self.sudo().message_post(body=notification, message_type="notification", subtype="mail.mt_comment", author_id=partner.id)
+            self.sudo().message_post(body=notification, subtype="mail.mt_comment", author_id=partner.id)
         return result
 
     @api.multi
