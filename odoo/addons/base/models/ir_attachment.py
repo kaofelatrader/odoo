@@ -313,7 +313,7 @@ class IrAttachment(models.Model):
     def _check_serving_attachments(self):
         # restrict writing on attachments that could be served by the
         # ir.http's dispatch exception handling
-        if self.env.user._is_admin():
+        if self.env.user._is_admin(): # this should be done in check(write), use a constrains for access right?
             return
         if self.type == 'binary' and self.url:
             has_group = self.env.user.has_group
@@ -329,7 +329,9 @@ class IrAttachment(models.Model):
         # collect the records to check (by model)
         model_ids = defaultdict(set)            # {model_name: set(ids)}
         require_employee = False
+        #todo add return if sudo
         if self:
+            # use cache values of sudo instead()?
             self._cr.execute('SELECT res_model, res_id, create_uid, public, res_field FROM ir_attachment WHERE id IN %s', [tuple(self.ids)])
             for res_model, res_id, create_uid, public, res_field in self._cr.fetchall():
                 if self.env.user.id != SUPERUSER_ID and not self.env.user._is_system() and res_field:
@@ -488,12 +490,20 @@ class IrAttachment(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        record_tuple_set = set()
         for values in vals_list:
             # remove computed field depending of datas
             for field in ('file_size', 'checksum'):
                 values.pop(field, False)
             values = self._check_contents(values)
-            self.browse().check('write', values=values)
+            # 'check()' only uses res_model and res_id from values, and make an exists.
+            # We can group the values by model, re_sid to make only one query when 
+            # creating multiple attachments on a single record.
+            record_tuple = (values.get('res_model'), values.get('res_id'))
+            record_tuple_set.add(record_tuple)
+        for record_tuple in record_tuple_set:
+            (res_model, res_id) = record_tuple
+            self.check('write', values={'res_model':res_model, 'res_id':res_id})
         return super(IrAttachment, self).create(vals_list)
 
     @api.multi
@@ -504,9 +514,12 @@ class IrAttachment(models.Model):
     def generate_access_token(self):
         if self.access_token:
             return self.access_token
-        access_token = str(uuid.uuid4())
+        access_token = self._generate_access_token()
         self.write({'access_token': access_token})
         return access_token
+
+    def _generate_access_token(self):
+        return str(uuid.uuid4())
 
     @api.model
     def action_get(self):

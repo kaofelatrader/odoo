@@ -1875,28 +1875,31 @@ class MailThread(models.AbstractModel):
     # Post / Send message API
     # ------------------------------------------------------
 
-    def _message_post_process_attachments(self, attachments, attachment_ids, message_data):
+    def _message_post_process_attachments(self, attachments, attachment_ids, body, model, res_id):
         """ Preprocess attachments for mail_thread.message_post() or mail_mail.create().
 
-        :param list attachments: list of attachment tuples in the form ``(name,content)``,
+        :param list attachments: list of attachment tuples in the form ``(name,content)``, #todo xdo update that
                                  where content is NOT base64 encoded
         :param list attachment_ids: a list of attachment ids, not in tomany command form
         :param dict message_data: model: the model of the attachments parent record,
           res_id: the id of the attachments parent record
         """
-        IrAttachment = self.env['ir.attachment']
+        return_values = {}
+
         m2m_attachment_ids = []
-        cid_mapping = {}
-        fname_mapping = {}
         if attachment_ids:
             filtered_attachment_ids = self.env['ir.attachment'].sudo().search([
                 ('res_model', '=', 'mail.compose.message'),
                 ('create_uid', '=', self._uid),
                 ('id', 'in', attachment_ids)])
             if filtered_attachment_ids:
-                filtered_attachment_ids.write({'res_model': message_data['model'], 'res_id': message_data['res_id']})
+                filtered_attachment_ids.write({'res_model': model, 'res_id': res_id})
             m2m_attachment_ids += [(4, id) for id in attachment_ids]
         # Handle attachments parameter, that is a dictionary of attachments
+        attachement_values_list = []
+        counter = 0
+        cid_list = []
+        name_list = []
         for attachment in attachments:
             cid = False
             if len(attachment) == 2:
@@ -1910,39 +1913,47 @@ class MailThread(models.AbstractModel):
                 content = content.encode('utf-8')
             elif content is None:
                 continue
-            data_attach = {
+
+            counter+=1
+            attachement_values_list.append({
                 'name': name,
                 'datas': base64.b64encode(content),
                 'type': 'binary',
                 'datas_fname': name,
                 'description': name,
-                'res_model': message_data['model'],
-                'res_id': message_data['res_id'],
-            }
-            new_attachment = IrAttachment.create(data_attach)
-            m2m_attachment_ids.append((4, new_attachment.id))
+                'res_model': model,
+                'res_id': res_id,
+                'access_token': self.env['ir.attachment']._generate_access_token() 
+                # todo xdo improve: only compute token if needed in body but for now, keep it simple.
+            })
+            cid_list.append(cid)
+            name_list.append(name)
+        new_attachments = self.env['ir.attachment'].create(attachement_values_list)
+        cid_mapping = {}
+        name_mapping = {}
+        for counter, new_attachment in enumerate(new_attachments):
+            cid = cid_list[counter]
             if cid:
                 cid_mapping[cid] = new_attachment
-            fname_mapping[name] = new_attachment
+            name = name_list[counter]
+            name_mapping[name] = new_attachment
+            m2m_attachment_ids.append((4, new_attachment.id))
 
-        if cid_mapping and message_data.get('body'):
-            root = lxml.html.fromstring(tools.ustr(message_data['body']))
+        if (cid_mapping or name_mapping) and body:
+            root = lxml.html.fromstring(tools.ustr(body))
             postprocessed = False
             for node in root.iter('img'):
                 if node.get('src', '').startswith('cid:'):
                     cid = node.get('src').split('cid:')[1]
-                    attachment = cid_mapping.get(cid)
-                    if not attachment:
-                        attachment = fname_mapping.get(node.get('data-filename'), '')
+                    attachment = cid_mapping.get(cid) or name_mapping.get(node.get('data-filename'), '')
                     if attachment:
                         attachment.generate_access_token()
                         node.set('src', '/web/image/%s?access_token=%s' % (attachment.id, attachment.access_token))
                         postprocessed = True
             if postprocessed:
-                body = lxml.html.tostring(root, pretty_print=False, encoding='UTF-8')
-                message_data['body'] = body
-
-        return m2m_attachment_ids
+                return_values['body'] = lxml.html.tostring(root, pretty_print=False, encoding='UTF-8')
+        return_values['attachment_ids'] = m2m_attachment_ids
+        return return_values
 
     @api.multi
     @api.returns('mail.message', lambda value: value.id)
@@ -1999,33 +2010,30 @@ class MailThread(models.AbstractModel):
 
         # automatically subscribe recipients if asked to
         if self._context.get('mail_post_autofollow') and partner_ids:
-            partner_to_subscribe = partner_ids
-            if self._context.get('mail_post_autofollow_partner_ids'):
-                partner_to_subscribe = [p for p in partner_ids if p in self._context.get('mail_post_autofollow_partner_ids')]
-            self.message_subscribe(list(partner_to_subscribe))
+            self.message_subscribe(list(partner_ids))
 
-        # _mail_flat_thread: automatically set free messages to the first posted message
-        MailMessage = self.env['mail.message']
+        MailMessage_sudo = self.env['mail.message'].sudo()
         if self._mail_flat_thread and not parent_id:
-            messages = MailMessage.search(['&', ('res_id', '=', self.ids[0]), ('model', '=', model), ('message_type', '!=', 'user_notification')], order="id ASC", limit=1)
-            parent_id = messages.ids and messages.ids[0] or False
-        # we want to set a parent: force to set the parent_id to the oldest ancestor, to avoid having more than 1 level of thread
-        elif parent_id:
-            messages = MailMessage.sudo().search([('id', '=', parent_id), ('parent_id', '!=', False)], limit=1)
+            parent_message = MailMessage_sudo.search([('res_id', '=', self.id), ('model', '=', model), ('message_type', '!=', 'user_notification')], order="id ASC", limit=1)
+            # parent_message searched in sudo for performance, only used for id.
+            # Note that with sudo we will match message with internal subtypes.
+            parent_id = parent_message.id if parent_message else False
+        elif parent_id: 
+            old_parent_id = parent_id
+            parent_message = MailMessage_sudo.search([('id', '=', parent_id), ('parent_id', '!=', False)], limit=1)
             # avoid loops when finding ancestors
             processed_list = []
-            if messages:
-                message = messages[0]
-                while (message.parent_id and message.parent_id.id not in processed_list):
-                    processed_list.append(message.parent_id.id)
-                    message = message.parent_id
-                parent_id = message.id
-
-        values = kwargs
+            if parent_message:
+                new_parent_id = parent_message.parent_id and parent_message.parent_id.id
+                while (new_parent_id and new_parent_id not in processed_list):
+                    processed_list.append(new_parent_id)
+                    parent_message = parent_message.parent_id
+                parent_id = parent_message.id
+        values = dict(kwargs)
         values.update({
             'author_id': author_id,
             'model': model,
-            'res_id': model and self.ids[0] or False,
+            'res_id': res_id,
             'body': body,
             'subject': subject or False,
             'message_type': message_type,
@@ -2035,12 +2043,13 @@ class MailThread(models.AbstractModel):
             'channel_ids': channel_ids,
             'add_sign': add_sign,
         })
+        attachments = attachments or []
+        attachment_ids = attachment_ids or []
+        attachement_values = self._message_post_process_attachments(attachments, attachment_ids, body, model, res_id)
+        values.update(attachement_values) # attachement_ids, [body]
 
-        # 3. Attachments
-        #   - HACK TDE FIXME: Chatter: attachments linked to the document (not done JS-side), load the message
+        new_message= self._message_create(values)
 
-        values['attachment_ids'] = self._message_post_process_attachments(attachments or [], attachment_ids or [], values)
-        new_message = self._message_create(values)
         # Set main attachment field if necessary
         self._set_main_attachement_id(values['attachment_ids'])
 
