@@ -317,12 +317,8 @@ class Channel(models.Model):
         return groups
 
     @api.multi
-    def _notify_specific_email_values(self, message):
-        res = super(Channel, self)._notify_specific_email_values(message)
-        try:
-            headers = safe_eval(res.get('headers', dict()))
-        except Exception:
-            headers = {}
+    def _notify_email_header_dict(self):
+        headers = super(Channel, self)._notify_email_header_dict()
         headers['Precedence'] = 'list'
         # avoid out-of-office replies from MS Exchange
         # http://blogs.technet.com/b/exchange/archive/2006/10/06/3395024.aspx
@@ -334,8 +330,7 @@ class Channel(models.Model):
             # X-Forge-To: will replace To: after SMTP envelope is determined by ir.mail.server
             list_to = '"%s" <%s@%s>' % (self.name, self.alias_name, self.alias_domain)
             headers['X-Forge-To'] = list_to
-        res['headers'] = repr(headers)
-        return res
+        return headers
 
     @api.multi
     def message_receive_bounce(self, email, partner, mail_id=None):

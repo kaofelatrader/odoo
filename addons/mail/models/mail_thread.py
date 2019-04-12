@@ -906,18 +906,19 @@ class MailThread(models.AbstractModel):
         return self._notify_get_reply_to(default=default, records=records, company=company, doc_names=doc_names)
 
     @api.multi
-    def _notify_specific_email_values(self, message):
-        """ Get specific notification email values to store on the notification
-        mail.mail. Override to add values related to a specific model.
-
-        :param message: mail.message record being notified by email
+    def _notify_email_headers(self):
+        """
+            Generate the email headers based on record
         """
         if not self:
             return {}
         self.ensure_one()
-        return {'headers': repr({
-            'X-Odoo-Objects': "%s-%s" % (self._name, self.id),
-        })}
+        return repr(self._notify_email_header_dict())
+
+    def _notify_email_header_dict(self):
+        return {
+            'X-Odoo-Objects': "%s-%s" % (self._name, self.id),  # todo xdo what is it used for?
+        }
 
     @api.multi
     def _notify_email_recipient_values(self, recipient_ids):
@@ -2207,7 +2208,6 @@ class MailThread(models.AbstractModel):
         if not recipients_groups_data:
             return True
 
-        specific_values = self._notify_specific_email_values(message)
         force_send = self.env.context.get('mail_notify_force_send', True)
 
         base_template_ctx = self._notify_prepare_template_context(message, msg_vals, model_description=model_description)
@@ -2226,8 +2226,9 @@ class MailThread(models.AbstractModel):
             'auto_delete': mail_auto_delete,
             'references': message.parent_id.message_id if message.parent_id else False
         }
-        if specific_values:
-            base_mail_values.update(specific_values)
+        headers = self._notify_email_headers()
+        if headers:
+            base_mail_values['headers'] = headers
 
         Mail = self.env['mail.mail'].sudo()
         emails = self.env['mail.mail'].sudo()
