@@ -501,6 +501,9 @@ var ArchPlugin = AbstractPlugin.extend({
     _getRange: function () {
         return new WrappedRange({}, this.editable.ownerDocument);
     },
+    _isCollapsed: function () {
+        return this._range.scID === this._range.ecID && this._range.so === this._range.eo;
+    },
     /**
      * Set the DOM Range from the given points.
      *
@@ -648,14 +651,14 @@ var ArchPlugin = AbstractPlugin.extend({
             id = this._range.scID;
             offset = this._range.so;
 
-            if (this._range.scID !== this._range.ecID || this._range.so !== this._range.eo) {
-                this._resetChange();
+            if (!this._isCollapsed()) {
                 this._removeFromRange();
                 var changedNodes = this._getChanges();
                 if (changedNodes.length) {
                     id = changedNodes[0].id;
                     offset = changedNodes[0].offset;
                 }
+                this._resetChange();
             }
         }
 
@@ -664,7 +667,19 @@ var ArchPlugin = AbstractPlugin.extend({
     },
     addLine: function () {
         this._resetChange();
-        this._getNode(this._range.scID).addLine(this._range.so);
+        var id = this._range.scID;
+        var offset = this._range.so;
+        this._resetChange();
+        if (!this._isCollapsed()) {
+            this._removeFromRange();
+            var changedNodes = this._getChanges();
+            if (changedNodes.length) {
+                id = changedNodes[0].id;
+                offset = changedNodes[0].offset;
+                this._resetChange();
+            }
+        }
+        this._getNode(id).addLine(offset);
         this._applyChangesInRenderer();
     },
     removeLeft: function () {

@@ -947,8 +947,7 @@ var keyboardTestsEnter = [{
         }],
         test: {
             content: "<p>d</p><p>edit</p>",
-            start: "p:eq(1)->0",
-            end: "p:eq(1)->0",
+            start: "p:eq(1):contents()[0]->0",
         },
     },
     {

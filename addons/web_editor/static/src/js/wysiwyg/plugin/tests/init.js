@@ -166,14 +166,15 @@ var TestPlugin = AbstractPlugin.extend({
     getValue: function () {
         var params = this.dependencies.Arch._arch.params; // TODO: Remove access private (=> apply customRules on parsing !, and after changes)
         var range = this.dependencies.Arch.getRange();
+        var archNode;
         var proto = customNodes.TEST.prototype;
         if (range.isCollapsed()) {
-            var archNode = new customNodes.TEST(params, proto.rangeColaspsed);
+            archNode = new customNodes.TEST(params, proto.rangeColaspsed);
             this.dependencies.Arch.insert(archNode);
         } else {
-            var archNode = new customNodes.TEST(params, proto.rangeEnd);
+            archNode = new customNodes.TEST(params, proto.rangeEnd);
             this.dependencies.Arch.insert(archNode, range.ec, range.eo);
-            var archNode = new customNodes.TEST(params, proto.rangeStart);
+            archNode = new customNodes.TEST(params, proto.rangeStart);
             this.dependencies.Arch.insert(archNode, range.sc, range.so);
         }
         return this.dependencies.Arch.getValue();
