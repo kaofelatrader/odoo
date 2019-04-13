@@ -177,7 +177,7 @@ var TestPlugin = AbstractPlugin.extend({
             archNode = new customNodes.TEST(params, proto.rangeStart);
             this.dependencies.Arch.insert(archNode, range.sc, range.so);
         }
-        return this.dependencies.Arch.getValue();
+        return this.dependencies.Arch.getValue().replace(/\u00A0/g, '&nbsp;');
     },
     test: function (assert) {
         var test = false;
