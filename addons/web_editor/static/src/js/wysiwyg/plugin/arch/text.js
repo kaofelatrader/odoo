@@ -32,7 +32,7 @@ var TextNode = ArchNode.extend({
             return;
         }
 
-        if (archNode.isText() && archNode.isVisibleText()) {
+        if (archNode.isText() && archNode.isVisibleText() && !archNode.isVirtual()) {
             this.nodeValue = this.nodeValue.slice(0, offset) + archNode.nodeValue + this.nodeValue.slice(offset);
             this.params.change(this, offset + archNode.nodeValue.length);
             return;

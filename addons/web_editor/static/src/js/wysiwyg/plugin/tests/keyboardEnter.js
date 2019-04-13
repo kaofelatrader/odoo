@@ -104,11 +104,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 end: "p:contents()[0]->7",
                 key: 'ENTER',
             }],
-            test: {
-                content: "<p>d</p><p>edit</p>",
-                start: "p:eq(1)->0",
-                end: "p:eq(1)->0",
-            },
+            test: "<p>d</p><p>◆edit</p>",
         },
         {
             name: "in p: SHIFT+ENTER on selection",
@@ -119,10 +115,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 key: 'ENTER',
                 shiftKey: true,
             }],
-            test: {
-                content: "<p>d<br/>edit</p>",
-                start: "p->2",
-            },
+            test: "<p>d<br/>◆edit</p>",
         },
 
         // list UL / OL
@@ -135,10 +128,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 key: 'ENTER',
                 shiftKey: true,
             }],
-            test: {
-                content: "<ul><li><br/>dom to edit</li></ul>",
-                start: "li:contents()[1]->0",
-            },
+            test: "<ul><li><br/>◆dom to edit</li></ul>",
         },
         {
             name: "in li: SHIFT+ENTER within contents",
@@ -148,10 +138,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 key: 'ENTER',
                 shiftKey: true,
             }],
-            test: {
-                content: "<ul><li>dom t<br/>o edit</li></ul>",
-                start: "li:contents()[2]->0",
-            },
+            test: "<ul><li>dom t<br/>◆o edit</li></ul>",
         },
         {
             name: "in empty-li: SHIFT+ENTER",
@@ -161,10 +148,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 key: 'ENTER',
                 shiftKey: true,
             }],
-            test: {
-                content: "<ul><li><br/><br/></li></ul>",
-                start: "br:eq(1)->0",
-            },
+            test: "<ul><li><br/><br/>◆</li></ul>",
         },
         {
             name: "in li: SHIFT+ENTER on selection",
@@ -175,10 +159,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 key: 'ENTER',
                 shiftKey: true,
             }],
-            test: {
-                content: "<ul><li>d<br/>edit</li></ul>",
-                start: "li->2",
-            },
+            test: "<ul><li>d<br/>◆edit</li></ul>",
         },
         {
             name: "in li: ENTER at start",
@@ -187,10 +168,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 start: "li:contents()[0]->0",
                 key: 'ENTER',
             }],
-            test: {
-                content: "<ul><li><br/></li><li>dom to edit</li></ul>",
-                start: "li:contents()[1]->0",
-            },
+            test: "<ul><li><br/></li><li>◆dom to edit</li></ul>",
         },
         {
             name: "in li: ENTER within contents",
@@ -199,10 +177,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 start: "li:contents()[0]->5",
                 key: 'ENTER',
             }],
-            test: {
-                content: "<ul><li>dom t</li><li>o edit</li></ul>",
-                start: "li:eq(1):contents()[0]->0",
-            },
+            test: "<ul><li>dom t</li><li>◆o edit</li></ul>",
         },
         {
             name: "in li: ENTER on selection",
@@ -212,10 +187,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 end: "li:contents()[0]->7",
                 key: 'ENTER',
             }],
-            test: {
-                content: "<ul><li>d</li><li>edit</li></ul>",
-                start: "li:eq(1)->0",
-            },
+            test: "<ul><li>d</li><li>◆edit</li></ul>",
         },
         {
             name: "in li: ENTER on selection of all contents",
@@ -225,10 +197,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 end: "li:contents()[0]->11",
                 key: 'ENTER',
             }],
-            test: {
-                content: "<p><br/></p>",
-                start: "p->1",
-            },
+            test: "<p><br/>◆</p>",
         },
         {
             name: "in li: ENTER -> 'a' on selection of all contents",
@@ -240,10 +209,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'a',
             }],
-            test: {
-                content: "<p>a</p>",
-                start: "p:contents()[0]->1",
-            },
+            test: "<p>a◆</p>",
         },
         {
             name: "across 2 li: ENTER on partial selection",
@@ -253,10 +219,8 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 end: "li:eq(1):contents()[0]->4",
                 key: 'ENTER',
             }],
-            test: {
-                content: "<ul><li>d</li><li>to edit</li></ul>",
-                start: "li:eq(1):contents()[0]->0", // we are after the <br/>, the carret is on the li with an offset equal to the node length
-            },
+            test: "<ul><li>d</li><li>◆to edit</li></ul>",
+            // we are after the <br/>, the carret is on the li with an offset equal to the node length
         },
         {
             name: "in li: ENTER at end",
@@ -265,10 +229,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 start: "p:contents()[0]->11",
                 key: 'ENTER',
             }],
-            test: {
-                content: "<ul><li><p>dom to edit</p></li><li><p><br/></p></li></ul>",
-                start: "p:eq(1)->1",
-            },
+            test: "<ul><li><p>dom to edit</p></li><li><p><br/>◆</p></li></ul>",
         },
         {
             name: "in li: 2x ENTER at end",
@@ -279,10 +240,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'ENTER',
             }],
-            test: {
-                content: "<ul><li><p>dom to edit</p></li></ul><p><br/></p>",
-                start: "p:eq(1)->1",
-            },
+            test: "<ul><li><p>dom to edit</p></li></ul><p><br/>◆</p>",
         },
         {
             name: "in ul.list-group > li: ENTER at end",
@@ -293,10 +251,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'ENTER',
             }],
-            test: {
-                content: '<ul class="list-group"><li><p>dom to edit</p></li><li><p><br/></p></li><li><p><br/></p></li></ul>',
-                start: "p:eq(2)->1",
-            },
+            test: '<ul class="list-group"><li><p>dom to edit</p></li><li><p><br/></p></li><li><p><br/>◆</p></li></ul>',
         },
         {
             name: "in indented-li: 2x ENTER at end",
@@ -307,10 +262,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'ENTER',
             }],
-            test: {
-                content: "<ul><li><p>aaa</p></li><ul><li><p>dom to edit</p></li></ul><li><p><br/></p></li><li><p>bbb</p></li></ul>",
-                start: "p:eq(2)->1",
-            },
+            test: "<ul><li><p>aaa</p></li><ul><li><p>dom to edit</p></li></ul><li><p><br/>◆</p></li><li><p>bbb</p></li></ul>",
         },
         {
             name: "in indented-li with font: 2x ENTER at end",
@@ -321,10 +273,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'ENTER',
             }],
-            test: {
-                content: "<ul><li><p>aaa</p></li><ul><li><p><font style=\"color\">dom to edit</font></p></li></ul><li><p><font style=\"color\"><br/></font></p></li><li><p>bbb</p></li></ul>",
-                start: "font:eq(1)->1",
-            },
+            test: "<ul><li><p>aaa</p></li><ul><li><p><font style=\"color\">dom to edit</font></p></li></ul><li><p><font style=\"color\"><br/>◆</font></p></li><li><p>bbb</p></li></ul>",
         },
         {
             name: "in li > empty-p: ENTER",
@@ -333,10 +282,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 start: "p:contents()[0]->0",
                 key: 'ENTER',
             }],
-            test: {
-                content: "<p><br/></p>",
-                start: "p->1",
-            },
+            test: "<p><br/>◆</p>",
         },
         {
             name: "in li > p > empty-b: ENTER",
@@ -345,10 +291,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 start: "b:contents()[0]->0",
                 key: 'ENTER',
             }],
-            test: {
-                content: "<p><b><br/></b></p>",
-                start: "b->1",
-            },
+            test: "<p><b><br/>◆</b></p>",
         },
 
         // end list UL / OL
@@ -361,10 +304,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 key: 'ENTER',
                 shiftKey: true,
             }],
-            test: {
-                content: "<p><b>dom</b><br/>&nbsp;to edit</p>",
-                start: "p:contents()[2]->0",
-            },
+            test: "<p><b>dom</b><br/>◆&nbsp;to edit</p>",
         },
         {
             name: "in p > b: ENTER -> 'a'",
@@ -375,10 +315,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'a',
             }],
-            test: {
-                content: "<p><b>do</b></p><p><b>am to edit</b></p>",
-                start: "b:eq(1):contents()[0]->1",
-            },
+            test: "<p><b>do</b></p><p><b>a◆m to edit</b></p>",
         },
         {
             name: "after p > b: ENTER -> 'a'",
@@ -389,440 +326,408 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'a',
             }],
-            test: {
-                content: "<p><b>dom</b></p><p>a&nbsp;to edit</p>",
-                start: "p:eq(1):contents()[0]->1",
-            },
+            test: "<p><b>dom</b></p><p>a◆&nbsp;to edit</p>",
         },
-        {
-            name: "after p > b: SHIFT+ENTER -> 'a'",
-            content: "<p><b>dom</b>&nbsp;to edit</p>",
-            steps: [{
-                start: "p:contents()[1]->0",
-                key: 'ENTER',
-                shiftKey: true,
-            }, {
-                key: 'a',
-            }],
-            test: {
-                content: "<p><b>dom</b><br/>a&nbsp;to edit</p>",
-                start: "p:contents()[2]->1",
-            },
-        },
-        {
-            name: "in p (other-p > span.a before - p > span.b after): ENTER at beginning",
-            content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">edit</span></p>",
-            steps: [{
-                start: "p:eq(1):contents()[0]->0",
-                key: 'ENTER',
-            }],
-            test: {
-                content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/></span></p><p><span class=\"b\">edit</span></p>",
-                start: "span:eq(2):contents()[0]->0",
-            },
-        },
-        {
-            name: "in p (other-p > span.a before - p > span.b after): ENTER -> 'a' at beginning",
-            content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">edit</span></p>",
-            steps: [{
-                start: "p:eq(1):contents()[0]->0",
-                key: 'ENTER',
-            }, {
-                key: 'a',
-            }],
-            test: {
-                content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/></span></p><p><span class=\"b\">aedit</span></p>",
-                start: "span:eq(2):contents()[0]->1",
-            },
-        },
-        {
-            name: "in p (other-p > span.a before - p > span.b after): SHIFT+ENTER at beginning",
-            content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">edit</span></p>",
-            steps: [{
-                start: "p:eq(1):contents()[0]->0",
-                key: 'ENTER',
-                shiftKey: true,
-            }],
-            test: {
-                content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/>edit</span></p>",
-                start: "span:eq(1):contents()[1]->0",
-            },
-        },
-        {
-            name: "in p (other-p > span.a before - p > span.b after): SHIFT+ENTER -> 'a' at beginning",
-            content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">edit</span></p>",
-            steps: [{
-                start: "p:eq(1):contents()[0]->0",
-                key: 'ENTER',
-                shiftKey: true,
-            }, {
-                key: 'a',
-            }],
-            test: {
-                content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/>aedit</span></p>",
-                start: "span:eq(1):contents()[1]->1",
-            },
-        },
-        {
-            name: "in p: ENTER on selection of all contents",
-            content: "<p>dom to edit</p>",
-            steps: [{
-                start: "p:contents()[0]->0",
-                end: "p:contents()[0]->11",
-                key: 'ENTER',
-            }],
-            test: {
-                content: "<p><br/></p><p><br/></p>",
-                start: "p:eq(1)->1",
-            },
-        },
-        {
-            name: "in p: ENTER -> 'a' on selection of all contents",
-            content: "<p>dom to edit</p>",
-            steps: [{
-                start: "p:contents()[0]->0",
-                end: "p:contents()[0]->11",
-                key: 'ENTER',
-            }, {
-                key: 'a',
-            }],
-            test: {
-                content: "<p><br/></p><p>a</p>",
-                start: "p:eq(1):contents()[0]->1",
-            },
-        },
-        {
-            name: "in p: SHIFT+ENTER on selection of all contents",
-            content: "<p>dom to edit</p>",
-            steps: [{
-                start: "p:contents()[0]->0",
-                end: "p:contents()[0]->11",
-                key: 'ENTER',
-                shiftKey: true,
-            }],
-            test: {
-                content: "<p><br/><br/></p>",
-                start: "br:eq(1)->0",
-            },
-        },
-        {
-            name: "in p: SHIFT+ENTER -> 'a' on selection of all contents",
-            content: "<p>dom to edit</p>",
-            steps: [{
-                start: "p:contents()[0]->0",
-                end: "p:contents()[0]->11",
-                key: 'ENTER',
-                shiftKey: true,
-            }, {
-                key: 'a',
-            }],
-            test: {
-                content: "<p><br/>a</p>",
-                start: "p:contents()[1]->1",
-            },
-        },
-        {
-            name: "in p: 2x ENTER -> 'a' on selection of all contents",
-            content: "<p>dom to edit</p>",
-            steps: [{
-                start: "p:contents()[0]->3",
-                key: 'ENTER',
-            }, {
-                key: 'ENTER',
-            }, {
-                key: 'a',
-            }],
-            test: {
-                content: "<p>dom</p><p><br/></p><p>a&nbsp;to edit</p>",
-                start: "p:eq(2):contents()[0]->1",
-            },
-        },
-        {
-            name: "in p > b: ENTER at start",
-            content: "<p><b>dom to edit</b></p>",
-            steps: [{
-                start: "b:contents()[0]->0",
-                key: 'ENTER',
-            }],
-            test: {
-                content: "<p><b><br/></b></p><p><b>dom to edit</b></p>",
-                start: "b:eq(1):contents()[0]->0",
-            },
-        },
-        {
-            name: "in p > b: ENTER",
-            content: "<p><b>dom to edit</b></p>",
-            steps: [{
-                start: "b:contents()[0]->3",
-                key: 'ENTER',
-            }],
-            test: {
-                content: "<p><b>dom</b></p><p><b>&nbsp;to edit</b></p>",
-                start: "b:eq(1):contents()[0]->0",
-            },
-        },
-        {
-            name: "in p > b: SHIFT+ENTER -> ENTER",
-            content: "<p><b>dom to edit</b></p>",
-            steps: [{
-                start: "b:contents()[0]->3",
-                key: 'ENTER',
-                shiftKey: true,
-            }, {
-                key: 'ENTER',
-            }],
-            test: {
-                content: "<p><b>dom<br/>&#65279;</b></p><p><b>&nbsp;to edit</b></p>",
-                start: "b:eq(1):contents()[0]->0",
-            },
-        },
-        {
-            name: "in p > b: ENTER -> a'",
-            content: "<p><b>dom to edit</b></p>",
-            steps: [{
-                start: "b:contents()[0]->3",
-                key: 'ENTER',
-            }, {
-                key: 'a',
-            }],
-            test: {
-                content: "<p><b>dom</b></p><p><b>a&nbsp;to edit</b></p>",
-                start: "b:eq(1):contents()[0]->1",
-            },
-        },
-        {
-            name: "in p > b: SHIFT+ENTER",
-            content: "<p><b>dom to edit</b></p>",
-            steps: [{
-                start: "b:contents()[0]->3",
-                key: 'ENTER',
-                shiftKey: true,
-            }],
-            test: {
-                content: "<p><b>dom<br/>&nbsp;to edit</b></p>",
-                start: "b:contents()[2]->0",
-            },
-        },
-        {
-            name: "in p > b: SHIFT+ENTER -> 'a'",
-            content: "<p><b>dom to edit</b></p>",
-            steps: [{
-                start: "b:contents()[0]->3",
-                key: 'ENTER',
-                shiftKey: true,
-            }, {
-                key: 'a',
-            }],
-            test: {
-                content: "<p><b>dom<br/>a&nbsp;to edit</b></p>",
-                start: "b:contents()[2]->1",
-            },
-        },
-        {
-            name: "in p > b: SHIFT+ENTER -> ENTER -> 'a'",
-            content: "<p><b>dom to edit</b></p>",
-            steps: [{
-                start: "b:contents()[0]->3",
-                key: 'ENTER',
-                shiftKey: true,
-            }, {
-                key: 'ENTER',
-            }, {
-                key: 'a',
-            }],
-            test: {
-                content: "<p><b>dom<br/>&#65279;</b></p><p><b>a&nbsp;to edit</b></p>",
-                start: "b:eq(1):contents()[0]->1",
-            },
-        },
-        {
-            name: "in span > b: ENTER",
-            content: "<span><b>dom to edit</b></span>",
-            steps: [{
-                start: "b:contents()[0]->3",
-                key: 'ENTER',
-            }],
-            test: {
-                content: "<span><b>dom</b></span><br/><span><b>&nbsp;to edit</b></span>",
-                start: "b:eq(1)->0",
-            },
-        },
-        {
-            name: "in span > b: SHIFT+ENTER -> ENTER",
-            content: "<span><b>dom to edit</b></span>",
-            steps: [{
-                start: "b:contents()[0]->3",
-                key: 'ENTER',
-                shiftKey: true,
-            }, {
-                key: 'ENTER',
-            }],
-            test: {
-                content: "<span><b>dom<br/></b></span><br/><span><b>&nbsp;to edit</b></span>",
-                start: "b:eq(1)->0",
-            },
-        },
-        {
-            name: "in span > b: ENTER -> 'a'",
-            content: "<span><b>dom to edit</b></span>",
-            steps: [{
-                start: "b:contents()[0]->3",
-                key: 'ENTER',
-            }, {
-                key: 'a',
-            }],
-            test: {
-                content: "<span><b>dom</b></span><br/><span><b>a&nbsp;to edit</b></span>",
-                start: "b:eq(1):contents()[0]->1",
-            },
-        },
-        {
-            name: "in span > b: SHIFT+ENTER",
-            content: "<span><b>dom to edit</b></span>",
-            steps: [{
-                start: "b:contents()[0]->3",
-                key: 'ENTER',
-                shiftKey: true,
-            }],
-            test: {
-                content: "<span><b>dom<br/>&nbsp;to edit</b></span>",
-                start: "b:contents()[2]->0",
-            },
-        },
-        {
-            name: "in span > b: SHIFT+ENTER -> 'a'",
-            content: "<span><b>dom to edit</b></span>",
-            steps: [{
-                start: "b:contents()[0]->3",
-                key: 'ENTER',
-                shiftKey: true,
-            }, {
-                key: 'a',
-            }],
-            test: {
-                content: "<span><b>dom<br/>a&nbsp;to edit</b></span>",
-                start: "b:contents()[2]->1",
-            },
-        },
-        {
-            name: "in span > b: SHIFT+ENTER -> ENTER -> 'a'",
-            content: "<span><b>dom to edit</b></span>",
-            steps: [{
-                start: "b:contents()[0]->3",
-                key: 'ENTER',
-                shiftKey: true,
-            }, {
-                key: 'ENTER',
-            }, {
-                key: 'a',
-            }],
-            test: {
-                content: "<span><b>dom<br/></b></span><br/><span><b>a&nbsp;to edit</b></span>",
-                start: "b:eq(1):contents()[0]->1",
-            },
-        },
-        {
-            name: "in p: 2x SHIFT+ENTER -> 'a'",
-            content: "<p>dom to edit</p>",
-            steps: [{
-                start: "p:contents()[0]->3",
-                key: 'ENTER',
-                shiftKey: true,
-            }, {
-                key: 'ENTER',
-                shiftKey: true,
-            }, {
-                key: 'a',
-            }],
-            test: {
-                content: "<p>dom<br/><br/>a&nbsp;to edit</p>",
-                start: "p:contents()[3]->1",
-            },
-        },
-        {
-            name: "in p: ENTER -> SHIFT+ENTER -> 'a'",
-            content: "<p>dom to edit</p>",
-            steps: [{
-                start: "p:contents()[0]->3",
-                key: 'ENTER',
-            }, {
-                key: 'ENTER',
-                shiftKey: true,
-            }, {
-                key: 'a',
-            }],
-            test: {
-                content: "<p>dom</p><p><br/>a&nbsp;to edit</p>",
-                start: "p:eq(1):contents()[1]->1",
-            },
-        },
-        {
-            name: "in empty-p (p before and after): ENTER -> 'a'",
-            content: "<p>dom </p><p><br/></p><p>to edit</p>",
-            steps: [{
-                start: "p:eq(1):contents()[0]->0",
-                key: 'ENTER',
-            }, {
-                key: 'a',
-            }],
-            test: {
-                content: "<p>dom </p><p><br/></p><p>a</p><p>to edit</p>",
-                start: "p:eq(2):contents()[0]->1",
-            },
-        },
-        {
-            name: "in p: SHIFT+ENTER at end",
-            content: "<p>dom </p><p>to edit</p>",
-            steps: [{
-                start: "p:first:contents()[0]->4",
-                key: 'ENTER',
-                shiftKey: true,
-            }],
-            test: {
-                content: "<p>dom <br/>&#65279;</p><p>to edit</p>",
-                start: "p:first:contents()[2]->0",
-            },
-        },
-        {
-            name: "in p: SHIFT+ENTER at end -> '寺'",
-            content: "<p>dom </p><p>to edit</p>",
-            steps: [{
-                start: "p:first:contents()[0]->4",
-                key: 'ENTER',
-                shiftKey: true,
-            }, {
-                keyCode: 23546, /*temple in chinese*/
-            }],
-            test: {
-                content: "<p>dom <br/>寺</p><p>to edit</p>",
-                start: "p:first:contents()[2]->1",
-            },
-        },
-        {
-            name: "in empty-p (div > a after): 3x SHIFT+ENTER -> 'a'",
-            content: "<p><br/></p><div><a href='#'>dom to edit</a></div>",
-            steps: [{
-                    start: "p->1",
-                    key: 'ENTER',
-                    shiftKey: true,
-                },
-                {
-                    key: 'ENTER',
-                    shiftKey: true,
-                },
-                {
-                    key: 'ENTER',
-                    shiftKey: true,
-                },
-                {
-                    key: 'a',
-                }
-            ],
-            test: {
-                content: "<p><br/><br/><br/>a</p><div><a href=\"#\">dom to edit</a></div>",
-                start: "p:contents()[3]->1",
-            },
-        },
+        // {
+        //     name: "after p > b: SHIFT+ENTER -> 'a'",
+        //     content: "<p><b>dom</b>&nbsp;to edit</p>",
+        //     steps: [{
+        //         start: "p:contents()[1]->0",
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }, {
+        //         key: 'a',
+        //     }],
+        //     test: "<p><b>dom</b><br/>a&nbsp;to edit</p>",
+        //         start: "p:contents()[2]->1",
+        //     },
+        // },
+        // {
+        //     name: "in p (other-p > span.a before - p > span.b after): ENTER at beginning",
+        //     content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">edit</span></p>",
+        //     steps: [{
+        //         start: "p:eq(1):contents()[0]->0",
+        //         key: 'ENTER',
+        //     }],
+        //     test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/></span></p><p><span class=\"b\">edit</span></p>",
+        //         start: "span:eq(2):contents()[0]->0",
+        //     },
+        // },
+        // {
+        //     name: "in p (other-p > span.a before - p > span.b after): ENTER -> 'a' at beginning",
+        //     content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">edit</span></p>",
+        //     steps: [{
+        //         start: "p:eq(1):contents()[0]->0",
+        //         key: 'ENTER',
+        //     }, {
+        //         key: 'a',
+        //     }],
+        //     test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/></span></p><p><span class=\"b\">aedit</span></p>",
+        //         start: "span:eq(2):contents()[0]->1",
+        //     },
+        // },
+        // {
+        //     name: "in p (other-p > span.a before - p > span.b after): SHIFT+ENTER at beginning",
+        //     content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">edit</span></p>",
+        //     steps: [{
+        //         start: "p:eq(1):contents()[0]->0",
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }],
+        //     test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/>edit</span></p>",
+        //         start: "span:eq(1):contents()[1]->0",
+        //     },
+        // },
+        // {
+        //     name: "in p (other-p > span.a before - p > span.b after): SHIFT+ENTER -> 'a' at beginning",
+        //     content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">edit</span></p>",
+        //     steps: [{
+        //         start: "p:eq(1):contents()[0]->0",
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }, {
+        //         key: 'a',
+        //     }],
+        //     test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/>aedit</span></p>",
+        //         start: "span:eq(1):contents()[1]->1",
+        //     },
+        // },
+        // {
+        //     name: "in p: ENTER on selection of all contents",
+        //     content: "<p>dom to edit</p>",
+        //     steps: [{
+        //         start: "p:contents()[0]->0",
+        //         end: "p:contents()[0]->11",
+        //         key: 'ENTER',
+        //     }],
+        //     test: "<p><br/></p><p><br/></p>",
+        //         start: "p:eq(1)->1",
+        //     },
+        // },
+        // {
+        //     name: "in p: ENTER -> 'a' on selection of all contents",
+        //     content: "<p>dom to edit</p>",
+        //     steps: [{
+        //         start: "p:contents()[0]->0",
+        //         end: "p:contents()[0]->11",
+        //         key: 'ENTER',
+        //     }, {
+        //         key: 'a',
+        //     }],
+        //     test: "<p><br/></p><p>a</p>",
+        //         start: "p:eq(1):contents()[0]->1",
+        //     },
+        // },
+        // {
+        //     name: "in p: SHIFT+ENTER on selection of all contents",
+        //     content: "<p>dom to edit</p>",
+        //     steps: [{
+        //         start: "p:contents()[0]->0",
+        //         end: "p:contents()[0]->11",
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }],
+        //     test: "<p><br/><br/></p>",
+        //         start: "br:eq(1)->0",
+        //     },
+        // },
+        // {
+        //     name: "in p: SHIFT+ENTER -> 'a' on selection of all contents",
+        //     content: "<p>dom to edit</p>",
+        //     steps: [{
+        //         start: "p:contents()[0]->0",
+        //         end: "p:contents()[0]->11",
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }, {
+        //         key: 'a',
+        //     }],
+        //     test: "<p><br/>a</p>",
+        //         start: "p:contents()[1]->1",
+        //     },
+        // },
+        // {
+        //     name: "in p: 2x ENTER -> 'a' on selection of all contents",
+        //     content: "<p>dom to edit</p>",
+        //     steps: [{
+        //         start: "p:contents()[0]->3",
+        //         key: 'ENTER',
+        //     }, {
+        //         key: 'ENTER',
+        //     }, {
+        //         key: 'a',
+        //     }],
+        //     test: "<p>dom</p><p><br/></p><p>a&nbsp;to edit</p>",
+        //         start: "p:eq(2):contents()[0]->1",
+        //     },
+        // },
+        // {
+        //     name: "in p > b: ENTER at start",
+        //     content: "<p><b>dom to edit</b></p>",
+        //     steps: [{
+        //         start: "b:contents()[0]->0",
+        //         key: 'ENTER',
+        //     }],
+        //     test: "<p><b><br/></b></p><p><b>dom to edit</b></p>",
+        //         start: "b:eq(1):contents()[0]->0",
+        //     },
+        // },
+        // {
+        //     name: "in p > b: ENTER",
+        //     content: "<p><b>dom to edit</b></p>",
+        //     steps: [{
+        //         start: "b:contents()[0]->3",
+        //         key: 'ENTER',
+        //     }],
+        //     test: "<p><b>dom</b></p><p><b>&nbsp;to edit</b></p>",
+        //         start: "b:eq(1):contents()[0]->0",
+        //     },
+        // },
+        // {
+        //     name: "in p > b: SHIFT+ENTER -> ENTER",
+        //     content: "<p><b>dom to edit</b></p>",
+        //     steps: [{
+        //         start: "b:contents()[0]->3",
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }, {
+        //         key: 'ENTER',
+        //     }],
+        //     test: "<p><b>dom<br/>&#65279;</b></p><p><b>&nbsp;to edit</b></p>",
+        //         start: "b:eq(1):contents()[0]->0",
+        //     },
+        // },
+        // {
+        //     name: "in p > b: ENTER -> a'",
+        //     content: "<p><b>dom to edit</b></p>",
+        //     steps: [{
+        //         start: "b:contents()[0]->3",
+        //         key: 'ENTER',
+        //     }, {
+        //         key: 'a',
+        //     }],
+        //     test: "<p><b>dom</b></p><p><b>a&nbsp;to edit</b></p>",
+        //         start: "b:eq(1):contents()[0]->1",
+        //     },
+        // },
+        // {
+        //     name: "in p > b: SHIFT+ENTER",
+        //     content: "<p><b>dom to edit</b></p>",
+        //     steps: [{
+        //         start: "b:contents()[0]->3",
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }],
+        //     test: "<p><b>dom<br/>&nbsp;to edit</b></p>",
+        //         start: "b:contents()[2]->0",
+        //     },
+        // },
+        // {
+        //     name: "in p > b: SHIFT+ENTER -> 'a'",
+        //     content: "<p><b>dom to edit</b></p>",
+        //     steps: [{
+        //         start: "b:contents()[0]->3",
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }, {
+        //         key: 'a',
+        //     }],
+        //     test: "<p><b>dom<br/>a&nbsp;to edit</b></p>",
+        //         start: "b:contents()[2]->1",
+        //     },
+        // },
+        // {
+        //     name: "in p > b: SHIFT+ENTER -> ENTER -> 'a'",
+        //     content: "<p><b>dom to edit</b></p>",
+        //     steps: [{
+        //         start: "b:contents()[0]->3",
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }, {
+        //         key: 'ENTER',
+        //     }, {
+        //         key: 'a',
+        //     }],
+        //     test: "<p><b>dom<br/>&#65279;</b></p><p><b>a&nbsp;to edit</b></p>",
+        //         start: "b:eq(1):contents()[0]->1",
+        //     },
+        // },
+        // {
+        //     name: "in span > b: ENTER",
+        //     content: "<span><b>dom to edit</b></span>",
+        //     steps: [{
+        //         start: "b:contents()[0]->3",
+        //         key: 'ENTER',
+        //     }],
+        //     test: "<span><b>dom</b></span><br/><span><b>&nbsp;to edit</b></span>",
+        //         start: "b:eq(1)->0",
+        //     },
+        // },
+        // {
+        //     name: "in span > b: SHIFT+ENTER -> ENTER",
+        //     content: "<span><b>dom to edit</b></span>",
+        //     steps: [{
+        //         start: "b:contents()[0]->3",
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }, {
+        //         key: 'ENTER',
+        //     }],
+        //     test: "<span><b>dom<br/></b></span><br/><span><b>&nbsp;to edit</b></span>",
+        //         start: "b:eq(1)->0",
+        //     },
+        // },
+        // {
+        //     name: "in span > b: ENTER -> 'a'",
+        //     content: "<span><b>dom to edit</b></span>",
+        //     steps: [{
+        //         start: "b:contents()[0]->3",
+        //         key: 'ENTER',
+        //     }, {
+        //         key: 'a',
+        //     }],
+        //     test: "<span><b>dom</b></span><br/><span><b>a&nbsp;to edit</b></span>",
+        //         start: "b:eq(1):contents()[0]->1",
+        //     },
+        // },
+        // {
+        //     name: "in span > b: SHIFT+ENTER",
+        //     content: "<span><b>dom to edit</b></span>",
+        //     steps: [{
+        //         start: "b:contents()[0]->3",
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }],
+        //     test: "<span><b>dom<br/>&nbsp;to edit</b></span>",
+        //         start: "b:contents()[2]->0",
+        //     },
+        // },
+        // {
+        //     name: "in span > b: SHIFT+ENTER -> 'a'",
+        //     content: "<span><b>dom to edit</b></span>",
+        //     steps: [{
+        //         start: "b:contents()[0]->3",
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }, {
+        //         key: 'a',
+        //     }],
+        //     test: "<span><b>dom<br/>a&nbsp;to edit</b></span>",
+        //         start: "b:contents()[2]->1",
+        //     },
+        // },
+        // {
+        //     name: "in span > b: SHIFT+ENTER -> ENTER -> 'a'",
+        //     content: "<span><b>dom to edit</b></span>",
+        //     steps: [{
+        //         start: "b:contents()[0]->3",
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }, {
+        //         key: 'ENTER',
+        //     }, {
+        //         key: 'a',
+        //     }],
+        //     test: "<span><b>dom<br/></b></span><br/><span><b>a&nbsp;to edit</b></span>",
+        //         start: "b:eq(1):contents()[0]->1",
+        //     },
+        // },
+        // {
+        //     name: "in p: 2x SHIFT+ENTER -> 'a'",
+        //     content: "<p>dom to edit</p>",
+        //     steps: [{
+        //         start: "p:contents()[0]->3",
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }, {
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }, {
+        //         key: 'a',
+        //     }],
+        //     test: "<p>dom<br/><br/>a&nbsp;to edit</p>",
+        //         start: "p:contents()[3]->1",
+        //     },
+        // },
+        // {
+        //     name: "in p: ENTER -> SHIFT+ENTER -> 'a'",
+        //     content: "<p>dom to edit</p>",
+        //     steps: [{
+        //         start: "p:contents()[0]->3",
+        //         key: 'ENTER',
+        //     }, {
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }, {
+        //         key: 'a',
+        //     }],
+        //     test: "<p>dom</p><p><br/>a&nbsp;to edit</p>",
+        //         start: "p:eq(1):contents()[1]->1",
+        //     },
+        // },
+        // {
+        //     name: "in empty-p (p before and after): ENTER -> 'a'",
+        //     content: "<p>dom </p><p><br/></p><p>to edit</p>",
+        //     steps: [{
+        //         start: "p:eq(1):contents()[0]->0",
+        //         key: 'ENTER',
+        //     }, {
+        //         key: 'a',
+        //     }],
+        //     test: "<p>dom </p><p><br/></p><p>a</p><p>to edit</p>",
+        //         start: "p:eq(2):contents()[0]->1",
+        //     },
+        // },
+        // {
+        //     name: "in p: SHIFT+ENTER at end",
+        //     content: "<p>dom </p><p>to edit</p>",
+        //     steps: [{
+        //         start: "p:first:contents()[0]->4",
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }],
+        //     test: "<p>dom <br/>&#65279;</p><p>to edit</p>",
+        //         start: "p:first:contents()[2]->0",
+        //     },
+        // },
+        // {
+        //     name: "in p: SHIFT+ENTER at end -> '寺'",
+        //     content: "<p>dom </p><p>to edit</p>",
+        //     steps: [{
+        //         start: "p:first:contents()[0]->4",
+        //         key: 'ENTER',
+        //         shiftKey: true,
+        //     }, {
+        //         keyCode: 23546, /*temple in chinese*/
+        //     }],
+        //     test: "<p>dom <br/>寺</p><p>to edit</p>",
+        //         start: "p:first:contents()[2]->1",
+        //     },
+        // },
+        // {
+        //     name: "in empty-p (div > a after): 3x SHIFT+ENTER -> 'a'",
+        //     content: "<p><br/></p><div><a href='#'>dom to edit</a></div>",
+        //     steps: [{
+        //             start: "p->1",
+        //             key: 'ENTER',
+        //             shiftKey: true,
+        //         },
+        //         {
+        //             key: 'ENTER',
+        //             shiftKey: true,
+        //         },
+        //         {
+        //             key: 'ENTER',
+        //             shiftKey: true,
+        //         },
+        //         {
+        //             key: 'a',
+        //         }
+        //     ],
+        //     test: "<p><br/><br/><br/>a</p><div><a href=\"#\">dom to edit</a></div>",
+        //         start: "p:contents()[3]->1",
+        //     },
+        // },
 
         // Buttons
         // TODO: RESTORE

@@ -116,7 +116,7 @@ var TestKeyboard = AbstractPlugin.extend({
                         }
                         setTimeout(function () {
                             if (step.keyCode || step.key) {
-                                target = target.tagName ? target : target.parentNode;
+                                target = !target || target.tagName ? target : target.parentNode;
                                 if (target) {
                                     self.dependencies.Test.triggerNativeEvents(target, 'keyup', {
                                         key: step.key,

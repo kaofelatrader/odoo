@@ -113,11 +113,11 @@ var ArchPlugin = AbstractPlugin.extend({
         // H1 > i
         // b > i
         [
-            styleTags.concat(formatTags).concat(['a']),
+            styleTags.concat(formatTags).concat(['a', 'li']),
             formatTags.concat(['TEXT']),
         ],
         [
-            styleTags.concat(formatTags).concat(['div', 'td', 'th']),
+            styleTags.concat(formatTags).concat(['div', 'td', 'th', 'li']),
             ['br'],
         ],
     ],
@@ -429,6 +429,7 @@ var ArchPlugin = AbstractPlugin.extend({
         };
 
         this._setRangeWithIDs(pointsWithIDs);
+        this._setRange();
     },
     /**
      * Select the target media on the right (or left)
@@ -528,7 +529,16 @@ var ArchPlugin = AbstractPlugin.extend({
      */
     _setRange: function () {
         var wrappedRange = this.getRange();
+        // only if the native range change, after the redraw
+        // the renderer can associate existing note to the arch (to prevent error on mobile)
         this._select(wrappedRange.sc, wrappedRange.so, wrappedRange.ec, wrappedRange.eo);
+
+        if (this._didRangeChange) {
+            this.trigger('range');
+        }
+        if (this._isChangeElemIDs) {
+            this.trigger('focus', this.getFocusedNode());
+        }
     },
     /**
      * Set the range from the selection in the DOM.
@@ -577,22 +587,14 @@ var ArchPlugin = AbstractPlugin.extend({
             ecID = archEc.id;
         }
 
-        var didRangeChange = this._willRangeChange(scID, so, ecID, eo);
-        var isChangeElemIDs = this.parentIfText(scID) !== this.parentIfText(this._range.scID) ||
+        this._didRangeChange = this._willRangeChange(scID, so, ecID, eo);
+        this._isChangeElemIDs = this.parentIfText(scID) !== this.parentIfText(this._range.scID) ||
             this.parentIfText(ecID) !== this.parentIfText(this._range.ecID);
 
         this._range.scID = scID;
         this._range.so = so;
         this._range.ecID = ecID;
         this._range.eo = eo;
-        this._setRange();
-
-        if (didRangeChange) {
-            this.trigger('range');
-        }
-        if (isChangeElemIDs) {
-            this.trigger('focus', this.getFocusedNode());
-        }
     },
     /**
      * Get the native Range object corresponding to the given range points.
@@ -639,8 +641,8 @@ var ArchPlugin = AbstractPlugin.extend({
         } else {
             this._removeFromRange();
         }
-
-        this._applyChangesInRenderer();
+        this._changes[0].isRange = true;
+        this._updateRendererFromChanges();
     },
     insert: function (DOM, element, offset) {
         if (typeof DOM !== 'string' && this._renderer.whoIsThisNode(DOM)) {
@@ -648,45 +650,48 @@ var ArchPlugin = AbstractPlugin.extend({
         }
         var id = this._renderer.whoIsThisNode(element);
         if (!id) {
+            this._removeFromRange();
             id = this._range.scID;
             offset = this._range.so;
-
-            if (!this._isCollapsed()) {
-                this._removeFromRange();
-                var changedNodes = this._getChanges();
-                if (changedNodes.length) {
-                    id = changedNodes[0].id;
-                    offset = changedNodes[0].offset;
-                }
-                this._resetChange();
-            }
         }
-
+        var index = this._changes.length;
         this._insert(DOM, id, offset);
-        this._applyChangesInRenderer();
+        if (this._changes.length > index) {
+            this._changes[index].isRange = true;
+        }
+        this._updateRendererFromChanges();
     },
     addLine: function () {
         this._resetChange();
+        this._removeFromRange();
         var id = this._range.scID;
         var offset = this._range.so;
-        this._resetChange();
-        if (!this._isCollapsed()) {
-            this._removeFromRange();
-            var changedNodes = this._getChanges();
-            if (changedNodes.length) {
-                id = changedNodes[0].id;
-                offset = changedNodes[0].offset;
-                this._resetChange();
-            }
-        }
+        var index = this._changes.length;
         this._getNode(id).addLine(offset);
-        this._applyChangesInRenderer();
+        if (this._changes.length > index) {
+            this._changes[index].isRange = true;
+        }
+        this._updateRendererFromChanges();
     },
     removeLeft: function () {
+        this._resetChange();
+        this._removeFromRange();
+        var index = this._changes.length;
         this._removeSide(true);
+        if (this._changes.length > index) {
+            this._changes[index].isRange = true;
+        }
+        this._updateRendererFromChanges();
     },
     removeRight: function () {
+        this._resetChange();
+        this._removeFromRange();
+        var index = this._changes.length;
         this._removeSide(false);
+        if (this._changes.length > index) {
+            this._changes[index].isRange = true;
+        }
+        this._updateRendererFromChanges();
     },
     _removeSide: function (isLeft) {
         var archNode = this._getNode(this._range.scID);
@@ -708,22 +713,21 @@ var ArchPlugin = AbstractPlugin.extend({
         } else {
             archNode.remove();
         }
-        this._applyChangesInRenderer();
     },
 
     //--------------------------------------------------------------------------
     // Private from Common
     //--------------------------------------------------------------------------
 
-    _applyChangesInRenderer: function () {
+    _updateRendererFromChanges: function () {
         var self = this;
-        var changedNodes = this._getChanges();
 
-        if (!changedNodes.length) {
+        var result = this._getChanges();
+        if (!result.changes.length) {
             return;
         }
 
-        var json = changedNodes.map(function (change) {
+        var json = result.changes.map(function (change) {
             return self.export(change.id, {
                 keepVirtual: true,
             });
@@ -731,16 +735,12 @@ var ArchPlugin = AbstractPlugin.extend({
         self._renderer.update(json);
         this.trigger_up('change');
 
-        // changedNodes.forEach(function (r) {
-        //     console.log(r.id, self._renderer.getElement(r.id), r.offset);
-        // });
+        this._setRangeWithIDs({
+            scID: result.range.id,
+            so: result.range.offset,
+        });
 
-        if (changedNodes.length) {
-            this._setRangeWithIDs({
-                scID: changedNodes[0].id,
-                so: changedNodes[0].offset,
-            });
-        }
+        this._setRange();
     },
     _isVoidBlock: function (archNode) {
         return archNode.attributes && archNode.attributes.contentEditable === 'false';
@@ -869,33 +869,40 @@ var ArchPlugin = AbstractPlugin.extend({
         return archNode;
     },
     _removeFromRange: function () {
-        var areSameNode = this._range.scID === this._range.ecID;
+        if (this._isCollapsed()) {
+            return;
+        }
+
+        var virtualTextNodeBegin = this._createArchNode(); // the next range
+        var virtualTextNodeEnd = this._createArchNode();
+
+        // rechercher le common ancestor des deux virtuels
+
+        var endNode = this._getNode(this._range.ecID);
+        endNode.insert(virtualTextNodeEnd, this._range.eo);
+
+        // todo: faire un split tree jusque l'ancetre commun/unbreakable
+
         var fromNode = this._getNode(this._range.scID);
-        fromNode = fromNode.split(this._range.so) || fromNode;
+        fromNode.insert(virtualTextNodeBegin, this._range.so);
 
-        var toNode = this._getNode(this._range.ecID);
-        if (areSameNode) {
-            var newToNode = toNode.nextUntil(function (next) {
-                return next !== toNode;
-            });
-            this._range.eo -= toNode.length();
-            toNode = newToNode;
-        }
-        toNode.split(this._range.eo);
+        // todo: faire un split tree jusque l'ancetre commun/unbreakable
 
-        if (areSameNode) {
-            toNode.remove();
-        } else {
-            fromNode.nextUntil(function (next) {
-                this.remove();
-                if (next === toNode) {
-                    next.remove();
-                    return true;
-                }
-            });
-        }
+        var toRemove = [];
+        virtualTextNodeBegin.nextUntil(function (next) {
+            toRemove.push(next);
+            return next !== virtualTextNodeEnd;
+        });
 
-        this._applyChangesInRenderer();
+        toRemove.forEach(function (archNode) {
+            archNode.remove();
+        });
+
+        // the the range in the arch but not in the dom, wait redraw
+        this._setRangeWithIDs({
+            scID: virtualTextNodeBegin.id,
+            so: 0,
+        });
     },
     _reset: function (value) {
         this._id = 1;
@@ -957,6 +964,7 @@ var ArchPlugin = AbstractPlugin.extend({
         var self = this;
         this._applyRules();
 
+        var range;
         var changes = [];
         this._changes.forEach(function (c) {
             if (!c.archNode.id || !self._getNode(c.archNode.id)) {
@@ -967,17 +975,27 @@ var ArchPlugin = AbstractPlugin.extend({
                 if (change.id === c.archNode.id) {
                     toAdd = false;
                     change.offset = c.offset;
+                    if (c.isRange) {
+                        range = change;
+                    }
                 }
             });
             if (toAdd) {
-                changes.push({
+                var change = {
                     id: c.archNode.id,
                     offset: c.offset,
-                });
+                };
+                changes.push(change);
+                if (!range || c.isRange) {
+                    range = change;
+                }
             }
         });
 
-        return changes;
+        return {
+            changes: changes,
+            range: range,
+        };
     },
     _getNode: function (archNodeId) {
         return this._archNodeList[archNodeId];
