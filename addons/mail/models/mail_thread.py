@@ -963,9 +963,7 @@ class MailThread(models.AbstractModel):
         self.env['mail.mail'].create(bounce_mail_values).send()
 
     @api.model
-    def message_route_verify(self, message, message_dict, route,
-                             update_author=True, assert_model=True,
-                             create_fallback=True, drop_alias=False):
+    def message_route_verify(self, message, message_dict, route, assert_model=True):
         """ Verify route validity. Check and rules:
             1 - if thread_id -> check that document effectively exists; otherwise
                 fallback on a message_new by resetting thread_id
@@ -985,21 +983,16 @@ class MailThread(models.AbstractModel):
                              mail_message.create()
         :param route: route to check which is a tuple (model, thread_id,
                       custom_values, uid, alias)
-        :param update_author: update message_dict['author_id']. TDE TODO: move me
         :param assert_model: if an error occurs, tell whether to raise an error
                              or just log a warning and try other processing or
                              invalidate route
-        :param create_fallback: if the route aims at updating a record and that
-                                record does not exists or does not support update
-                                either fallback on creating a new record in the
-                                same model or raise / warn
         """
 
         assert isinstance(route, (list, tuple)), 'A route should be a list or a tuple'
         assert len(route) == 5, 'A route should contain 5 elements: model, thread_id, custom_values, uid, alias record'
 
-        message_id = message.get('Message-Id')
-        email_from = tools.decode_message_header(message, 'From')
+        message_id = message_dict['message_id']
+        email_from = message_dict['email_from']
         author_id = message_dict.get('author_id')
         model, thread_id, alias = route[0], route[1], route[4]
         record_set = None
@@ -1008,7 +1001,7 @@ class MailThread(models.AbstractModel):
 <p>Hello,</p>
 <p>The following email sent to %s cannot be accepted because this is a private email address.
    Only allowed people can contact us at this address.</p>
-</div><blockquote>%s</blockquote>""" % (message.get('to'), message_dict.get('body'))
+</div><blockquote>%s</blockquote>""" % (message_dict.get('to'), message_dict.get('body'))
 
         # Wrong model
         if model and model not in self.env:
@@ -1025,10 +1018,10 @@ class MailThread(models.AbstractModel):
 
         # Existing Document: check if exists and model accepts the mailgateway; if not, fallback on create if allowed
         if thread_id:
-            if not record_set.exists() and create_fallback:
+            if not record_set.exists():
                 self._routing_warn(_('reply to missing document (%s,%s), fall back on new document creation') % (model, thread_id), '', message_id, route, False)
                 thread_id = None
-            elif not hasattr(record_set, 'message_update') and create_fallback:
+            elif not hasattr(record_set, 'message_update'):
                 self._routing_warn(_('model %s does not accept document update, fall back on document creation') % model, '', message_id, route, False)
                 thread_id = None
 
@@ -1045,7 +1038,7 @@ class MailThread(models.AbstractModel):
             return False
 
         # Update message author if asked. We do it now because we need it for aliases (contact settings)
-        if not author_id and update_author:
+        if not author_id:
             authors = self._mail_find_partner_from_emails([email_from], records=record_set)
             if authors:
                 message_dict['author_id'] = authors[0].id
@@ -1071,7 +1064,7 @@ class MailThread(models.AbstractModel):
         if not thread_id and not alias:
             return False
 
-        return (model, thread_id, route[2], route[3], None if drop_alias else route[4])
+        return (model, thread_id, route[2], route[3], route[4])
 
     @api.model
     def message_route(self, message, message_dict, model=None, thread_id=None, custom_values=None):
@@ -1122,29 +1115,23 @@ class MailThread(models.AbstractModel):
 
         # get email.message.Message variables for future processing
         local_hostname = socket.gethostname()
-        message_id = message.get('Message-Id')
+        message_id = message_dict['message_id']
 
         # compute references to find if message is a reply to an existing thread
-        references = tools.decode_message_header(message, 'References')
-        in_reply_to = tools.decode_message_header(message, 'In-Reply-To').strip()
-        thread_references = references or in_reply_to
-        reply_match, reply_model, reply_thread_id, reply_hostname, reply_private = tools.email_references(thread_references)
+        thread_references = message_dict['references'] or message_dict['in_reply_to']
+        msg_references = [ref for ref in tools.mail_header_msgid_re.findall(thread_references) if 'reply_to' not in ref]
+        mail_messages = MailMessage.sudo().search([('message_id', 'in', msg_references)], limit=1)
+        is_a_reply = bool(mail_messages)
+        reply_model, reply_thread_id = mail_messages.model, mail_messages.res_id
 
         # author and recipients
-        email_from = tools.decode_message_header(message, 'From')
+        email_from = message_dict['email_from']
         email_from_localpart = (tools.email_split(email_from) or [''])[0].split('@', 1)[0].lower()
-        email_to = tools.decode_message_header(message, 'To')
+        email_to = message_dict['to']
         email_to_localpart = (tools.email_split(email_to) or [''])[0].split('@', 1)[0].lower()
-
         # Delivered-To is a safe bet in most modern MTAs, but we have to fallback on To + Cc values
         # for all the odd MTAs out there, as there is no standard header for the envelope's `rcpt_to` value.
-        rcpt_tos = ','.join([
-            tools.decode_message_header(message, 'Delivered-To'),
-            tools.decode_message_header(message, 'To'),
-            tools.decode_message_header(message, 'Cc'),
-            tools.decode_message_header(message, 'Resent-To'),
-            tools.decode_message_header(message, 'Resent-Cc')])
-        rcpt_tos_localparts = [e.split('@')[0].lower() for e in tools.email_split(rcpt_tos)]
+        rcpt_tos_localparts = [e.split('@')[0].lower() for e in tools.email_split(message_dict['recipients'])]
 
         # 0. Verify whether this is a bounced email and use it to collect bounce data and update notifications for customers
         if bounce_alias and bounce_alias in email_to_localpart:
@@ -1199,11 +1186,6 @@ class MailThread(models.AbstractModel):
                          message_id, email_from, email_to)
             return []
 
-        # 1. Check if message is a reply on a thread
-        msg_references = [ref for ref in tools.mail_header_msgid_re.findall(thread_references) if 'reply_to' not in ref]
-        mail_messages = MailMessage.sudo().search([('message_id', 'in', msg_references)], limit=1)
-        is_a_reply = bool(mail_messages)
-
         # 1.1 Handle forward to an alias with a different model: do not consider it as a reply
         if reply_model and reply_thread_id:
             other_alias = Alias.search([
@@ -1215,18 +1197,18 @@ class MailThread(models.AbstractModel):
                 is_a_reply = False
 
         if is_a_reply:
-            model, thread_id = mail_messages.model, mail_messages.res_id
             dest_aliases = Alias.search([('alias_name', 'in', rcpt_tos_localparts)], limit=1)
 
             route = self.message_route_verify(
                 message, message_dict,
-                (model, thread_id, custom_values, self._uid, dest_aliases),
-                update_author=True, assert_model=False, create_fallback=True,
-                drop_alias=True)
+                (reply_model, reply_thread_id, custom_values, self._uid, dest_aliases),
+                assert_model=False)
+            # drop alias from route as it is a reply -> do not propagate other alias information after access check
+            route = (route[0], route[1], route[2], route[3], None)
             if route:
                 _logger.info(
                     'Routing mail from %s to %s with Message-Id %s: direct reply to msg: model: %s, thread_id: %s, custom_values: %s, uid: %s',
-                    email_from, email_to, message_id, model, thread_id, custom_values, self._uid)
+                    email_from, email_to, message_id, reply_model, reply_thread_id, custom_values, self._uid)
                 return [route]
 
         # 2. Look for a matching mail.alias entry
@@ -1259,7 +1241,7 @@ class MailThread(models.AbstractModel):
                     route = (alias.alias_model_id.model, alias.alias_force_thread_id, safe_eval(alias.alias_defaults), user_id, alias)
                     route = self.message_route_verify(
                         message, message_dict, route,
-                        update_author=True, assert_model=True, create_fallback=True)
+                        assert_model=True)
                     if route:
                         _logger.info(
                             'Routing mail from %s to %s with Message-Id %s: direct alias match: %r',
@@ -1275,7 +1257,7 @@ class MailThread(models.AbstractModel):
             route = self.message_route_verify(
                 message, message_dict,
                 (fallback_model, thread_id, custom_values, self._uid, None),
-                update_author=True, assert_model=True)
+                assert_model=True)
             if route:
                 _logger.info(
                     'Routing mail from %s to %s with Message-Id %s: fallback to model:%s, thread_id:%s, custom_values:%s, uid:%s',
@@ -1339,6 +1321,9 @@ class MailThread(models.AbstractModel):
             post_params = dict(subtype_id=subtype_id, partner_ids=partner_ids, **message_dict)
             if not hasattr(thread, 'message_post'):
                 post_params['model'] = model
+            # remove computational values not stored on mail.message and avoid warnings when creating it
+            for x in ('to', 'cc', 'recipients', 'references', 'in_reply_to'):
+                post_params.pop(x, None)
             new_msg = thread.message_post(**post_params)
 
             if new_msg and original_partner_ids:
@@ -1389,23 +1374,22 @@ class MailThread(models.AbstractModel):
             message = bytes(message.data)
         if isinstance(message, str):
             message = message.encode('utf-8')
-        msg_txt = email.message_from_bytes(message)
+        message = email.message_from_bytes(message)
 
         # parse the message, verify we are not in a loop by checking message_id is not duplicated
-        msg = self.message_parse(msg_txt, save_original=save_original)
+        msg_dict = self.message_parse(message, save_original=save_original)
         if strip_attachments:
-            msg.pop('attachments', None)
+            msg_dict.pop('attachments', None)
 
-        if msg.get('message_id'):   # should always be True as message_parse generate one if missing
-            existing_msg_ids = self.env['mail.message'].search([('message_id', '=', msg.get('message_id'))])
-            if existing_msg_ids:
-                _logger.info('Ignored mail from %s to %s with Message-Id %s: found duplicated Message-Id during processing',
-                                msg.get('from'), msg.get('to'), msg.get('message_id'))
-                return False
+        existing_msg_ids = self.env['mail.message'].search([('message_id', '=', msg_dict['message_id'])])
+        if existing_msg_ids:
+            _logger.info('Ignored mail from %s to %s with Message-Id %s: found duplicated Message-Id during processing',
+                         msg_dict.get('email_from'), msg_dict.get('to'), msg_dict.get('message_id'))
+            return False
 
         # find possible routes for the message
-        routes = self.message_route(msg_txt, msg, model, thread_id, custom_values)
-        thread_id = self.message_route_process(msg_txt, msg, routes)
+        routes = self.message_route(message, msg_dict, model, thread_id, custom_values)
+        thread_id = self.message_route_process(message, msg_dict, routes)
         return thread_id
 
     @api.model
@@ -1469,14 +1453,15 @@ class MailThread(models.AbstractModel):
         :param string email: email that caused the bounce """
         pass
 
-    def _message_extract_payload_postprocess(self, message, body, attachments):
+    def _message_extract_payload_postprocess(self, message, payload_dict):
         """ Perform some cleaning / postprocess in the body and attachments
         extracted from the email. Note that this processing is specific to the
         mail module, and should not contain security or generic html cleaning.
         Indeed those aspects should be covered by the html_sanitize method
         located in tools. """
+        body, attachments = payload_dict['body'], payload_dict['attachments']
         if not body:
-            return body, attachments
+            return payload_dict
         try:
             root = lxml.html.fromstring(body)
         except ValueError:
@@ -1502,7 +1487,7 @@ class MailThread(models.AbstractModel):
             node.getparent().remove(node)
         if postprocessed:
             body = etree.tostring(root, pretty_print=False, encoding='unicode')
-        return body, attachments
+        return {'body': body, 'attachments': attachments}
 
     def _message_extract_payload(self, message, save_original=False):
         """Extract body as HTML and attachments from the mail message"""
@@ -1579,44 +1564,38 @@ class MailThread(models.AbstractModel):
                 else:
                     attachments.append(self._Attachment(filename or 'attachment', part.get_payload(decode=True), {}))
 
-        body, attachments = self._message_extract_payload_postprocess(message, body, attachments)
-        return body, attachments
+        return self._message_extract_payload_postprocess(message, {'body': body, 'attachments': attachments})
 
     @api.model
     def message_parse(self, message, save_original=False):
-        """Parses a string or email.message.Message representing an
-           RFC-2822 email, and returns a generic dict holding the
-           message details.
+        """ Parses a string or email.message.Message representing an RFC-2822 email
+        and returns a generic dict holding the message details.
 
-           :param message: the message to parse
-           :type message: email.message.Message | string | unicode
-           :param bool save_original: whether the returned dict
-               should include an ``original`` attachment containing
-               the source of the message
-           :rtype: dict
-           :return: A dict with the following structure, where each
-                    field may not be present if missing in original
-                    message::
+        :param message: email to parse
+        :type message: email.message.Message | string | unicode
+        :param bool save_original: whether the returned dict should include
+            an ``original`` attachment containing the source of the message
+        :rtype: dict
+        :return: A dict with the following structure, where each field may not
+            be present if missing in original message::
 
-                    { 'message_id': msg_id,
-                      'subject': subject,
-                      'from': from,
-                      'to': to,
-                      'cc': cc,
-                      'body': unified_body,
-                      'attachments': [('file1', 'bytes'),
-                                      ('file2', 'bytes')}
-                    }
+            { 'message_id': msg_id,
+              'subject': subject,
+              'email_from': from,
+              'to': to,
+              'cc': cc,
+              'body': unified_body,
+              'attachments': [('file1', 'bytes'),
+                              ('file2', 'bytes')}
+            }
         """
         msg_dict = {
             'message_type': 'email',
         }
         if not isinstance(message, Message):
-            # message_from_string works on a native str
-            message = pycompat.to_text(message)
-            message = email.message_from_string(message)
+            raise ValueError(_('Message should be a valid Message instance'))
 
-        message_id = message['message-id']
+        message_id = message.get('Message-Id')
         if not message_id:
             # Very unusual situation, be we should be fault-tolerant here
             message_id = "<%s@localhost>" % time.time()
@@ -1624,20 +1603,37 @@ class MailThread(models.AbstractModel):
         msg_dict['message_id'] = message_id
 
         if message.get('Subject'):
-            msg_dict['subject'] = tools.decode_smtp_header(message.get('Subject'))
+            msg_dict['subject'] = tools.decode_message_header(message, 'Subject')
 
-        # Envelope fields not stored in mail.message but made available for message_new()
-        msg_dict['from'] = tools.decode_smtp_header(message.get('from'))
-        msg_dict['to'] = tools.decode_smtp_header(message.get('to'))
-        msg_dict['cc'] = tools.decode_smtp_header(message.get('cc'))
-        msg_dict['email_from'] = tools.decode_smtp_header(message.get('from'))
-        recipient_emails = ', '.join([tools.decode_smtp_header(message.get(h)) for h in ['To', 'Cc'] if message.get(h)])
-        partner_ids = [x.id for x in self._mail_find_partner_from_emails(tools.email_split(recipient_emails), records=self) if x]
+        # Delivered-To is a safe bet in most modern MTAs, but we have to fallback on To + Cc values
+        # for all the odd MTAs out there, as there is no standard header for the envelope's `rcpt_to` value.
+        msg_dict['recipients'] = ','.join(formatted_email
+            for address in [
+                tools.decode_message_header(message, 'Delivered-To'),
+                tools.decode_message_header(message, 'To'),
+                tools.decode_message_header(message, 'Cc'),
+                tools.decode_message_header(message, 'Resent-To'),
+                tools.decode_message_header(message, 'Resent-Cc')
+            ] if address
+            for formatted_email in tools.email_split_and_format(address)
+        )
+        email_from = tools.decode_message_header(message, 'From')
+        msg_dict['email_from'] = tools.email_split_and_format(email_from)[0] if email_from and tools.email_split_and_format(email_from) else email_from
+        msg_dict['to'] = ','.join(formatted_email for address in [
+            tools.decode_message_header(message, 'Delivered-To'),
+            tools.decode_message_header(message, 'To')] if address
+            for formatted_email in tools.email_split_and_format(address))
+        email_cc = tools.decode_message_header(message, 'cc')
+        msg_dict['cc'] = ','.join(tools.email_split_and_format(email_cc)) if email_cc and tools.email_split_and_format(email_cc) else email_cc
+        partner_ids = [x.id for x in self._mail_find_partner_from_emails(tools.email_split(msg_dict['recipients']), records=self) if x]
         msg_dict['partner_ids'] = [(4, partner_id) for partner_id in partner_ids]
+        # compute references to find if email_message is a reply to an existing thread
+        msg_dict['references'] = tools.decode_message_header(message, 'References')
+        msg_dict['in_reply_to'] = tools.decode_message_header(message, 'In-Reply-To').strip()
 
         if message.get('Date'):
             try:
-                date_hdr = tools.decode_smtp_header(message.get('Date'))
+                date_hdr = tools.decode_message_header(message, 'Date')
                 parsed_date = dateutil.parser.parse(date_hdr, fuzzy=True)
                 if parsed_date.utcoffset() is None:
                     # naive datetime, so we arbitrarily decide to make it
@@ -1648,25 +1644,25 @@ class MailThread(models.AbstractModel):
                     stored_date = parsed_date.astimezone(tz=pytz.utc)
             except Exception:
                 _logger.info('Failed to parse Date header %r in incoming mail '
-                                'with message-id %r, assuming current date/time.',
-                                message.get('Date'), message_id)
+                             'with message-id %r, assuming current date/time.',
+                             message.get('Date'), message_id)
                 stored_date = datetime.datetime.now()
             msg_dict['date'] = stored_date.strftime(tools.DEFAULT_SERVER_DATETIME_FORMAT)
 
-        if message.get('In-Reply-To'):
-            parent_ids = self.env['mail.message'].search([('message_id', '=', tools.decode_smtp_header(message['In-Reply-To'].strip()))], limit=1)
+        if msg_dict['in_reply_to']:
+            parent_ids = self.env['mail.message'].search([('message_id', '=', msg_dict['in_reply_to'])], limit=1)
             if parent_ids:
                 msg_dict['parent_id'] = parent_ids.id
                 msg_dict['internal'] = parent_ids.subtype_id and parent_ids.subtype_id.internal or False
 
-        if message.get('References') and 'parent_id' not in msg_dict:
-            msg_list = tools.mail_header_msgid_re.findall(tools.decode_smtp_header(message['References']))
-            parent_ids = self.env['mail.message'].search([('message_id', 'in', [x.strip() for x in msg_list])], limit=1)
+        if msg_dict['references'] and 'parent_id' not in msg_dict:
+            references_msg_id_list = tools.mail_header_msgid_re.findall(msg_dict['references'])
+            parent_ids = self.env['mail.message'].search([('message_id', 'in', [x.strip() for x in references_msg_id_list])], limit=1)
             if parent_ids:
                 msg_dict['parent_id'] = parent_ids.id
                 msg_dict['internal'] = parent_ids.subtype_id and parent_ids.subtype_id.internal or False
 
-        msg_dict['body'], msg_dict['attachments'] = self._message_extract_payload(message, save_original=save_original)
+        msg_dict.update(self._message_extract_payload(message, save_original=save_original))
         return msg_dict
 
     # ------------------------------------------------------

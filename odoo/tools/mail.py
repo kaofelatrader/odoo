@@ -517,20 +517,6 @@ def email_escape_char(email_address):
     """ Escape problematic characters in the given email address string"""
     return email_address.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
 
-def email_references(references):
-    ref_match, model, thread_id, hostname, is_private = False, False, False, False, False
-    if references:
-        ref_match = reference_re.search(references)
-    if ref_match:
-        model = ref_match.group(2)
-        thread_id = int(ref_match.group(1))
-        hostname = ref_match.group(3)
-    else:
-        ref_match = discussion_re.search(references)
-        if ref_match:
-            is_private = True
-    return (ref_match, model, thread_id, hostname, is_private)
-
 # was mail_message.decode()
 def decode_smtp_header(smtp_header):
     """Returns unicode() string conversion of the given encoded smtp header

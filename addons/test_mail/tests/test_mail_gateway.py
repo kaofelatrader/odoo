@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import email
 import socket
 
 from email.utils import formataddr
@@ -9,7 +10,7 @@ from odoo.addons.test_mail.data import test_mail_data
 from odoo.addons.test_mail.data.test_mail_data import MAIL_TEMPLATE
 from odoo.addons.test_mail.tests.common import BaseFunctionalTest, MockEmails
 from odoo.addons.test_mail.tests.common import mail_new_test_user
-from odoo.tools import mute_logger
+from odoo.tools import mute_logger, pycompat
 
 
 from odoo.tests import tagged
@@ -21,16 +22,16 @@ class TestEmailParsing(BaseFunctionalTest, MockEmails):
     def test_message_parse_body(self):
         # test pure plaintext
         plaintext = self.format(test_mail_data.MAIL_TEMPLATE_PLAINTEXT, email_from='Sylvie Lelitre <test.sylvie.lelitre@agrolait.com>')
-        res = self.env['mail.thread'].message_parse(plaintext)
+        res = self.env['mail.thread'].message_parse(email.message_from_string(pycompat.to_text(plaintext)))
         self.assertIn('Please call me as soon as possible this afternoon!', res['body'])
 
         # test multipart / text and html -> html has priority
         multipart = self.format(MAIL_TEMPLATE, email_from='Sylvie Lelitre <test.sylvie.lelitre@agrolait.com>')
-        res = self.env['mail.thread'].message_parse(multipart)
+        res = self.env['mail.thread'].message_parse(email.message_from_string(pycompat.to_text(multipart)))
         self.assertIn('<p>Please call me as soon as possible this afternoon!</p>', res['body'])
 
         # test multipart / mixed
-        res = self.env['mail.thread'].message_parse(test_mail_data.MAIL_MULTIPART_MIXED)
+        res = self.env['mail.thread'].message_parse(email.message_from_string(pycompat.to_text(test_mail_data.MAIL_MULTIPART_MIXED)))
         self.assertNotIn(
             'Should create a multipart/mixed: from gmail, *bold*, with attachment', res['body'],
             'message_parse: text version should not be in body after parsing multipart/mixed')
@@ -38,7 +39,7 @@ class TestEmailParsing(BaseFunctionalTest, MockEmails):
             '<div dir="ltr">Should create a multipart/mixed: from gmail, <b>bold</b>, with attachment.<br clear="all"><div><br></div>', res['body'],
             'message_parse: html version should be in body after parsing multipart/mixed')
 
-        res = self.env['mail.thread'].message_parse(test_mail_data.MAIL_MULTIPART_MIXED_TWO)
+        res = self.env['mail.thread'].message_parse(email.message_from_string(pycompat.to_text(test_mail_data.MAIL_MULTIPART_MIXED_TWO)))
         self.assertNotIn('First and second part', res['body'],
                          'message_parse: text version should not be in body after parsing multipart/mixed')
         self.assertIn('First part', res['body'],
@@ -46,7 +47,7 @@ class TestEmailParsing(BaseFunctionalTest, MockEmails):
         self.assertIn('Second part', res['body'],
                       'message_parse: second part of the html version should be in body after parsing multipart/mixed')
 
-        res = self.env['mail.thread'].message_parse(test_mail_data.MAIL_SINGLE_BINARY)
+        res = self.env['mail.thread'].message_parse(email.message_from_string(pycompat.to_text(test_mail_data.MAIL_SINGLE_BINARY)))
         self.assertEqual(res['body'], '')
         self.assertEqual(res['attachments'][0][0], 'thetruth.pdf')
 
