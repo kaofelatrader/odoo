@@ -234,7 +234,6 @@ var ScaleScreenWidget = ScreenWidget.extend({
     show: function(){
         this._super();
         var self = this;
-        var queue = this.pos.proxy_queue;
 
         this.set_weight(0);
         this.renderElement();
@@ -259,13 +258,7 @@ var ScaleScreenWidget = ScreenWidget.extend({
             // add product *after* switching screen to scroll properly
             self.order_product();
         });
-
-        queue.schedule(function(){
-            return self.pos.proxy.scale_read().then(function(weight){
-                self.set_weight(weight.weight);
-            });
-        },{duration:500, repeat: true});
-
+        this._scale_read();
     },
     get_product: function(){
         return this.gui.get_current_screen_param('product');
@@ -331,6 +324,14 @@ var ScaleScreenWidget = ScreenWidget.extend({
 
         this.pos.proxy_queue.clear();
     },
+
+    _scale_read: function() {
+        this.pos.proxy_queue.schedule(function(){
+            return this.pos.proxy.scale_read().then(function(weight){
+                this.set_weight(weight.weight);
+            });
+        },{duration:500, repeat: true});
+    }
 });
 gui.define_screen({name: 'scale', widget: ScaleScreenWidget});
 

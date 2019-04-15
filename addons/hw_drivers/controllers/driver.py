@@ -18,6 +18,7 @@ from cups import Connection as cups_connection
 from glob import glob
 from base64 import b64decode
 from pathlib import Path
+from serial.tools.list_ports import comports
 
 from odoo import http, _
 from odoo.modules.module import get_resource_path
@@ -299,6 +300,14 @@ class Manager(Thread):
         else:
             _logger.warning('Odoo server not set')
 
+    def serial_loop(self):
+        serial_devices = {}
+        devs = comports()
+        for dev in devs:
+            iot_device = IoTDevice(dev, 'serial')
+            serial_devices[dev.device] = iot_device
+        return serial_devices
+
     def usb_loop(self):
         usb_devices = {}
         devs = core.find(find_all=True)
@@ -346,6 +355,7 @@ class Manager(Thread):
         cpt = 0
         while 1:
             updated_devices = self.usb_loop()
+            updated_devices.update(self.serial_loop())
             updated_devices.update(self.video_loop())
             updated_devices.update(bt_devices)
             if cpt % 40 == 0:
