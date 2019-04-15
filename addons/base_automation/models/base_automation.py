@@ -26,6 +26,19 @@ DATE_RANGE_FUNCTION = {
 }
 
 
+class AutomationFailureWizard(models.TransientModel):
+    _name = 'base.automation.failure.wizard'
+    _description = 'Automated action failure wizard'
+
+    def deactivate(self):
+        failures = self.env['base.automation'].browse(self._context.get('active_ids'))
+        failures.write({'active': False})
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'reload',
+        }
+
+
 class BaseAutomation(models.Model):
     _name = 'base.automation'
     _description = 'Automated Action'
@@ -207,7 +220,25 @@ class BaseAutomation(models.Model):
                         'active_id': record.id,
                         'domain_post': domain_post,
                     }
-                    self.action_server_id.with_context(**ctx).run()
+                    meta = {
+                            'label': 'Fix me',
+                            'action': {
+                                'type': 'ir.actions.act_window',
+                                'res_model': 'base.automation.failure.wizard',
+                                'target': 'new',
+                                'views': [[
+                                    self.env.ref(
+                                        'base_automation.base_automation_failure_wizard_form').id,
+                                    'form']],
+                                },
+                            'options': {'additional_context': {'active_ids': self.ids}},
+                            'visible': self.user_has_groups('base.group_system'),
+                            }
+                    try:
+                        self.action_server_id.with_context(**ctx).run()
+                    except Exception as e:
+                        e.metadata = meta
+                        raise e
 
     def _check_trigger_fields(self, record):
         """ Return whether any of the trigger fields has been modified on ``record``. """
@@ -309,7 +340,26 @@ class BaseAutomation(models.Model):
                 action_rule = self.env['base.automation'].browse(action_rule_id)
                 result = {}
                 server_action = action_rule.action_server_id.with_context(active_model=self._name, onchange_self=self)
-                res = server_action.run()
+                meta = {
+                        'label': 'Fix me',
+                        'action': {
+                            'type': 'ir.actions.act_window',
+                            'res_model': 'base.automation.failure.wizard',
+                            'target': 'new',
+                            'views': [[
+                                self.env.ref(
+                                    'base_automation.base_automation_failure_wizard_form').id,
+                                'form']],
+                            },
+                        'options': {'additional_context': {'active_ids': self.ids}},
+                        'visible': self.user_has_groups('base.group_system'),
+                        }
+                try:
+                    res = server_action.run()
+                except Exception as e:
+                    e.metadata = meta
+                    raise e
+
                 if res:
                     if 'value' in res:
                         res['value'].pop('id', None)
