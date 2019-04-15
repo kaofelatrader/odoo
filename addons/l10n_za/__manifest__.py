@@ -19,7 +19,7 @@ This is the latest basic South African localisation necessary to run Odoo in ZA:
         'data/account.tax.group.csv',
         'data/account_chart_template_data.xml',
         'data/account.account.template.csv',
-        'data/account.tax.template.csv',
+        'data/account_tax_template_data.xml',
         'data/account_chart_template_post_data.xml',
         'data/account_chart_template_configure_data.xml',
     ],
