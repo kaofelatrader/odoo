@@ -50,6 +50,7 @@ var Dialog = Widget.extend({
      * @param {boolean} [options.technical=true]
      *        If set to false, the modal will have the standard frontend style
      *        (use this for non-editor frontend features)
+     * @param {string} [options.description] - extra message to add at the end of the body
      */
     init: function (parent, options) {
         var self = this;
@@ -65,9 +66,13 @@ var Dialog = Widget.extend({
             $content: false,
             buttons: [{text: _t("Ok"), close: true}],
             technical: true,
+            description: '',
         });
 
-        this.$content = options.$content;
+        this.$content = options.$content
+        if (options.description) {
+            this.$content.append('<br/><br/>' + options.description);
+        }
         this.title = options.title;
         this.subtitle = options.subtitle;
         this.fullscreen = options.fullscreen;

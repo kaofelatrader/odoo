@@ -129,24 +129,47 @@ var CrashManager = core.Class.extend({
             this.show_error(error);
         }
     },
+    getMetaBtns: function (metadata) {
+        var btns = [{text: _t("Ok"), close: true, classes: "btn-primary"}]
+        if (metadata) {
+            btns = btns.concat([{
+                text: metadata.label,
+                classes: "btn-secondary",
+                click: function (e) {
+                    core.bus.trigger(
+                        "do_action",
+                        metadata.action,
+                        metadata.options
+                    );
+                },
+            }]);
+        }
+        return btns;
+    },
     show_warning: function(error) {
         if (!this.active) {
             return;
         }
-        return new Dialog(this, {
+        var meta = error.data.metadata;
+        var dialog =  new Dialog(this, {
             size: 'medium',
             title: _.str.capitalize(error.type || error.message) || _t("Odoo Warning"),
             subtitle: error.data.title,
-            $content: $(QWeb.render('CrashManager.warning', {error: error}))
+            $content: $(QWeb.render('CrashManager.warning', {error: error})),
+            buttons: this.getMetaBtns(meta),
+            description: meta && meta.description,
         }).open({shouldFocusButtons:true});
     },
     show_error: function(error) {
         if (!this.active) {
             return;
         }
+        var meta = error.data.metadata;
         var dialog = new Dialog(this, {
             title: _.str.capitalize(error.type || error.message) || _t("Odoo Error"),
-            $content: $(QWeb.render('CrashManager.error', {error: error}))
+            $content: $(QWeb.render('CrashManager.error', {error: error})),
+            buttons: this.getMetaBtns(meta),
+            description: meta && meta.description,
         });
 
         // When the dialog opens, initialize the copy feature and destroy it when the dialog is closed

@@ -19,7 +19,7 @@ _logger = logging.getLogger(__name__)
 
 # kept for backward compatibility
 class except_orm(Exception):
-    def __init__(self, name, value=None):
+    def __init__(self, name, value=None, metadata=None):
         if type(self) == except_orm:
             caller = frame_codeinfo(currentframe(), 1)
             _logger.warn('except_orm is deprecated. Please use specific exceptions like UserError or AccessError. Caller: %s:%s', *caller)
@@ -27,10 +27,16 @@ class except_orm(Exception):
         self.value = value
         self.args = (name, value)
 
+        # only send the metadata to the web client if the user has the right permissions
+        if metadata and metadata.get('visible', True):
+            self.metadata = metadata
+        else:
+            self.metadata = False
+
 
 class UserError(except_orm):
-    def __init__(self, msg):
-        super(UserError, self).__init__(msg, value='')
+    def __init__(self, msg, metadata=None):
+        super(UserError, self).__init__(msg, value='', metadata=metadata)
 
 
 # deprecated due to collision with builtins, kept for compatibility
@@ -65,8 +71,8 @@ class AccessDenied(Exception):
 class AccessError(except_orm):
     """ Access rights error.
     Example: When you try to read a record that you are not allowed to."""
-    def __init__(self, msg):
-        super(AccessError, self).__init__(msg)
+    def __init__(self, msg, metadata=None):
+        super(AccessError, self).__init__(msg, metadata=metadata)
 
 
 class CacheMiss(except_orm, KeyError):
@@ -79,15 +85,15 @@ class CacheMiss(except_orm, KeyError):
 class MissingError(except_orm):
     """ Missing record(s).
     Example: When you try to write on a deleted record."""
-    def __init__(self, msg):
-        super(MissingError, self).__init__(msg)
+    def __init__(self, msg, metadata=None):
+        super(MissingError, self).__init__(msg, metadata=metadata)
 
 
 class ValidationError(except_orm):
     """ Violation of python constraints
     Example: When you try to create a new user with a login which already exist in the db."""
-    def __init__(self, msg):
-        super(ValidationError, self).__init__(msg)
+    def __init__(self, msg, metadata=None):
+        super(ValidationError, self).__init__(msg, metadata=metadata)
 
 
 class DeferredException(Exception):
