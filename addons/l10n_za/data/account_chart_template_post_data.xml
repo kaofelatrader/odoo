@@ -11,7 +11,6 @@
         <field name="property_stock_valuation_account_id" ref="100020"/>
         <field name="income_currency_exchange_account_id" ref="610440"/>
         <field name="expense_currency_exchange_account_id" ref="610440"/>
-        <field name="complete_tax_set" eval="False"/>
         <field name="use_anglo_saxon" eval="True"/>
     </record>
 
