@@ -40,6 +40,8 @@ class Company(models.Model):
     # logo_web: do not store in attachments, since the image is retrieved in SQL for
     # performance reasons (see addons/web/controllers/main.py, Binary.company_logo)
     logo_web = fields.Binary(compute='_compute_logo_web', store=True, attachment=False)
+    report_display_logo = fields.Binary(string="Report Logo", compute='_compute_report_display_logo', inverse='_inverse_report_display_logo')
+    report_logo = fields.Binary(string="Report Logo Store")
     currency_id = fields.Many2one('res.currency', string='Currency', required=True, default=lambda self: self._get_user_currency())
     user_ids = fields.Many2many('res.users', 'res_company_users_rel', 'cid', 'user_id', string='Accepted Users')
     account_no = fields.Char(string='Account No.')
@@ -121,6 +123,14 @@ class Company(models.Model):
     def _compute_logo_web(self):
         for company in self:
             company.logo_web = tools.image_resize_image(company.partner_id.image, (180, None))
+
+    def _compute_report_display_logo(self):
+        for company in self:
+            company.report_display_logo = company.report_logo if company.report_logo else company.logo
+
+    def _inverse_report_display_logo(self):
+        for company in self:
+            company.report_logo = company.report_display_logo
 
     @api.onchange('state_id')
     def _onchange_state(self):

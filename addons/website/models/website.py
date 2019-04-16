@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import base64
 import inspect
 import logging
 import hashlib
@@ -14,6 +15,7 @@ from odoo.addons.http_routing.models.ir_http import slugify, _guess_mimetype
 from odoo.addons.website.models.ir_http import sitemap_qs2dom
 from odoo.addons.portal.controllers.portal import pager
 from odoo.http import request
+from odoo.modules import get_module_resource
 from odoo.osv.expression import FALSE_DOMAIN
 from odoo.tools.translate import _
 
@@ -78,6 +80,10 @@ class Website(models.Model):
     def _default_social_twitter(self):
         return self.env.ref('base.main_company').social_twitter
 
+    def _default_logo(self):
+        image_path = get_module_resource('base', 'static/img', 'res_company_logo.png')
+        return tools.image_resize_image_big(base64.b64encode(open(image_path, 'rb').read()))
+
     social_twitter = fields.Char('Twitter Account', default=_default_social_twitter)
     social_facebook = fields.Char('Facebook Account', default=_default_social_facebook)
     social_github = fields.Char('GitHub Account', default=_default_social_github)
@@ -108,6 +114,7 @@ class Website(models.Model):
         ('b2b', 'On invitation'),
         ('b2c', 'Free sign up'),
     ], string='Customer Account', default='b2b')
+    logo = fields.Binary(default=_default_logo)
 
     @api.onchange('language_ids')
     def _onchange_language_ids(self):
