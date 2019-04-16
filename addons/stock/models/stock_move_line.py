@@ -79,7 +79,7 @@ class StockMoveLine(models.Model):
     def _check_same_company_id(self):
         for line in self:
             if line.move_id and line.move_id.company_id != line.company_id:
-                raise ValidationError(_('The move line a a different company than its move'))
+                raise ValidationError(_('The move line has a different company than its move'))
 
     @api.one
     def _set_product_qty(self):
