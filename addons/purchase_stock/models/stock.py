@@ -25,7 +25,6 @@ class StockMove(models.Model):
             > Check if some of previouse moves are not cancel decrease the line quantity.
             > Check that purchase line has been generated from the multiple move or not.
         """
-
         moves_purchase_line = self.filtered(lambda m: m.created_purchase_line_id and m.state not in ('done', 'cancel'))
         for move in moves_purchase_line:
             order = move.created_purchase_line_id.order_id
@@ -35,8 +34,9 @@ class StockMove(models.Model):
                     siblings_states = (move.created_purchase_line_id.move_dest_ids - move).mapped('state')
                     if all(state == 'cancel' for state in siblings_states):
                         if len(order.order_line) > 1:
+                            msg = _("%s has been removed from the quotations as demand changed.") % (purchase_line.product_id.name,)
                             purchase_line.unlink()
-                            # Need to log the message that line has been removed.
+                            order.message_post(body=msg)
                         else:
                             # Cancel order line incase its generated from single demand.
                             order.button_cancel()
@@ -44,16 +44,22 @@ class StockMove(models.Model):
                         # When purchase line is merged for two sale orders.
                         cancel_quantity = move.product_uom._compute_quantity(move.product_uom_qty, purchase_line.product_uom)
                         total_previous_qty = 0.0
-                        for move in move.created_purchase_line_id.move_dest_ids:
+                        for move in move.created_purchase_line_id.move_dest_ids.filtered(lambda x: x.state not in ('cancel', 'done')):
                             total_previous_qty += move.product_uom._compute_quantity(move.product_uom_qty, purchase_line.product_uom)
                         if purchase_line.product_qty >= total_previous_qty:
                             if cancel_quantity == purchase_line.product_qty:
                                 if len(order.order_line.ids) == 1:
                                     order.button_cancel()
                                 else:
+                                    msg = _("Quotation has been updated as demand changed, %s has been removed from the quotations.") % (purchase_line.product_id.name,)
                                     purchase_line.unlink()
+                                    order.message_post(body=msg)
                             else:
+                                from_qty = purchase_line.product_qty
+                                to_qty = purchase_line.product_qty - cancel_quantity
+                                msg = _("Quotation has been updated as demand changed for product %s : %.2f to %.2f.") % (purchase_line.product_id.name, from_qty, to_qty)
                                 purchase_line.write({'product_qty': purchase_line.product_qty - cancel_quantity})
+                                order.message_post(body=msg)
         # Skip moves which have created purchase lines
         return super(StockMove, self - moves_purchase_line)._action_cancel_origin()
 
@@ -120,7 +126,7 @@ class StockMove(models.Model):
         self.write({'created_purchase_line_id': False})
 
     def _get_upstream_documents_and_responsibles(self, visited):
-        if self.created_purchase_line_id and self.created_purchase_line_id.state not in ('done', 'cancel'):
+        if self.created_purchase_line_id and (not self.previous_move_propagate or self.created_purchase_line_id.state != 'draft') and self.created_purchase_line_id.state not in ('done', 'cancel'):
             return [(self.created_purchase_line_id.order_id, self.created_purchase_line_id.order_id.user_id, visited)]
         else:
             return super(StockMove, self)._get_upstream_documents_and_responsibles(visited)
