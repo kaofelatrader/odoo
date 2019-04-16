@@ -894,6 +894,7 @@ registry.background = SnippetOption.extend({
             res_model: $editable.data('oe-model'),
             res_id: $editable.data('oe-id'),
             background_video_options: true,
+            video: video,
         }, $image[0]).open();
 
         _editor.on('save', this, function (data) {
