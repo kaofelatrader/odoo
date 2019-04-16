@@ -211,7 +211,7 @@ class TestAdvMailPerformance(TransactionCase):
     def test_message_assignation_email(self):
         self.user_test.write({'notification_type': 'email'})
         record = self.env['mail.test.track'].create({'name': 'Test'})
-        with self.assertQueryCount(__system__=59, emp=74):  # com runbot: 59 - 74 // test_mail only: 59 - 71
+        with self.assertQueryCount(__system__=60, emp=74):  # com runbot: 59 - 74 // test_mail only: 59 - 71
             record.write({
                 'user_id': self.user_test.id,
             })
@@ -486,7 +486,7 @@ class TestHeavyMailPerformance(TransactionCase):
             'user_id': self.env.uid,
         })
         self.assertEqual(rec.message_partner_ids, self.partners | self.env.user.partner_id)
-        with self.assertQueryCount(__system__=60, emp=75):  # com runbot: 60 - 75 // test_mail only: 60 - 72
+        with self.assertQueryCount(__system__=61, emp=75):  # com runbot: 60 - 75 // test_mail only: 60 - 72
             rec.write({'user_id': self.user_portal.id})
         self.assertEqual(rec.message_partner_ids, self.partners | self.env.user.partner_id | self.user_portal.partner_id)
         # write tracking message
@@ -506,7 +506,7 @@ class TestHeavyMailPerformance(TransactionCase):
         customer_id = self.customer.id
         user_id = self.user_portal.id
 
-        with self.assertQueryCount(__system__=154, emp=171):  # com runbot: 154 - 171 // test_mail only: 154 - 168
+        with self.assertQueryCount(__system__=155, emp=171):  # com runbot: 154 - 171 // test_mail only: 154 - 168
             rec = self.env['mail.test.full'].create({
                 'name': 'Test',
                 'umbrella_id': umbrella_id,
@@ -756,7 +756,6 @@ class TestMailPerformancePost(TransactionCase):
         attachement_ids = self.attachements.ids
         with self.assertQueryCount(emp=248): # test_mail only: 210
             self.cr.sql_log = self.warm and self.cr.sql_log_count
-            print('begin #####################################')
             #record.with_context({'mail_post_autofollow':True}).message_post(
             record.with_context({}).message_post(
                 body='<p>Test body <img src="cid:cid1"> <img src="cid:cid2"></p>',
@@ -773,7 +772,6 @@ class TestMailPerformancePost(TransactionCase):
                 mail_auto_delete=True
             )
             self.cr.sql_log = False
-            print('end #####################################')
         self.assertTrue(record.message_ids[0].body.startswith('<p>Test body <img src="/web/image/'))
         self.assertEqual(self.attachements.mapped('res_model'), [record._name for i in range(3)])
         self.assertEqual(self.attachements.mapped('res_id'), [record.id for i in range(3)])
