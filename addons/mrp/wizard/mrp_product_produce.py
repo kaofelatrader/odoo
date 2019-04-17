@@ -66,7 +66,7 @@ class MrpProductProduce(models.TransientModel):
     def action_generate_serial(self):
         self.ensure_one()
         product_produce_wiz = self.env.ref('mrp.view_mrp_product_produce_wizard', False)
-        self.final_lot_id = self.env['stock.production.lot'].create({
+        self.finished_lot_id = self.env['stock.production.lot'].create({
             'product_id': self.product_id.id
         })
         return {
@@ -141,7 +141,7 @@ class MrpProductProduceLine(models.TransientModel):
     product_produce_id = fields.Many2one('mrp.product.produce', 'Produce wizard')
 
     def _get_final_lot(self):
-        return self.product_produce_id.final_lot_id
+        return self.product_produce_id.finished_lot_id
 
     def _get_production(self):
         return self.product_produce_id.production_id
