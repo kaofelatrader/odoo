@@ -42,6 +42,7 @@ var TextNode = ArchNode.extend({
         this.parent.insert(archNode, next.index());
     },
     toString: function (options) {
+        options = options || {};
         if (this.isVirtual() && !options.keepVirtual) {
             return '';
         }
