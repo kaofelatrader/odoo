@@ -870,6 +870,31 @@ class Message(models.Model):
         if not other_ids:
             return
 
+        # CRUD: Access rights related to the document
+        model_record_ids = _generate_model_record_ids(message_values, other_ids)
+        document_related_ids = []
+        for model, doc_ids in model_record_ids.items():
+            DocumentModel = self.env[model]
+            if hasattr(DocumentModel, 'get_mail_message_access'):
+                check_operation = DocumentModel.get_mail_message_access(doc_ids, operation)  ## why not giving model here?
+            else:
+                check_operation = self.env['mail.thread'].get_mail_message_access(doc_ids, operation, model_name=model)
+            records = DocumentModel.browse(doc_ids)
+            records.check_access_rights(check_operation)
+            mids = records.browse(doc_ids)._filter_access_rules(check_operation)
+            document_related_ids += [
+                mid for mid, message in message_values.items()
+                if (message.get('model') == model and
+                    message.get('res_id') in mids.ids and
+                    message.get('message_type') != 'user_notification' and
+                    (message.get('moderation_status') != 'pending_moderation' or
+                    operation not in ['write', 'unlink']))]
+
+        other_ids = other_ids.difference(set(document_related_ids))
+
+        if not other_ids:
+            return
+
         # Parent condition, for create (check for received notifications for the created message parent)
         notified_ids = []
         if operation == 'create':
@@ -913,31 +938,6 @@ class Message(models.Model):
                                  ]
 
         other_ids = other_ids.difference(set(notified_ids))
-        if not other_ids:
-            return
-
-         # CRUD: Access rights related to the document
-        model_record_ids = _generate_model_record_ids(message_values, other_ids)
-        document_related_ids = []
-        for model, doc_ids in model_record_ids.items():
-            DocumentModel = self.env[model]
-            if hasattr(DocumentModel, 'get_mail_message_access'):
-                check_operation = DocumentModel.get_mail_message_access(doc_ids, operation)
-            else:
-                check_operation = self.env['mail.thread'].get_mail_message_access(doc_ids, operation, model_name=model)
-            records = DocumentModel.browse(doc_ids)
-            records.check_access_rights(check_operation)
-            mids = records.browse(doc_ids)._filter_access_rules(check_operation)
-            document_related_ids += [
-                mid for mid, message in message_values.items()
-                if (message.get('model') == model and
-                    message.get('res_id') in mids.ids and
-                    message.get('message_type') != 'user_notification' and
-                    (message.get('moderation_status') != 'pending_moderation' or
-                    operation not in ['write', 'unlink']))]
-
-        other_ids = other_ids.difference(set(document_related_ids))
-
         if not other_ids:
             return
 
