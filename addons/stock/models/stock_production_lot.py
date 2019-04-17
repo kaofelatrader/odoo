@@ -10,6 +10,11 @@ class ProductionLot(models.Model):
     _inherit = ['mail.thread','mail.activity.mixin']
     _description = 'Lot/Serial'
 
+    def _default_display_complete(self):
+        if self._context.get('display_complete'):
+            return True
+        return False
+
     name = fields.Char(
         'Lot/Serial Number', default=lambda self: self.env['ir.sequence'].next_by_code('stock.lot.serial'),
         required=True, help="Unique Lot/Serial Number")
@@ -23,6 +28,8 @@ class ProductionLot(models.Model):
     quant_ids = fields.One2many('stock.quant', 'lot_id', 'Quants', readonly=True)
     product_qty = fields.Float('Quantity', compute='_product_qty')
     note = fields.Html(string='Description')
+    display_complete = fields.Boolean(default=_default_display_complete,
+        compute='_compute_display_complete', store=False)
 
     _sql_constraints = [
         ('name_ref_uniq', 'unique (name, product_id)', 'The combination of serial number and product must be unique !'),
@@ -34,6 +41,13 @@ class ProductionLot(models.Model):
             picking_id = self.env['stock.picking'].browse(active_picking_id)
             if picking_id and not picking_id.picking_type_id.use_create_lots:
                 raise UserError(_('You are not allowed to create a lot or serial number with this operation type. To change this, go on the operation type and tick the box "Create New Lots/Serial Numbers".'))
+
+    def _compute_display_complete(self):
+        for prod_lot in self:
+            if prod_lot.id is not False or self._context.get('display_complete'):
+                prod_lot.display_complete = True
+            else:
+                prod_lot.display_complete = False
 
     @api.model_create_multi
     def create(self, vals_list):
