@@ -1042,8 +1042,20 @@ class Message(models.Model):
         tracking_values_cmd = values.pop('tracking_value_ids', False)
         message = super(Message, self).create(values)
 
+        # check attachement access
         if values.get('attachment_ids'):
-            message.attachment_ids.check(mode='read')
+            attachment_ids = []
+            for attachment_commands in values.get('attachment_ids'):
+                if isinstance(attachment_commands, int):
+                    attachment_ids += [attachment_commands]
+                elif attachment_commands[0] == 6:
+                    attachment_ids += attachment_commands[2]
+                elif attachment_commands[0] == 4:
+                    attachment_ids += [attachment_commands[1]]
+                else: #unsuported command
+                    attachment_ids = message.attachment_ids.id # fallback on read. If unknow command
+                    break
+            self.env['ir.attachment'].browse(attachment_ids).check(mode='read')
 
         if tracking_values_cmd:
             vals_lst = [dict(cmd[2], mail_message_id=message.id) for cmd in tracking_values_cmd if len(cmd) == 3 and cmd[0] == 0]
