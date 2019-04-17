@@ -349,24 +349,26 @@ class TestPerformance(TransactionCase):
     def test_several_prefetch(self):
         initial_records = self.env['test_performance.base'].search([])
         self.assertEqual(len(initial_records), 5)
+        query = 'INSERT INTO test_performance_base(value) SELECT value FROM test_performance_base'
         for _i in range(8):
-            self.env.cr.execute(
-                'insert into test_performance_base(value) select value from test_performance_base'
-            )
+            self.env.cr.execute(query)
+
         records = self.env['test_performance.base'].search([])
         self.assertEqual(len(records), 1280)
         # should only cause 2 queries thanks to prefetching
         with self.assertQueryCount(__system__=2, demo=2):
             records.mapped('value')
-        records.invalidate_cache(['value'])
 
+        records.invalidate_cache(['value'])
         with self.assertQueryCount(__system__=2, demo=2):
-            with self.env.do_in_onchange():
-                records.mapped('value')
-        self.env.cr.execute(
-            'delete from test_performance_base where id not in %s',
-            (tuple(initial_records.ids),)
-        )
+            records.mapped('value')
+        with self.assertQueryCount(__system__=0, demo=0):
+            new_recs = records.browse(records.new(origin=record).id for record in records)
+            new_recs.mapped('value')
+
+        # clean up after each pass
+        query = 'DELETE FROM test_performance_base WHERE id NOT IN %s'
+        self.env.cr.execute(query, [tuple(initial_records.ids)])
 
     def expected_read_group(self):
         groups = defaultdict(list)
