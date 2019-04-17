@@ -1972,6 +1972,7 @@ class MailThread(models.AbstractModel):
             :return int: ID of newly created mail.message
         """
         self.ensure_one()  # should always be posted on a record, use message_notify if no record
+        self = self.with_lang()
         model = self._name
         res_id = self.id
 
@@ -2126,7 +2127,7 @@ class MailThread(models.AbstractModel):
             prioritary_attachments = all_attachments.filtered(lambda x: x.mimetype.endswith('pdf')) \
                                      or all_attachments.filtered(lambda x: x.mimetype.startswith('image')) \
                                      or all_attachments
-            self.sudo().write({'message_main_attachment_id': prioritary_attachments[0].id})
+            self.sudo().with_context(tracking_disable=True).write({'message_main_attachment_id': prioritary_attachments[0].id})
 
     def _message_create(self, values):
         create_values = dict(values)
