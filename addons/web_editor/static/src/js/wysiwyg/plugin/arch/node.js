@@ -276,6 +276,13 @@ return Class.extend({
         this.after(archNode);
         return archNode;
     },
+    splitUntil: function (ancestor, offset) {
+        if (this === ancestor) {
+            return this;
+        }
+        var right = this.split(offset);
+        return right.parent.splitUntil(ancestor, right.index());
+    },
 
     //--------------------------------------------------------------------------
     // Public: Update
@@ -322,13 +329,13 @@ return Class.extend({
     //--------------------------------------------------------------------------
 
     firstChild: function () {
-        return this.childNodes && this.childNodes.length ? this.childNodes[0] : this;
+        return this.childNodes && this.childNodes.length ? this.childNodes[0] : null;
     },
     index: function () {
         return this.parent.childNodes.indexOf(this);
     },
     lastChild: function () {
-        return this.childNodes && this.childNodes.length ? this.childNodes[this.childNodes.length - 1] : this;
+        return this.childNodes && this.childNodes.length ? this.childNodes[this.childNodes.length - 1] : null;
     },
     nextSibling: function (fn) {
         for (var k = this.index() + 1; k < this.parent.childNodes.length; k++) {
@@ -357,6 +364,25 @@ return Class.extend({
             parent = parent.parent;
         }
         return !!parent;
+    },
+    commonAncestor: function (otherArchNode) {
+        var ancestors = this.listAncestor();
+        for (var n = otherArchNode; n; n = n.parent) {
+            if (ancestors.indexOf(n) > -1) {
+                return n;
+            }
+        }
+        return null; // difference document area
+    },
+    listAncestor: function (pred) {
+        var ancestors = [];
+        this.ancestor(function (el) {
+            if (!el.isContentEditable()) {
+                ancestors.push(el);
+            }
+            return pred ? pred(el) : false;
+        });
+        return ancestors;
     },
     next: function () {
         return this._prevNextUntil(false);
