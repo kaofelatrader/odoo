@@ -266,11 +266,13 @@ class SaleOrderLine(models.Model):
         PurchaseOrder = self.env['purchase.order']
         supplier_po_map = {}
         sale_line_purchase_map = {}
+        precision = self.env['decimal.precision'].precision_get('Product Unit of Measure')
         for line in self:
             # determine vendor of the order (take the first matching company and product)
-            suppliers = line.product_id.seller_ids.filtered(lambda vendor: (not vendor.company_id or vendor.company_id == line.company_id) and (not vendor.product_id or vendor.product_id == line.product_id))
+            suppliers = line.product_id.seller_ids.filtered(lambda vendor: (not vendor.company_id or vendor.company_id == line.company_id) and (not vendor.product_id or vendor.product_id == line.product_id)
+                        and float_compare(self.product_uom_qty, vendor.min_qty, precision_digits=precision) != -1)
             if not suppliers:
-                raise UserError(_("There is no vendor associated to the product %s. Please define a vendor for this product.") % (line.product_id.display_name,))
+                raise UserError(_("There is no matching vendor price to generate the purchase order (no vendor defined, minimum quantity not reached, dates not valid, ....)    "))
             supplierinfo = suppliers[0]
             partner_supplier = supplierinfo.name  # yes, this field is not explicit .... it is a res.partner !
 
