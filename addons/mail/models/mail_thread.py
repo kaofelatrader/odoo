@@ -1998,7 +1998,11 @@ class MailThread(models.AbstractModel):
             author_id = self.env['mail.message']._get_default_author().id # self.env.user.partner_id
 
         author = self.env['res.partner'].browse(author_id) # 1 query prefetch author
-        email_from = email_from or (formataddr((author.name, author.email)) if author else self.env['mail.message']._get_default_from())
+
+        #Trying to fix 'test_convert_answer_to_comment' posting with user not having access to author.
+        #email_from = email_from or (formataddr((author.name, author.email)) if author else self.env['mail.message']._get_default_from())
+        # maybe we should call author as sudo as in message_notify
+        email_from = email_from or self.env['mail.message']._get_default_from()
 
         if not subtype_id:
             subtype = subtype or 'mt_note'

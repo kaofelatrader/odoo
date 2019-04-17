@@ -753,7 +753,7 @@ class TestMailPerformancePost(TransactionCase):
         ]
         self.attachements = self.env['ir.attachment'].sudo(self.env.user).create(self.vals) #-> 163-> 165 query 
         attachement_ids = self.attachements.ids
-        with self.assertQueryCount(emp=248): # test_mail only: 127
+        with self.assertQueryCount(emp=156): # test_mail only: 126
             self.cr.sql_log = self.warm and self.cr.sql_log_count
             #record.with_context({'mail_post_autofollow':True}).message_post(
             record.with_context({}).message_post(
