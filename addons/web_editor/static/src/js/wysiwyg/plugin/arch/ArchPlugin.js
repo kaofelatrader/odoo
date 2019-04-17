@@ -675,21 +675,21 @@ var ArchPlugin = AbstractPlugin.extend({
     },
     removeLeft: function () {
         this._resetChange();
-        this._removeFromRange();
-        var index = this._changes.length;
-        this._removeSide(true);
-        if (this._changes.length > index) {
-            this._changes[index].isRange = true;
+        if (this.getRange().isCollapsed()) {
+            this._removeSide(true);
+            this._changes[0].isRange = true;
+        } else {
+            this._removeFromRange();
         }
         this._updateRendererFromChanges();
     },
     removeRight: function () {
         this._resetChange();
-        this._removeFromRange();
-        var index = this._changes.length;
-        this._removeSide(false);
-        if (this._changes.length > index) {
-            this._changes[index].isRange = true;
+        if (this.getRange().isCollapsed()) {
+            this._removeSide(false);
+            this._changes[0].isRange = true;
+        } else {
+            this._removeFromRange();
         }
         this._updateRendererFromChanges();
     },
@@ -876,22 +876,22 @@ var ArchPlugin = AbstractPlugin.extend({
         var virtualTextNodeBegin = this._createArchNode(); // the next range
         var virtualTextNodeEnd = this._createArchNode();
 
-        // rechercher le common ancestor des deux virtuels
-
         var endNode = this._getNode(this._range.ecID);
+        var commonAncestor = endNode.commonAncestor(this._getNode(this._range.scID));
         endNode.insert(virtualTextNodeEnd, this._range.eo);
 
         // todo: faire un split tree jusque l'ancetre commun/unbreakable
+        endNode.splitUntil(commonAncestor, 0);
 
         var fromNode = this._getNode(this._range.scID);
         fromNode.insert(virtualTextNodeBegin, this._range.so);
 
-        // todo: faire un split tree jusque l'ancetre commun/unbreakable
+        fromNode.splitUntil(commonAncestor, 0);
 
         var toRemove = [];
         virtualTextNodeBegin.nextUntil(function (next) {
             toRemove.push(next);
-            return next !== virtualTextNodeEnd;
+            return next.next() === virtualTextNodeEnd;
         });
 
         toRemove.forEach(function (archNode) {
