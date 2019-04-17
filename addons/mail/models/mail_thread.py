@@ -1240,11 +1240,9 @@ class MailThread(models.AbstractModel):
                     'Routing mail from %s to %s with Message-Id %s: direct reply to msg: model: %s, thread_id: %s, custom_values: %s, uid: %s',
                     email_from, email_to, message_id, model, thread_id, custom_values, self._uid)
                 return [route]
-            elif route is False:
-                return []
 
         # 2. Look for a matching mail.alias entry
-        if rcpt_tos_localparts:
+        if not is_a_reply and rcpt_tos_localparts:
             # no route found for a matching reference (or reply), so parent is invalid
             message_dict.pop('parent_id', None)
 
@@ -1279,10 +1277,11 @@ class MailThread(models.AbstractModel):
                             'Routing mail from %s to %s with Message-Id %s: direct alias match: %r',
                             email_from, email_to, message_id, route)
                         routes.append(route)
-                return routes
+                if routes:
+                    return routes
 
         # 5. Fallback to the provided parameters, if they work
-        if fallback_model:
+        if not is_a_reply and not rcpt_tos_localparts and fallback_model:
             # no route found for a matching reference (or reply), so parent is invalid
             message_dict.pop('parent_id', None)
             route = self.message_route_verify(
