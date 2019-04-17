@@ -482,9 +482,10 @@ class AccountBankStatementLine(models.Model):
         going in the bank reconciliation widget. By setting an account_id on bank statement lines, it will create a journal
         entry using that account to counterpart the bank account
         """
+        statement_ids = [a['statement_line_id'][0] for a in self.env['account.move.line'].read_group([('statement_line_id', 'in', self.ids)], ['statement_line_id'], ['statement_line_id'])]
         for st_line in self:
             # Technical functionality to automatically reconcile by creating a new move line
-            if st_line.account_id and not st_line.journal_entry_ids.ids:
+            if st_line.account_id and not st_line.id in statement_ids:
                 vals = {
                     'name': st_line.name,
                     'debit': st_line.amount < 0 and -st_line.amount or 0.0,
@@ -556,7 +557,7 @@ class AccountBankStatementLine(models.Model):
             user_type_id = self.env['account.account'].browse(aml_dict.get('account_id')).user_type_id
             if user_type_id in [payable_account_type, receivable_account_type] and user_type_id not in account_types:
                 account_types |= user_type_id
-        if any(line.journal_entry_ids for line in self):
+        if self.env['account.move.line'].search_count([('statement_line_id', 'in', self.ids)]):
             raise UserError(_('A selected statement line was already reconciled with an account move.'))
 
         # Fully reconciled moves are just linked to the bank statement
