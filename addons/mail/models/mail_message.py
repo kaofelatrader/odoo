@@ -871,8 +871,12 @@ class Message(models.Model):
             return
 
         # CRUD: Access rights related to the document
-        model_record_ids = _generate_model_record_ids(message_values, other_ids)
         document_related_ids = []
+        document_related_candidate_ids = [mid for mid, message in message_values.items()
+                if (message.get('model') and message.get('res_id') and
+                    message.get('message_type') != 'user_notification' and
+                    (message.get('moderation_status') != 'pending_moderation' or operation not in ['write', 'unlink']))]
+        model_record_ids = _generate_model_record_ids(message_values, document_related_candidate_ids)
         for model, doc_ids in model_record_ids.items():
             DocumentModel = self.env[model]
             if hasattr(DocumentModel, 'get_mail_message_access'):
