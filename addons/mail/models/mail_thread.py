@@ -2194,13 +2194,21 @@ class MailThread(models.AbstractModel):
 
         inbox_pids = [r['id'] for r in rdata['partners'] if r['notif'] == 'inbox']
         partner_email_rdata = [r for r in rdata['partners'] if r['notif'] == 'email']
+        channel_ids = [r['id'] for r in rdata['channels']]
+
+        notifications = []
+        if inbox_pids or channel_ids:
+            message_values = False
+            if inbox_pids:
+                message_values = message.message_format()[0]
+                for partner in self.env['res.partner'].browse(inbox_pids):
+                    notifications.append([(self._cr.dbname, 'ir.needaction', partner), dict(message_values)])
+            if channel_ids:
+                notifications += self.env['mail.channel'].sudo().browse(channel_ids)._channel_message_notifications(message, message_values)
         if partner_email_rdata:
             self._notify_partners(message, partner_email_rdata, msg_vals=msg_vals, model_description=model_description, mail_auto_delete=mail_auto_delete)
-        if inbox_pids:
-            self.env['res.partner'].browse(inbox_pids)._notify_by_chat(message)
-        if rdata['channels']:
-            # send a notification on bus to update channel
-            self.env['mail.channel'].sudo().browse([r['id'] for r in rdata['channels']])._notify(message)
+        if notifications:
+            self.env['bus.bus'].sudo().sendmany(notifications)
         return True
 
     def _notify_partners(self, message, partners_data, msg_vals=False, model_description=False, mail_auto_delete=True, send_after_commit=False):
@@ -2215,7 +2223,7 @@ class MailThread(models.AbstractModel):
         :param mail_auto_delete: delete notification emails once sent;
         """
         model = msg_vals.get('model') if msg_vals else message.model
-        model_name = model_description or (self.with_lang().env['ir.model']._get(model).display_name if model else False)
+        model_name = model_description or (self.with_lang().env['ir.model']._get(model).display_name if model else False) # one query for display name
         recipients_groups_data = self._notify_classify_recipients(partners_data, model_name)
 
         if not recipients_groups_data:
@@ -2223,22 +2231,25 @@ class MailThread(models.AbstractModel):
 
         force_send = self.env.context.get('mail_notify_force_send', True)
 
-        template_values = self._notify_prepare_template_context(message, msg_vals, model_description=model_description)
+        template_values = self._notify_prepare_template_context(message, msg_vals, model_description=model_description) # 10 queries
 
         email_layout_xmlid = msg_vals.get('email_layout_xmlid') if msg_vals else message.email_layout_xmlid
         template_xmlid = email_layout_xmlid if email_layout_xmlid else 'mail.message_notification_email'
         try:
-            base_template = self.env.ref(template_xmlid, raise_if_not_found=True).with_context(lang=template_values['lang'])
+            base_template = self.env.ref(template_xmlid, raise_if_not_found=True).with_context(lang=template_values['lang']) # 1 query
         except ValueError:
             _logger.warning('QWeb template %s not found when sending notification emails. Sending without layouting.' % (template_xmlid))
             base_template = False
 
+
+        mail_subject = message.subject or (message.record_name and 'Re: %s' % message.record_name) # in cache, no queries
         # prepare notification mail values
         base_mail_values = {
             'mail_message_id': message.id,
-            'mail_server_id': message.mail_server_id.id,
+            'mail_server_id': message.mail_server_id.id, # 2 query, check acces + read, may be useless, Falsy, when will it be used?
             'auto_delete': mail_auto_delete,
-            'references': message.parent_id.message_id if message.parent_id else False
+            'references': message.parent_id.message_id if message.parent_id else False,
+            'subject': mail_subject,
         }
         headers = self._notify_email_headers()
         if headers:
@@ -2261,7 +2272,6 @@ class MailThread(models.AbstractModel):
             else:
                 mail_body = message.body
             mail_body = self._replace_local_links(mail_body)
-            mail_subject = message.subject or (message.record_name and 'Re: %s' % message.record_name)
             # send email
             for recipients_ids_chunk in split_every(recipients_max, recipients_ids):
                 recipient_values = self._notify_email_recipient_values(recipients_ids_chunk)
@@ -2331,9 +2341,11 @@ class MailThread(models.AbstractModel):
         subtype_id =  msg_vals.get('subtype_id') if msg_vals else message.subtype_id.id
         message_id = message.id
         record_name = msg_vals.get('record_name') if msg_vals else message.record_name
-
-        if author and author.user_ids:
-            user = author.user_ids[0]
+        author_user = user if user.partner_id == author else author.user_ids[0] if author and author.user_ids else False
+        # trying to use user (self.env.user) instead of browing user_ids if he is the author will give a sudo user,
+        # improving access performances and cache usage.
+        if author_user:
+            user = author_user
             if add_sign:
                 signature = user.signature
         else:

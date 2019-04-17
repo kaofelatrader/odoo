@@ -34,17 +34,6 @@ class Partner(models.Model):
     def message_get_default_recipients(self):
         return dict((res_id, {'partner_ids': [res_id], 'email_to': False, 'email_cc': False}) for res_id in self.ids)
 
-    @api.multi
-    def _notify_by_chat(self, message):
-        """ Broadcast the message to all the partner since """
-        if not self:
-            return
-        message_values = message.message_format()[0]
-        notifications = []
-        for partner in self:
-            notifications.append([(self._cr.dbname, 'ir.needaction', partner.id), dict(message_values)])
-        self.env['bus.bus'].sendmany(notifications)
-
     @api.model
     def get_needaction_count(self):
         """ compute the number of needaction of the current user """
