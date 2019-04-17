@@ -936,37 +936,27 @@ class Environment(Mapping):
 
     def field_todo(self, field):
         """ Return a recordset with all records to recompute for ``field``. """
-        ids = {rid for recs in self.all.todo.get(field, ()) for rid in recs.ids}
+        ids = self.all.todo.get(field, ())
         return self[field.model_name].browse(ids)
 
     def check_todo(self, field, record):
         """ Check whether ``field`` must be recomputed on ``record``, and if so,
             return the corresponding recordset to recompute.
         """
-        for recs in self.all.todo.get(field, []):
-            if recs & record:
-                return recs
+        ids = self.all.todo.get(field, ())
+        if record.id in ids:
+            return self(user=SUPERUSER_ID, context={})[field.model_name].browse(ids)
 
     def add_todo(self, field, records):
         """ Mark ``field`` to be recomputed on ``records``. """
-        recs_list = self.all.todo.setdefault(field, [])
-        for i, recs in enumerate(recs_list):
-            if recs.env == records.env:
-                # only add records if not already in the recordset, much much
-                # cheaper in case recs is big and records is a singleton
-                # already present
-                if not records <= recs:
-                    recs_list[i] |= records
-                break
-        else:
-            recs_list.append(records)
+        self.all.todo[field].update(records._ids)
 
     def remove_todo(self, field, records):
         """ Mark ``field`` as recomputed on ``records``. """
-        recs_list = [recs - records for recs in self.all.todo.pop(field, [])]
-        recs_list = [r for r in recs_list if r]
-        if recs_list:
-            self.all.todo[field] = recs_list
+        ids = self.all.todo[field]
+        ids.difference_update(records._ids)
+        if not ids:
+            del self.all.todo[field]
 
     def has_todo(self):
         """ Return whether some fields must be recomputed. """
@@ -977,7 +967,7 @@ class Environment(Mapping):
             The field is such that none of its dependencies must be recomputed.
         """
         field = min(self.all.todo, key=self.registry.field_sequence)
-        return field, self.all.todo[field][0]
+        return field, self[field.model_name].browse(self.all.todo[field])
 
     @property
     def recompute(self):
@@ -1004,7 +994,7 @@ class Environments(object):
     def __init__(self):
         self.envs = WeakSet()           # weak set of environments
         self.cache = Cache()            # cache for all records
-        self.todo = {}                  # recomputations {field: [records]}
+        self.todo = {}                  # recomputations {field: {ids}}
         self.mode = False               # flag for draft/onchange
         self.recompute = True
 
