@@ -735,11 +735,12 @@ var ArchPlugin = AbstractPlugin.extend({
         self._renderer.update(json);
         this.trigger_up('change');
 
-        this._setRangeWithIDs({
-            scID: result.range.id,
-            so: result.range.offset,
-        });
-
+        if (this._renderer.getElement(result.range.id)) {
+            this._setRangeWithIDs({
+                scID: result.range.id,
+                so: result.range.offset,
+            });
+        }
         this._setRange();
     },
     _isVoidBlock: function (archNode) {
@@ -806,7 +807,6 @@ var ArchPlugin = AbstractPlugin.extend({
         offset = offset || 0;
 
         var childNodes = fragment.childNodes.slice();
-        childNodes.reverse();
         childNodes.forEach(function (child, index) {
             archNode.insert(child, offset);
         });
@@ -890,8 +890,11 @@ var ArchPlugin = AbstractPlugin.extend({
 
         var toRemove = [];
         virtualTextNodeBegin.nextUntil(function (next) {
+            if (next === virtualTextNodeEnd) {
+                return true;
+            }
             toRemove.push(next);
-            return next.next() === virtualTextNodeEnd;
+            return false;
         });
 
         toRemove.forEach(function (archNode) {

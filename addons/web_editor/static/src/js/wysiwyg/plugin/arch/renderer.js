@@ -196,6 +196,7 @@ Renderer.prototype = {
     },
     _redraw: function (json, changes, options) {
         var self = this;
+        options = options || {};
         var node;
         if (json.isVirtual && !options.keepVirtual) {
             node = document.createDocumentFragment();
@@ -243,7 +244,7 @@ Renderer.prototype = {
                         break;
                     }
                 }
-                if (changes.childNodes.indexOf(id) === -1) {
+                if (changes.childNodes.indexOf(id) === -1 || self.elements[id] !== childNode) {
                     childNode.parentNode.removeChild(childNode);
                 }
             });

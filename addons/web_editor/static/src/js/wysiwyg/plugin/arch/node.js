@@ -164,6 +164,7 @@ return Class.extend({
         return data;
     },
     toString: function (options) {
+        options = options || {};
         var string = '';
         var isVirtual = this.isVirtual() && !options.keepVirtual;
 
@@ -277,7 +278,7 @@ return Class.extend({
         return archNode;
     },
     splitUntil: function (ancestor, offset) {
-        if (this === ancestor) {
+        if (this === ancestor || this.isUnbreakable()) {
             return this;
         }
         var right = this.split(offset);
@@ -338,6 +339,9 @@ return Class.extend({
         return this.childNodes && this.childNodes.length ? this.childNodes[this.childNodes.length - 1] : null;
     },
     nextSibling: function (fn) {
+        if (this.isContentEditable()) {
+            return;
+        }
         for (var k = this.index() + 1; k < this.parent.childNodes.length; k++) {
             if (!fn || fn(this.parent.childNodes[k])) {
                 return this.parent.childNodes[k];
@@ -345,6 +349,9 @@ return Class.extend({
         }
     },
     previousSibling: function (fn) {
+        if (this.isContentEditable()) {
+            return;
+        }
         for (var k = this.index() - 1; k >= 0; k--) {
             if (!fn || fn(this.parent.childNodes[k])) {
                 return this.parent.childNodes[k];
