@@ -1467,9 +1467,7 @@ class MailThread(models.AbstractModel):
                         used notably in mass mailing.
         :param RecordSet partner: partner matching the bounced email address, if any
         :param string email: email that caused the bounce """
-        if 'message_bounce' in self._fields:
-            for record in self:
-                record.message_bounce = record.message_bounce + 1
+        pass
 
     def _message_extract_payload_postprocess(self, message, body, attachments):
         """ Perform some cleaning / postprocess in the body and attachments
