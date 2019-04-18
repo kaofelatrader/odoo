@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<odoo>
+    <data noupdate="1">
+        <record id="banned_1" model="crm.iap.lead.banned.domain">
+            <field name="domain">gmail.com</field>
+        </record>
+        <record id="banned_2" model="crm.iap.lead.banned.domain">
+            <field name="domain">yahoo.com</field>
+        </record>
+        <record id="banned_3" model="crm.iap.lead.banned.domain">
+            <field name="domain">hotmail.com</field>
+        </record>
+        <record id="banned_4" model="crm.iap.lead.banned.domain">
+            <field name="domain">aol.com</field>
+        </record>
+    </data>
+</odoo>

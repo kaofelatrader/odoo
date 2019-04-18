@@ -101,6 +101,7 @@ class CRMHelpers(models.Model):
     @api.model
     def format_data_for_message_post(self, company_data, people_data):
         log_data = {
+            'message_title': "Opportunity created by Odoo Lead Generation",
             'twitter': company_data['twitter'],
             'description': company_data['description'],
             'logo': company_data['logo'],

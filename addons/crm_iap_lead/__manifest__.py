@@ -11,6 +11,7 @@
         'data/crm.iap.lead.role.csv',
         'data/crm.iap.lead.seniority.csv',
         'data/crm.iap.lead.technology.csv',
+        'data/crm.iap.banned.domains.xml',
         'data/message_template.xml',
         'data/crm_iap_lead_data.xml',
         'data/ir_sequence_data.xml',
@@ -19,6 +20,7 @@
         'views/crm_iap_lead_views.xml',
         'views/res_config_settings_views.xml',
         'views/crm_iap_lead_templates.xml',
+        'views/crm_iap_lead_enrichment_email.xml',
     ],
     'qweb': [
         'static/src/xml/leads_tree_generate_leads_views.xml',

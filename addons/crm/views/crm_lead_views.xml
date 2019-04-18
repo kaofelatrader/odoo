@@ -477,10 +477,6 @@
                             string="Restore"
                             type="object"
                             attrs="{'invisible': ['|', ('probability', '&gt;', 0), ('active', '=', True)]}"/>
-                        <button name="lead_enrich_based_on_email"
-                            string="Enrich"
-                            type="object"
-                            attrs="{'invisible': ['|', ('probability', '=', 0), ('email_from', '=', False)]}"/> new
                         <field name="stage_id" widget="statusbar"
                             options="{'clickable': '1', 'fold_field': 'fold'}"
                             domain="['|', ('team_id', '=', team_id), ('team_id', '=', False)]"
