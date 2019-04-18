@@ -226,6 +226,14 @@ return Class.extend({
     insertBefore: function (archNode, ref) {
         return this._changeParent(archNode, ref.index());
     },
+    mergeWithNext: function () {
+        var self = this;
+        var next = this.nextSibling();
+        while (next.childNodes.length) {
+            self.append(next.childNodes[0]);
+        }
+        next.remove();
+    },
     prepend: function (archNode) {
         return this._changeParent(archNode, 0);
     },

@@ -880,13 +880,10 @@ var ArchPlugin = AbstractPlugin.extend({
         var commonAncestor = endNode.commonAncestor(this._getNode(this._range.scID));
         endNode.insert(virtualTextNodeEnd, this._range.eo);
 
-        // todo: faire un split tree jusque l'ancetre commun/unbreakable
         endNode.splitUntil(commonAncestor, 0);
 
         var fromNode = this._getNode(this._range.scID);
         fromNode.insert(virtualTextNodeBegin, this._range.so);
-
-        fromNode.splitUntil(commonAncestor, 0);
 
         var toRemove = [];
         virtualTextNodeBegin.nextUntil(function (next) {
@@ -900,6 +897,10 @@ var ArchPlugin = AbstractPlugin.extend({
         toRemove.forEach(function (archNode) {
             archNode.remove();
         });
+
+        while (virtualTextNodeBegin.parent !== virtualTextNodeEnd.parent) {
+            virtualTextNodeBegin.parent.mergeWithNext();
+        }
 
         // the the range in the arch but not in the dom, wait redraw
         this._setRangeWithIDs({
