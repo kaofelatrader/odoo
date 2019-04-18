@@ -175,7 +175,7 @@ exports.PosModel = Backbone.Model.extend({
         loaded: function(self,users){
             self.user = users[0];
             self.user.role = 'manager';
-            self.employee.name = self.user.name;
+            self.employee = self.user;
             self.employee.user_id = [self.user.id, self.user.name];
             self.employees = [self.employee];
             self.set_cashier(self.employee);

@@ -480,11 +480,24 @@ var ProxyDevice  = core.Class.extend(mixins.PropertiesMixin,{
         send_printing_job();
     },
 
-    print_sale_details: function() {
+    /** Print an overview of todays sales.
+     *
+     * By default this will print all sales of the day for current PoS config.
+     * 
+     * @param {boolean} current_session: If set, only sales for the current session will be printed.
+     */
+    print_sale_details: function(current_session) {
         var self = this;
+        var config_ids = [this.pos.config.id];
+        var args = [false, false, config_ids];
+        if (current_session) {
+            var session_ids = [this.pos.pos_session.id];
+            args.push(session_ids);
+        }
         rpc.query({
                 model: 'report.point_of_sale.report_saledetails',
                 method: 'get_sale_details',
+                args: args,
             })
             .then(function(result){
                 var env = {

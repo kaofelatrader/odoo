@@ -1175,41 +1175,48 @@ class ReportSaleDetails(models.AbstractModel):
 
 
     @api.model
-    def get_sale_details(self, date_start=False, date_stop=False, configs=False):
-        """ Serialise the orders of the day information
+    def get_sale_details(self, date_start=False, date_stop=False, config_ids=False, session_ids=False):
+        """ Serialise the orders of the requested time period, configs and sessions.
 
-        params: date_start, date_stop string representing the datetime of order
+        Args: 
+            date_start (string): The dateTime to start, default today 00:00:00.
+            date_stop (string): The dateTime to stop, default date_start + 23:59:59.
+            config_ids (list of numbers): Pos Config id's to include.
+            session_ids (list of numbers): Pos Config id's to include.
+
+        Returns:
+            dict: Serialised sales.
         """
-        if not configs:
-            configs = self.env['pos.config'].search([])
 
-        user_tz = pytz.timezone(self.env.context.get('tz') or self.env.user.tz or 'UTC')
-        today = user_tz.localize(fields.Datetime.from_string(fields.Date.context_today(self)))
-        today = today.astimezone(pytz.timezone('UTC'))
         if date_start:
             date_start = fields.Datetime.from_string(date_start)
         else:
             # start by default today 00:00:00
-            date_start = today
+            user_tz = pytz.timezone(self.env.context.get('tz') or self.env.user.tz or 'UTC')
+            today = user_tz.localize(fields.Datetime.from_string(fields.Date.context_today(self)))
+            date_start = today.astimezone(pytz.timezone('UTC'))
 
         if date_stop:
-            # set time to 23:59:59
             date_stop = fields.Datetime.from_string(date_stop)
+            # avoid a date_stop smaller than date_start
+            if (date_stop < date_start):
+                date_stop = date_start + timedelta(days=1, seconds=-1)
         else:
             # stop by default today 23:59:59
-            date_stop = today + timedelta(days=1, seconds=-1)
+            date_stop = date_start + timedelta(days=1, seconds=-1)
 
-        # avoid a date_stop smaller than date_start
-        date_stop = max(date_stop, date_start)
+        domain = [
+            ('date_order', '>=', fields.Datetime.to_string(date_start)),
+            ('date_order', '<=', fields.Datetime.to_string(date_stop)),
+            ('state', 'in', ['paid','invoiced','done'])]
 
-        date_start = fields.Datetime.to_string(date_start)
-        date_stop = fields.Datetime.to_string(date_stop)
+        if config_ids:
+            domain.append(('config_id', 'in', config_ids))
 
-        orders = self.env['pos.order'].search([
-            ('date_order', '>=', date_start),
-            ('date_order', '<=', date_stop),
-            ('state', 'in', ['paid','invoiced','done']),
-            ('config_id', 'in', configs.ids)])
+        if (session_ids):
+            domain.append(('session_id', 'in', session_ids))
+
+        orders = self.env['pos.order'].search(domain)
 
         user_currency = self.env.user.company_id.currency_id
 
