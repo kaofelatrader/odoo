@@ -549,10 +549,14 @@ class ProductTemplate(models.Model):
                         # This is the case from existing stock reordering rules.
                         variant.write({'active': False})
 
-        # prefetched o2m have to be reloaded (because of active_test)
-        # (eg. product.template: product_variant_ids)
         # We can't rely on existing invalidate_cache because of the savepoint.
-        self.invalidate_cache()
+        self.env['product.template'].invalidate_cache(fnames=[
+            'product_variant_ids',
+            'product_variant_id',
+            'product_variant_count',
+            'valid_archived_variant_ids',
+            'valid_existing_variant_ids',
+        ], ids=self.ids)
         return True
 
     def has_dynamic_attributes(self):
@@ -873,7 +877,7 @@ class ProductTemplate(models.Model):
         return self.env['product.product'].browse(self._get_variant_id_for_combination(attribute_values))
 
     @api.multi
-    @tools.ormcache('self', 'attribute_values')
+    @tools.ormcache('self.id', 'attribute_values.ids')
     def _get_variant_id_for_combination(self, attribute_values):
         """See `_get_variant_for_combination`. This method returns an ID
         so it can be cached."""
@@ -895,7 +899,7 @@ class ProductTemplate(models.Model):
         )[:1].id
 
     @api.multi
-    @tools.ormcache('self')
+    @tools.ormcache('self.id')
     def _get_first_possible_variant_id(self):
         """See `_create_first_product_variant`. This method returns an ID
         so it can be cached."""
