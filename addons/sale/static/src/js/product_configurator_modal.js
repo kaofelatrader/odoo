@@ -157,6 +157,25 @@ var OptionalProductsModal = Dialog.extend(ServicesMixin, ProductConfiguratorMixi
     //--------------------------------------------------------------------------
 
     /**
+     * Computes and updates the total price, useful when a product is added or
+     * when the quantity is changed.
+     * TODO awa: add a container context to avoid global selectors ?
+     */
+    computePriceTotal: function () {
+        if ($('.js_price_total').length) {
+            var price = 0;
+            $('.js_product.in_cart').each(function () {
+                var quantity = parseInt($('input[name="add_qty"]').first().val());
+                price += parseFloat($(this).find('.js_raw_price').html()) * quantity;
+            });
+
+            $('.js_price_total .oe_currency_value').html(
+                this._priceToStr(parseFloat(price))
+            );
+        }
+        ProductConfiguratorMixin.computePriceTotal.apply(this, arguments);
+    },
+    /**
      * Returns the list of selected products.
      * The root product is added on top of the list.
      *
@@ -450,6 +469,8 @@ var OptionalProductsModal = Dialog.extend(ServicesMixin, ProductConfiguratorMixi
             .text(combination.display_name);
 
         ProductConfiguratorMixin._onChangeCombination.apply(this, arguments);
+
+        this.computePriceTotal();
     },
     /**
      * When the quantity of the root product is updated, we need to update

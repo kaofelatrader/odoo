@@ -388,9 +388,13 @@ sAnimations.registry.WebsiteSale = sAnimations.Class.extend(ProductConfiguratorM
      * @override
      * @private
      */
-    _updateProductImage: function ($productContainer, productId, productTemplateId, new_carousel) {
+    _updateProductImage: function ($productContainer, productId, productTemplateId, new_carousel, isCombinationPossible) {
         var $img;
         var $carousel = $productContainer.find('#o-carousel-product');
+
+        if (isCombinationPossible === undefined) {
+            isCombinationPossible = this.isSelectedVariantAllowed;
+        }
 
         if (new_carousel) {
             // When using the web editor, don't reload this or the images won't
@@ -434,7 +438,7 @@ sAnimations.registry.WebsiteSale = sAnimations.Class.extend(ProductConfiguratorM
             }
         }
 
-        $carousel.toggleClass('css_not_available', !this.isSelectedVariantAllowed);
+        $carousel.toggleClass('css_not_available', !isCombinationPossible);
     },
 
     //--------------------------------------------------------------------------
@@ -604,6 +608,16 @@ sAnimations.registry.WebsiteSale = sAnimations.Class.extend(ProductConfiguratorM
             return;
         }
         return ProductConfiguratorMixin.onChangeVariant.apply(this, arguments);
+    },
+    /**
+     * Toggles the add to cart button depending on the possibility of the
+     * current combination.
+     *
+     * @override
+     */
+    _toggleDisable: function ($parent, isCombinationPossible) {
+        ProductConfiguratorMixin._toggleDisable.apply(this, arguments);
+        $parent.find("#add_to_cart").toggleClass('disabled', !isCombinationPossible);
     },
     /**
      * @private
