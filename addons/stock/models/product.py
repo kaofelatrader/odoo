@@ -647,8 +647,12 @@ class UoM(models.Model):
 
                 if stock_move_lines:
                     raise UserError(_(
-                        "You cannot change the ratio of this unit of mesure as some"
-                        " products with this UoM have already been moved or are "
-                        "currently reserved."
+                        "You cannot change the ratio nor the category of this unit of measure as some"
+                        " products with this UoM category have already been moved or are "
+                        "currently reserved.\n"
+                        "If you just created this UoM, you can delete it and create"
+                        " a new one with the right parameters.\n"
+                        "If you cannot delete it, it is already used and thus editing it"
+                        " could compromise stock values."
                     ))
         return super(UoM, self).write(values)
