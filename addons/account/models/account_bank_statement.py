@@ -652,9 +652,12 @@ class AccountBankStatementLine(models.Model):
             # Create write-offs
             for aml_dict in new_aml_dicts:
                 aml_dict['payment_id'] = payment and payment.id or False
-                aml_obj.with_context(check_move_validity=False).create(aml_dict)
+            if new_aml_dicts:
+                aml_obj.with_context(check_move_validity=False).create(new_aml_dicts)
 
             # Create counterpart move lines and reconcile them
+            to_create = []
+            counterpart_ids = []
             for aml_dict in counterpart_aml_dicts:
                 if aml_dict['move_line'].payment_id:
                     aml_dict['move_line'].write({'statement_line_id': self.id})
@@ -664,11 +667,15 @@ class AccountBankStatementLine(models.Model):
                 aml_dict['payment_id'] = payment and payment.id or False
 
                 counterpart_move_line = aml_dict.pop('move_line')
-                new_aml = aml_obj.with_context(check_move_validity=False).create(aml_dict)
+                to_create.append(aml_dict)
+                counterpart_ids.append(counterpart_move_line)
 
-                (new_aml | counterpart_move_line).reconcile()
+            if to_create:
+                new_aml_ids = aml_obj.with_context(check_move_validity=False).create(to_create)
 
-                self._check_invoice_state(counterpart_move_line.invoice_id)
+                new_aml_ids.union(*counterpart_ids).reconcile()
+                for counterpart_id in counterpart_ids:
+                    self._check_invoice_state(counterpart_id.invoice_id)
 
             # Balance the move
             st_line_amount = -sum([x.balance for x in move.line_ids])
