@@ -1249,10 +1249,11 @@ class DisableCacheMiddleware(object):
             debug = parsed.query.count('debug') >= 1
 
             new_headers = []
-            unwanted_keys = ['Last-Modified']
+            unwanted_keys = []
+            
             if debug:
                 new_headers = [('Cache-Control', 'no-cache')]
-                unwanted_keys += ['Expires', 'Etag', 'Cache-Control']
+                unwanted_keys = ['Expires', 'Cache-Control', 'Last-Modified']
 
             for k, v in headers:
                 if k not in unwanted_keys:
