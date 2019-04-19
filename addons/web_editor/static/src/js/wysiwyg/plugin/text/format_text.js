@@ -1271,7 +1271,7 @@ var ParagraphPlugin = AbstractPlugin.extend({
      * @returns {false|Node[]} contents of list/indented item
      */
     indent: function (value, range) {
-        return this._indent(false, range);
+        return this.dependencies.Arch.indent();
     },
     /**
      * Outdent a node (list or format node).
@@ -1279,7 +1279,7 @@ var ParagraphPlugin = AbstractPlugin.extend({
      * @returns {false|Node[]} contents of list/outdented item
      */
     outdent: function (value, range) {
-        return this._indent(true, range);
+        return this.dependencies.Arch.outdent();
     },
 
     //--------------------------------------------------------------------------
