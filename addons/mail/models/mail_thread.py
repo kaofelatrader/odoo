@@ -965,8 +965,7 @@ class MailThread(models.AbstractModel):
     @api.model
     def message_route_verify(self, message, message_dict, route,
                              update_author=True, assert_model=True,
-                             create_fallback=True, allow_private=False,
-                             drop_alias=False):
+                             create_fallback=True, drop_alias=False):
         """ Verify route validity. Check and rules:
             1 - if thread_id -> check that document effectively exists; otherwise
                 fallback on a message_new by resetting thread_id
@@ -994,8 +993,6 @@ class MailThread(models.AbstractModel):
                                 record does not exists or does not support update
                                 either fallback on creating a new record in the
                                 same model or raise / warn
-        :param allow_private: allow void model / thread_id routes, aka private
-                              discussions
         """
 
         assert isinstance(route, (list, tuple)), 'A route should be a list or a tuple'
@@ -1017,21 +1014,13 @@ class MailThread(models.AbstractModel):
         if model and model not in self.env:
             self._routing_warn(_('unknown target model %s') % model, '', message_id, route, assert_model)
             return ()
-
-        # Private message
-        if not model:
-            # should not contain any thread_id
-            if thread_id:
-                self._routing_warn(_('posting a message without model should be with a null res_id (private message), received %s') % thread_id, _('resetting thread_id'), message_id, route, assert_model)
-                thread_id = 0
-            # should have a parent_id (only answers)
-            if not message_dict.get('parent_id'):
-                self._routing_warn(_('posting a message without model should be with a parent_id (private message)'), _('skipping'), message_id, route, assert_model)
-                return False
+        elif not model:
+            self._routing_warn(_('Unspecified model UPDATE ME'))
+            return ()
 
         if model and thread_id:
             record_set = self.env[model].browse(thread_id)
-        elif model:
+        else:
             record_set = self.env[model]
 
         # Existing Document: check if exists and model accepts the mailgateway; if not, fallback on create if allowed
@@ -1068,7 +1057,7 @@ class MailThread(models.AbstractModel):
                 obj = record_set[0]
             elif alias.alias_parent_model_id and alias.alias_parent_thread_id:
                 obj = self.env[alias.alias_parent_model_id.model].browse(alias.alias_parent_thread_id)
-            elif model:
+            else:
                 obj = self.env[model]
             if hasattr(obj, '_alias_check_contact'):
                 check_result = obj._alias_check_contact(message, message_dict, alias)
@@ -1079,7 +1068,7 @@ class MailThread(models.AbstractModel):
                 self._routing_create_bounce_email(email_from, check_result.get('error_template', _generic_bounce_body_html), message)
                 return False
 
-        if not model and not thread_id and not alias and not allow_private:
+        if not thread_id and not alias:
             return False
 
         return (model, thread_id, route[2], route[3], None if drop_alias else route[4])
@@ -1227,14 +1216,13 @@ class MailThread(models.AbstractModel):
 
         if is_a_reply:
             model, thread_id = mail_messages.model, mail_messages.res_id
-            if not reply_private:  # TDE note: not sure why private mode as no alias search, copying existing behavior
-                dest_aliases = Alias.search([('alias_name', 'in', rcpt_tos_localparts)], limit=1)
+            dest_aliases = Alias.search([('alias_name', 'in', rcpt_tos_localparts)], limit=1)
 
             route = self.message_route_verify(
                 message, message_dict,
                 (model, thread_id, custom_values, self._uid, dest_aliases),
-                update_author=True, assert_model=reply_private, create_fallback=True,
-                allow_private=reply_private, drop_alias=True)
+                update_author=True, assert_model=False, create_fallback=True,
+                drop_alias=True)
             if route:
                 _logger.info(
                     'Routing mail from %s to %s with Message-Id %s: direct reply to msg: model: %s, thread_id: %s, custom_values: %s, uid: %s',
