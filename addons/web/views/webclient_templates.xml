@@ -756,7 +756,7 @@
                             oReq.open("GET", '/web/webclient/load_menus/' + odoo.session_info.cache_hashes.load_menus);
                             oReq.send();
                         });
-                    }
+                    };
                     window.loadMenusPromise = reloadMenus();
                 </script>
                 <t t-call-assets="web.assets_common" t-js="false"/>

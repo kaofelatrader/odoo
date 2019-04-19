@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="assets_common" inherit_id="web.assets_common" name="Common Assets using CDN to delivery big libraries">
+        <xpath expr="//link[@href='/web/static/lib/jquery.ui/jquery-ui.css']" position="attributes">
+            <!-- 25 K -->
+            <attribute name="href">https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.min.css</attribute>
+            <attribute name="integrity">sha256-sEGfrwMkIjbgTBwGLVK38BG/XwIiNC/EAG9Rzsfda6A=</attribute>
+            <attribute name="crossorigin">anonymous</attribute>
+        </xpath>
+        <xpath expr="//link[@href='/web/static/lib/fontawesome/css/font-awesome.css']" position="attributes">
+            <!-- 39 K -->
+            <attribute name="href">https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css</attribute>
+            <attribute name="integrity">sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN</attribute>
+            <attribute name="crossorigin">anonymous</attribute>
+        </xpath>
+
+        <xpath expr="//script[@src='/web/static/lib/moment/moment.js']" position="attributes">
+            <!-- 125 K -->
+            <attribute name="src">https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.min.js</attribute>
+            <attribute name="integrity">sha256-Gn7MUQono8LUxTfRA0WZzJgTua52Udm1Ifrk5421zkA=</attribute>
+            <attribute name="crossorigin">anonymous</attribute>
+        </xpath>
+        <xpath expr="//script[@src='/web/static/lib/jquery/jquery.js']" position="attributes">
+            <!-- 276 K -->
+            <attribute name="src">https://code.jquery.com/jquery-3.3.1.min.js</attribute>
+            <attribute name="integrity">sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=</attribute>
+            <attribute name="crossorigin">anonymous</attribute>
+        </xpath>
+        <xpath expr="//script[@src='/web/static/lib/jquery.ui/jquery-ui.js']" position="attributes">
+            <!-- 356 K -->
+            <attribute name="src">https://code.jquery.com/ui/1.12.1/jquery-ui.min.js</attribute>
+            <attribute name="integrity">sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=</attribute>
+            <attribute name="crossorigin">anonymous</attribute>
+        </xpath>
+    </template>
+</odoo>
