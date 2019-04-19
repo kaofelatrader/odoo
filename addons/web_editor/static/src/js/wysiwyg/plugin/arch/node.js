@@ -199,13 +199,37 @@ return Class.extend({
     // Public: Update (to check if private ?)
     //--------------------------------------------------------------------------
 
+    /**
+     * Insert a(n) (list of) archNode(s) after the current archNode
+     *
+     * @param {ArchNode|ArchNode []} archNode
+     */
     after: function (archNode) {
+        if (Array.isArray(archNode)) {
+            return archNode.reverse().forEach(this.after.bind(this));
+        }
         return this.parent.insertAfter(archNode, this);
     },
+    /**
+     * Insert a(n) (list of) archNode(s) before the current archNode
+     *
+     * @param {ArchNode|ArchNode []} archNode
+     */
     before: function (archNode) {
+        if (Array.isArray(archNode)) {
+            return archNode.reverse().forEach(this.before.bind(this));
+        }
         return this.parent.insertBefore(archNode, this);
     },
+    /**
+     * Insert a(n) (list of) archNode(s) at the end of the current archNode's children
+     *
+     * @param {ArchNode|ArchNode []} archNode
+     */
     append: function (archNode) {
+        if (Array.isArray(archNode)) {
+            return archNode.reverse().forEach(this.append.bind(this));
+        }
         return this._changeParent(archNode, this.childNodes.length);
     },
     deleteEdge: function (isLeft) {
@@ -234,7 +258,15 @@ return Class.extend({
         }
         next.remove();
     },
+    /**
+     * Insert a(n) (list of) archNode(s) at the beginning of the current archNode's children
+     *
+     * @param {ArchNode|ArchNode []} archNode
+     */
     prepend: function (archNode) {
+        if (Array.isArray(archNode)) {
+            return archNode.reverse().forEach(this.prepend.bind(this));
+        }
         return this._changeParent(archNode, 0);
     },
     empty: function () {
@@ -452,10 +484,10 @@ return Class.extend({
         }
 
         var self = this;
-        if (archNode.ancestor(function (node) { return node === self;})) {
-            console.warn("can not add an node in itself");
+        /* if (archNode.ancestor(function (node) { return node === self;})) {
+            console.warn("can not add an node in itself"); // well... what if you want to unwrap a node? Move it into a parent's sibling?
             return;
-        }
+        } */
 
         if (archNode.isFragment()) {
             var ids = [];

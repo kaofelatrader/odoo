@@ -291,7 +291,15 @@ var KeyboardPlugin = AbstractPlugin.extend({
         } else if (e.ctrlKey) {
             this.dependencies.Arch.insert('<hr/>');
         } else {
-            this.dependencies.Arch.addLine();
+            var range = this.dependencies.Arch.getRange();
+            var liAncestor = this.utils.ancestor(range.sc, this.utils.isLi);
+            var isInEmptyLi = range.isCollapsed() && liAncestor &&
+                /^\s*$/.test(liAncestor.textContent);
+            if (isInEmptyLi) {
+                this.dependencies.Arch.outdent();
+            } else {
+                this.dependencies.Arch.addLine();
+            }
         }
         return true;
     },

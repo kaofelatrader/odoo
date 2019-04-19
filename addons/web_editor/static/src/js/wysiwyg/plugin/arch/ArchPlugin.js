@@ -644,6 +644,9 @@ var ArchPlugin = AbstractPlugin.extend({
         this._changes[0].isRange = true;
         this._updateRendererFromChanges();
     },
+    indent: function () {
+        this._indent(false);
+    },
     insert: function (DOM, element, offset) {
         if (typeof DOM !== 'string' && this._renderer.whoIsThisNode(DOM)) {
             DOM = this._renderer.whoIsThisNode(DOM);
@@ -660,6 +663,9 @@ var ArchPlugin = AbstractPlugin.extend({
             this._changes[index].isRange = true;
         }
         this._updateRendererFromChanges();
+    },
+    outdent: function () {
+        this._indent(true);
     },
     addLine: function () {
         this._resetChange();
@@ -693,6 +699,42 @@ var ArchPlugin = AbstractPlugin.extend({
         }
         this._updateRendererFromChanges();
     },
+    /**
+     * Indent or outdent a format node.
+     *
+     * @private
+     * @param {bool} outdent true to outdent, false to indent
+     */
+    _indent: function (outdent) {
+        this._resetChange();
+        var archNode = this._getNode(this._range.scID);
+        var listAncestor = archNode.ancestor(function (archAncestor) {
+            return archAncestor.isList();
+        });
+        if (listAncestor) {
+            this._indentList(outdent);
+        } else {
+            this._indentText(outdent);
+        }
+        this._updateRendererFromChanges();
+    },
+    _indentList: function (outdent) {
+        var archNode = this._getNode(this._range.scID);
+        if (outdent) {
+            var listAncestor = archNode.ancestor(function (archAncestor) {
+                return archAncestor.isList();
+            });
+            listAncestor = listAncestor.parent.isLi() ? listAncestor.parent : listAncestor;
+            var liAncestor = archNode.ancestor(function (archAncestor) {
+                return archAncestor.isLi();
+            });
+            liAncestor.insert(this._createArchNode()); // todo: fix (this ensures range position but has side effects)
+            listAncestor.before(liAncestor.childNodes);
+            var toRemove = !liAncestor.previousSibling() && !liAncestor.nextSibling() ? liAncestor.parent : liAncestor;
+            toRemove.remove();
+        }
+    },
+    _indentText: function (outdent) {},
     _removeSide: function (isLeft) {
         var archNode = this._getNode(this._range.scID);
         if (this.getRange().isCollapsed()) {
@@ -1001,7 +1043,8 @@ var ArchPlugin = AbstractPlugin.extend({
             range: range,
         };
     },
-    _getNode: function (archNodeId) {
+    _getNode: function (idOrElement) {
+        var archNodeId = typeof idOrElement === 'number' ? idOrElement : this._renderer.whoIsThisNode(idOrElement);
         return this._archNodeList[archNodeId];
     },
     _removeFromArch: function (archNode) {
