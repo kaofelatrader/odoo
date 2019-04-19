@@ -183,6 +183,7 @@ xpath_utils = etree.FunctionNamespace(None)
 xpath_utils['hasclass'] = _hasclass
 
 TRANSLATED_ATTRS_RE = re.compile(r"@(%s)\b" % "|".join(TRANSLATED_ATTRS))
+TRANSLATED_ATTRS_SRC_RE = re.compile(r"(?<=img\[contains\()@src\b")
 WRONGCLASS = re.compile(r"(@class\s*=|=\s*@class|contains\(@class)")
 READONLY = re.compile(r"\breadonly\b")
 
@@ -336,7 +337,7 @@ actual arch.
             # inheritance may not use a translated attribute as selector
             if node.tag == 'xpath':
                 match = TRANSLATED_ATTRS_RE.search(node.get('expr', ''))
-                if match:
+                if match and TRANSLATED_ATTRS_SRC_RE.search(node.get('expr', '')):
                     message = "View inheritance may not use attribute %r as a selector." % match.group(1)
                     self.raise_view_error(message, self.id)
                 if WRONGCLASS.search(node.get('expr', '')):
