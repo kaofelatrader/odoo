@@ -740,22 +740,21 @@ class AccountMoveLine(models.Model):
         In case of full reconciliation, all moves belonging to the reconciliation will belong to the same account_full_reconcile object.
         """
         # Get first all aml involved
-        part_recs = self.env['account.partial.reconcile'].search(['|', ('debit_move_id', 'in', self.ids), ('credit_move_id', 'in', self.ids)])
-        amls = self
-        todo = set(part_recs)
-        seen = set()
+        todo = self.env['account.partial.reconcile'].search_read(['|', ('debit_move_id', 'in', self.ids), ('credit_move_id', 'in', self.ids)], ['debit_move_id', 'credit_move_id'])
+        amls = self.ids
+        seen = self.env['account.partial.reconcile']
         while todo:
-            partial_rec = todo.pop()
-            seen.add(partial_rec)
-            for aml in [partial_rec.debit_move_id, partial_rec.credit_move_id]:
-                if aml not in amls:
-                    amls += aml
-                    for x in aml.matched_debit_ids | aml.matched_credit_ids:
-                        if x not in seen:
-                            todo.add(x)
-        partial_rec_ids = [x.id for x in seen]
+            aml_ids = [apr['debit_move_id'][0] for apr in todo if apr['debit_move_id']] + [apr['credit_move_id'][0] for apr in todo if apr['credit_move_id']]
+            amls += aml_ids
+            seen |= self.env['account.partial.reconcile'].browse([apr['id'] for apr in todo])
+            todo = self.env['account.partial.reconcile'].search_read(['&', '|', ('credit_move_id', 'in', aml_ids), ('credit_move_id', 'in', aml_ids), '!', ('id', 'in', seen.ids)], ['debit_move_id', 'credit_move_id'])
+
+        partial_rec_ids = list(set(seen.ids))
         if not amls:
             return
+        else:
+            amls = self.browse(list(set(amls)))
+
         # If we have multiple currency, we can only base ourselve on debit-credit to see if it is fully reconciled
         currency = set([a.currency_id for a in amls if a.currency_id.id != False])
         multiple_currency = False
