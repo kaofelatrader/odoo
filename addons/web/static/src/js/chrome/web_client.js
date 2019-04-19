@@ -55,12 +55,7 @@ return AbstractWebClient.extend({
         });
     },
     load_menus: function () {
-        return this._rpc({
-                model: 'ir.ui.menu',
-                method: 'load_menus',
-                args: [config.debug],
-                context: session.user_context,
-            })
+        return (window.loadMenusPromise || window.reloadMenus())
             .then(function (menuData) {
                 // Compute action_id if not defined on a top menu item
                 for (var i = 0; i < menuData.children.length; i++) {
@@ -75,6 +70,7 @@ return AbstractWebClient.extend({
                         }
                     }
                 }
+                window.loadMenusPromise = null;
                 return menuData;
             });
     },

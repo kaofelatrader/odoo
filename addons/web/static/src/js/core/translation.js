@@ -62,9 +62,14 @@ var TranslationDataBase = Class.extend(/** @lends instance.TranslationDataBase# 
     */
     load_translations: function(session, modules, lang, url) {
         var self = this;
-        return session.rpc(url || '/web/webclient/translations', {
-            "mods": modules || null,
-            "lang": lang || null
+        var cacheId = window.odoo.session_info &&
+                    window.odoo.session_info.cache_hashes &&
+                    window.odoo.session_info.cache_hashes.translations;
+        url = url || '/web/webclient/translations';
+        url += '/' + (cacheId ? cacheId : Date.now());
+        return $.get(url, {
+            mods: modules ? modules.join(',') : null,
+            lang: lang || null,
         }).then(function (trans) {
             self.set_bundle(trans);
         });

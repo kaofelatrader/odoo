@@ -241,7 +241,11 @@ var Session = core.Class.extend(mixins.EventDispatcherMixin, {
     },
     load_qweb: function (mods) {
         var lock = this.qweb_mutex.exec(function () {
-            return $.get('/web/webclient/qweb?mods=' + mods).then(function (doc) {
+            var cacheId = window.odoo.session_info &&
+                    window.odoo.session_info.cache_hashes &&
+                    window.odoo.session_info.cache_hashes.qweb;
+            var route  = '/web/webclient/qweb/' + (cacheId ? cacheId : Date.now()) + '?mods=' + mods;
+            return $.get(route).then(function (doc) {
                 if (!doc) { return; }
                 qweb.add_template(doc);
             });

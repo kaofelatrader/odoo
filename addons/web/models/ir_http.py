@@ -5,6 +5,9 @@ import json
 
 from odoo import models
 from odoo.http import request
+from odoo.tools import date_utils
+
+from odoo.addons.web.controllers.main import concat_xml, manifest_glob, module_boot
 
 import odoo
 
@@ -22,11 +25,20 @@ class Http(models.AbstractModel):
         user = request.env.user
         display_switch_company_menu = user.has_group('base.group_multi_company') and len(user.company_ids) > 1
         version_info = odoo.service.common.exp_version()
+
+        user_context = request.session.get_context() if request.session.uid else {}
+
+        mods = ','.join(module_boot())
+        files = [f[0] for f in manifest_glob('qweb', addons=mods)]
+        _, qweb_checksum = concat_xml(files)
+        lang = user_context.get("lang")
+        translations_per_module, _ = request.env['ir.translation'].get_translations_for_webclient(mods, lang)
+
         return {
             "uid": request.session.uid,
             "is_system": user._is_system() if request.session.uid else False,
             "is_admin": user._is_admin() if request.session.uid else False,
-            "user_context": request.session.get_context() if request.session.uid else {},
+            "user_context": user_context,
             "db": request.session.db,
             "server_version": version_info.get('server_version'),
             "server_version_info": version_info.get('server_version_info'),
@@ -38,7 +50,12 @@ class Http(models.AbstractModel):
             "user_companies": {'current_company': (user.company_id.id, user.company_id.name), 'allowed_companies': [(comp.id, comp.name) for comp in user.company_ids]} if display_switch_company_menu else False,
             "currencies": self.get_currencies() if request.session.uid else {},
             "web.base.url": self.env['ir.config_parameter'].sudo().get_param('web.base.url', default=''),
-            "show_effect": True
+            "show_effect": True,
+            "cache_hashes": {
+                "load_menus": hash(json.dumps(request.env['ir.ui.menu'].load_menus(request.debug), default=date_utils.json_default)),
+                "qweb": qweb_checksum,
+                "translations": hash(json.dumps(translations_per_module)),
+            },
         }
 
     def get_currencies(self):

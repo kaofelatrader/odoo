@@ -26,6 +26,9 @@ return core.Class.extend({
      * Suggestion: could be refined to invalidate some part of the cache
      */
     invalidate: function () {
+        if (odoo.session_info && odoo.session_info.cache_hashes) {
+            odoo.session_info.cache_hashes.load_menus = Date.now();
+        }
         this._init_cache();
     },
 
@@ -45,7 +48,7 @@ return core.Class.extend({
                 route: "/web/action/load",
                 params: {
                     action_id: action_id,
-                    additional_context : additional_context,
+                    additional_context: additional_context,
                 },
             }).then(function (action) {
                 self._cache.actions[key] = action.no_cache ? null : self._cache.actions[key];
