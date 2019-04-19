@@ -102,6 +102,7 @@ class PosSession(models.Model):
         readonly=True,
         string='Available Payment Methods')
     order_ids = fields.One2many('pos.order', 'session_id',  string='Orders')
+    order_count = fields.Integer(compute='_compute_order_count')
     statement_ids = fields.One2many('account.bank.statement', 'pos_session_id', string='Bank Statement', readonly=True)
     picking_count = fields.Integer(compute='_compute_picking_count')
     rescue = fields.Boolean(string='Recovery Session',
@@ -110,6 +111,11 @@ class PosSession(models.Model):
         copy=False)
 
     _sql_constraints = [('uniq_name', 'unique(name)', "The name of this POS Session must be unique !")]
+
+    @api.multi
+    def _compute_order_count(self):
+        for pos in self:
+            pos.order_count = len(pos.order_ids)
 
     @api.multi
     def _compute_picking_count(self):
@@ -343,6 +349,20 @@ class PosSession(models.Model):
         if cashbox_id:
             action['res_id'] = cashbox_id
 
+        return action
+
+    @api.multi
+    def action_view_order(self):
+        action = {
+            'name': 'Orders',
+            'res_model': 'pos.order',
+            'view_mode': 'tree,form',
+            'type': 'ir.actions.act_window',
+            'domain': [('session_id', 'in', self.ids)],
+        }
+        if len(self.order_ids) == 1:
+            action['res_id'] = self.order_ids[0].id
+            action['view_mode'] = 'form'
         return action
 
     @api.model
