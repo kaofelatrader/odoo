@@ -377,6 +377,7 @@ var ListController = BasicController.extend({
      */
     _update: function () {
         this._toggleSidebar();
+        this._updateButtons('readonly');
         return this._super.apply(this, arguments);
     },
     /**
