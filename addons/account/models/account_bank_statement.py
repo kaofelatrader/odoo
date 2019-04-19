@@ -532,13 +532,13 @@ class AccountBankStatementLine(models.Model):
 
         # Creates
         payment_ids = self.env['account.payment'].create(payment_list)
-        for payment_id, move_vals in zip(payment_ids, move_list):
+        for payment_id, move_vals in pycompat.izip(payment_ids, move_list):
             for line in move_vals['line_ids']:
                 line[2]['payment_id'] = payment_id.id
         move_ids = self.env['account.move'].create(move_list)
         move_ids.post()
 
-        for move, st_line, payment in zip(move_ids, self, payment_ids):
+        for move, st_line, payment in pycompat.izip(move_ids, self, payment_ids):
             st_line.write({'move_name': move.name})
             payment.write({'payment_reference': move.name})
 
