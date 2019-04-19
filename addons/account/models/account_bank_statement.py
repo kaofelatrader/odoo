@@ -524,7 +524,7 @@ class AccountBankStatementLine(models.Model):
                     'partner_id': st_line.partner_id.id,
                     'statement_line_id': st_line.id,
                 }
-                st_line._prepare_move_line_for_currency(aml_dict)
+                st_line._prepare_move_line_for_currency(aml_dict, self.date or fields.Date.today())
                 move_vals['line_ids'] = [(0, 0, aml_dict)]
                 balance_line = self._prepare_reconciliation_move_line(move_vals, st_line.amount)
                 move_vals['line_ids'].append((0, 0, balance_line))
@@ -673,7 +673,7 @@ class AccountBankStatementLine(models.Model):
                 aml_dict['move_id'] = move.id
                 aml_dict['partner_id'] = self.partner_id.id
                 aml_dict['statement_line_id'] = self.id
-                self._prepare_move_line_for_currency(aml_dict)
+                self._prepare_move_line_for_currency(aml_dict, date)
 
             # Create write-offs
             for aml_dict in new_aml_dicts:
@@ -727,7 +727,7 @@ class AccountBankStatementLine(models.Model):
         return counterpart_moves
 
     @api.one
-    def _prepare_move_line_for_currency(self, aml_dict):
+    def _prepare_move_line_for_currency(self, aml_dict, date):
         company_currency = self.journal_id.company_id.currency_id
         statement_currency = self.journal_id.currency_id or company_currency
         st_line_currency = self.currency_id or statement_currency
