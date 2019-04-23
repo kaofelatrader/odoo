@@ -41,11 +41,25 @@ var RootNode = ArchNode.extend({
      * @override
      */
     isVirtual: True,
+    /**
+     * @override
+     */
+    split: function (offset) {
+        var virtualText = this.params.create();
+        this.childNodes[offset].after(virtualText);
+        return virtualText;
+    },
+    /**
+     * @override
+     */
     toJSON: function (options) {
         var data = this._super(options);
         delete data.nodeName;
         return data;
     },
+    /**
+     * @override
+     */
     toString: function (options) {
         var isVirtual = options && !options.keepVirtual;
         var string = this._super(options);

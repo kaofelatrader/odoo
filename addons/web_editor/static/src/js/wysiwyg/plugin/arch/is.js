@@ -7,6 +7,20 @@ function False () { return false; };
 
 ArchNode.include({
 
+    styleTags: [
+        'p',
+        'td',
+        'th',
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'blockquote',
+        'pre',
+    ],
+
     /**
      * Return true if the given node is an anchor element (A, BUTTON, .btn).
      *
@@ -139,13 +153,10 @@ ArchNode.include({
      * an editable block or an editable element expecting text
      * (eg.: p, h1, span).
      *
-     * @param {String []} [styleTags]
      * @returns {Boolean}
      */
-    isFormatNode: function (styleTags) {
-        styleTags = styleTags instanceof Array ? styleTags : this.params.formatTags;
-        // console.warn('defaultStyleTags ?');
-        return styleTags.indexOf(this.nodeName) !== -1;
+    isFormatNode: function () {
+        return this.styleTags.indexOf(this.nodeName) !== -1;
     },
     /**
      * Return true if the given node is an image element (IMG).
