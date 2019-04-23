@@ -83,6 +83,7 @@ class Lead(models.Model):
         help="Type is used to separate Leads and Opportunities")
     priority = fields.Selection(crm_stage.AVAILABLE_PRIORITIES, string='Priority', index=True, default=crm_stage.AVAILABLE_PRIORITIES[0][0])
     date_closed = fields.Datetime('Closed Date', readonly=True, copy=False)
+    final_stage_id = fields.Many2one('crm.stage', string="Stage when closed")
 
     stage_id = fields.Many2one('crm.stage', string='Stage', ondelete='restrict', tracking=True, index=True,
         domain="['|', ('team_id', '=', False), ('team_id', '=', team_id)]",
@@ -322,6 +323,13 @@ class Lead(models.Model):
 
     @api.multi
     def write(self, vals):
+        # Just an idea but maybe not really needed
+        if 'probability' in vals and vals.get('probability') < 100:
+            new_stage = self.env['crm.stage'].browse(vals.get('stage_id'))
+            lost = not vals.get('active', True)
+            for lead in self:
+                if lead.stage_id.won_stage and (new_stage.won_stage or not new_stage) and not lost:
+                    raise UserError('You cannot modify the probability of an already won opportunity.')
         # stage change: update date_last_stage_update
         if 'stage_id' in vals:
             vals['date_last_stage_update'] = fields.Datetime.now()
@@ -376,14 +384,14 @@ class Lead(models.Model):
     @api.multi
     def action_set_lost(self):
         """ Lost semantic: probability = 0, active = False """
-        return self.write({'probability': 0, 'active': False})
+        return self.write({'probability': 0, 'active': False, 'manual_probability': True})
 
     @api.multi
     def action_set_won(self):
         """ Won semantic: probability = 100 (active untouched) """
         for lead in self:
-            stage_id = lead._stage_find(domain=[('probability', '=', 100.0), ('on_change', '=', True)])
-            lead.write({'stage_id': stage_id.id, 'probability': 100})
+            stage_id = lead._stage_find(domain=[('won_stage', '=', True), ('on_change', '=', True)])
+            lead.write({'stage_id': stage_id.id, 'probability': 100, 'manual_probability': True})
 
         return True
 
@@ -395,22 +403,23 @@ class Lead(models.Model):
         if self.user_id and self.team_id and self.planned_revenue:
             query = """
                 SELECT
-                    SUM(CASE WHEN user_id = %(user_id)s THEN 1 ELSE 0 END) as total_won,
-                    MAX(CASE WHEN date_closed >= CURRENT_DATE - INTERVAL '30 days' AND user_id = %(user_id)s THEN planned_revenue ELSE 0 END) as max_user_30,
-                    MAX(CASE WHEN date_closed >= CURRENT_DATE - INTERVAL '7 days' AND user_id = %(user_id)s THEN planned_revenue ELSE 0 END) as max_user_7,
-                    MAX(CASE WHEN date_closed >= CURRENT_DATE - INTERVAL '30 days' AND team_id = %(team_id)s THEN planned_revenue ELSE 0 END) as max_team_30,
-                    MAX(CASE WHEN date_closed >= CURRENT_DATE - INTERVAL '7 days' AND team_id = %(team_id)s THEN planned_revenue ELSE 0 END) as max_team_7
-                FROM crm_lead
+                    SUM(CASE WHEN l.user_id = %(user_id)s THEN 1 ELSE 0 END) as total_won,
+                    MAX(CASE WHEN l.date_closed >= CURRENT_DATE - INTERVAL '30 days' AND l.user_id = %(user_id)s THEN l.planned_revenue ELSE 0 END) as max_user_30,
+                    MAX(CASE WHEN l.date_closed >= CURRENT_DATE - INTERVAL '7 days' AND l.user_id = %(user_id)s THEN l.planned_revenue ELSE 0 END) as max_user_7,
+                    MAX(CASE WHEN l.date_closed >= CURRENT_DATE - INTERVAL '30 days' AND l.team_id = %(team_id)s THEN l.planned_revenue ELSE 0 END) as max_team_30,
+                    MAX(CASE WHEN l.date_closed >= CURRENT_DATE - INTERVAL '7 days' AND l.team_id = %(team_id)s THEN l.planned_revenue ELSE 0 END) as max_team_7
+                FROM crm_lead l
+                INNER JOIN crm_stage s on s.id = l.stage_id
                 WHERE
-                    type = 'opportunity'
+                    l.type = 'opportunity'
                 AND
-                    active = True
+                    l.active = True
                 AND
-                    probability = 100
+                    s.won_stage = True
                 AND
-                    DATE_TRUNC('year', date_closed) = DATE_TRUNC('year', CURRENT_DATE)
+                    DATE_TRUNC('year', l.date_closed) = DATE_TRUNC('year', CURRENT_DATE)
                 AND
-                    (user_id = %(user_id)s OR team_id = %(team_id)s)
+                    (l.user_id = %(user_id)s OR l.team_id = %(team_id)s)
             """
             self.env.cr.execute(query, {'user_id': self.user_id.id,
                                         'team_id': self.team_id.id})
