@@ -71,6 +71,13 @@ Attributes.prototype = {
         }
         this[name] = value;
     },
+    clear: function () {
+        var self = this;
+        this.__order__.forEach(function (name) {
+            delete self[name];
+        });
+        this.__order__ = [];
+    },
     isEqual: function (obj, options) {
         if (!obj) {
             return !this.__order__.length;
@@ -329,7 +336,6 @@ return Class.extend({
         this.params.remove(this);
         this.parent = null;
         this.__removed = true;
-        this.empty();
     },
     split: function (offset) {
         if (this.isUnbreakable()) {

@@ -384,6 +384,14 @@ var ArchPlugin = AbstractPlugin.extend({
         }
         return archNode ? archNode.toJSON(options) : {};
     },
+    exportRange: function () {
+        return {
+            scID: this._range.scID,
+            so: this._range.so,
+            ecID: this._range.ecID,
+            eo: this._range.eo,
+        };
+    },
     /**
      * @param {Int} id
      * @param {Object} [options]
@@ -769,6 +777,60 @@ var ArchPlugin = AbstractPlugin.extend({
         }
     },
 
+    importUpdate: function (changes, range) {
+        var self = this;
+        var nodes = {};
+        this._resetChange();
+
+        changes.forEach(function (change) {
+            var archNode = self._getNode(change.id);
+            if (archNode) {
+                if (change.attributes) {
+                    archNode.clear();
+                    change.attributes.forEach(function (attribute) {
+                        archNode.add(attribute[0], attribute[1])
+                    });
+                }
+                if ('nodeValue' in change) {
+                    archNode.nodeValue = change.nodeValue;
+                }
+                if (change.childNodes) {
+                    change.childNodes.forEach(function (id) {
+                        nodes[id] = self._getNode(id);
+                    });
+                }
+            } else {
+                var archNode = self._importJSON(change);
+            }
+            nodes[archNode.id] = archNode;
+
+            self._changeArch(archNode, 0);
+        });
+
+        changes.forEach(function (change) {
+            if (!change.childNodes) {
+                return;
+            }
+            var archNode = self._getNode(change.id);
+            var childNodes = archNode.childNodes.slice();
+            archNode.empty();
+            change.childNodes.forEach(function (id) {
+                if (nodes[id]) {
+                    archNode.append(nodes[id]);
+                } else {
+                    throw new Error('Imported node "' + id + '" is missing');
+                }
+            });
+        });
+
+        this._updateRendererFromChanges({
+            scID: range.scID,
+            so: range.so,
+            ecID: range.ecID,
+            eo: range.eo,
+        });
+    },
+
     //--------------------------------------------------------------------------
     // Private from Common
     //--------------------------------------------------------------------------
@@ -1103,41 +1165,6 @@ var ArchPlugin = AbstractPlugin.extend({
     },
 });
 
-
-/*
-`
-            Bonjour,
-            <br>
-            <b>comment va-<i>tu</i> ?</b>
-            <table><td>wrong TD</td> free text in table</table>
-            <i><font color="red">comment</font> <font color="blue">va-<b>tu</b></font> ?</i>
-            <div>
-                text dans div ?
-
-                if (div) {
-                    console.log('div');
-                }
-            </div>
-            <pre> 
-                if (tata) {
-                    console.log('tutu');
-                }
-
-                <span>OKI</span>
-            </pre>
-
-            <section>
-                <block>
-                    % if toto:
-                    TOTO
-                    %end
-                </block>
-            </section>
-            <p>
-                <i>iiii</i> <iframe src="/test"/> <b>bbb</b>
-            </p>
-            `
-*/
 Manager.addPlugin('Arch', ArchPlugin);
 
 return ArchPlugin;
