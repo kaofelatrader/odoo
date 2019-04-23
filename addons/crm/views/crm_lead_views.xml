@@ -510,7 +510,16 @@
                                     </div>
                                 </div>
                                 <div class="col">
-                                    <label for="probability" class="oe_edit_only"/>
+                                    <field name="manual_probability" invisible="True"/>
+                                    <span class="oe_edit_only">
+                                        <label for="probability"/>
+                                        <button class="btn btn-link" name="action_toggle_manual_probability" type="object" style="font-size: 1.5rem;">
+                                            <i class="fa fa-lock" role="img" title="Manual probability"
+                                            aria-label="Manual probability" attrs="{'invisible': [('manual_probability', '=', False)]}"></i>
+                                            <i class="fa fa-unlock-alt" role="img" title="Predictive probability"
+                                            aria-label="Predictive probability" attrs="{'invisible': [('manual_probability', '!=', False)]}"></i>
+                                        </button>
+                                    </span>
                                     <div class="o_row d-flex">
                                         <field name="probability" widget="integer" class="oe_inline"/>
                                         <span class="oe_grey"> %%</span>

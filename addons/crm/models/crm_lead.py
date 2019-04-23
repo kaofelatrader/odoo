@@ -101,6 +101,7 @@ class Lead(models.Model):
 
     # Only used for type opportunity
     probability = fields.Float('Probability', group_operator="avg", default=lambda self: self._default_probability())
+    manual_probability = fields.Boolean('Manual Probability', default=False)
     planned_revenue = fields.Monetary('Expected Revenue', currency_field='company_currency', tracking=True)
     expected_revenue = fields.Monetary('Prorated Revenue', currency_field='company_currency', store=True, compute="_compute_expected_revenue")
     date_deadline = fields.Date('Expected Closing', help="Estimate of the date on which the opportunity will be won.")
@@ -262,6 +263,11 @@ class Lead(models.Model):
             values = self._onchange_user_values(self.user_id.id)
             self.update(values)
 
+    @api.onchange('probability')
+    def _onchange_probability(self):
+        if not self.manual_probability:
+            self.manual_probability = True
+
     @api.constrains('user_id')
     @api.multi
     def _valid_team(self):
@@ -361,6 +367,11 @@ class Lead(models.Model):
     # ----------------------------------------
     # Actions Methods
     # ----------------------------------------
+
+    def action_toggle_manual_probability(self):
+        self.manual_probability = not self.manual_probability
+        if not self.manual_probability:
+            self.probability = self.stage_id.probability
 
     @api.multi
     def action_set_lost(self):
