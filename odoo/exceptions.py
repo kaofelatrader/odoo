@@ -13,6 +13,7 @@ If you consider introducing new exceptions, check out the test_exceptions addon.
 import logging
 from inspect import currentframe
 from .tools.func import frame_codeinfo
+from .tools.translate import _
 
 _logger = logging.getLogger(__name__)
 
@@ -113,3 +114,55 @@ class DeferredException(Exception):
 
 class QWebException(Exception):
     pass
+
+
+class ViewError(except_orm, ValueError):
+
+    def __init__(self, msg, view):
+        not_avail = _('n/a')
+        message = (
+            "%(msg)s\n\n" +
+            _("Error context:\nView `%(view_name)s`") +
+            "\n[view_id: %(viewid)s, xml_id: %(xmlid)s, "
+            "model: %(model)s, parent_id: %(parent)s]"
+        ) % {
+            'view_name': view.name or not_avail,
+            'viewid': view.id or not_avail,
+            'xmlid': view.xml_id or not_avail,
+            'model': view.model or not_avail,
+            'parent': view.inherit_id.id or not_avail,
+            'msg': msg,
+        }
+        vals = [self, message, '']
+        _logger.info(message)
+
+        if not view:
+            # an error occurred when loading a default view, find out especifically which one broke
+            loaded_view = view.env.context.get('loaded_view', False)
+            if loaded_view:
+                model = loaded_view[0]
+
+                try:
+                    # reload the views to retrigger a ViewError, this time with debug information
+                    # to properly find the view id that causes the error
+                    view.env[model].with_context(inherit_branding=True).load_views(*loaded_view[1:])
+                except ViewError as e:
+                    vals = [self, e.name, e.value, e.metadata]
+        else:
+            metadata = {
+                    'label': 'Go to view',
+                    'action': {
+                        'type': 'ir.actions.act_window',
+                        'res_model': 'ir.ui.view',
+                        'res_id': view.id,
+                        'views': [[False, 'form']],
+                        },
+                    'visible': view.user_has_groups('base.group_system'),
+                    'description': (
+                        "You may click on the 'Go to view' button to open the problematic view "
+                        "to modify and fix it and/or disable it."
+                        )
+                    }
+            vals.append(metadata)
+
+        except_orm.__init__(*vals)
