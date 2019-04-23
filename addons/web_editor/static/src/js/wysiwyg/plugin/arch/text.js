@@ -268,7 +268,7 @@ var VirtualTextNode = TextNode.extend({
     //--------------------------------------------------------------------------
 
     _applyRulesArchNode: function () {
-        if (this.parent && this.parent.isList()) {
+        if (this.parent && (this.parent.isList() || this.parent.isRoot())) {
             return this._mutation('br');
         }
 

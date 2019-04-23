@@ -74,6 +74,7 @@ var TestKeyboard = AbstractPlugin.extend({
 
             function poll(step) {
                 return new Promise(function (resolve) {
+                    var target;
                     if (step.start) {
                         try {
                             self._selectText(test.name, assert, step.start, step.end);
@@ -89,7 +90,7 @@ var TestKeyboard = AbstractPlugin.extend({
                     }
                     setTimeout(function () {
                         if (step.keyCode || step.key) {
-                            var target = self.dependencies.Arch.getRange().ec;
+                            target = self.dependencies.Arch.getRange().ec;
                             if (window.location.search.indexOf('notrycatch') !== -1) {
                                 self.keydown(target, {
                                     key: step.key,
@@ -116,6 +117,7 @@ var TestKeyboard = AbstractPlugin.extend({
                         }
                         setTimeout(function () {
                             if (step.keyCode || step.key) {
+                                target = self.dependencies.Arch.getRange().ec;
                                 target = !target || target.tagName ? target : target.parentNode;
                                 if (target) {
                                     self.dependencies.Test.triggerNativeEvents(target, 'keyup', {

@@ -271,7 +271,7 @@ return Class.extend({
     },
     empty: function () {
         if (!this.isEditable()) {
-            console.warn("can not empty a non editable node");
+            console.warn("cannot empty a non editable node");
             return;
         }
         this.childNodes.slice().forEach(function (archNode) {
@@ -282,7 +282,7 @@ return Class.extend({
     remove: function () {
         if (this.parent) {
             if (!this.parent.isEditable()) {
-                console.warn("can not remove a node in a non editable node");
+                console.warn("cannot remove a node in a non editable node");
                 return;
             }
             var offset = this.index();
@@ -296,11 +296,11 @@ return Class.extend({
     },
     split: function (offset) {
         if (this.isUnbreakable()) {
-            console.warn("can not split an unbreakable");
+            console.warn("cannot split an unbreakable node");
             return;
         }
         if (!this.isEditable()) {
-            console.warn("can not split a not editable node");
+            console.warn("cannot split a non editable node");
             return;
         }
 
@@ -468,25 +468,24 @@ return Class.extend({
 
     _changeParent: function (archNode, index) {
         if (this.isVoid()) {
-            throw new Error("You can't add a node in a void");
+            throw new Error("You can't add a node into a void node");
         }
 
         if (!this.childNodes) {
-            throw new Error("You can't add a child in this node");
+            throw new Error("You can't add a child into this node");
         }
 
         if (!this.isEditable()) { // id is setted only if the node is contains in the root
-            console.warn("can not add a node in a non editable node");
+            console.warn("cannot add a node into a non editable node");
             return;
         }
         if (archNode.parent && !archNode.parent.isEditable()) {
-            console.warn("can not remove a node in a non editable node");
+            console.warn("cannot remove a node from a non editable node");
             return;
         }
 
-        var self = this;
-        if (archNode.parent && archNode.parent.ancestor(function (node) { return node === self;})) {
-            console.warn("can not add an node in itself"); // well... what if you want to unwrap a node? Move it into a parent's sibling?
+        if (this.ancestor(function (node) { return node === archNode;})) {
+            console.warn("cannot add a node into itself");
             return;
         }
 

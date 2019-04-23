@@ -36,6 +36,10 @@ var RootNode = ArchNode.extend({
     /**
      * @override
      */
+    isRoot: True,
+    /**
+     * @override
+     */
     isVirtual: True,
     toJSON: function (options) {
         var data = {

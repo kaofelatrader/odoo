@@ -109,7 +109,7 @@ ArchNode.include({
         return false;
     },
     isEditable: function () {
-        return !this.id || this.ancestor(this.isContentEditable);
+        return !this.ancestor(this.isRoot) || this.ancestor(this.isContentEditable);
     },
     /**
      * Return true if the given node's type is element (1).
@@ -290,6 +290,10 @@ ArchNode.include({
         }
         return true;
     },
+    /**
+     * Return true if the current node is the root node.
+     */
+    isRoot: False,
     /**
      * Return true if the given node is a span element (SPAN).
      *

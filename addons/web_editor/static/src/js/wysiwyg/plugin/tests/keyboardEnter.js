@@ -242,20 +242,20 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }],
             test: "<ul><li><p>dom to edit</p></li></ul><p><br/>◆</p>",
         },
-        {
-            name: "in ul.list-group > li: ENTER at end",
-            content: '<ul class="list-group"><li><p>dom to edit</p></li></ul>',
-            steps: [{
-                start: "p:contents()[0]->11",
-                key: 'ENTER',
-            }, {
-                key: 'ENTER',
-            }],
-            test: '<ul class="list-group"><li><p>dom to edit</p></li><li><p><br/></p></li><li><p><br/>◆</p></li></ul>',
-        },
+        // {
+        //     name: "in ul.list-group > li: ENTER at end",
+        //     content: '<ul class="list-group"><li><p>dom to edit</p></li></ul>',
+        //     steps: [{
+        //         start: "p:contents()[0]->11",
+        //         key: 'ENTER',
+        //     }, {
+        //         key: 'ENTER',
+        //     }],
+        //     test: '<ul class="list-group"><li><p>dom to edit</p></li><li><p><br/></p></li><li><p><br/>◆</p></li></ul>',
+        // },
         {
             name: "in indented-li: 2x ENTER at end",
-            content: "<ul><li><p>aaa</p></li><ul><li><p>dom to edit</p></li></ul><li><p>bbb</p></li></ul>",
+            content: "<ul><li><p>aaa</p></li><li><ul><li><p>dom to edit</p></li></ul></li><li><p>bbb</p></li></ul>",
             steps: [{
                 start: "ul ul p:contents()[0]->11",
                 key: 'ENTER',

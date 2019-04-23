@@ -729,7 +729,7 @@ var ArchPlugin = AbstractPlugin.extend({
                 return archAncestor.isLi();
             }) || archNode;
             liAncestor.insert(this._createArchNode());
-            listAncestor.before(liAncestor.childNodes);
+            listAncestor.after(liAncestor.childNodes);
             var toRemove = !liAncestor.previousSibling() && !liAncestor.nextSibling() ? liAncestor.parent : liAncestor;
             toRemove.remove();
         }
