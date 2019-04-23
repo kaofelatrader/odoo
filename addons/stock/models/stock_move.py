@@ -475,6 +475,15 @@ class StockMove(models.Model):
             ),
         }
 
+    def open_assign_serial(self):
+        self.ensure_one()
+        action = self.env.ref('stock.act_assign_serial_numbers').read()[0]
+        action['context'] = {
+            'default_product_id': self.product_id.id,
+            'default_move_id': self.id,
+            }
+        return action
+
     def _do_unreserve(self):
         moves_to_unreserve = self.env['stock.move']
         for move in self:

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_assign_serial_numbers" model="ir.ui.view">
+        <field name="name">stock_assign_serial_numbers</field>
+        <field name="model">stock.assign.serial.numbers</field>
+        <field name="arch" type="xml">
+            <form string="Assign Serial Numbers">
+                <group>
+                    <field name="product_id" readonly="1"/>
+                    <field name="move_id" readonly="1"/>
+                    <field name="initial_prod_lot_name"/>
+                </group>
+                <footer>
+                    <button name="generate_serial_numbers" type="object"
+                            string="Generate Serial Numbers" class="oe_highlight"/>
+                    <button special="cancel" string="Cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="act_assign_serial_numbers" model="ir.actions.act_window">
+        <field name="name">Produce</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">stock.assign.serial.numbers</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">form</field>
+        <field name="context">{}</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
