@@ -8,7 +8,8 @@ var FragmentNode = require('wysiwyg.plugin.arch.fragment');
 var ArchNode = require('wysiwyg.plugin.arch.node');
 var Renderer = require('wysiwyg.plugin.arch.renderer');
 var RootNode = require('wysiwyg.plugin.arch.root');
-var text = require('wysiwyg.plugin.arch.text');
+var VirtualText = require('wysiwyg.plugin.arch.virtualText');
+var VisibleText = require('wysiwyg.plugin.arch.visibleText');
 var WrappedRange = require('wysiwyg.WrappedRange');
 
 var $ = require('web_editor.jquery');
@@ -244,8 +245,14 @@ var ArchPlugin = AbstractPlugin.extend({
     // Public
     //--------------------------------------------------------------------------
 
-    getValue: function () {
-        return this._arch.toString({});
+    /**
+     * @param {object} [options]
+     * @param {boolean} options.keepVirtual
+     * @param {boolean} options.architecturalSpace
+     * @returns {string}
+     **/
+    getValue: function (options) {
+        return this._arch.toString(options || {});
     },
     addCustomRule: function (callback, children) {
         this.customRules.push([callback, children]);
@@ -365,7 +372,7 @@ var ArchPlugin = AbstractPlugin.extend({
     /**
      * @param {Int} id
      * @param {boolean} options.keepVirtual
-     * @param {boolean} options.keepArchitecturalSpaces
+     * @param {boolean} options.architecturalSpace
      * @returns {JSON}
      **/
     export: function (id, options) {
@@ -382,7 +389,7 @@ var ArchPlugin = AbstractPlugin.extend({
      * @param {Object} [options]
      * @param {int} options.spacer
      *      number of space for indent the html (remove old architecturalSpaces if outside PRE tag)
-     * @param {boolean} options.keepArchitecturalSpaces
+     * @param {boolean} options.architecturalSpace
      * @returns {string}
      **/
     render: function (id, options) {
@@ -850,7 +857,7 @@ var ArchPlugin = AbstractPlugin.extend({
 
         var childNodes = fragment.childNodes.slice();
         childNodes.forEach(function (child, index) {
-            archNode.insert(child, offset);
+            archNode.insert(child, offset + index);
         });
     },
     _importJSON: function (json) {
@@ -992,12 +999,12 @@ var ArchPlugin = AbstractPlugin.extend({
     },
     _createArchNode: function (nodeName, param) {
         if (!nodeName) {
-            return new text.VirtualTextNode(this._arch.params);
+            return new VirtualText(this._arch.params);
         } else if (nodeName !== 'TEXT') {
             var Constructor = customNodes[nodeName] || ArchNode;
             return new Constructor(this._arch.params, nodeName, param || []);
         } else {
-            return new text.VisibleTextNode(this._arch.params, param);
+            return new VisibleText(this._arch.params, param);
         }
     },
     _changeArch: function (archNode, offset) {

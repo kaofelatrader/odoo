@@ -2,7 +2,8 @@ odoo.define('wysiwyg.plugin.arch.customNodes', function (require) {
 'use strict';
 
 var ArchNode = require('wysiwyg.plugin.arch.node');
-var text = require('wysiwyg.plugin.arch.text');
+var TextNode = require('wysiwyg.plugin.arch.text');
+var VirtualText = require('wysiwyg.plugin.arch.virtualText');
 
 function True () { return true; };
 function False () { return false; };
@@ -10,14 +11,14 @@ function False () { return false; };
 ArchNode.include = function (argument) {
     throw new Error("Can not use include on ArchNode");
 };
-text.TextNode.include = function (argument) {
+TextNode.include = function (argument) {
     throw new Error("Can not use include on TextNode");
 };
 
 var customNodes = {
     ArchNode: ArchNode,
-    TEXT: text.TextNode,
-    VirtualTextNode: text.VirtualTextNode,
+    TEXT: TextNode,
+    'TEXT-VIRTUAL': VirtualText,
 };
 
 customNodes.br = ArchNode.extend({
@@ -27,7 +28,7 @@ customNodes.br = ArchNode.extend({
     insert: function (archNode, offset) {
         if (archNode.isBR()) {
             var ancestor = this.ancestor(this.isBlock);
-            var archNode = this.isRightEdgeOf(ancestor) ? new customNodes.VirtualTextNode(this.params) : archNode;
+            var archNode = this.isRightEdgeOf(ancestor) ? new customNodes['TEXT-VIRTUAL'](this.params) : archNode;
             this.params.change(archNode, archNode.length());
             this.after(archNode);
             return;

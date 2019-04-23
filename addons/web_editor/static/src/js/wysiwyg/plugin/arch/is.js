@@ -26,7 +26,7 @@ ArchNode.include({
      *
      * @returns {Boolean}
      */
-    isArchitecturalSpaceNode: False,
+    isArchitecturalSpace: False,
     /**
      * Returns true if the node is a text node containing nothing
      *
@@ -207,7 +207,7 @@ ArchNode.include({
      */
     isLeftEdge: function () {
         var previousSibling = this.parent.childNodes.slice(0, this.index());
-        while (previousSibling.length && previousSibling[0].isArchitecturalSpaceNode()) {
+        while (previousSibling.length && previousSibling[0].isArchitecturalSpace()) {
             previousSibling.pop();
         }
         return !previousSibling.length;
@@ -270,7 +270,7 @@ ArchNode.include({
      */
     isRightEdge: function () {
         var nextSibling = this.parent.childNodes.slice(this.index() + 1);
-        while (nextSibling.length && nextSibling[0].isArchitecturalSpaceNode()) {
+        while (nextSibling.length && nextSibling[0].isArchitecturalSpace()) {
             nextSibling.pop();
         }
         return !nextSibling.length;

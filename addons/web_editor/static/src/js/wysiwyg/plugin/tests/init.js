@@ -5,7 +5,7 @@ var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 var customNodes = require('wysiwyg.plugin.arch.customNodes');
 
-customNodes.TEST = customNodes.VirtualTextNode.extend({
+customNodes.TEST = customNodes['TEXT-VIRTUAL'].extend({
     rangeColaspsed: '\u25C6',
     rangeStart: '\u25B6',
     rangeEnd: '\u25C0',

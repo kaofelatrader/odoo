@@ -60,6 +60,9 @@
 
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/node.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/text.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/virtualText.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/visibleText.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/architecturalSpace.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/is.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/rules.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/fragment.js"/>
@@ -106,6 +109,7 @@
     <!-- Tests -->
 
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/tests/init.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/tests/arch.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/tests/keyboard.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/tests/keyboardChar.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/tests/keyboardEnter.js"/>

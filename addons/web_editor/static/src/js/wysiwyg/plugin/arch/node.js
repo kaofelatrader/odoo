@@ -115,11 +115,6 @@ return Class.extend({
 
     toJSON: function (options) {
         var data = {};
-
-        if (options && options.architecturalSpace) {
-            this._architecturalSpaceNodePropagation();
-        }
-
         if (this.id) {
             data.id = this.id;
         }
@@ -179,12 +174,6 @@ return Class.extend({
                 string += '/';
             }
             string += '>';
-
-            if (options && options.architecturalSpace) {
-                options = Object.assign({}, options, {
-                    architecturalLevel: (options.architecturalLevel || 0) + 1,
-                });
-            }
         }
         this.childNodes.forEach(function (archNode) {
             string += archNode.toString(options);
@@ -253,7 +242,10 @@ return Class.extend({
     mergeWithNext: function () {
         var self = this;
         var next = this.nextSibling();
-        while (next.childNodes.length) {
+        if (!next) {
+            return;
+        }
+        while (next.childNodes && next.childNodes.length) {
             self.append(next.childNodes[0]);
         }
         next.remove();

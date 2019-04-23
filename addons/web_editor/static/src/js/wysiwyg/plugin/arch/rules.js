@@ -2,7 +2,6 @@ odoo.define('wysiwyg.plugin.arch.rules', function (require) {
 'use strict';
 
 var ArchNode = require('wysiwyg.plugin.arch.node');
-var text = require('wysiwyg.plugin.arch.text');
 
 ArchNode.include({
     applyRules: function () {
@@ -144,9 +143,12 @@ ArchNode.include({
     _applyRulesMergeExcessStructure: function (newParents) {
         for (var k = 0; k < newParents.length; k++) {
             var item = newParents[k];
-            var prev = item.previousSibling(function (n) {
-                return !(n instanceof text.VirtualTextNode) && !(n instanceof text.ArchitecturalSpaceNode);
-            });
+
+            function visibleNode (n) {
+                return !(n.isText() && n.isVirtual()) && !n.isArchitecturalSpace();
+            }
+
+            var prev = item.previousSibling(visibleNode);
             if (prev && prev.nodeName === item.nodeName && newParents.indexOf(prev) !== -1 && item.attributes.toString() === prev.attributes.toString()) {
                 item.childNodes.slice().forEach(function (node) {
                     prev.append(node);
@@ -155,9 +157,7 @@ ArchNode.include({
                 continue;
             }
 
-            var next = item.previousSibling(function (n) {
-                return !(n instanceof text.VirtualTextNode) && !(n instanceof text.ArchitecturalSpaceNode);
-            });
+            var next = item.previousSibling(visibleNode);
             if (next && next.nodeName === item.nodeName && newParents.indexOf(next) !== -1 && item.attributes.toString() === next.attributes.toString()) {
                 item.childNodes.slice().forEach(function (node) {
                     next.append(node);
@@ -165,38 +165,6 @@ ArchNode.include({
                 item.remove();
                 continue;
             }
-        }
-    },
-    _architecturalSpaceNodePropagation: function () {
-        if (this.__removed || this instanceof text.ArchitecturalSpaceNode) {
-            return;
-        }
-        if (this.parent) {
-            this._addArchitecturalSpaceNode();
-        }
-        if (!(this instanceof TextNode) && !this.ancestor(this.isPre)) {
-            this.childNodes.slice().forEach(function (archNode) {
-                archNode._ArchitecturalSpaceNodePropagation();
-            });
-        }
-    },
-    _addArchitecturalSpaceNode: function () {
-        var prev = this.previousSibling();
-        if (prev instanceof text.ArchitecturalSpaceNode && this.isText() && this.nodeValue[0] === '\n') {
-            console.log(prev.previousSibling());
-            prev.remove();
-        }
-
-        if (!this.isBlock() && !this.parent.isBlock()) {
-            return;
-        }
-
-        if (!(prev instanceof text.ArchitecturalSpaceNode) && (!this.isText() || this.nodeValue[0] !== '\n')) {
-            this.parent.insertBefore(new text.ArchitecturalSpaceNode(this.params), this);
-        }
-
-        if (this.isBlock() && !this.isPre() && !this.isText() && !this.isVoid() && this.childNodes.length) {
-            this.append(new text.ArchitecturalSpaceNode(this.params), this);
         }
     },
 });
