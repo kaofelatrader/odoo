@@ -20,6 +20,22 @@ ClassName.prototype = {
     contains: function (className) {
         return this.value.indexOf(className) !== -1;
     },
+    isEqual: function (obj, options) {
+        if (!obj) {
+            return !this.value.length;
+        }
+        var self = this;
+        var isEqual = true;
+        this.value.concat(obj.value).forEach(function (className) {
+            if (!isEqual || options && options.blackListClassNames && options.blackListClassNames.indexOf(className) !== -1) {
+                return;
+            }
+            if (self.value.indexOf(className) === -1 || obj.value.indexOf(className) === -1) {
+                isEqual = false;
+            }
+        });
+        return isEqual;
+    },
     remove: function (classNames) {
         classNames.replace(regMultiSpace, ' ').split(' ').forEach(function (className) {
             var index = this.value.indexOf(className);
@@ -55,10 +71,35 @@ Attributes.prototype = {
         }
         this[name] = value;
     },
+    isEqual: function (obj, options) {
+        if (!obj) {
+            return !this.__order__.length;
+        }
+        var self = this;
+        var isEqual = true;
+        var list = Object.keys(this);
+        Object.keys(obj).forEach(function (name) {
+            if (list.indexOf(name) === -1) {
+                list.push(name);
+            }
+        });
+        list.forEach(function (name) {
+            if (!isEqual || options && options.blackList && options.blackList.indexOf(name) !== -1) {
+                return;
+            }
+            if (name === 'class') {
+                isEqual = self[name].isEqual(obj[name], options);
+            }
+            if (self[name] !== obj[name]) {
+                isEqual = false;
+            }
+        });
+        return isEqual;
+    },
     forEach: function (fn) {
         this.__order__.forEach(fn.bind(this));
     },
-    remove: function (classNames) {
+    remove: function (name) {
         var index = this.__order__.indexOf(name);
         if (index !== -1) {
             this.__order__.splice(index, 1);
@@ -76,7 +117,7 @@ Attributes.prototype = {
         });
         return attributes;
     },
-    toString: function (options) {
+    toString: function () {
         var self = this;
         var string = '';
         this.__order__.forEach(function (name) {
@@ -239,16 +280,20 @@ return Class.extend({
     insertBefore: function (archNode, ref) {
         return this._changeParent(archNode, ref.index());
     },
-    mergeWithNext: function () {
+    mergeWithNext: function (options) {
         var self = this;
         var next = this.nextSibling();
         if (!next) {
+            return;
+        }
+        if (this.nodeName !== next.nodeName || this.attributes && !this.attributes.isEqual(next.attributes, options)) {
             return;
         }
         while (next.childNodes && next.childNodes.length) {
             self.append(next.childNodes[0]);
         }
         next.remove();
+        return true;
     },
     /**
      * Insert a(n) (list of) archNode(s) at the beginning of the current archNode's children

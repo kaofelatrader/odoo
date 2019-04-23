@@ -947,8 +947,14 @@ var ArchPlugin = AbstractPlugin.extend({
             archNode.remove();
         });
 
-        while (virtualTextNodeBegin.parent !== virtualTextNodeEnd.parent) {
-            virtualTextNodeBegin.parent.mergeWithNext();
+        var merged = true;
+        while (merged && virtualTextNodeBegin.parent !== virtualTextNodeEnd.parent) {
+            var node = virtualTextNodeBegin.parent;
+            var merged = false;
+            while (!merged && node.parent && node !== commonAncestor) {
+                merged = virtualTextNodeBegin.parent.mergeWithNext();
+                node = node.parent;
+            }
         }
 
         // the the range in the arch but not in the dom, wait redraw
