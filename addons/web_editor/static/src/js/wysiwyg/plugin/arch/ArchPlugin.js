@@ -735,9 +735,14 @@ var ArchPlugin = AbstractPlugin.extend({
             var liAncestor = archNode.ancestor(function (archAncestor) {
                 return archAncestor.isLi();
             }) || archNode;
-            liAncestor.insert(this._createArchNode());
+            var lastChild = liAncestor.lastChild();
+            if (lastChild) {
+                lastChild.params.change(lastChild, lastChild.length());
+            } else {
+                liAncestor.insert(this._createArchNode());
+            }
             listAncestor.after(liAncestor.childNodes);
-            var toRemove = !liAncestor.previousSibling() && !liAncestor.nextSibling() ? liAncestor.parent : liAncestor;
+            var toRemove = !liAncestor.previousSibling() && !liAncestor.nextSibling() ? listAncestor : liAncestor;
             toRemove.remove();
         }
     },

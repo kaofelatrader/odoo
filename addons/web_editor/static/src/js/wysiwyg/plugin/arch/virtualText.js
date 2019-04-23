@@ -20,7 +20,12 @@ return TextNode.extend({
     //--------------------------------------------------------------------------
 
     insert: function (node, offset) {
-        this.parent.insert(node, this.index());
+        var prev = this.previousSibling();
+        if (prev) {
+            prev.insert(node, prev.length());
+        } else {
+            this.parent.insert(node, this.index());
+        }
         this.remove();
     },
     /**

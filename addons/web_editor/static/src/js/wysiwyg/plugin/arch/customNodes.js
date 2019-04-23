@@ -28,7 +28,7 @@ customNodes.br = ArchNode.extend({
     insert: function (archNode, offset) {
         if (archNode.isBR()) {
             var ancestor = this.ancestor(this.isBlock);
-            var archNode = this.isRightEdgeOf(ancestor) ? new customNodes['TEXT-VIRTUAL'](this.params) : archNode;
+            var archNode = this !== ancestor && this.isRightEdgeOf(ancestor) ? new customNodes['TEXT-VIRTUAL'](this.params) : archNode;
             this.params.change(archNode, archNode.length());
             this.after(archNode);
             return;
@@ -41,7 +41,7 @@ customNodes.br = ArchNode.extend({
         }
         this.parent.insert(archNode, this.index() + 1);
     },
-    isBr: True,
+    isBR: True,
     split: function () {
         return;
     },

@@ -282,6 +282,7 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isRightEdgeOf: function (ancestor) {
+        var node = this;
         while (node && node !== ancestor) {
             if (!node.isRightEdge()) {
                 return false;
