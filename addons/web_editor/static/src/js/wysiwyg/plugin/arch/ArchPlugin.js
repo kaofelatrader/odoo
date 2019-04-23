@@ -728,7 +728,7 @@ var ArchPlugin = AbstractPlugin.extend({
             var liAncestor = archNode.ancestor(function (archAncestor) {
                 return archAncestor.isLi();
             }) || archNode;
-            // liAncestor.insert(this._createArchNode()); // todo: fix (this ensures range position but has side effects)
+            liAncestor.insert(this._createArchNode());
             listAncestor.before(liAncestor.childNodes);
             var toRemove = !liAncestor.previousSibling() && !liAncestor.nextSibling() ? liAncestor.parent : liAncestor;
             toRemove.remove();

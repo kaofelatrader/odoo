@@ -290,6 +290,7 @@ return Class.extend({
             this.params.change(this.parent, offset);
         }
         this.params.remove(this);
+        this.parent = null;
         this.__removed = true;
         this.empty();
     },
@@ -484,10 +485,10 @@ return Class.extend({
         }
 
         var self = this;
-        /* if (archNode.ancestor(function (node) { return node === self;})) {
+        if (archNode.parent && archNode.parent.ancestor(function (node) { return node === self;})) {
             console.warn("can not add an node in itself"); // well... what if you want to unwrap a node? Move it into a parent's sibling?
             return;
-        } */
+        }
 
         if (archNode.isFragment()) {
             var ids = [];

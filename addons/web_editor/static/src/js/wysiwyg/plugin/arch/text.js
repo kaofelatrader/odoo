@@ -220,6 +220,7 @@ var VirtualTextNode = TextNode.extend({
         this.params = root;
         this.nodeName = 'TEXT-VIRTUAL';
         this.nodeValue = this.char;
+        this.params.change(this, this.length());
     },
 
     //--------------------------------------------------------------------------
@@ -267,25 +268,26 @@ var VirtualTextNode = TextNode.extend({
     //--------------------------------------------------------------------------
 
     _applyRulesArchNode: function () {
+        if (this.parent && this.parent.isList()) {
+            return this._mutation('br');
+        }
+
         var para = this.ancestor(this._isPara);
         if (!para) {
-            this.remove();
-            return;
+            return this.remove();
         }
 
         if (para.isEmpty()) {
-            this._mutation('br');
-            return;
+            return this._mutation('br');
         }
     },
     _applyRulesCheckParents: function () {},
     _addArchitecturalSpaceNode: function () {},
     _mutation: function (nodeName, param) {
         var archNode = this.params.create(nodeName, param);
-        archNode.id = this.id;
         this.before(archNode);
-        this.id = null;
         this.remove();
+        this.id = archNode.id;
     },
 });
 

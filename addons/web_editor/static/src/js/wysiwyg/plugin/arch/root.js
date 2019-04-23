@@ -55,6 +55,13 @@ var RootNode = ArchNode.extend({
         data.childNodes = childNodes;
         return data;
     },
+    toString: function (options) {
+        var string = '';
+        this.childNodes.forEach(function (archNode) {
+            string += archNode.toString(options);
+        });
+        return string;
+    },
 });
 
 return RootNode;
