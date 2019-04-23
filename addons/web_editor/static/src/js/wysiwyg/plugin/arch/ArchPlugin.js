@@ -230,7 +230,7 @@ var ArchPlugin = AbstractPlugin.extend({
             create: this._createArchNode.bind(this),
             change: this._changeArch.bind(this),
             remove: this._removeFromArch.bind(this),
-            import: this.import.bind(this),
+            import: this._importJSON.bind(this),
 
             isEditableNode: this.isEditableNode.bind(this),
             isUnbreakableNode: this.isUnbreakableNode.bind(this),
@@ -350,26 +350,6 @@ var ArchPlugin = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     /**
-     * @param {JSON} json
-     * @returns {ArchNode}
-     **/
-    import: function (json) {
-        var self = this;
-        var fragment = new FragmentNode(this._arch.params);
-        return fragment;
-
-        // TODO
-        if (!json.childNodes || json.nodeValue || json.nodeName) {
-            json = {
-                childNodes: [json],
-            };
-        }
-        json.childNodes.forEach(function (json) {
-            fragment.append(self._importJSON(json));
-        });
-        return fragment;
-    },
-    /**
      * @param {Int} id
      * @param {boolean} options.keepVirtual
      * @param {boolean} options.architecturalSpace
@@ -377,6 +357,10 @@ var ArchPlugin = AbstractPlugin.extend({
      **/
     export: function (id, options) {
         var archNode;
+        if (typeof id === 'object') {
+            options = id;
+            id = null;
+        }
         if (id) {
             archNode = this._getNode(id);
         } else {
@@ -835,7 +819,7 @@ var ArchPlugin = AbstractPlugin.extend({
     // Private from Common
     //--------------------------------------------------------------------------
 
-    _updateRendererFromChanges: function () {
+    _updateRendererFromChanges: function (range) {
         var self = this;
 
         var result = this._getChanges();
@@ -844,20 +828,27 @@ var ArchPlugin = AbstractPlugin.extend({
         }
 
         var json = result.changes.map(function (change) {
-            return self.export(change.id, {
+            return self._getNode(change.id).toJSON({
                 keepVirtual: true,
             });
         });
-        self._renderer.update(json);
-        this.trigger_up('change');
+        this._renderer.update(json);
 
-        if (this._renderer.getElement(result.range.id)) {
-            this._setRangeWithIDs({
-                scID: result.range.id,
-                so: result.range.offset,
-            });
+        if (range) {
+            this._range = range; // fail if use _setRangeWithIDs ????
+        } else {
+            range = result.range;
+            if (this._renderer.getElement(range.id)) {
+                this._setRangeWithIDs({
+                    scID: range.id,
+                    so: range.offset,
+                });
+            }
         }
         this._setRange();
+
+        this.trigger('update', json);
+        this.trigger_up('change');
     },
     _isVoidBlock: function (archNode) {
         return archNode.attributes && archNode.attributes.contentEditable === 'false';
@@ -929,15 +920,13 @@ var ArchPlugin = AbstractPlugin.extend({
     },
     _importJSON: function (json) {
         var self = this;
-        var archNode;
-        if (json.nodeName) {
-            archNode = this._createArchNode(json.nodeName, json.attributes);
+        var archNode = this._createArchNode(json.nodeName, json);
+        if (json.childNodes) {
             json.childNodes.forEach(function (json) {
                 archNode.append(self._importJSON(json));
             });
-        } else {
-            archNode = this._createArchNode('TEXT', json.nodeValue);
         }
+        archNode.id = json.id;
         return archNode;
     },
     /**
@@ -1071,13 +1060,13 @@ var ArchPlugin = AbstractPlugin.extend({
         });
     },
     _createArchNode: function (nodeName, param) {
-        if (!nodeName) {
+        if (!nodeName || nodeName === 'TEXT-VIRTUAL') {
             return new VirtualText(this._arch.params);
         } else if (nodeName !== 'TEXT') {
             var Constructor = customNodes[nodeName] || ArchNode;
-            return new Constructor(this._arch.params, nodeName, param || []);
+            return new Constructor(this._arch.params, nodeName, param && param.attributes || []);
         } else {
-            return new VisibleText(this._arch.params, param);
+            return new VisibleText(this._arch.params, param && param.nodeValue || param);
         }
     },
     _changeArch: function (archNode, offset) {
