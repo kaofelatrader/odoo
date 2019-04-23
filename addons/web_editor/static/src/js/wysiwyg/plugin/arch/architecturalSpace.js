@@ -48,9 +48,10 @@ ArchNode.include({
         }
     },
     _addArchitecturalSpaceNodes: function () {
+        var childNodes = this.childNodes && this.childNodes.slice();
         this._addArchitecturalSpaceNode();
-        if (this.childNodes) {
-            this.childNodes.slice().forEach(function (child) {
+        if (childNodes) {
+            childNodes.forEach(function (child) {
                 child._addArchitecturalSpaceNodes();
             });
         }

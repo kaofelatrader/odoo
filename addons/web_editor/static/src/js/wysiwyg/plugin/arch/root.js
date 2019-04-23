@@ -42,28 +42,16 @@ var RootNode = ArchNode.extend({
      */
     isVirtual: True,
     toJSON: function (options) {
-        var data = {
-            id: this.id,
-        };
-        var childNodes = [];
-        this.childNodes.forEach(function (archNode) {
-            var json = archNode.toJSON(options);
-            if (json) {
-                if (json.nodeName || json.nodeValue) {
-                    childNodes.push(json);
-                } else if (json.childNodes) {
-                    childNodes = childNodes.concat(json.childNodes);
-                }
-            }
-        });
-        data.childNodes = childNodes;
+        var data = this._super(options);
+        delete data.nodeName;
         return data;
     },
     toString: function (options) {
-        var string = '';
-        this.childNodes.forEach(function (archNode) {
-            string += archNode.toString(options);
-        });
+        var isVirtual = options && !options.keepVirtual;
+        var string = this._super(options);
+        if (options && options.keepVirtual) {
+            return string.replace(/^[^>]+>/, '').replace(/<[^<]+$/, '');
+        }
         return string;
     },
 });
