@@ -79,7 +79,15 @@ class Contract(models.Model):
         ('close', 'Expired'),
         ('cancel', 'Cancelled')
     ], string='Status', group_expand='_expand_states',
-       tracking=True, help='Status of the contract', default='draft')
+       tracking=True, default='draft',
+       help="Status of the contract:\n"
+            "New: the contract is a draft.\n"
+            "Incoming: the contract is ready and waiting the begining date.\n"
+            "Running: the contract is the current contract.\n"
+            "To Renew: the contract will expire soon.\n"
+            "Cancelled: the contract have been cancelled.\n"
+            "\nContract states are automatically changed when needed.\n"
+            "e.g. from Incoming to Running the first day of the contract.")
     company_id = fields.Many2one('res.company', default=lambda self: self.env.user.company_id)
     currency_id = fields.Many2one(string="Currency", related='company_id.currency_id', readonly=True)
     permit_no = fields.Char('Work Permit No', related="employee_id.permit_no", readonly=False)
