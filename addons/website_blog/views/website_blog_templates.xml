@@ -31,15 +31,14 @@
         <div id="wrap">
             <div class="oe_structure" id="oe_structure_website_blog_latest_blogs_1"/>
             <section class="container">
-                <div class="alert alert-warning alert-dismissable mt16" groups="website.group_website_publisher" role="status">
+                <div class="alert alert-info alert-dismissable mt16" groups="website.group_website_publisher" role="status">
                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">&amp;times;</button>
+                   <h4 class="alert-heading">This page is great to improve your <strong>Search Engine Optimization</strong></h4>
                    <p>
-                   This page is great to improve your <strong>Search Engine Optimization</strong>;
-                   You can review titles, keywords and descriptions of all blogs at once.
-                   </p><p>
-                   You should <strong>add a banner on the top</strong> as it is a frequent landing page for new visitors.
-                   <span class="text-muted">This box will not be visible to your visitors.</span>
+                       You can review titles, keywords and descriptions of all blogs at once.<br/>
+                       You should <strong>add a banner on the top</strong> as it is a frequent landing page for new visitors.
                    </p>
+                   <div class="font-italic font-weight-bold">- This box will not be visible to your visitors -</div>
                 </div>
                 <t t-call="website.pager" >
                     <t t-set="classname">float-right</t>
