@@ -228,7 +228,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 start: "p:contents()[0]->11",
                 key: 'ENTER',
             }],
-            test: "<ul><li><p>dom to edit</p></li><li>◆</li></ul>",
+            test: "<ul><li><p>dom to edit</p></li><li><br/>◆</li></ul>",
         },
         {
             name: "in li: 2x ENTER at end",
@@ -261,7 +261,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'ENTER',
             }],
-            test: "<ul><li><p>aaa</p></li><li><ul><li><p>dom to edit</p></li></ul></li><li><p><br/>◆</p></li><li><p>bbb</p></li></ul>",
+            test: "<ul><li><p>aaa</p></li><li><ul><li><p>dom to edit</p></li></ul></li><li><br/>◆</li><li><p>bbb</p></li></ul>",
         },
         {
             name: "in indented-li with font: 2x ENTER at end",
@@ -272,7 +272,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'ENTER',
             }],
-            test: "<ul><li><p>aaa</p></li><ul><li><p><font style=\"color\">dom to edit</font></p></li></ul><li><p><font style=\"color\"><br/>◆</font></p></li><li><p>bbb</p></li></ul>",
+            test: "<ul><li><p>aaa</p></li><ul><li><p><font style=\"color\">dom to edit</font></p></li></ul><li><br/>◆</li><li><p>bbb</p></li></ul>",
         },
         {
             name: "in li > empty-p: ENTER",

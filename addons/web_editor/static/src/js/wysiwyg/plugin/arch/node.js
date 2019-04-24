@@ -403,6 +403,12 @@ return Class.extend({
             return;
         }
 
+        var child = this.childNodes[offset];
+        if (child && child.isRightEdge() && !this.isUnbreakable() && child.isVirtual()) {
+            var virtual = this.childNodes[offset];
+            this.after(virtual);
+            return virtual.parent.addLine(virtual.index());
+        }
         var next = this.split(offset);
         if (!next) {
             this.insert(this.params.create('br'), offset);
