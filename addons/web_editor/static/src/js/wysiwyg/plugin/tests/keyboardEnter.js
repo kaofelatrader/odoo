@@ -272,7 +272,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'ENTER',
             }],
-            test: "<ul><li><p>aaa</p></li><ul><li><p><font style=\"color\">dom to edit</font></p></li></ul><li><br/>◆</li><li><p>bbb</p></li></ul>",
+            test: "<ul><li><p>aaa</p></li><li><ul><li><p><font style=\"color\">dom to edit</font></p></li></ul></li><li><br/>◆</li><li><p>bbb</p></li></ul>",
         },
         {
             name: "in li > empty-p: ENTER",
@@ -290,7 +290,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 start: "b:contents()[0]->0",
                 key: 'ENTER',
             }],
-            test: "<p><b><br/>◆</b></p>",
+            test: "<p><br/>◆</p>",
         },
 
         // end list UL / OL

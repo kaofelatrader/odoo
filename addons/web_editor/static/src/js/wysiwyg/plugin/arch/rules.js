@@ -58,7 +58,7 @@ ArchNode.include({
     _applyRulesCheckParents: function () {
         var rules = this.params.parentedRules;
         var parentedRule = this._applyRulesFilterRules(rules);
-        if (!(!parentedRule.length || parentedRule.indexOf(null) !== -1)) {
+        if (parentedRule.length && parentedRule.indexOf(null) === -1) {
 
             // We seek to minimize the number of parents to create
             var parentName = this.parent.nodeName === 'FRAGMENT' ? 'EDITABLE' : this.parent.nodeName;

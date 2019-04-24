@@ -492,6 +492,26 @@ var ArchPlugin = AbstractPlugin.extend({
             });
         }
     },
+    _deducePoints: function (pointsWithIDs) {
+        var scID = pointsWithIDs.scID;
+        var so = pointsWithIDs.so || 0;
+        var ecID = pointsWithIDs.ecID || scID;
+        var eo = pointsWithIDs.eo;
+        if (!pointsWithIDs.ecID) {
+            if (typeof pointsWithIDs.so === 'number') {
+                eo = so;
+            } else {
+                var sc = this._renderer.getElement(scID);
+                eo = this.utils.nodeLength(sc);
+            }
+        }
+        return {
+            scID: scID,
+            so: so,
+            ecID: ecID,
+            eo: eo,
+        };
+    },
     /**
      * Get the range from the selection in the DOM.
      *
@@ -503,6 +523,55 @@ var ArchPlugin = AbstractPlugin.extend({
     },
     _isCollapsed: function () {
         return this._range.scID === this._range.ecID && this._range.so === this._range.eo;
+    },
+    _moveToBeforeInline: function (points) {
+        var isCollapsed = points.scID === points.ecID && points.so === points.eo;
+        var archSC = this._getNode(points.scID);
+        var isLeftEdgeOfInline = !points.so && archSC.isLeftEdge() && archSC.ancestor(archSC.isInlineFormatNode);
+        var prev = archSC.previousSibling();
+        if (isCollapsed && isLeftEdgeOfInline && prev) {
+            points = this._deducePoints({
+                scID: prev.id,
+                so: prev.length(),
+            });
+            points = this._moveToDeepest(points);
+        }
+        return points
+    },
+    _moveToDeepest: function (points) {
+        var self = this;
+        var startPoint = __moveToDeepest(points.scID, points.so);
+        var endPoint = __moveToDeepest(points.ecID, points.eo);
+        function __moveToDeepest(id, offset) {
+            var archNode = self._getNode(id);
+            while (archNode.childNodes && archNode.childNodes.length > offset) {
+                archNode = archNode.childNodes[offset];
+                offset = 0;
+            }
+            return {
+                id: archNode.id,
+                offset: offset,
+            };
+        };
+        return {
+            scID: startPoint.id,
+            so: startPoint.offset,
+            ecID: endPoint.id,
+            eo: endPoint.offset,
+        };
+    },
+    _moveToEndOfInline: function (points) {
+        var isCollapsed = points.scID === points.ecID && points.so === points.eo;
+        var prev = this._getNode(points.scID).previousSibling();
+        var prevIsRightEdgeOfInline = prev && prev.isRightEdge() && prev.isInlineFormatNode()
+        if (isCollapsed && !points.so && prevIsRightEdgeOfInline) {
+            points = this._deducePoints({
+                scID: prev.id,
+                so: prev.length(),
+            });
+            points = this._moveToDeepest(points);
+        }
+        return points;
     },
     /**
      * Set the DOM Range from the given points.
@@ -549,51 +618,29 @@ var ArchPlugin = AbstractPlugin.extend({
     },
     /**
      * Set the range.
-     * Pass only `pointsWithIDs.scID` to set the range on the whole element.
-     * Pass only `pointsWithIDs.scID` and `pointsWithIDs.so` to collapse the range on the start.
+     * Pass only `points.scID` to set the range on the whole element.
+     * Pass only `points.scID` and `points.so` to collapse the range on the start.
      *
-     * @param {Object} pointsWithIDs
-     * @param {Node} pointsWithIDs.scID
-     * @param {Number} [pointsWithIDs.so]
-     * @param {Node} [pointsWithIDs.ecID]
-     * @param {Number} [pointsWithIDs.eo] must be given if ecID is given
+     * @param {Object} points
+     * @param {Node} points.scID
+     * @param {Number} [points.so]
+     * @param {Node} [points.ecID]
+     * @param {Number} [points.eo] must be given if ecID is given
      */
-    _setRangeWithIDs: function (pointsWithIDs) {
-        var scID = pointsWithIDs.scID;
-        var so = pointsWithIDs.so || 0;
-        var ecID = pointsWithIDs.ecID || scID;
-        var eo = pointsWithIDs.eo;
-        if (!pointsWithIDs.ecID) {
-            if (typeof pointsWithIDs.so === 'number') {
-                eo = so;
-            } else {
-                var sc = this._renderer.getElement(scID);
-                eo = this.utils.nodeLength(sc);
-            }
-        }
+    _setRangeWithIDs: function (points) {
+        points = this._deducePoints(points);
+        points = this._moveToDeepest(points);
+        points = this._moveToEndOfInline(points);
+        points = this._moveToBeforeInline(points);
 
-        // getDeepeset range
-        var archSc = this._getNode(scID);
-        while (archSc.childNodes && archSc.childNodes.length > so) {
-            archSc = archSc.childNodes[so];
-            so = 0;
-            scID = archSc.id;
-        }
-        var archEc = this._getNode(ecID);
-        while (archEc.childNodes && archEc.childNodes.length > eo) {
-            archEc = archEc.childNodes[eo];
-            eo = 0;
-            ecID = archEc.id;
-        }
+        this._didRangeChange = this._willRangeChange(points);
+        this._isChangeElemIDs = this.parentIfText(points.scID) !== this.parentIfText(this._range.scID) ||
+            this.parentIfText(points.ecID) !== this.parentIfText(this._range.ecID);
 
-        this._didRangeChange = this._willRangeChange(scID, so, ecID, eo);
-        this._isChangeElemIDs = this.parentIfText(scID) !== this.parentIfText(this._range.scID) ||
-            this.parentIfText(ecID) !== this.parentIfText(this._range.ecID);
-
-        this._range.scID = scID;
-        this._range.so = so;
-        this._range.ecID = ecID;
-        this._range.eo = eo;
+        this._range.scID = points.scID;
+        this._range.so = points.so;
+        this._range.ecID = points.ecID;
+        this._range.eo = points.eo;
     },
     /**
      * Get the native Range object corresponding to the given range points.
@@ -610,17 +657,18 @@ var ArchPlugin = AbstractPlugin.extend({
     /**
      * Return true if the range will change once set to the given points.
      *
-     * @param {Number} scID
-     * @param {Number} so
-     * @param {Number} ecID
-     * @param {Number} eo
+     * @param {Object} points
+     * @param {Number} points.scID
+     * @param {Number} points.so
+     * @param {Number} points.ecID
+     * @param {Number} points.eo
      * @returns {Boolean}
      */
-    _willRangeChange: function (scID, so, ecID, eo) {
-        var willOffsetChange = so !== this._range.so || eo !== this._range.eo;
-        var willIDsChange = scID !== this._range.scID || ecID !== this._range.ecID;
-        var willNodesChange = this._renderer.getElement(scID) !== this._renderer.getElement(this._range.scID) ||
-            this._renderer.getElement(ecID) !== this._renderer.getElement(this._range.ecID);
+    _willRangeChange: function (points) {
+        var willOffsetChange = points.so !== this._range.so || points.eo !== this._range.eo;
+        var willIDsChange = points.scID !== this._range.scID || points.ecID !== this._range.ecID;
+        var willNodesChange = this._renderer.getElement(points.scID) !== this._renderer.getElement(this._range.scID) ||
+            this._renderer.getElement(points.ecID) !== this._renderer.getElement(this._range.ecID);
         return willOffsetChange || willIDsChange || willNodesChange;
     },
 

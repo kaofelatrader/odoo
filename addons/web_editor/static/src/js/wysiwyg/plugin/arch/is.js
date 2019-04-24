@@ -206,6 +206,9 @@ ArchNode.include({
     isFormatNode: function () {
         return this.styleTags.concat(this.formatTags).indexOf(this.nodeName) !== -1;
     },
+    isInlineFormatNode: function () {
+        return this.formatTags.indexOf(this.nodeName) !== -1;
+    },
     /**
      * Return true if the given node is an image element (IMG).
      *
