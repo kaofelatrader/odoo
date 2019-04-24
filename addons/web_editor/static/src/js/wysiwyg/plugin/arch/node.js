@@ -559,9 +559,9 @@ return Class.extend({
 
         archNode.parent = this;
         this.childNodes.splice(index, 0, archNode);
-        if (this.__removed) {
+        if (archNode.__removed) {
             this.params.change(archNode, 0);
-            this.__removed = false;
+            archNode.__removed = false;
         }
 
         this.params.add(archNode);

@@ -66,7 +66,9 @@ var HistoryPlugin = AbstractPlugin.extend({
             var oldOffset = this.stackOffset;
             this.stackOffset--;
             this._muteUpdate = true;
-            this.dependencies.Arch.importUpdate(this._getStepDiff(this.stackOffset, oldOffset), this._range[this.stackOffset]);
+            var diff = this._getStepDiff(this.stackOffset, oldOffset);
+            var range = this._range[this.stackOffset];
+            this.dependencies.Arch.importUpdate(diff, range);
             this._muteUpdate = false;
         }
     },
@@ -75,7 +77,9 @@ var HistoryPlugin = AbstractPlugin.extend({
             var oldOffset = this.stackOffset;
             this.stackOffset++;
             this._muteUpdate = true;
-            this.dependencies.Arch.importUpdate(this._getStepDiff(this.stackOffset, oldOffset), this._range[this.stackOffset]);
+            var diff = this._getStepDiff(this.stackOffset, oldOffset);
+            var range = this._range[this.stackOffset];
+            this.dependencies.Arch.importUpdate(diff, range);
             this._muteUpdate = false;
         }
     },
@@ -87,7 +91,15 @@ var HistoryPlugin = AbstractPlugin.extend({
     // Private
     //--------------------------------------------------------------------------
     _onArchRange: function (range) {
+        if (this._muteUpdate) {
+            return;
+        }
+        if (this.stackOffset < this._eachNodeHistory[0].length -1) {
+            return;
+        }
+
         if (this._eachNodeHistory[0][this.stackOffset] &&
+            !this._eachNodeHistory[0][this.stackOffset + 1] &&
                 (!this._range[this.stackOffset] ||
                     this._range[this.stackOffset].scID !== range.scID ||
                     this._range[this.stackOffset].so !== range.so ||

@@ -369,12 +369,7 @@ var ArchPlugin = AbstractPlugin.extend({
         return archNode ? archNode.toJSON(options) : {};
     },
     exportRange: function () {
-        return {
-            scID: this._range.scID,
-            so: this._range.so,
-            ecID: this._range.ecID,
-            eo: this._range.eo,
-        };
+        return Object.assign({}, this._range);
     },
     /**
      * @param {Int} id
@@ -815,6 +810,8 @@ var ArchPlugin = AbstractPlugin.extend({
     importUpdate: function (changes, range) {
         var self = this;
 
+        range = Object.assign({}, range);
+
         if (!changes.length) {
             this._range = range; // fail if use _setRangeWithIDs ????
             this._setRange();
@@ -1177,7 +1174,6 @@ var ArchPlugin = AbstractPlugin.extend({
             if (this._archNodeList[archNode.id] === archNode) {
                 delete this._archNodeList[archNode.id];
             }
-
             if (archNode.childNodes) {
                 archNode.childNodes.forEach(function (archNode) {
                     self._removeFromArch(archNode);
