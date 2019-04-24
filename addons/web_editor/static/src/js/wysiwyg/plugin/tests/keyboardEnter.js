@@ -228,8 +228,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 start: "p:contents()[0]->11",
                 key: 'ENTER',
             }],
-            // we are after the <br/>, the carret is on the li with an offset equal to the node length
-            test: "<ul><li><p>dom to edit</p></li><li><p><br/>◆</p></li></ul>",
+            test: "<ul><li><p>dom to edit</p></li><li>◆</li></ul>",
         },
         {
             name: "in li: 2x ENTER at end",

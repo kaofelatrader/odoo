@@ -19,8 +19,9 @@ return ArchNode.extend({
             return;
         }
 
-        if (offset === this.length() && this.parent.isFormatNode() && this.parent.parent) {
-            return this.parent.parent.split(this.index());
+        var isRightEdgeOfFormatNode = offset === this.length() && this.parent.isFormatNode() && this.isRightEdge();
+        if (isRightEdgeOfFormatNode && this.parent.parent) {
+            return this.parent.parent.split(this.parent.index() + 1);
         }
         var next = this.split(offset) || this.nextSibling() || this;
         return this.parent.addLine(next.index());
