@@ -6,6 +6,7 @@ var Manager = require('web_editor.wysiwyg.plugin.manager');
 
 var $ = require('web_editor.jquery');
 var _ = require('web_editor._');
+var spacePonctu = /( |\u00A0|~|`|!|@|#|\$|%|\^|&|\*|\(|\)|{|}|\[|\]|;|:|\"|'|<|,|\.|>|\?|\/|\\|\||-|_|\+|=)/;
 
 
 var HistoryPlugin = AbstractPlugin.extend({
@@ -118,7 +119,20 @@ var HistoryPlugin = AbstractPlugin.extend({
         }
 
         var old = this._getStep(this.stackOffset);
-        this.stackOffset++;
+
+        var concatTextHistory = false;
+        if (diffToNew.length === 1 && diffToNew[0].nodeName === 'TEXT') {
+            var nodeHistory = this._eachNodeHistory[diffToNew[0].id];
+            var step = nodeHistory && nodeHistory[this.stackOffset];
+            if (step) {
+                // break the history for each space or ponctuation
+                concatTextHistory = step.nodeValue.replace('\uFEFF', '').split(spacePonctu).length === diffToNew[0].nodeValue.replace('\uFEFF', '').split(spacePonctu).length;
+            }
+        }
+
+        if (!concatTextHistory) {
+            this.stackOffset++;
+        }
 
         // Wash out stack after stackOffset
         if (this._range.length > this.stackOffset) {
