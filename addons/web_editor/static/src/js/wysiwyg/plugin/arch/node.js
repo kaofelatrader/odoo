@@ -404,7 +404,8 @@ return Class.extend({
         }
 
         var child = this.childNodes[offset];
-        if (child && child.isRightEdge() && !this.isUnbreakable() && child.isVirtual()) {
+        var isChildRightEdgeVirtual = child && child.isRightEdge() && child.isVirtual();
+        if (isChildRightEdgeVirtual && !this.isUnbreakable() && (this.isFormatNode() || this._isPara())) {
             var virtual = this.childNodes[offset];
             this.after(virtual);
             return virtual.parent.addLine(virtual.index());
