@@ -551,6 +551,16 @@ class Picking(models.Model):
         return self.env.ref('stock.action_report_picking').report_action(self)
 
     @api.multi
+    def do_print_barcodes_zpl(self):
+        self.write({'printed': True})
+        return self.env.ref('stock.label_transfer_template').report_action(self)
+
+    @api.multi
+    def do_print_barcodes_pdf(self):
+        self.write({'printed': True})
+        return self.env.ref('stock.label_transfer_template_pdf').report_action(self)
+
+    @api.multi
     def action_confirm(self):
         self.mapped('package_level_ids').filtered(lambda pl: pl.state == 'draft' and not pl.move_ids)._generate_moves()
         # call `_action_confirm` on every draft move
