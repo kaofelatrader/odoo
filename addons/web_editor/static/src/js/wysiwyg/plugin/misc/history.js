@@ -29,6 +29,7 @@ var HistoryPlugin = AbstractPlugin.extend({
     },
     start: function () {
         this.dependencies.Arch.on('update', this, this._onArchUpdate.bind(this));
+        this.dependencies.Arch.on('range', this, this._onArchRange.bind(this));
         return this._super.apply(this, arguments);
     },
 
@@ -85,7 +86,19 @@ var HistoryPlugin = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
-
+    _onArchRange: function (range) {
+        if (this._eachNodeHistory[0][this.stackOffset] &&
+                (!this._range[this.stackOffset] ||
+                    this._range[this.stackOffset].scID !== range.scID ||
+                    this._range[this.stackOffset].so !== range.so ||
+                    this._range[this.stackOffset].ecID !== range.ecID ||
+                    this._range[this.stackOffset].eo !== range.eo
+                )
+            ) {
+            this.stackOffset++;
+        }
+        this._range[this.stackOffset] = range;
+    },
     _onArchUpdate: function (diffToNew) {
         var self = this;
         if (this._muteUpdate) {
@@ -104,6 +117,8 @@ var HistoryPlugin = AbstractPlugin.extend({
             });
             this._range = this._range.slice(0, this.stackOffset);
         }
+
+        this._eachNodeHistory[0][self.stackOffset] = true;
 
         diffToNew.forEach(function (json) {
             var nodeHistory = self._eachNodeHistory[json.id];

@@ -533,7 +533,7 @@ var ArchPlugin = AbstractPlugin.extend({
         this._select(wrappedRange.sc, wrappedRange.so, wrappedRange.ec, wrappedRange.eo);
 
         if (this._didRangeChange) {
-            this.trigger('range');
+            this.trigger('range', this.exportRange());
         }
         if (this._isChangeElemIDs) {
             this.trigger('focus', this.getFocusedNode());
@@ -766,6 +766,13 @@ var ArchPlugin = AbstractPlugin.extend({
 
     importUpdate: function (changes, range) {
         var self = this;
+
+        if (!changes.length) {
+            this._range = range; // fail if use _setRangeWithIDs ????
+            this._setRange();
+            return;
+        }
+
         var nodes = {};
         this._resetChange();
 
@@ -810,12 +817,7 @@ var ArchPlugin = AbstractPlugin.extend({
             });
         });
 
-        this._updateRendererFromChanges({
-            scID: range.scID,
-            so: range.so,
-            ecID: range.ecID,
-            eo: range.eo,
-        });
+        this._updateRendererFromChanges(range);
     },
 
     //--------------------------------------------------------------------------
@@ -848,9 +850,9 @@ var ArchPlugin = AbstractPlugin.extend({
                 });
             }
         }
-        this._setRange();
 
         this.trigger('update', json);
+        this._setRange();
         this.trigger_up('change');
     },
     _isVoidBlock: function (archNode) {
