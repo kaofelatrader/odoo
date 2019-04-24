@@ -20,7 +20,7 @@ ArchNode.include({
             options.__architecturalSpace = true;
             this._addArchitecturalSpaceNodes();
         }
-        return this._super.apply(this, arguments);
+        return this._super(arguments);
     },
     _addArchitecturalSpaceNode: function () {
         if (this.__removed || !this.parent || this.parent.ancestor(this.isPre)) {
