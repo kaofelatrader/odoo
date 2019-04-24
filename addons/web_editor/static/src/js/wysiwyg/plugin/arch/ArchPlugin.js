@@ -541,9 +541,10 @@ var ArchPlugin = AbstractPlugin.extend({
         var endPoint = __moveToDeepest(points.ecID, points.eo);
         function __moveToDeepest(id, offset) {
             var archNode = self._getNode(id);
-            while (archNode.childNodes && archNode.childNodes.length > offset) {
-                archNode = archNode.childNodes[offset];
-                offset = 0;
+            while (archNode.childNodes && archNode.childNodes.length) {
+                var isAfterEnd = offset >= archNode.childNodes.length;
+                archNode = archNode.childNodes[isAfterEnd ? archNode.childNodes.length - 1 : offset];
+                offset = isAfterEnd ? archNode.length() : 0;
             }
             return {
                 id: archNode.id,
