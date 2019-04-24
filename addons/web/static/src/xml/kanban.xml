@@ -29,7 +29,7 @@
                         </t>
                     </div>
                 </span>
-                <span t-if="widget.quick_create" class="o_kanban_quick_add"><i class="fa fa-plus" role="img" aria-label="Quick add" title="Quick add"/></span>
+                <span t-if="widget.quick_create or widget.overlay_form_view" t-att-class="widget.overlay_form_view ? 'o_kanban_overlay_form_view' : 'o_kanban_quick_add'"><i class="fa fa-plus" role="img" t-att-aria-label="widget.overlay_form_view ? 'Overlay Form View' : 'Quick add'" t-att-title="widget.overlay_form_view ? 'Overlay Form View' : 'Quick add'"/></span>
             </div>
         </div>
         <div t-if="widget.remaining > 0" class="o_kanban_load_more">

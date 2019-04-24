@@ -50,6 +50,7 @@ var KanbanColumn = Widget.extend({
 
         this.quick_create = options.quick_create;
         this.quickCreateView = options.quickCreateView;
+        this.overlay_form_view = options.overlay_form_view;
         this.groupedBy = options.groupedBy;
         this.grouped_by_m2o = options.grouped_by_m2o;
         this.editable = options.editable;

@@ -77,6 +77,7 @@ var KanbanView = BasicView.extend({
             read_only_mode: params.readOnlyMode,
         };
         this.rendererParams.quickCreateEnabled = this._isQuickCreateEnabled();
+        this.rendererParams.overlayFormViewEnabled = this._isOverlayFormViewEnabled();
         this.rendererParams.readOnlyMode = params.readOnlyMode;
         var examples = archAttrs.examples;
         if (examples) {
@@ -164,6 +165,18 @@ var KanbanView = BasicView.extend({
             var searchPanelDomain = searchPanel.getDomain();
             self.loadParams.domain = controlPanelDomain.concat(searchPanelDomain);
         });
+    },
+    /**
+     * @private
+     * @param {Object} viewInfo
+     * @returns {boolean} false if the open overlay form view feature is not explicitely
+     *   enable (with overlay_form_view="true" in the arch)
+     */
+    _isOverlayFormViewEnabled: function () {
+        if (this.arch.attrs.overlay_form_view !== undefined) {
+            return !!JSON.parse(this.arch.attrs.overlay_form_view);
+        }
+        return false;
     },
     /**
      * @private

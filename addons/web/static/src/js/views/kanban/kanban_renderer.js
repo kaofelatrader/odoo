@@ -125,6 +125,7 @@ var KanbanRenderer = BasicRenderer.extend({
             var handleField = _.findWhere(this.state.fieldsInfo.kanban, {widget: 'handle'});
             this.handleField = handleField && handleField.name;
         }
+        this.overlayFormViewEnabled = params.overlayFormViewEnabled;
         this._setState(state);
     },
     /**
@@ -507,6 +508,7 @@ var KanbanRenderer = BasicRenderer.extend({
             grouped_by_m2o: this.groupedByM2O,
             relation: relation,
             quick_create: this.quickCreateEnabled && viewUtils.isQuickCreateEnabled(state),
+            overlay_form_view: this.overlayFormViewEnabled,
         });
         this.createColumnEnabled = this.groupedByM2O && this.columnOptions.group_creatable;
     },
