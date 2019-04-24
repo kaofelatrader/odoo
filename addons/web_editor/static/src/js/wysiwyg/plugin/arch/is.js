@@ -20,6 +20,37 @@ ArchNode.include({
         'blockquote',
         'pre',
     ],
+    formatTags: [
+        'abbr',
+        'acronym',
+        'b',
+        'bdi',
+        'bdo',
+        'big',
+        'blink',
+        'cite',
+        'code',
+        'dfn',
+        'em',
+        'font',
+        'i',
+        'ins',
+        'kbd',
+        'mark',
+        'nobr',
+        'q',
+        's',
+        'samp',
+        'small',
+        'span',
+        'strike',
+        'strong',
+        'sub',
+        'sup',
+        'tt',
+        'u',
+        'var',
+    ],
 
     /**
      * Return true if the given node is an anchor element (A, BUTTON, .btn).
@@ -156,7 +187,7 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isFormatNode: function () {
-        return this.styleTags.indexOf(this.nodeName) !== -1;
+        return this.styleTags.concat(this.formatTags).indexOf(this.nodeName) !== -1;
     },
     /**
      * Return true if the given node is an image element (IMG).
