@@ -73,6 +73,7 @@ Copyright 2018 Odoo House ApS
         'data/l10n_dk_chart_data.xml',
         'data/account.account.template.csv',
         'data/l10n_dk_chart_post_data.xml',
+        'data/account_tax_report_line.xml',
         'data/account_tax_data.xml',
         'data/account_fiscal_position_data.xml',
         'data/account_chart_template_configuration_data.xml',

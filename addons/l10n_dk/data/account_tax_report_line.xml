@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="account_financial_report_l10n_dk_momsialt" model="account.tax.report.line">
+        <field name="name">Moms i alt (Positivt beløb = betale, negativ beløb = penge til gode)</field>
+        <field name="sequence" eval="1"/>
+        <field name="formula">DM_MOM_01_01 + DM_MOM_01_02 + DM_MOM_01_03 - DM_MOM_01_04</field>
+        <field name="country_id" ref="base.dk"/>
+    </record>
+
+    <record id="account_financial_report_l10n_dk_salgsmoms" model="account.tax.report.line">
+        <field name="name">Salgsmoms (Udgående moms)</field>
+        <field name="tag_name">Salgsmoms (Udgående moms)</field>
+        <field name="parent_line_id" ref="account_financial_report_l10n_dk_momsialt"/>
+        <field name="code">DM_MOM_01_01</field>
+        <field name="sequence" eval="1"/>
+        <field name="country_id" ref="base.dk"/>
+    </record>
+
+    <record id="account_financial_report_l10n_dk_moms_af_varekob_i_udlandet" model="account.tax.report.line">
+        <field name="name">Moms af varekøb i udlandet (både EU og tredjelande)</field>
+        <field name="tag_name">Moms af varekøb i udlandet (både EU og tredjelande)</field>
+        <field name="parent_line_id" ref="account_financial_report_l10n_dk_momsialt"/>
+        <field name="code">DM_MOM_01_02</field>
+        <field name="sequence" eval="2"/>
+        <field name="country_id" ref="base.dk"/>
+    </record>
+
+    <record id="account_financial_report_l10n_dk_moms_af_ydelseskob_i_udlandet" model="account.tax.report.line">
+        <field name="name">Moms af ydelseskøb i udlandet med omvendt betalingspligt</field>
+        <field name="tag_name">Moms af ydelseskøb i udlandet med omvendt betalingspligt</field>
+        <field name="parent_line_id" ref="account_financial_report_l10n_dk_momsialt"/>
+        <field name="code">DM_MOM_01_03</field>
+        <field name="sequence" eval="3"/>
+        <field name="country_id" ref="base.dk"/>
+    </record>
+
+    <record id="account_financial_report_l10n_dk_kobsmoms" model="account.tax.report.line">
+        <field name="name">Købsmoms (indgående moms)</field>
+        <field name="tag_name">Købsmoms (indgående moms)</field>
+        <field name="parent_line_id" ref="account_financial_report_l10n_dk_momsialt"/>
+        <field name="code">DM_MOM_01_04</field>
+        <field name="sequence" eval="4"/>
+        <field name="country_id" ref="base.dk"/>
+    </record>
+
+    <record id="account_financial_report_l10n_dk_supplerende_oplysninger" model="account.tax.report.line">
+        <field name="name">Supplerende oplysninger. Rubrik A, B og C (Denne linie medtages ikke i indberetning)</field>
+        <field name="sequence" eval="2"/>
+        <field name="formula">-DM_MOM_02_01 - DM_MOM_02_02 + DM_MOM_02_03 - DM_MOM_02_04 + DM_MOM_02_05 + DM_MOM_02_06</field>
+        <field name="country_id" ref="base.dk"/>
+    </record>
+
+    <record id="account_financial_report_l10n_dk_rubrik_a_varer" model="account.tax.report.line">
+        <field name="name">Rubrik A - varer. Værdien uden moms af varekøb i andre EU-lande (EU erhvervelser)</field>
+        <field name="tag_name">Rubrik A - varer. Værdien uden moms af varekøb i andre EU-lande (EU erhvervelser)</field>
+        <field name="parent_line_id" ref="account_financial_report_l10n_dk_supplerende_oplysninger"/>
+        <field name="code">DM_MOM_02_01</field>
+        <field name="sequence" eval="1"/>
+        <field name="country_id" ref="base.dk"/>
+    </record>
+
+    <record id="account_financial_report_l10n_dk_rubrik_a_ydelser" model="account.tax.report.line">
+        <field name="name">Rubrik A - ydelser. Værdien uden moms af ydelseskøb i andre EU-lande</field>
+        <field name="tag_name">Rubrik A - ydelser. Værdien uden moms af ydelseskøb i andre EU-lande</field>
+        <field name="parent_line_id" ref="account_financial_report_l10n_dk_supplerende_oplysninger"/>
+        <field name="code">DM_MOM_02_02</field>
+        <field name="sequence" eval="2"/>
+        <field name="country_id" ref="base.dk"/>
+    </record>
+
+    <record id="account_financial_report_l10n_dk_rubrik_b_vare_til_EUmoms" model="account.tax.report.line">
+        <field name="name">Rubrik B - vare - indberettes til 'EU-salg uden moms'. Værdien af varesalg uden moms til andre EU-lande.</field>
+        <field name="tag_name">Rubrik B - vare - indberettes til 'EU-salg uden moms'. Værdien af varesalg uden moms til andre EU-lande.</field>
+        <field name="parent_line_id" ref="account_financial_report_l10n_dk_supplerende_oplysninger"/>
+        <field name="code">DM_MOM_02_03</field>
+        <field name="sequence" eval="3"/>
+        <field name="country_id" ref="base.dk"/>
+    </record>
+
+    <record id="account_financial_report_l10n_dk_rubrik_b_vareikke_til_EU_moms" model="account.tax.report.line">
+        <field name="name">Rubrik B - vare - indberettes ikke til  'EU-salg uden moms'. Værdien til ikke momsregistrerede kunder uden moms til andre EU-lande.</field>
+        <field name="tag_name">Rubrik B - vare - indberettes ikke til  'EU-salg uden moms'. Værdien til ikke momsregistrerede kunder uden moms til andre EU-lande.</field>
+        <field name="parent_line_id" ref="account_financial_report_l10n_dk_supplerende_oplysninger"/>
+        <field name="code">DM_MOM_02_04</field>
+        <field name="sequence" eval="4"/>
+        <field name="country_id" ref="base.dk"/>
+    </record>
+
+    <record id="account_financial_report_l10n_dk_rubrik_b_ydelser" model="account.tax.report.line">
+        <field name="name">Rubrik B - ydelser. Værdien af visse ydelsessalg uden moms til andre EU-lande. Indberettes til 'EU-salg uden moms'.</field>
+        <field name="tag_name">Rubrik B - ydelser. Værdien af visse ydelsessalg uden moms til andre EU-lande. Indberettes til 'EU-salg uden moms'.</field>
+        <field name="parent_line_id" ref="account_financial_report_l10n_dk_supplerende_oplysninger"/>
+        <field name="code">DM_MOM_02_05</field>
+        <field name="sequence" eval="5"/>
+        <field name="country_id" ref="base.dk"/>
+    </record>
+
+    <record id="account_financial_report_l10n_dk_rubrik_c_ydelser" model="account.tax.report.line">
+        <field name="name">Rubrik C - ydelser. Værdien af andre vare og ydelser, der leveres uden afgift her i landet, i andre EU-lande og i lande uden for EU.</field>
+        <field name="tag_name">Rubrik C - ydelser. Værdien af andre vare og ydelser, der leveres uden afgift her i landet, i andre EU-lande og i lande uden for EU.</field>
+        <field name="parent_line_id" ref="account_financial_report_l10n_dk_supplerende_oplysninger"/>
+        <field name="code">DM_MOM_02_06</field>
+        <field name="sequence" eval="6"/>
+        <field name="country_id" ref="base.dk"/>
+    </record>
+
+</odoo>
