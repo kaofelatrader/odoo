@@ -522,7 +522,9 @@ var ArchPlugin = AbstractPlugin.extend({
     _moveToBeforeInline: function (points) {
         var isCollapsed = points.scID === points.ecID && points.so === points.eo;
         var archSC = this._getNode(points.scID);
-        var isLeftEdgeOfInline = !points.so && archSC.isLeftEdge() && archSC.ancestor(archSC.isInlineFormatNode);
+        var isLeftEdgeOfInline = !points.so &&
+            (archSC.isInlineFormatNode() ||
+                archSC.isLeftEdge() && archSC.ancestor(archSC.isInlineFormatNode));
         var prev = archSC.previousSibling();
         if (isCollapsed && isLeftEdgeOfInline && prev) {
             points = this._deducePoints({
@@ -558,8 +560,8 @@ var ArchPlugin = AbstractPlugin.extend({
     _moveToEndOfInline: function (points) {
         var isCollapsed = points.scID === points.ecID && points.so === points.eo;
         var prev = this._getNode(points.scID).previousSibling();
-        var prevIsRightEdgeOfInline = prev && prev.isRightEdge() && prev.isInlineFormatNode()
-        if (isCollapsed && !points.so && prevIsRightEdgeOfInline) {
+        var prevIsInline = prev && prev.isInlineFormatNode()
+        if (isCollapsed && !points.so && prevIsInline) {
             points = this._deducePoints({
                 scID: prev.id,
                 so: prev.length(),
