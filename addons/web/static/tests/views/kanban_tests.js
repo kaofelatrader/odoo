@@ -3139,10 +3139,10 @@ QUnit.module('Views', {
             "the old widgets should have been correctly deleted");
 
         // test column drag and drop having an 'Undefined' column
-        await testUtils.dom.pointerDragAndDrop(
-            kanban.$('.o_kanban_header_title:first')[0],
-            kanban.$('.o_kanban_header_title:last')[0],
-            { position: 'right' }
+        await testUtils.dom.dragAndDrop(
+            kanban.$('.o_kanban_header_title:first'),
+            kanban.$('.o_kanban_header_title:last'),
+            {position: 'right'}
         );
         assert.strictEqual(resequencedIDs, undefined,
             "resequencing require at least 2 not Undefined columns");
@@ -3150,17 +3150,17 @@ QUnit.module('Views', {
         kanban.$('.o_column_quick_create input').val('once third column');
         await testUtils.dom.click(kanban.$('.o_column_quick_create button.o_kanban_add'));
         var newColumnID = kanban.$('.o_kanban_group:last').data('id');
-        await testUtils.dom.pointerDragAndDrop(
-            kanban.$('.o_kanban_header_title:first')[0],
-            kanban.$('.o_kanban_header_title:last')[0],
-            { position: 'right' }
+        await testUtils.dom.dragAndDrop(
+            kanban.$('.o_kanban_header_title:first'),
+            kanban.$('.o_kanban_header_title:last'),
+            {position: 'right'}
         );
         assert.deepEqual([3, newColumnID], resequencedIDs,
             "moving the Undefined column should not affect order of other columns")
-        await testUtils.dom.pointerDragAndDrop(
-            kanban.$('.o_kanban_header_title:first')[0],
-            kanban.$('.o_kanban_header_title:nth(1)')[0],
-            { position: 'right' }
+        await testUtils.dom.dragAndDrop(
+            kanban.$('.o_kanban_header_title:first'),
+            kanban.$('.o_kanban_header_title:nth(1)'),
+            {position: 'right'}
         );
         await nextTick(); // wait for resequence after drag and drop
         assert.deepEqual([newColumnID, 3], resequencedIDs,
