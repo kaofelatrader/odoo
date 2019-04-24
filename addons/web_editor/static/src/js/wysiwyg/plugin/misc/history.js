@@ -115,23 +115,37 @@ var HistoryPlugin = AbstractPlugin.extend({
                     return child.id || child;
                 });
             }
-            if (old[json.id] && JSON.stringify(old[json.id]) === JSON.stringify(json)) {
-                return;
+            var oldJSON = old[json.id];
+            if (oldJSON) {
+                if (JSON.stringify(oldJSON) === JSON.stringify(json)) {
+                    return;
+                }
             }
             nodeHistory[self.stackOffset] = json;
         });
-        this._range.push(this.dependencies.Arch.exportRange());
+
+        this._range[this.stackOffset] = this.dependencies.Arch.exportRange();
+    },
+    _getStepActiveIds: function (step) {
+        var ids = [];
+        (function lookChildren (id) {
+            ids.push(id);
+            if (step[id].childNodes) {
+                step[id].childNodes.forEach(lookChildren);
+            }
+        })(1);
+        return ids.sort();
     },
     _getStep: function (oldOffset) {
         var nodes = [];
-        this._eachNodeHistory.forEach(function (nodeHistory) {
+        this._eachNodeHistory.forEach(function (nodeHistory, id) {
             var offset = oldOffset;
             var snapshot = nodeHistory[offset];
             while (!snapshot && offset > 0) {
                 offset--;
                 snapshot = nodeHistory[offset];
             }
-            nodes.push(snapshot);
+            nodes[+id] = snapshot;
         });
         return nodes;
     },
@@ -139,8 +153,15 @@ var HistoryPlugin = AbstractPlugin.extend({
         var diff = [];
         var newStep = this._getStep(this.stackOffset);
         var oldStep = this._getStep(oldOffset);
-        newStep.forEach(function (json, index) {
-            if (json && json !== oldStep[index]) {
+
+        var oldIds = this._getStepActiveIds(oldStep);
+        var newIds = this._getStepActiveIds(newStep);
+
+        newStep.forEach(function (json) {
+            if (!json || newIds.indexOf(json.id) === -1) {
+                return;
+            }
+            if (oldIds.indexOf(json.id) === -1 || json !== oldStep[json.id]) {
                 diff.push(json);
             }
         });

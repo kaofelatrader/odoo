@@ -25,6 +25,11 @@ var TestArchAndRules = AbstractPlugin.extend({
             test: '<p><font color="red">comment</font></p>',
         },
         {
+            name: "Sort classes",
+            content: '<p class="red blue green">comment</p>',
+            test: '<p class="blue green red">comment</p>',
+        },
+        {
             name: "Fix a complex DOM",
             content: `
                 Bonjour,

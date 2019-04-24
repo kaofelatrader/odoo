@@ -783,7 +783,7 @@ var ArchPlugin = AbstractPlugin.extend({
                 }
                 if (change.childNodes) {
                     change.childNodes.forEach(function (id) {
-                        nodes[id] = self._getNode(id);
+                        nodes[id] = self._getNode(id) || nodes[id];
                     });
                 }
             } else {

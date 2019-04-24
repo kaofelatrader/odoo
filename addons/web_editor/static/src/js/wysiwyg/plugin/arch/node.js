@@ -45,7 +45,7 @@ ClassName.prototype = {
         });
     },
     toString: function () {
-        return this.value.join(' ');
+        return this.value.sort().join(' ');
     },
     get length () {
         return this.toString().length;
