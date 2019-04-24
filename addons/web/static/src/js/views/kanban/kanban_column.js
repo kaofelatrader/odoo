@@ -156,20 +156,18 @@ var KanbanColumn = Widget.extend({
                     console.log('creating record dropzones...');
                     self.activated = true;
                     self.$el[0].querySelectorAll('.o_kanban_record:not(.o_sortable_placeholder)').forEach(function(element) {
-                        if (element !== event.relatedTarget) {
-                            interact(element).dropzone({
-                                accept: '.o_kanban_record',
-                                checker: function (dragEvent, event, dropped, dropzone, dropElement, draggable, draggableElement) {
-                                    return dropped && (dropElement.parentNode.contains(draggableElement) || (connectWith && draggableElement.matches(connectWith + ' .o_kanban_record')));
-                                },
-                                ondragenter: function (event) {
-                                    console.log('entered');
-                                    var beforeTarget = event.dragEvent.dy > 0 ? event.target.nextSibling : event.target;
-                                    var parentTarget = beforeTarget ? beforeTarget.parentNode : event.target.parentNode;
-                                    insertPlaceholder(event.target, parentTarget, beforeTarget);
-                                },
-                            });
-                        }
+                        interact(element).dropzone({
+                            accept: '.o_kanban_record',
+                            checker: function (dragEvent, event, dropped, dropzone, dropElement, draggable, draggableElement) {
+                                return dropped && (dropElement.parentNode.contains(draggableElement) || (connectWith && draggableElement.matches(connectWith + ' .o_kanban_record')));
+                            },
+                            ondragenter: function (event) {
+                                console.log('entered');
+                                var beforeTarget = event.dragEvent.dy > 0 ? event.target.nextSibling : event.target;
+                                var parentTarget = beforeTarget ? beforeTarget.parentNode : event.target.parentNode;
+                                insertPlaceholder(event.target, parentTarget, beforeTarget);
+                            },
+                        });
                     })
                 }
             },
