@@ -1,140 +1,147 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <record id="account_tax_report_line_sum_avgiftsgrunnlag" model="account.tax.report.line">
-        <field name="name">Sum avgiftsgrunnlag</field>
+    <record id="account_tax_report_line_total_turnover_within_scope" model="account.tax.report.line">
+        <field name="name">Total turnover and withdrawals within the scope of the Value Added Tax Act and imports</field>
         <field name="sequence" eval="1"/>
         <field name="country_id" ref="base.no"/>
     </record>
 
-    <record id="account_tax_report_line_ikke_momspliktig_omsetning" model="account.tax.report.line">
-        <field name="name">Ikke momspliktig omsetning</field>
-        <field name="tag_name">Ikke momspliktig omsetning</field>
+    <record id="account_tax_report_line_total_turnover_sale" model="account.tax.report.line">
+        <field name="name">Total turnover and withdrawals of sale</field>
+        <field name="sequence" eval="1"/>
+        <field name="country_id" ref="base.no"/>
+        <field name="parent_line_id" ref="account_tax_report_line_total_turnover_within_scope"/>
+    </record>
+
+    <record id="account_tax_report_line_domestic_turnover_25" model="account.tax.report.line">
+        <field name="name">Domestic turnover and withdrawals, and calculated tax at 25%</field>
+        <field name="tag_name">Domestic turnover and withdrawals, and calculated tax at 25%</field>
         <field name="code">NOTAX_0100</field>
         <field name="sequence" eval="0"/>
-        <field name="parent_line_id" ref="account_tax_report_line_sum_avgiftsgrunnlag"/>
+        <field name="parent_line_id" ref="account_tax_report_line_total_turnover_sale"/>
         <field name="country_id" ref="base.no"/>
     </record>
 
-    <record id="account_tax_report_line_grunnlag_for_utgaende_avgift_hoy_sats" model="account.tax.report.line">
-        <field name="name">Grunnlag for utgående avgift, høy sats</field>
-        <field name="tag_name">Grunnlag for utgående avgift, høy sats</field>
-        <field name="code">NOTAX_0101</field>
-        <field name="sequence" eval="1"/>
-        <field name="parent_line_id" ref="account_tax_report_line_sum_avgiftsgrunnlag"/>
-        <field name="country_id" ref="base.no"/>
-    </record>
-
-    <record id="account_tax_report_line_grunnlag_for_utgaende_avgift_mellom_sats" model="account.tax.report.line">
-        <field name="name">Grunnlag for utgående avgift, mellom sats</field>
-        <field name="tag_name">Grunnlag for utgående avgift, mellom sats</field>
+    <record id="account_tax_report_line_domestic_turnover_15" model="account.tax.report.line">
+        <field name="name">Domestic turnover and withdrawals, and calculated tax at 15%</field>
+        <field name="tag_name">Domestic turnover and withdrawals, and calculated tax at 15%</field>
         <field name="code">NOTAX_0102</field>
-        <field name="sequence" eval="2"/>
-        <field name="parent_line_id" ref="account_tax_report_line_sum_avgiftsgrunnlag"/>
+        <field name="sequence" eval="0"/>
+        <field name="parent_line_id" ref="account_tax_report_line_total_turnover_sale"/>
         <field name="country_id" ref="base.no"/>
     </record>
 
-    <record id="account_tax_report_line_grunnlag_for_utgaende_avgift_lav_sats" model="account.tax.report.line">
-        <field name="name">Grunnlag for utgående avgift, lav sats</field>
-        <field name="tag_name">Grunnlag for utgående avgift, lav sats</field>
+    <record id="account_tax_report_line_domestic_turnover_12" model="account.tax.report.line">
+        <field name="name">Domestic turnover and withdrawals, and calculated tax at 12%</field>
+        <field name="tag_name">Domestic turnover and withdrawals, and calculated tax at 12%</field>
         <field name="code">NOTAX_0103</field>
-        <field name="sequence" eval="3"/>
-        <field name="parent_line_id" ref="account_tax_report_line_sum_avgiftsgrunnlag"/>
+        <field name="sequence" eval="0"/>
+        <field name="parent_line_id" ref="account_tax_report_line_total_turnover_sale"/>
         <field name="country_id" ref="base.no"/>
     </record>
 
-    <record id="account_tax_report_line_sum_innkjop" model="account.tax.report.line">
-        <field name="name">Sum innkjøp</field>
-        <field name="sequence" eval="2"/>
-        <field name="country_id" ref="base.no"/>
-    </record>
-
-    <record id="account_tax_report_line_grunnlag_for_inngaende_avgift_hoy_sats" model="account.tax.report.line">
-        <field name="name">Grunnlag for inngående avgift, høy sats</field>
-        <field name="tag_name">Grunnlag for inngående avgift, høy sats</field>
+    <record id="account_tax_report_line_domestic_turnover_0" model="account.tax.report.line">
+        <field name="name">Domestic turnover and withdrawals exempt from Value Added Tax</field>
+        <field name="tag_name">Domestic turnover and withdrawals exempt from Value Added Tax</field>
         <field name="code">NOTAX_0104</field>
-        <field name="sequence" eval="1"/>
-        <field name="parent_line_id" ref="account_tax_report_line_sum_innkjop"/>
+        <field name="sequence" eval="0"/>
+        <field name="parent_line_id" ref="account_tax_report_line_total_turnover_sale"/>
         <field name="country_id" ref="base.no"/>
     </record>
 
-    <record id="account_tax_report_line_grunnlag_for_inngaende_avgift_mellom_sats" model="account.tax.report.line">
-        <field name="name">Grunnlag for inngående avgift, mellom sats</field>
-        <field name="tag_name">Grunnlag for inngående avgift, mellom sats</field>
+    <record id="account_tax_report_line_total_turnover_purchase" model="account.tax.report.line">
+        <field name="name">Total turnover and withdrawals of purchase</field>
+        <field name="sequence" eval="1"/>
+        <field name="country_id" ref="base.no"/>
+        <field name="parent_line_id" ref="account_tax_report_line_total_turnover_within_scope"/>
+    </record>
+
+    <record id="account_tax_report_line_import_tax_25" model="account.tax.report.line">
+        <field name="name">Import of goods, and calculated tax at 25%</field>
+        <field name="tag_name">Import of goods, and calculated tax at 25%</field>
         <field name="code">NOTAX_0105</field>
-        <field name="sequence" eval="2"/>
-        <field name="parent_line_id" ref="account_tax_report_line_sum_innkjop"/>
+        <field name="sequence" eval="0"/>
+        <field name="parent_line_id" ref="account_tax_report_line_total_turnover_purchase"/>
         <field name="country_id" ref="base.no"/>
     </record>
 
-    <record id="account_tax_report_line_grunnlag_for_inngaende_avgift_lav_sats" model="account.tax.report.line">
-        <field name="name">Grunnlag for inngående avgift, lav sats</field>
-        <field name="tag_name">Grunnlag for inngående avgift, lav sats</field>
+    <record id="account_tax_report_line_import_tax_15" model="account.tax.report.line">
+        <field name="name">Import of goods, and calculated tax at 15%</field>
+        <field name="tag_name">Import of goods, and calculated tax at 15%</field>
         <field name="code">NOTAX_0106</field>
-        <field name="sequence" eval="3"/>
-        <field name="parent_line_id" ref="account_tax_report_line_sum_innkjop"/>
+        <field name="sequence" eval="0"/>
+        <field name="parent_line_id" ref="account_tax_report_line_total_turnover_purchase"/>
         <field name="country_id" ref="base.no"/>
     </record>
 
-    <record id="account_tax_report_line_netto_beregnet_avgift" model="account.tax.report.line">
-        <field name="name">Netto beregnet avgift</field>
-        <field name="sequence" eval="3"/>
-        <field name="formula">- NOTAX_0201 - NOTAX_0202 - NOTAX_0203 + NOTAX_0204 + NOTAX_0205 + NOTAX_0206</field>
+    <record id="account_tax_report_line_service_purchase_abroad_25" model="account.tax.report.line">
+        <field name="name">Services purchased from abroad, and calculated tax at 25%</field>
+        <field name="tag_name">Services purchased from abroad, and calculated tax at 25%</field>
+        <field name="code">NOTAX_0107</field>
+        <field name="sequence" eval="0"/>
+        <field name="parent_line_id" ref="account_tax_report_line_total_turnover_purchase"/>
         <field name="country_id" ref="base.no"/>
     </record>
 
-    <record id="account_tax_report_line_beregnet_inngaende_avgift_hoy_sats" model="account.tax.report.line">
-        <field name="name">Beregnet inngående avgift, høy sats</field>
-        <field name="tag_name">Beregnet inngående avgift, høy sats</field>
-        <field name="code">NOTAX_0201</field>
-        <field name="sequence" eval="4"/>
-        <field name="parent_line_id" ref="account_tax_report_line_netto_beregnet_avgift"/>
+    <record id="account_tax_report_line_service_purchase_domestic_25" model="account.tax.report.line">
+        <field name="name">Domestic purchases of goods and services, and calculated tax at 25 %</field>
+        <field name="tag_name">Domestic purchases of goods and services, and calculated tax at 25 %</field>
+        <field name="code">NOTAX_0108</field>
+        <field name="sequence" eval="0"/>
+        <field name="parent_line_id" ref="account_tax_report_line_total_turnover_purchase"/>
         <field name="country_id" ref="base.no"/>
     </record>
 
-    <record id="account_tax_report_line_beregnet_inngaende_avgift_lav_sats" model="account.tax.report.line">
-        <field name="name">Beregnet inngående avgift, lav sats</field>
-        <field name="tag_name">Beregnet inngående avgift, lav sats</field>
-        <field name="code">NOTAX_0202</field>
-        <field name="sequence" eval="5"/>
-        <field name="parent_line_id" ref="account_tax_report_line_netto_beregnet_avgift"/>
-        <field name="country_id" ref="base.no"/>
-    </record>
-
-    <record id="account_tax_report_line_beregnet_inngaende_avgift_mellom_sats" model="account.tax.report.line">
-        <field name="name">Beregnet inngående avgift, mellom sats</field>
-        <field name="tag_name">Beregnet inngående avgift, mellom sats</field>
-        <field name="code">NOTAX_0203</field>
-        <field name="sequence" eval="6"/>
-        <field name="parent_line_id" ref="account_tax_report_line_netto_beregnet_avgift"/>
-        <field name="country_id" ref="base.no"/>
-    </record>
-
-    <record id="account_tax_report_line_beregnet_utgaende_avgift_hoy_sats" model="account.tax.report.line">
-        <field name="name">Beregnet utgående avgift, høy sats</field>
-        <field name="tag_name">Beregnet utgående avgift, høy sats</field>
-        <field name="code">NOTAX_0204</field>
+    <record id="account_tax_report_line_tax_purchase_total" model="account.tax.report.line">
+        <field name="name">Total Tax Purchase</field>
         <field name="sequence" eval="1"/>
-        <field name="parent_line_id" ref="account_tax_report_line_netto_beregnet_avgift"/>
+        <field name="country_id" ref="base.no"/>
+        <field name="parent_line_id" ref="account_tax_report_line_total_turnover_within_scope"/>
+    </record>
+
+    <record id="account_tax_report_line_domestic_purchase_tax_25" model="account.tax.report.line">
+        <field name="name">Deductible domestic input tax 25%</field>
+        <field name="tag_name">Deductible domestic input tax 25%</field>
+        <field name="code">NOTAX_0109</field>
+        <field name="sequence" eval="0"/>
+        <field name="parent_line_id" ref="account_tax_report_line_tax_purchase_total"/>
         <field name="country_id" ref="base.no"/>
     </record>
 
-    <record id="account_tax_report_line_beregnet_utgaende_avgift_lav_sats" model="account.tax.report.line">
-        <field name="name">Beregnet utgående avgift, lav sats</field>
-        <field name="tag_name">Beregnet utgående avgift, lav sats</field>
-        <field name="code">NOTAX_0205</field>
-        <field name="sequence" eval="2"/>
-        <field name="parent_line_id" ref="account_tax_report_line_netto_beregnet_avgift"/>
+    <record id="account_tax_report_line_domestic_purchase_tax_15" model="account.tax.report.line">
+        <field name="name">Deductible domestic input tax 15%</field>
+        <field name="tag_name">Deductible domestic input tax 15%</field>
+        <field name="code">NOTAX_0110</field>
+        <field name="sequence" eval="0"/>
+        <field name="parent_line_id" ref="account_tax_report_line_tax_purchase_total"/>
         <field name="country_id" ref="base.no"/>
     </record>
 
-    <record id="account_tax_report_line_beregnet_utgaende_avgift_mellom_sats" model="account.tax.report.line">
-        <field name="name">Beregnet utgående avgift, mellom sats</field>
-        <field name="tag_name">Beregnet utgående avgift, mellom sats</field>
-        <field name="code">NOTAX_0206</field>
-        <field name="sequence" eval="3"/>
-        <field name="parent_line_id" ref="account_tax_report_line_netto_beregnet_avgift"/>
+    <record id="account_tax_report_line_domestic_purchase_tax_12" model="account.tax.report.line">
+        <field name="name">Deductible domestic input tax 12%</field>
+        <field name="tag_name">Deductible domestic input tax 12%</field>
+        <field name="code">NOTAX_0111</field>
+        <field name="sequence" eval="0"/>
+        <field name="parent_line_id" ref="account_tax_report_line_tax_purchase_total"/>
         <field name="country_id" ref="base.no"/>
     </record>
 
+    <record id="account_tax_report_line_import_purchase_tax_25" model="account.tax.report.line">
+        <field name="name">Deductible import Value Added Tax, 25%</field>
+        <field name="tag_name">Deductible import Value Added Tax, 25%</field>
+        <field name="code">NOTAX_0112</field>
+        <field name="sequence" eval="0"/>
+        <field name="parent_line_id" ref="account_tax_report_line_tax_purchase_total"/>
+        <field name="country_id" ref="base.no"/>
+    </record>
+
+    <record id="account_tax_report_line_import_purchase_tax_15" model="account.tax.report.line">
+        <field name="name">Deductible import Value Added Tax, 15%</field>
+        <field name="tag_name">Deductible import Value Added Tax, 15%</field>
+        <field name="code">NOTAX_0113</field>
+        <field name="sequence" eval="0"/>
+        <field name="parent_line_id" ref="account_tax_report_line_tax_purchase_total"/>
+        <field name="country_id" ref="base.no"/>
+    </record>
 </odoo>

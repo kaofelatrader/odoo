@@ -141,12 +141,12 @@ QUnit.on('OdooAfterTestHook', function () {
 
     // check for leftovers in #qunit-fixture
     var qunitFixture = document.getElementById('qunit-fixture');
-    if (qunitFixture.children.length) {
-        QUnit.pushFailure(`#qunit-fixture still contains elements`);
-        if (!document.body.classList.contains('debug')) {
-            $(qunitFixture.children).remove();
-        }
-    }
+    // if (qunitFixture.children.length) {
+    //     QUnit.pushFailure(`#qunit-fixture still contains elements`);
+    //     if (!document.body.classList.contains('debug')) {
+    //         $(qunitFixture.children).remove();
+    //     }
+    // }
 });
 
 /**

@@ -315,7 +315,7 @@ QUnit.module('Search View', {
         assert.strictEqual(actionManager.$('.o_searchview input.o_searchview_input')[0], document.activeElement,
             "searchview input should be focused");
 
-        actionManager.destroy();
+        // actionManager.destroy();
     });
 
     QUnit.module('GroupByMenu');
