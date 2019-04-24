@@ -2605,7 +2605,7 @@ QUnit.module('Views', {
         var $record = kanban.$('.o_kanban_group:nth-child(1) .o_kanban_record:first');
         var $group = kanban.$('.o_kanban_group:nth-child(2)');
         envIDs = [3, 2, 4, 1]; // first record of first column moved to the bottom of second column
-        await testUtils.dom.dragAndDrop($record, $group, {withTrailingClick: true});
+        await testUtils.dom.pointerDragAndDrop($record[0], $group[0], {withTrailingClick: true});
 
         resequenceDef.resolve();
         await testUtils.nextTick();
@@ -2649,7 +2649,7 @@ QUnit.module('Views', {
 
         var $record = kanban.$('.o_kanban_group:nth-child(1) .o_kanban_record:first');
         var $group = kanban.$('.o_kanban_group:nth-child(2)');
-        await testUtils.dom.dragAndDrop($record, $group);
+        await testUtils.dom.pointerDragAndDrop($record[0], $group[0]);
         await nextTick();  // wait for resequence after drag and drop
 
         assert.containsNone(kanban, '.o_kanban_group:nth-child(1) .o_kanban_record');
@@ -2691,7 +2691,7 @@ QUnit.module('Views', {
         // drag&drop a record in another column
         var $record = kanban.$('.o_kanban_group:nth-child(1) .o_kanban_record:first');
         var $group = kanban.$('.o_kanban_group:nth-child(2)');
-        await testUtils.dom.dragAndDrop($record, $group);
+        await testUtils.dom.pointerDragAndDrop($record[0], $group[0]);
         await nextTick();  // wait for resequence after drag and drop
         // should not be draggable
         assert.containsOnce(kanban, '.o_kanban_group:nth-child(1) .o_kanban_record');
@@ -2705,7 +2705,7 @@ QUnit.module('Views', {
         // drag&drop a record in another column
         $record = kanban.$('.o_kanban_group:nth-child(1) .o_kanban_record:first');
         $group = kanban.$('.o_kanban_group:nth-child(2)');
-        await testUtils.dom.dragAndDrop($record, $group);
+        await testUtils.dom.pointerDragAndDrop($record[0], $group[0]);
         await nextTick();  // wait for resequence after drag and drop
         // should not be draggable
         assert.containsOnce(kanban, '.o_kanban_group:nth-child(1) .o_kanban_record');
@@ -2716,7 +2716,7 @@ QUnit.module('Views', {
         var $record2 = kanban.$('.o_kanban_group:nth-child(2) .o_kanban_record:eq(1)');
         assert.strictEqual($record1.text(), "blipDEF", "first record should be DEF");
         assert.strictEqual($record2.text(), "blipGHI", "second record should be GHI");
-        await testUtils.dom.dragAndDrop($record2, $record1, {position: 'top'});
+        await testUtils.dom.pointerDragAndDrop($record2[0], $record1[0], {position: 'top'});
         // should still be able to resequence
         assert.strictEqual(kanban.$('.o_kanban_group:nth-child(2) .o_kanban_record:eq(0)').text(), "blipGHI",
             "records should have been resequenced");
@@ -2755,7 +2755,7 @@ QUnit.module('Views', {
         // drag&drop a record in another column
         var $record = kanban.$('.o_kanban_group:nth-child(1) .o_kanban_record:first');
         var $group = kanban.$('.o_kanban_group:nth-child(2)');
-        await testUtils.dragAndDrop($record, $group);
+        await testUtils.dom.pointerDragAndDrop($record[0], $group[0]);
 
         // should not drag&drop record
         assert.strictEqual(kanban.$('.o_kanban_group:nth-child(1) .o_kanban_record').length , 2,
@@ -3139,9 +3139,10 @@ QUnit.module('Views', {
             "the old widgets should have been correctly deleted");
 
         // test column drag and drop having an 'Undefined' column
-        await testUtils.dom.dragAndDrop(
-            kanban.$('.o_kanban_header_title:first'),
-            kanban.$('.o_kanban_header_title:last'), {position: 'right'}
+        await testUtils.dom.pointerDragAndDrop(
+            kanban.$('.o_kanban_header_title:first')[0],
+            kanban.$('.o_kanban_header_title:last')[0],
+            { position: 'right' }
         );
         assert.strictEqual(resequencedIDs, undefined,
             "resequencing require at least 2 not Undefined columns");
@@ -3149,15 +3150,17 @@ QUnit.module('Views', {
         kanban.$('.o_column_quick_create input').val('once third column');
         await testUtils.dom.click(kanban.$('.o_column_quick_create button.o_kanban_add'));
         var newColumnID = kanban.$('.o_kanban_group:last').data('id');
-        await testUtils.dom.dragAndDrop(
-            kanban.$('.o_kanban_header_title:first'),
-            kanban.$('.o_kanban_header_title:last'), {position: 'right'}
+        await testUtils.dom.pointerDragAndDrop(
+            kanban.$('.o_kanban_header_title:first')[0],
+            kanban.$('.o_kanban_header_title:last')[0],
+            { position: 'right' }
         );
         assert.deepEqual([3, newColumnID], resequencedIDs,
-            "moving the Undefined column should not affect order of other columns");
-        await testUtils.dom.dragAndDrop(
-            kanban.$('.o_kanban_header_title:first'),
-            kanban.$('.o_kanban_header_title:nth(1)'), {position: 'right'}
+            "moving the Undefined column should not affect order of other columns")
+        await testUtils.dom.pointerDragAndDrop(
+            kanban.$('.o_kanban_header_title:first')[0],
+            kanban.$('.o_kanban_header_title:nth(1)')[0],
+            { position: 'right' }
         );
         await nextTick(); // wait for resequence after drag and drop
         assert.deepEqual([newColumnID, 3], resequencedIDs,
@@ -4365,7 +4368,7 @@ QUnit.module('Views', {
 
         var $record = kanban.$('.o_kanban_group:eq(1) .o_kanban_record:eq(0)');
         var $group = kanban.$('.o_kanban_group:eq(0)');
-        await testUtils.dom.dragAndDrop($record, $group);
+        await testUtils.dom.pointerDragAndDrop($record[0], $group[0]);
         await nextTick();  // wait for resequencing after drag and drop
 
         assert.strictEqual(kanban.$('.o_kanban_group:eq(0) .o_kanban_record').length, 1,
@@ -4376,7 +4379,7 @@ QUnit.module('Views', {
         $record = kanban.$('.o_kanban_group:eq(0) .o_kanban_record:eq(0)');
         $group = kanban.$('.o_kanban_group:eq(1)');
 
-        await testUtils.dom.dragAndDrop($record, $group);
+        await testUtils.dom.pointerDragAndDrop($record[0], $group[0]);
         await nextTick();  // wait for resequencing after drag and drop
 
         assert.strictEqual(kanban.$('.o_kanban_group:eq(0) .o_kanban_record').length, 0,
@@ -4428,29 +4431,29 @@ QUnit.module('Views', {
         assert.strictEqual(kanban.$('.o_kanban_group:eq(0) .o_kanban_record').length, 2,
                         "column should contain 2 records");
         assert.strictEqual(kanban.$('.o_kanban_group:eq(0) .o_kanban_record:eq(0)').text(), "record2",
-                        "records should be correctly ordered");
+                        "records should be correctly ordered after quickcreate");
         assert.strictEqual(kanban.$('.o_kanban_group:eq(0) .o_kanban_record:eq(1)').text(), "record1",
-                        "records should be correctly ordered");
+                        "records should be correctly ordered after quickcreate");
 
         var $record1 = kanban.$('.o_kanban_group:eq(0) .o_kanban_record:eq(1)');
         var $record2 = kanban.$('.o_kanban_group:eq(0) .o_kanban_record:eq(0)');
-        await testUtils.dom.dragAndDrop($record1, $record2, {position: 'top'});
+        await testUtils.dom.pointerDragAndDrop($record1[0], $record2[0], {position: 'top'});
 
         assert.strictEqual(kanban.$('.o_kanban_group:eq(0) .o_kanban_record').length, 2,
                         "column should contain 2 records");
         assert.strictEqual(kanban.$('.o_kanban_group:eq(0) .o_kanban_record:eq(0)').text(), "record1",
-                        "records should be correctly ordered");
+                        "records should be correctly ordered after first swap");
         assert.strictEqual(kanban.$('.o_kanban_group:eq(0) .o_kanban_record:eq(1)').text(), "record2",
-                        "records should be correctly ordered");
+                        "records should be correctly ordered after first swap");
 
-        await testUtils.dom.dragAndDrop($record2, $record1, {position: 'top'});
+        await testUtils.dom.pointerDragAndDrop($record2[0], $record1[0], {position: 'top'});
 
         assert.strictEqual(kanban.$('.o_kanban_group:eq(0) .o_kanban_record').length, 2,
                         "column should contain 2 records");
         assert.strictEqual(kanban.$('.o_kanban_group:eq(0) .o_kanban_record:eq(0)').text(), "record2",
-                        "records should be correctly ordered");
+                        "records should be correctly ordered after second swap");
         assert.strictEqual(kanban.$('.o_kanban_group:eq(0) .o_kanban_record:eq(1)').text(), "record1",
-                        "records should be correctly ordered");
+                        "records should be correctly ordered after second swap");
         assert.strictEqual(nbResequence, 2, "should have resequenced twice");
         kanban.destroy();
     });
@@ -4798,17 +4801,17 @@ QUnit.module('Views', {
         assert.strictEqual(kanban.$('.o_kanban_group:eq(0) .o_kanban_counter_side').text(), "1",
             "counter should contain the correct value");
 
-        await testUtils.dom.dragAndDrop(kanban.$('.o_kanban_group:eq(0) .o_kanban_record:eq(0)'), kanban.$('.o_kanban_group:eq(1)'));
+        await testUtils.dom.pointerDragAndDrop(kanban.$('.o_kanban_group:eq(0) .o_kanban_record:eq(0)')[0], kanban.$('.o_kanban_group:eq(1)')[0]);
         await nextTick();  // wait for update resulting from drag and drop
         assert.strictEqual(kanban.$('.o_kanban_group:eq(0) .o_kanban_counter_side').text(), "0",
             "counter should contain the correct value");
 
-        await testUtils.dom.dragAndDrop(kanban.$('.o_kanban_group:eq(1) .o_kanban_record:eq(2)'), kanban.$('.o_kanban_group:eq(0)'));
+        await testUtils.dom.pointerDragAndDrop(kanban.$('.o_kanban_group:eq(1) .o_kanban_record:eq(2)')[0], kanban.$('.o_kanban_group:eq(0)')[0]);
         await nextTick();  // wait for update resulting from drag and drop
         assert.strictEqual(kanban.$('.o_kanban_group:eq(0) .o_kanban_counter_side').text(), "1",
             "counter should contain the correct value");
 
-        await testUtils.dom.dragAndDrop(kanban.$('.o_kanban_group:eq(0) .o_kanban_record:eq(0)'), kanban.$('.o_kanban_group:eq(1)'));
+        await testUtils.dom.pointerDragAndDrop(kanban.$('.o_kanban_group:eq(0) .o_kanban_record:eq(0)')[0], kanban.$('.o_kanban_group:eq(1)')[0]);
         await nextTick();  // wait for update resulting from drag and drop
         assert.strictEqual(kanban.$('.o_kanban_group:eq(0) .o_kanban_counter_side').text(), "0",
             "counter should contain the correct value");
@@ -4912,7 +4915,7 @@ QUnit.module('Views', {
         var $quickCreateGroup;
         var $groups;
         await _quickCreateAndTest();
-        await testUtils.dom.dragAndDrop($groups.first().find('.o_kanban_record:first'), $groups.eq(1));
+        await testUtils.dom.pointerDragAndDrop($groups.first().find('.o_kanban_record:first')[0], $groups.eq(1)[0]);
         await _quickCreateAndTest();
         kanban.destroy();
 

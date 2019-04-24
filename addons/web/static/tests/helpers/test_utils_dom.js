@@ -107,6 +107,120 @@ function dragAndDrop($el, $to, options) {
 }
 
 /**
+ * Simulate a drag and drop operation between 2 element nodes: el and to.
+ * This is a crude simulation, with only the mousedown, mousemove and mouseup
+ * events, but it is enough to help test drag and drop operations with sortable.
+ *
+ * @param {DOMElement} el
+ * @param {DOMElement} to
+ * @param {Object} [options]
+ * @param {string|Object} [options.position='center'] target position:
+ *   can either be one of {'top', 'bottom', 'left', 'right'} or
+ *   an object with two attributes (top and left))
+ * @param {boolean} [options.disableDrop=false] whether to trigger the drop action
+ * @param {boolean} [options.continueMove=false] whether to trigger the
+ *   mousedown action (will only work after another call of this function with
+ *   without this option)
+ * @param {boolean} [options.withTrailingClick=false] if true, this utility
+ *   function will also trigger a click on the target after the mouseup event
+ *   (this is actually what happens when a drag and drop operation is done)
+ */
+async function pointerDragAndDrop(el, to, options) {
+    options = options || {};
+    var position = options.position || 'center';
+    var elementCenterRect = el.getBoundingClientRect();
+    var elementCenter = {
+        top: elementCenterRect.top + document.body.scrollTop,
+        left: elementCenterRect.left + document.body.scrollLeft,
+    }
+    var toOffsetRect = to.getBoundingClientRect();
+    var toOffset = {
+        top: toOffsetRect.top + document.body.scrollTop,
+        left: toOffsetRect.left + document.body.scrollLeft,
+    }
+
+    if (_.isObject(position)) {
+        toOffset.top += position.top;
+        toOffset.left += position.left;
+    } else {
+        toOffset.top += to.offsetHeight / 2;
+        toOffset.left += to.offsetWidth / 2;
+        var vertical_offset = (toOffset.top < elementCenter.top) ? -1 : 1;
+        if (position === 'top') {
+            toOffset.top -= to.offsetHeight / 2 + vertical_offset;
+        } else if (position === 'bottom') {
+            toOffset.top += to.offsetHeight / 2 - vertical_offset;
+        } else if (position === 'left') {
+            toOffset.left -= to.offsetWidth / 2;
+        } else if (position === 'right') {
+            toOffset.left += to.offsetWidth / 2;
+        }
+    }
+
+    if (to.ownerDocument !== document) {
+        // we are in an iframe
+        var bound = $('iframe')[0].getBoundingClientRect();
+        toOffset.left += bound.left;
+        toOffset.top += bound.top;
+    }
+    var pointerEnterEvent = new PointerEvent("pointerenter", {
+        bubbles: true,
+        screenX: elementCenter.left,
+        screenY: elementCenter.top,
+        clientX: elementCenter.left,
+        clientY: elementCenter.top,
+    });
+    el.dispatchEvent(pointerEnterEvent);
+    if (!(options.continueMove)) {
+        elementCenter.left += el.offsetWidth / 2;
+        elementCenter.top += el.offsetHeight / 2;
+
+        var pointerDownEvent = new PointerEvent("pointerdown", {
+            bubbles: true,
+            screenX: elementCenter.left,
+            screenY: elementCenter.top,
+            clientX: elementCenter.left,
+            clientY: elementCenter.top,
+        });
+        el.dispatchEvent(pointerDownEvent);
+    }
+
+    // await concurrency.delay(1000);
+
+    var pointerMoveEvent = new PointerEvent("pointermove", {
+        bubbles: true,
+        screenX: toOffset.left,
+        screenY: toOffset.top,
+        clientX: toOffset.left,
+        clientY: toOffset.top,
+    });
+    el.dispatchEvent(pointerMoveEvent);
+
+    if (!options.disableDrop) {
+        var pointerUpEvent = new PointerEvent("pointerup", {
+            bubbles: true,
+            screenX: toOffset.left,
+            screenY: toOffset.top,
+            clientX: toOffset.left,
+            clientY: toOffset.top,
+        });
+        el.dispatchEvent(pointerUpEvent);
+        if (options.withTrailingClick) {
+            el.click();
+        }
+    } else {
+        // It's impossible to drag another element when one is already
+        // being dragged. So it's necessary to finish the drop when the test is
+        // over otherwise it's impossible for the next tests to drag and
+        // drop elements.
+        el.on("remove", function () {
+            el.dispatchEvent(new CustomEvent("mouseup"));
+        });
+    }
+    return concurrency.delay(0);
+}
+
+/**
  * simulate a mouse event with a custom event who add the item position. This is
  * sometimes necessary because the basic way to trigger an event (such as
  * $el.trigger('mousemove')); ) is too crude for some uses.
@@ -282,6 +396,7 @@ return {
     triggerMouseEvent: triggerMouseEvent,
     triggerPositionalMouseEvent: triggerPositionalMouseEvent,
     dragAndDrop: dragAndDrop,
+    pointerDragAndDrop: pointerDragAndDrop,
     openDatepicker: openDatepicker,
     click: click,
     clickFirst: clickFirst,

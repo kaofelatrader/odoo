@@ -130,6 +130,7 @@ return Promise.all([
             triggerMouseEvent: testUtilsDom.triggerMouseEvent,
             triggerPositionalMouseEvent: testUtilsDom.triggerPositionalMouseEvent,
             dragAndDrop: testUtilsDom.dragAndDrop,
+            pointerDragAndDrop: testUtilsDom.pointerDragAndDrop,
             openDatepicker: testUtilsDom.openDatepicker,
             click: testUtilsDom.click,
             clickFirst: testUtilsDom.clickFirst,

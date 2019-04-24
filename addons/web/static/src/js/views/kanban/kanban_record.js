@@ -65,8 +65,9 @@ var KanbanRecord = Widget.extend({
     start: function () {
         var self = this;
         return Promise.all([this._super.apply(this, arguments), this._render()]).then(function() {
-            interact(self.$el[0]).draggable({
+            var interactOptions = {
                 onstart: function (event) {
+                    console.log('!!! dragged !!!')
                     var target = event.target;
 
                     target.setAttribute('data-originalHeight', target.style.height);
@@ -108,7 +109,14 @@ var KanbanRecord = Widget.extend({
                     event.target.style.width = event.target.getAttribute('data-originalWidth');
                     event.target.style.zIndex = event.target.getAttribute('data-originalZIndex');
                 }
-            });
+            }
+            if (!self.getParent().draggable) {
+                interactOptions.restrict = {
+                    restriction: '.o_kanban_group',
+                        elementRect: { left: 0, right: 1, top: 0, bottom: 1 }
+                };
+            }
+            interact(self.el).draggable(interactOptions);
         })
     },
     /**
