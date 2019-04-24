@@ -138,6 +138,23 @@ ArchNode.include({
         return this.nodeName === 'data';
     },
     /**
+     * Return true if the node has no visible content.
+     */
+    isDeepEmpty: function () {
+        if (!this.childNodes || !this.childNodes.length) {
+            if (this.isBR()) {
+                var prev = this.previousSibling();
+                var next = this.nextSibling();
+                return (!prev || !prev.isBR()) &&
+                    !next || !next.isBR() && !next.isVirtual();
+            }
+            return this.isEmpty();
+        }
+        return this.childNodes.every(function (child) {
+            return child.isDeepEmpty();
+        });
+    },
+    /**
      * Return true if `node` is a descendent of `ancestor` (or is `ancestor` itself).
      *
      * @param {ArchNode} ancestor

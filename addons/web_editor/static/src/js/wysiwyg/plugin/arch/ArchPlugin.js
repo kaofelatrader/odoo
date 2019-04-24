@@ -728,9 +728,12 @@ var ArchPlugin = AbstractPlugin.extend({
                 return archAncestor.isLi();
             }) || archNode;
             var lastChild = liAncestor.lastChild();
-            if (lastChild) {
+            if (lastChild && !lastChild.isDeepEmpty()) {
                 lastChild.params.change(lastChild, lastChild.length());
             } else {
+                if (lastChild) {
+                    liAncestor.empty();
+                }
                 liAncestor.insert(this._createArchNode());
             }
             listAncestor.after(liAncestor.childNodes);
