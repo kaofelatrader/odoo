@@ -96,8 +96,11 @@ Attributes.prototype = {
             }
             if (name === 'class') {
                 isEqual = self[name].isEqual(obj[name], options);
-            }
-            if (self[name] !== obj[name]) {
+            } else if (self[name] instanceof Array && obj[name] instanceof Array) {
+                isEqual = self[name].every(function (item, index) {
+                    return obj[name][index] && item === obj[name][index];
+                });
+            } else if (self[name] !== obj[name]) {
                 isEqual = false;
             }
         });
@@ -560,9 +563,9 @@ return Class.extend({
     },
     /**
      * Next or previous node, following the leaf
-     * - go to the first child (or last) if exist (an the node in not unbreakable)
+     * - go to the first child (or last) if exist (and the node in not unbreakable or architectural)
      * - go to next sibbling
-     * - when the are no next sibbling, go to the parent
+     * - when the is no next sibling, go to the parent
      * - go to then next node
      * - go to the first child...
      *
@@ -596,6 +599,9 @@ return Class.extend({
         if (!next) {
             __goUp = true;
             next = this.parent[isPrev ? 'previousSibling' : 'nextSibling']();
+            while (next && next.isArchitecturalSpace()) {
+                next = next[isPrev ? 'previousSibling' : 'nextSibling']();
+            }
             if (next) {
                 next = next[isPrev ? 'lastChild' : 'firstChild']();
             }

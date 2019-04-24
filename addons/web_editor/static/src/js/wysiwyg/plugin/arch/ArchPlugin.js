@@ -985,7 +985,7 @@ var ArchPlugin = AbstractPlugin.extend({
         var commonAncestor = endNode.commonAncestor(this._getNode(this._range.scID));
         endNode.insert(virtualTextNodeEnd, this._range.eo);
 
-        endNode.splitUntil(commonAncestor, 0);
+        endNode.splitUntil(commonAncestor, endNode.length());
 
         var fromNode = this._getNode(this._range.scID);
         fromNode.insert(virtualTextNodeBegin, this._range.so);
