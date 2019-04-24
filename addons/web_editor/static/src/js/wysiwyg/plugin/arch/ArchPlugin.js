@@ -1044,8 +1044,10 @@ var ArchPlugin = AbstractPlugin.extend({
     },
     _addToArch: function (archNode) {
         var self = this;
-        if (!archNode.__removed && !archNode.id && archNode.parent && archNode.parent.id) {
-            archNode.id = ++this._id;
+        if (!archNode.__removed && archNode.parent && archNode.parent.id) {
+            if (!archNode.id) {
+                archNode.id = ++this._id;
+            }
             this._archNodeList[archNode.id] = archNode;
             if (archNode.childNodes) {
                 archNode.childNodes.forEach(function (archNode) {
@@ -1119,7 +1121,9 @@ var ArchPlugin = AbstractPlugin.extend({
     _removeFromArch: function (archNode) {
         var self = this;
         if (this._archNodeList[archNode.id]) {
-            delete this._archNodeList[archNode.id];
+            if (this._archNodeList[archNode.id] === archNode) {
+                delete this._archNodeList[archNode.id];
+            }
 
             if (archNode.childNodes) {
                 archNode.childNodes.forEach(function (archNode) {

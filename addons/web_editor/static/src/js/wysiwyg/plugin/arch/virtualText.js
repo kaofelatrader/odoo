@@ -84,7 +84,6 @@ return TextNode.extend({
         archNode.id = this.id;
         this.before(archNode);
         this.remove();
-        this.id = archNode.id;
     },
 });
 
