@@ -91,7 +91,7 @@ Attributes.prototype = {
             }
         });
         list.forEach(function (name) {
-            if (!isEqual || options && options.blackList && options.blackList.indexOf(name) !== -1) {
+            if (!name.indexOf('_') || !isEqual || options && options.blackList && options.blackList.indexOf(name) !== -1) {
                 return;
             }
             if (name === 'class') {

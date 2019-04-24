@@ -1066,9 +1066,9 @@ var ArchPlugin = AbstractPlugin.extend({
             return new VirtualText(this._arch.params);
         } else if (nodeName !== 'TEXT') {
             var Constructor = customNodes[nodeName] || ArchNode;
-            return new Constructor(this._arch.params, nodeName, param && param.attributes || []);
+            return new Constructor(this._arch.params, nodeName, param instanceof Array ? param : (param && param.attributes || []));
         } else {
-            return new VisibleText(this._arch.params, param && param.nodeValue || param);
+            return new VisibleText(this._arch.params, typeof param === 'string' ? param : (param && param.nodeValue || ''));
         }
     },
     _changeArch: function (archNode, offset) {

@@ -20,6 +20,11 @@ var TestArchAndRules = AbstractPlugin.extend({
             test: "<ul><li><ul><li>text</li></ul></li></ul>",
         },
         {
+            name: "Keep attribute",
+            content: '<font color="red">comment</font>',
+            test: '<p><font color="red">comment</font></p>',
+        },
+        {
             name: "Fix a complex DOM",
             content: `
                 Bonjour,
