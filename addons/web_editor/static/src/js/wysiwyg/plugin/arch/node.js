@@ -442,9 +442,6 @@ return Class.extend({
         return next && next._nextSibling(fn);
     },
     previousSibling: function (fn) {
-        if (this.index() === 0) {
-            return;
-        }
         var prev = this.parent.childNodes[this.index() - 1];
         return prev && prev._previousSibling(fn);
     },
@@ -565,14 +562,14 @@ return Class.extend({
         this.params.change(this, index);
     },
     _nextSibling: function (fn) {
-        if (this.isContentEditable() && (!fn || fn(this))) {
+        if (this.isEditable() && (!fn || fn(this))) {
             return this;
         } else {
             return this.nextSibling(fn);
         }
     },
     _previousSibling: function (fn) {
-        if (this.isContentEditable() && (!fn || fn(this))) {
+        if (this.isEditable() && (!fn || fn(this))) {
             return this;
         } else {
             return this.previousSibling(fn);
