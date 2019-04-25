@@ -4,7 +4,6 @@
     <record id="tax_report_sale_and_income" model="account.tax.report.line">
         <field name="name">Sales and Income</field>
         <field name="sequence" eval="1"/>
-        <field name="formula">BOX5 + BOX6 + (BOX5 - BOX6) + (((BOX5 - BOX6) * 3)/23)</field>
         <field name="country_id" ref="base.nz"/>
     </record>
 
@@ -63,7 +62,6 @@
     <record id="tax_report_purchases_and_expenses" model="account.tax.report.line">
         <field name="name">Purchases and Expenses</field>
         <field name="sequence" eval="2"/>
-        <field name="formula">BOX11 + ((BOX11 * 3)/23) + BOX13 + (((BOX11 * 3)/23) + BOX13) + (((((BOX5 - BOX6) * 3)/23) + BOX9) - (((BOX11 * 3)/23) + BOX13))</field>
         <field name="country_id" ref="base.nz"/>
     </record>
 
@@ -86,10 +84,8 @@
 
     <record id="tax_report_box13" model="account.tax.report.line">
         <field name="name">[BOX 13] Credit adjustments from your calculation sheet</field>
-        <field name="tag_name">[BOX 13] Credit adjustments from your calculation sheet</field>
         <field name="parent_line_id" ref="tax_report_purchases_and_expenses"/>
         <field name="sequence" eval="3"/>
-        <field name="code">BOX13</field>
         <field name="country_id" ref="base.nz"/>
     </record>
 
@@ -97,7 +93,7 @@
         <field name="name">[BOX 14] Total GST credit for purchases and expenses</field>
         <field name="parent_line_id" ref="tax_report_purchases_and_expenses"/>
         <field name="sequence" eval="4"/>
-        <field name="formula">((BOX11 * 3)/23) + BOX13</field>
+        <field name="formula">((BOX11 * 3)/23)</field>
         <field name="country_id" ref="base.nz"/>
     </record>
 
@@ -105,7 +101,7 @@
         <field name="name">[BOX 15]  Difference between BOX10 and BOX14</field>
         <field name="sequence" eval="3"/>
         <field name="parent_line_id" ref=""/>
-        <field name="formula">((((BOX5 - BOX6) * 3)/23) + BOX9) - (((BOX11 * 3)/23) + BOX13)</field>
+        <field name="formula">((((BOX5 - BOX6) * 3)/23) + BOX9) - ((BOX11 * 3)/23)</field>
         <field name="country_id" ref="base.nz"/>
     </record>
 
