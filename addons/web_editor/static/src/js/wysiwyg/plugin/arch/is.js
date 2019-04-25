@@ -52,6 +52,11 @@ ArchNode.include({
         'var',
     ],
 
+    containsOnlyBlank: function () {
+        return this.childNodes.every(function (child) {
+            return child.isVirtual() || child.isArchitecturalSpace() || child.isBlankText();
+        });
+    },
     /**
      * Return true if the given node is an anchor element (A, BUTTON, .btn).
      *
@@ -190,6 +195,9 @@ ArchNode.include({
         }
         var child = this.childNodes[0];
         if (this.childNodes.length === 1 && (child.isBR() || child.isText() && child.isEmpty())) {
+            return true;
+        }
+        if (this.containsOnlyBlank()) {
             return true;
         }
         return false;

@@ -197,7 +197,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 end: "li:contents()[0]->11",
                 key: 'ENTER',
             }],
-            test: "<ul><li></li><li>◆</li></ul>",
+            test: "<ul><li><br/></li><li><br/>◆</li></ul>",
         },
         {
             name: "in li: ENTER -> 'a' on selection of all contents",
@@ -209,7 +209,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'a',
             }],
-            test: "<ul><li></li><li>a◆</li></ul>",
+            test: "<ul><li><br/></li><li>a◆</li></ul>",
         },
         {
             name: "across 2 li: ENTER on partial selection",

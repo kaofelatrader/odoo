@@ -249,6 +249,7 @@ var ArchPlugin = AbstractPlugin.extend({
      * @param {object} [options]
      * @param {boolean} options.keepVirtual
      * @param {boolean} options.architecturalSpace
+     * @param {boolean} options.showIDs
      * @returns {string}
      **/
     getValue: function (options) {
@@ -266,6 +267,16 @@ var ArchPlugin = AbstractPlugin.extend({
     parentIfText: function (id) {
         var archNode = this._getNode(id);
         return archNode && (archNode.isText() ? archNode.parent.id : archNode.id);
+    },
+    /**
+     * Get a representation of the Arch with architectural space, node IDs and virtual nodes
+     */
+    repr: function () {
+        return this.getValue({
+            showIDs: true,
+            keepVirtual: true,
+            architecturalSpace: true
+        });
     },
 
     //--------------------------------------------------------------------------
@@ -1066,10 +1077,31 @@ var ArchPlugin = AbstractPlugin.extend({
             }
         }
 
+        this._removeAllVirtualText([virtualTextNodeBegin.id]);
+
         // the the range in the arch but not in the dom, wait redraw
         this._setRangeWithIDs({
             scID: virtualTextNodeBegin.id,
             so: 0,
+        });
+    },
+    /**
+     * Remove all virtual text nodes from the Arch, except the optional
+     * list passed in argument
+     *
+     * @param {Number []} [except] id's to ignore
+     */
+    _removeAllVirtualText: function (except) {
+        var self = this;
+        Object.keys(this._archNodeList).forEach(function (id) {
+            id = parseInt(id);
+            if (except.indexOf(id) !== -1) {
+                return;
+            }
+            var archNode = self._getNode(id);
+            if (archNode.isText() && archNode.isVirtual()) {
+                archNode.remove();
+            }
         });
     },
     _reset: function (value) {

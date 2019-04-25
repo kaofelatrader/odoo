@@ -410,6 +410,9 @@ return Class.extend({
         if (isChildRightEdgeVirtual && !this.isUnbreakable() && (this.isFormatNode() || this._isPara())) {
             var virtual = this.childNodes[offset];
             this.after(virtual);
+            if (this.isEmpty()) {
+                this.append(this.params.create());
+            }
             return virtual.parent.addLine(virtual.index());
         }
         var next = this.split(offset);
@@ -435,24 +438,15 @@ return Class.extend({
         return this.childNodes && this.childNodes.length ? this.childNodes[this.childNodes.length - 1] : null;
     },
     nextSibling: function (fn) {
-        if (this.isContentEditable()) {
-            return;
-        }
-        for (var k = this.index() + 1; k < this.parent.childNodes.length; k++) {
-            if (!fn || fn(this.parent.childNodes[k])) {
-                return this.parent.childNodes[k];
-            }
-        }
+        var next = this.parent.childNodes[this.index() + 1];
+        return next && next._nextSibling(fn);
     },
     previousSibling: function (fn) {
-        if (this.isContentEditable()) {
+        if (this.index() === 0) {
             return;
         }
-        for (var k = this.index() - 1; k >= 0; k--) {
-            if (!fn || fn(this.parent.childNodes[k])) {
-                return this.parent.childNodes[k];
-            }
-        }
+        var prev = this.parent.childNodes[this.index() - 1];
+        return prev && prev._previousSibling(fn);
     },
     ancestor: function (fn) {
         var parent = this;
@@ -569,6 +563,20 @@ return Class.extend({
         this.params.add(archNode);
 
         this.params.change(this, index);
+    },
+    _nextSibling: function (fn) {
+        if (this.isContentEditable() && (!fn || fn(this))) {
+            return this;
+        } else {
+            return this.nextSibling(fn);
+        }
+    },
+    _previousSibling: function (fn) {
+        if (this.isContentEditable() && (!fn || fn(this))) {
+            return this;
+        } else {
+            return this.previousSibling(fn);
+        }
     },
     /**
      * Next or previous node, following the leaf

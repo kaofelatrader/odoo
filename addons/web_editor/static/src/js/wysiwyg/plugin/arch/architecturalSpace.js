@@ -141,6 +141,18 @@ var ArchitecturalSpace = TextNode.extend({
         }
     },
     _addArchitecturalSpaceNodes: function () {},
+    /**
+     * @override
+     */
+    _nextSibling: function (fn) {
+        return this.nextSibling(fn);
+    },
+    /**
+     * @override
+     */
+    _previousSibling: function (fn) {
+        return this.previousSibling(fn);
+    },
 });
 
 return ArchitecturalSpace;
