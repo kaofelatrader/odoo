@@ -21,6 +21,13 @@ return TextNode.extend({
 
     insert: function (node, offset) {
         var prev = this.previousSibling();
+        if (this.parent.isEmpty() && node.isBR()) {
+            var parent = this.parent;
+            var index = this.index();
+            this.applyRules();
+            parent.insert(node, index);
+            return;
+        }
         if (prev) {
             prev.insert(node, prev.length());
         } else {

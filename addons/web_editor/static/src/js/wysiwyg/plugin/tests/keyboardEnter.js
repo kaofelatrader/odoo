@@ -428,7 +428,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             test: "<p><br/>a◆</p>",
         },
         {
-            name: "in p: 2x ENTER -> 'a' on selection of all contents",
+            name: "in p: 2x ENTER -> 'a' within text",
             content: "<p>dom to edit</p>",
             steps: [{
                 start: "p:contents()[0]->3",
@@ -438,7 +438,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'a',
             }],
-            test: "<p>dom</p><p><br/></p><p>a◆&nbsp;to edit</p>",
+            test: "<p>dom</p><p><br/></p><p>a◆ to edit</p>",
         },
         {
             name: "in p > b: ENTER at start",
