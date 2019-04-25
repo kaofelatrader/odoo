@@ -111,7 +111,7 @@ class TestProductAttributeValueSetup(TransactionCase):
         self.computer_hdd_attribute_lines.product_template_value_ids[2].price_extra = 8
 
     def _add_ram_exclude_for(self):
-        self._get_product_value_id(self.computer_ram_attribute_lines, self.ram_16).update({
+        self._get_product_value_id(self.computer_ram_attribute_lines, self.ram_16).write({
             'exclude_for': [(0, 0, {
                 'product_tmpl_id': self.computer.id,
                 'value_ids': [(6, 0, [self._get_product_value_id(self.computer_hdd_attribute_lines, self.hdd_1).id])]
@@ -163,7 +163,7 @@ class TestProductAttributeValueSetup(TransactionCase):
         )
 
     def _add_exclude(self, m1, m2, product_template=False):
-        m1.update({
+        m1.write({
             'exclude_for': [(0, 0, {
                 'product_tmpl_id': (product_template or self.computer).id,
                 'value_ids': [(6, 0, [m2.id])]
