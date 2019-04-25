@@ -165,8 +165,6 @@ async function pointerDragAndDrop(el, to, options) {
     }
     var pointerEnterEvent = new PointerEvent("pointerenter", {
         bubbles: true,
-        screenX: elementCenter.left,
-        screenY: elementCenter.top,
         clientX: elementCenter.left,
         clientY: elementCenter.top,
     });
@@ -177,8 +175,6 @@ async function pointerDragAndDrop(el, to, options) {
 
         var pointerDownEvent = new PointerEvent("pointerdown", {
             bubbles: true,
-            screenX: elementCenter.left,
-            screenY: elementCenter.top,
             clientX: elementCenter.left,
             clientY: elementCenter.top,
         });
@@ -189,8 +185,6 @@ async function pointerDragAndDrop(el, to, options) {
 
     var pointerMoveEvent = new PointerEvent("pointermove", {
         bubbles: true,
-        screenX: toOffset.left,
-        screenY: toOffset.top,
         clientX: toOffset.left,
         clientY: toOffset.top,
     });

@@ -31,6 +31,9 @@ var RunningTourActionHelper = core.Class.extend({
     drag_and_drop: function (to, element) {
         this._drag_and_drop(this._get_action_values(element), to);
     },
+    pointer_drag_and_drop: function (to, element) {
+        this._pointer_drag_and_drop(this._get_action_values(element), to);
+    },
     keydown: function (keyCodes, element) {
         this._keydown(this._get_action_values(element), keyCodes.split(/[,\s]+/));
     },
@@ -126,6 +129,48 @@ var RunningTourActionHelper = core.Class.extend({
         values.$element.trigger($.Event("mousemove", {which: 1, pageX: toCenter.left, pageY: toCenter.top}));
         values.$element.trigger($.Event("mouseup", {which: 1, pageX: toCenter.left, pageY: toCenter.top}));
      },
+    _pointer_drag_and_drop: function (values, to) {
+        var $to;
+        if (to) {
+            $to = get_jquery_element_from_selector(to);
+        } else {
+            $to = $(document.body);
+        }
+        var elementCenter = values.$element.offset();
+        elementCenter.left += values.$element.outerWidth() / 2;
+        elementCenter.top += values.$element.outerHeight() / 2;
+
+        var toCenter = $to.offset();
+
+        if (to && to.indexOf('iframe') !== -1) {
+            var iFrameOffset = $('iframe').offset();
+            toCenter.left += iFrameOffset.left;
+            toCenter.top += iFrameOffset.top;
+        }
+        toCenter.left += $to.outerWidth() / 2;
+        toCenter.top += $to.outerHeight() / 2;
+
+        values.$element[0].dispatchEvent(new PointerEvent("pointerenter", {
+            bubbles: true,
+            clientX: elementCenter.left,
+            clientY: elementCenter.top,
+        }));
+        values.$element[0].dispatchEvent(new PointerEvent("pointerdown", {
+            bubbles: true,
+            clientX: elementCenter.left,
+            clientY: elementCenter.top,
+        }));
+        values.$element[0].dispatchEvent(new PointerEvent("pointermove", {
+            bubbles: true,
+            clientX: toCenter.left,
+            clientY: toCenter.top,
+        }));
+        values.$element[0].dispatchEvent(new PointerEvent("pointerup", {
+            bubbles: true,
+            clientX: toCenter.left,
+            clientY: toCenter.top,
+        }));
+    },
     _keydown: function (values, keyCodes) {
         while (keyCodes.length) {
             var keyCode = +keyCodes.shift();
