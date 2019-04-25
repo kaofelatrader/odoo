@@ -75,7 +75,7 @@ return ArchNode.extend({
      * @override
      */
     isEmpty: function () {
-        return !!this.nodeValue.length;
+        return !this.nodeValue.length;
     },
     /**
      * @override

@@ -81,7 +81,7 @@ return TextNode.extend({
             return this.remove();
         }
 
-        if (para.isEmpty()) {
+        if (para.isDeepEmpty()) {
             return this._mutation('br');
         }
     },
