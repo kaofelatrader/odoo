@@ -128,7 +128,7 @@ class SurveyInvite(models.TransientModel):
             if not self.survey_id.users_can_signup:
                 invalid_partners = self.env['res.partner'].search([
                     ('user_ids', '=', False),
-                    ('id', 'in', self.partner_ids.ids)
+                    ('id', 'in', self.partner_ids._origin.ids)
                 ])
                 if invalid_partners:
                     raise UserError(
