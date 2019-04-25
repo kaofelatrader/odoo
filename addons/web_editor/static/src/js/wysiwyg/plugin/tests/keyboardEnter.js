@@ -346,7 +346,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 start: "p:eq(1):contents()[0]->0",
                 key: 'ENTER',
             }],
-            test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/></span></p><p><span class=\"b\">◆edit</span></p>",
+            test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"></span></p><p><span class=\"b\">◆edit</span></p>",
         },
         {
             name: "in p (other-p > span.a before - p > span.b after): ENTER -> 'a' at beginning",
@@ -357,7 +357,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'a',
             }],
-            test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/></span></p><p><span class=\"b\">a◆edit</span></p>",
+            test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"></span></p><p><span class=\"b\">a◆edit</span></p>",
         },
         {
             name: "in p (other-p > span.a before - p > span.b after): SHIFT+ENTER at beginning",
