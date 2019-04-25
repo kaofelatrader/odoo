@@ -4,6 +4,7 @@ from functools import wraps
 import logging
 from psycopg2 import IntegrityError, OperationalError, errorcodes
 import random
+import re
 import threading
 import time
 
@@ -118,22 +119,28 @@ def check(f):
                     if key in inst.pgerror:
                         raise ValidationError(tr(registry._sql_error[key], 'sql_constraint') or inst.pgerror)
                 if inst.pgcode in (errorcodes.NOT_NULL_VIOLATION, errorcodes.FOREIGN_KEY_VIOLATION, errorcodes.RESTRICT_VIOLATION):
-                    msg = _('The operation cannot be completed, probably due to the following:\n- deletion: you may be trying to delete a record while other records still reference it\n- creation/update: a mandatory field is not correctly set')
+                    msg = _('The operation cannot be completed.\n\n')
                     _logger.debug("IntegrityError", exc_info=True)
                     try:
                         errortxt = inst.pgerror.replace('«','"').replace('»','"')
-                        if '"public".' in errortxt:
-                            context = errortxt.split('"public".')[1]
-                            model_name = table = context.split('"')[1]
-                        else:
-                            last_quote_end = errortxt.rfind('"')
-                            last_quote_begin = errortxt.rfind('"', 0, last_quote_end)
-                            model_name = table = errortxt[last_quote_begin+1:last_quote_end].strip()
-                        model = table.replace("_",".")
-                        if model in registry:
+                        value = re.findall(r'\"(.+?)\"', errortxt)
+                        rmodel_name = value[1] if '"public".' in errortxt else value[0]
+                        model_name = table = value[-1]
+                        rmodel = rmodel_name.replace("_", ".")
+                        model = table.replace("_", ".")
+                        if (model or rmodel) in registry:
+                            model_class, rmodel_class = registry[model], registry[rmodel]
+                            model_name, rmodel_name = model_class._description or model_class._name, rmodel_class._description or rmodel_class._name
+                        if inst.pgcode == errorcodes.NOT_NULL_VIOLATION:
+                            model = kwargs.get('model')
                             model_class = registry[model]
-                            model_name = model_class._description or model_class._name
-                        msg += _('\n\n[object with reference: %s - %s]') % (model_name, model)
+                            msg += _('A record of model %s (%s) cannot be created/updated because some of its required fields are not set: \n %s (%s)') % (model_class._description, model_class._name, model_class._fields.get(rmodel_name).string, rmodel_name)
+                        if inst.pgcode == errorcodes.FOREIGN_KEY_VIOLATION:
+                            msg += _('A record of %s (%s) cannot be found and therefore referenced.\n If you are trying to save a record, this record is probably referencing another from model %s (%s) that does not exist anymore.') % (rmodel_name, rmodel_class._name, model_name, model_class._name)
+                        if inst.pgcode == errorcodes.RESTRICT_VIOLATION:
+                            model = kwargs.get('model')
+                            model_class = registry[model]
+                            msg += _('You may be trying to delete a record that is referenced by others from model "%s" (%s).\nIf possible, you should archive the record instead of deleting it.\n If you have to delete the record, make sure to unlink it from the records referencing it first.') % (model_class._description, model_class._name)
                     except Exception:
                         pass
                     raise ValidationError(msg)
