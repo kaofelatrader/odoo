@@ -170,7 +170,7 @@ class AccountMove(models.Model):
 
         def _build_grouping_key(line):
             #build a string containing all values used to create the tax line
-            return str(line.tax_ids.ids) + '-' + str(line.analytic_tag_ids.ids) + '-' + (line.analytic_account_id and str(line.analytic_account_id.id) or '')
+            return str(line.tax_ids._origin.ids) + '-' + str(line.analytic_tag_ids._origin.ids) + '-' + (line.analytic_account_id and str(line.analytic_account_id.id) or '')
 
         def _parse_grouping_key(line):
             # Retrieve values computed the last time this method has been run.
@@ -184,14 +184,16 @@ class AccountMove(models.Model):
             }
 
         def _find_existing_tax_line(line_ids, tax, tag_ids, analytic_account_id):
+            # tax is a real record; tag_ids and analytic_account_id are real ids
             if tax.analytic:
-                return line_ids.filtered(lambda x: x.tax_line_id == tax and x.analytic_tag_ids.ids == tag_ids and x.analytic_account_id.id == analytic_account_id)
+                return line_ids.filtered(lambda x: x.tax_line_id == tax and x.analytic_tag_ids._origin.ids == tag_ids and x.analytic_account_id.id == analytic_account_id)
             return line_ids.filtered(lambda x: x.tax_line_id == tax)
 
         def _get_lines_to_sum(line_ids, tax, tag_ids, analytic_account_id):
+            # tax is a real record; tag_ids and analytic_account_id are real ids
             if tax.analytic:
-                return line_ids.filtered(lambda x: tax in x.tax_ids and x.analytic_tag_ids.ids == tag_ids and x.analytic_account_id.id == analytic_account_id)
-            return line_ids.filtered(lambda x: tax in x.tax_ids)
+                return line_ids.filtered(lambda x: tax in x.tax_ids._origin and x.analytic_tag_ids._origin.ids == tag_ids and x.analytic_account_id.id == analytic_account_id)
+            return line_ids.filtered(lambda x: tax in x.tax_ids._origin)
 
         def _get_tax_account(tax, amount):
             if tax.tax_exigibility == 'on_payment' and tax.cash_basis_account_id:
@@ -200,7 +202,7 @@ class AccountMove(models.Model):
                 return tax.refund_account_id if amount < 0 else tax.account_id
             return tax.refund_account_id if amount >= 0 else tax.account_id
 
-        # Cache the already computed tax to avoid useless recalculation.
+        # Cache the already computed tax to avoid useless recalculation (real records)
         processed_taxes = self.env['account.tax']
 
         self.ensure_one()
@@ -211,22 +213,22 @@ class AccountMove(models.Model):
             # Unmark the line.
             line.recompute_tax_line = False
 
-            # Manage group of taxes.
+            # Manage group of taxes (new records)
             group_taxes = line.tax_ids.filtered(lambda t: t.amount_type == 'group')
             children_taxes = group_taxes.mapped('children_tax_ids')
             if children_taxes:
-                line.tax_ids += children_taxes - line.tax_ids
+                line.tax_ids |= children_taxes
                 # Because the taxes on the line changed, we need to recompute them.
-                processed_taxes -= children_taxes
+                processed_taxes -= children_taxes._origin
 
-            # Get the taxes to process.
+            # Get the taxes to process (actual records)
             taxes = self.env['account.tax'].browse(parsed_key['tax_ids'])
-            taxes += line.tax_ids.filtered(lambda t: t not in taxes)
-            taxes += children_taxes.filtered(lambda t: t not in taxes)
+            taxes |= line.tax_ids._origin
+            taxes |= children_taxes._origin
             to_process_taxes = (taxes - processed_taxes).filtered(lambda t: t.amount_type != 'group')
             processed_taxes += to_process_taxes
 
-            # Process taxes.
+            # Process taxes (real records)
             for tax in to_process_taxes:
                 tax_line = _find_existing_tax_line(self.line_ids, tax, parsed_key['tag_ids'], parsed_key['analytic_account_id'])
                 lines_to_sum = _get_lines_to_sum(self.line_ids, tax, parsed_key['tag_ids'], parsed_key['analytic_account_id'])
@@ -256,9 +258,9 @@ class AccountMove(models.Model):
                     else:
                         # Reset debit/credit in case of the originator line is temporary set to 0 in both debit/credit.
                         tax_line.debit = tax_line.credit = 0.0
+
                 elif taxes_vals.get('taxes'):
                     # Create a new tax_line.
-
                     amount = taxes_vals['taxes'][0]['amount']
                     account = _get_tax_account(tax, amount) or line.account_id
                     tax_vals = taxes_vals['taxes'][0]
@@ -272,7 +274,7 @@ class AccountMove(models.Model):
                         'debit': amount > 0 and amount or 0.0,
                         'credit': amount < 0 and -amount or 0.0,
                         'analytic_account_id': line.analytic_account_id.id if tax.analytic else False,
-                        'analytic_tag_ids': line.analytic_tag_ids.ids if tax.analytic else False,
+                        'analytic_tag_ids': line.analytic_tag_ids._origin.ids if tax.analytic else False,
                         'move_id': self.id,
                         'tax_exigible': tax.tax_exigibility == 'on_invoice',
                         'company_id': self.company_id.id,
