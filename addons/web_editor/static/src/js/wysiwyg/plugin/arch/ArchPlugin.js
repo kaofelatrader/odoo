@@ -253,6 +253,9 @@ var ArchPlugin = AbstractPlugin.extend({
      * @returns {string}
      **/
     getValue: function (options) {
+        if (options && options.architecturalSpace) {
+            this._removeAllArchitecturalSpace();
+        }
         return this._arch.toString(options || {});
     },
     addCustomRule: function (callback, children) {
@@ -1083,6 +1086,21 @@ var ArchPlugin = AbstractPlugin.extend({
         this._setRangeWithIDs({
             scID: virtualTextNodeBegin.id,
             so: 0,
+        });
+    },
+    _removeAllArchitecturalSpace: function () {
+        var self = this;
+        Object.keys(this._archNodeList).forEach(function (id) {
+            id = parseInt(id);
+            var archNode = self._getNode(id);
+            if (!archNode || !archNode.childNodes) {
+                return;
+            }
+            archNode.childNodes.forEach(function (child) {
+                if (child.isArchitecturalSpace()) {
+                    child.remove();
+                }
+            });
         });
     },
     /**
