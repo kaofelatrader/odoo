@@ -4,6 +4,7 @@ odoo.define('web.KanbanColumn', function (require) {
 var config = require('web.config');
 var core = require('web.core');
 var Dialog = require('web.Dialog');
+var web_interact = require('web.interact');
 var KanbanRecord = require('web.KanbanRecord');
 var RecordQuickCreate = require('web.kanban_record_quick_create');
 var view_dialogs = require('web.view_dialogs');
@@ -100,90 +101,14 @@ var KanbanColumn = Widget.extend({
             defs.push(this._addRecord(this.data_records[i]));
         }
 
-        var connectWith = '.o_kanban_group';
-        var getPlaceholder = function () {
-            return self.$el[0].querySelector('.o_sortable_placeholder');
-        }
-        var insertPlaceholder = function (node, parent, before) {
-            var placeholder = getPlaceholder(node);
-            if (!placeholder) {
-                console.log('creating a new placeholder ...');
-                var computedStyle = window.getComputedStyle(node);
-                placeholder = document.createElement(node.tagName);
-                placeholder.classList.add('o_sortable_placeholder');
-                placeholder.style.width = computedStyle.getPropertyValue('width');
-                placeholder.style.height = computedStyle.getPropertyValue('height');
-                placeholder.style.backgroundColor = 'lightgray';
-            }
-
-            if (connectWith) {
-                cleanConnectedPlaceholders(event.target);
-            }
-
-            parent.insertBefore(placeholder, before);
-        }
-        var cleanPlaceholder = function () {
-            var placeholder = getPlaceholder();
-            if (placeholder) {
-                console.log('deleting placeholder');
-                placeholder.remove();
-                placeholder = undefined;
-            }
-        }
-        var cleanConnectedPlaceholders = function(originalSortable) {
-            document.querySelectorAll(connectWith).forEach(function (sortable) {
-                if (sortable !== originalSortable) {
-                    var connectedPlaceholders = sortable.querySelectorAll('.o_sortable_placeholder');
-                    connectedPlaceholders.forEach(function (placeholder) {
-                        console.log('removed connected placeholders')
-                        placeholder.remove();
-                    });
-                }
-            });
-        }
-        var itemsSelector = '.o_kanban_record';
-        var containment = !this.draggable ? 'parent': false;
-        interact(this.el).dropzone({
-            accept: itemsSelector,
-            checker: function (dragEvent, event, dropped, dropzone, dropElement, draggable, draggableElement) {
-                return dropped && (dropElement.contains(draggableElement) || (connectWith && draggableElement.matches(connectWith + ' .o_kanban_record')));
-            },
-            ondropactivate: function (event) {
-                var draggable = event.relatedTarget;
-                var droppable = event.target;
-                if (droppable.contains(draggable)) {
-                    insertPlaceholder(draggable, droppable, draggable.nextSibling);
-                }
-                if (!self.activated) {
-                    console.log('creating record dropzones...');
-                    self.activated = true;
-                    self.$el[0].querySelectorAll('.o_kanban_record:not(.o_sortable_placeholder)').forEach(function(element) {
-                        interact(element).dropzone({
-                            accept: '.o_kanban_record',
-                            checker: function (dragEvent, event, dropped, dropzone, dropElement, draggable, draggableElement) {
-                                return dropped && (dropElement.parentNode.contains(draggableElement) || (connectWith && draggableElement.matches(connectWith + ' ' + itemsSelector)));
-                            },
-                            ondragenter: function (event) {
-                                console.log('entered');
-                                var beforeTarget = event.dragEvent.dy > 0 ? event.target.nextSibling : event.target;
-                                var parentTarget = beforeTarget ? beforeTarget.parentNode : event.target.parentNode;
-                                insertPlaceholder(event.target, parentTarget, beforeTarget);
-                            },
-                        });
-                    })
-                }
-            },
+        web_interact.sortable(this.el, {
+            items: '.o_kanban_record',
+            connectWith: '.o_kanban_group',
+            containment: !this.draggable ? 'parent' : false,
             ondragenter: function (event) {
                 event.target.classList.add('o_kanban_hover');
-                if (!getPlaceholder()) {
-                    insertPlaceholder(event.relatedTarget, event.target, null);
-                }
             },
             ondrop: function (event) {
-                var placeholder = getPlaceholder(event.target);
-                placeholder.parentNode.insertBefore(event.relatedTarget, placeholder);
-                cleanPlaceholder();
-
                 // update record
                 var record = $(event.relatedTarget).data('record');
                 if (self.records.indexOf(record) >= 0) {
@@ -199,75 +124,8 @@ var KanbanColumn = Widget.extend({
             },
             ondragleave: function (event) {
                 event.target.classList.remove('o_kanban_hover');
-                cleanPlaceholder();
             },
-            ondropdeactivate: function (event) {
-                console.log('deactivate');
-                cleanPlaceholder();
-            }
         })
-        interact.dynamicDrop(true);
-        var itemsInteractOptions = {
-            onstart: function (event) {
-                console.log('!!! dragged !!!')
-                var target = event.target;
-
-                target.classList.add('o_currently_dragged');
-
-                target.setAttribute('data-originalHeight', target.style.height);
-                target.setAttribute('data-originalLeft', target.style.left);
-                target.setAttribute('data-originalPosition', target.style.position);
-                target.setAttribute('data-originalTop', target.style.top);
-                target.setAttribute('data-originalWidth', target.style.width);
-                target.setAttribute('data-originalZIndex', target.style.zIndex);
-
-                var computedStyle = window.getComputedStyle(target);
-                target.style.height = computedStyle.getPropertyValue('height');
-                target.style.width = computedStyle.getPropertyValue('width');
-
-                var xPosition = target.offsetLeft;
-                var yPosition = target.offsetTop;
-                target.style.position = 'absolute';
-                target.style.zIndex = 1000;
-                target.style.left = xPosition + 'px';
-                target.style.top = yPosition + 'px';
-
-                target.setAttribute('data-x', xPosition);
-                target.setAttribute('data-y', yPosition);
-            },
-            onmove: function (event) {
-                var target = event.target;
-                var xPosition = parseFloat(target.getAttribute('data-x')) + event.dx;
-                var yPosition = parseFloat(target.getAttribute('data-y')) + event.dy;
-                target.style.left = xPosition + 'px';
-                target.style.top = yPosition + 'px';
-                target.setAttribute('data-x', xPosition);
-                target.setAttribute('data-y', yPosition);
-            },
-            onend: function (event) {
-                var target = event.target;
-                target.style.height = target.getAttribute('data-originalHeight');
-                target.style.left = target.getAttribute('data-originalLeft');
-                target.style.position = target.getAttribute('data-originalPosition');
-                target.style.top = target.getAttribute('data-originalTop');
-                target.style.width = target.getAttribute('data-originalWidth');
-                target.style.zIndex = target.getAttribute('data-originalZIndex');
-                target.classList.remove('o_currently_dragged');
-            }
-        }
-        if (containment) {
-            itemsInteractOptions.restrict = {
-                restriction: containment,
-                elementRect: { left: 0, right: 1, top: 0, bottom: 1 }
-            };
-        }
-        this.el.addEventListener('pointerdown', function(ev) {
-            var itemClicked = $(ev.target).closest(itemsSelector)[0];
-            if (itemClicked && !itemClicked.classList.contains('o_sortable_handle')) {
-                itemClicked.classList.add('o_sortable_handle');
-                interact(itemClicked).draggable(itemsInteractOptions);
-            }
-        });
 
         this.$el.click(function (event) {
             if (self.folded) {

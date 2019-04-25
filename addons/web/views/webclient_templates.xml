@@ -137,6 +137,7 @@
         <script type="text/javascript" src="/web/static/src/js/core/translation.js"></script>
         <script type="text/javascript" src="/web/static/src/js/core/utils.js"></script>
         <script type="text/javascript" src="/web/static/src/js/core/widget.js"></script>
+        <script type="text/javascript" src="/web/static/src/js/core/web_interact.js"></script>
 
         <script type="text/javascript" src="/web/static/src/js/services/ajax_service.js"></script>
         <script type="text/javascript" src="/web/static/src/js/services/config.js"></script>
