@@ -64,6 +64,19 @@
         <field name="category_id" ref="base.module_category_hidden"/>
     </record>
 
+    <record id="journal_comp_rule" model="ir.rule">
+        <field name="name">Journal multi-company</field>
+        <field name="model_id" ref="model_account_journal"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">['|',('company_id','=',False),('company_id','child_of',[user.company_id.id])]</field>
+    </record>
+
+    <record id="account_comp_rule" model="ir.rule">
+        <field name="name">Account multi-company</field>
+        <field name="model_id" ref="model_account_account"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">['|',('company_id','=',False),('company_id','child_of',[user.company_id.id])]</field>
+    </record>
 </data>
 
 
@@ -99,20 +112,6 @@
     <record id="journal_comp_rule" model="ir.rule">
         <field name="name">Journal multi-company</field>
         <field name="model_id" ref="model_account_journal_group"/>
-        <field name="global" eval="True"/>
-        <field name="domain_force">['|',('company_id','=',False),('company_id','child_of',[user.company_id.id])]</field>
-    </record>
-
-    <record id="journal_comp_rule" model="ir.rule">
-        <field name="name">Journal multi-company</field>
-        <field name="model_id" ref="model_account_journal"/>
-        <field name="global" eval="True"/>
-        <field name="domain_force">['|',('company_id','=',False),('company_id','child_of',[user.company_id.id])]</field>
-    </record>
-
-    <record id="account_comp_rule" model="ir.rule">
-        <field name="name">Account multi-company</field>
-        <field name="model_id" ref="model_account_account"/>
         <field name="global" eval="True"/>
         <field name="domain_force">['|',('company_id','=',False),('company_id','child_of',[user.company_id.id])]</field>
     </record>
