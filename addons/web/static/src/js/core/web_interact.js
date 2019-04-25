@@ -1,6 +1,18 @@
 odoo.define('web.interact', function (require) {
 "use strict";
 
+var placeholderClass = 'o_sortable_placeholder';
+
+/**
+ * Make an element draggable.
+ * TODO: better doc
+ *
+ * @param {DOMElement} el
+ * @param {Object} [options]
+ * @param {string} [options.onstart]
+ *      Bla bla bla better doc
+ * @returns {Interactable}
+ */
 var _draggable = function (el, options) {
 
     var interactOptions = {
@@ -71,15 +83,15 @@ var _draggable = function (el, options) {
 };
 
 var _getPlaceholder = function (el) {
-    return el.querySelector('.o_sortable_placeholder');
+    return el.querySelector('.' + placeholderClass);
 };
 
-var _insertPlaceholder = function (node, parent, before, connectWith) {
+var _setPlaceholder = function (node, parent, before, connectWith) {
     var placeholder = _getPlaceholder(node);
     if (!placeholder) {
         var computedStyle = window.getComputedStyle(node);
         placeholder = document.createElement(node.tagName);
-        placeholder.classList.add('o_sortable_placeholder');
+        placeholder.classList.add(placeholderClass);
         placeholder.style.width = computedStyle.getPropertyValue('width');
         placeholder.style.height = computedStyle.getPropertyValue('height');
         placeholder.style.backgroundColor = 'lightgray';
@@ -100,102 +112,125 @@ var _cleanPlaceholder = function (el) {
     }
 };
 
+/**
+ * Clean the placeholders of every sortable connected with originalSortable.
+ *
+ * @param {DOMElement} originalSortable element ordering the cleaning
+ * @param {string} connectWith css selector identifying connected sortables
+ */
 var _cleanConnectedPlaceholders = function (originalSortable, connectWith) {
-    var connectedSortables = document.querySelectorAll(connectWith)
-    connectedSortables.forEach(function (currentSortable) {
+    var sortables = document.querySelectorAll(connectWith)
+    sortables.forEach(function (currentSortable) {
         if (currentSortable !== originalSortable) {
-            var connectedPlaceholders = currentSortable.querySelectorAll('.o_sortable_placeholder');
-            connectedPlaceholders.forEach(function (placeholder) {
+            var placeholder = currentSortable.querySelector('.' + placeholderClass);
+            if (placeholder) {
                 placeholder.remove();
-            });
+            }
         }
     });
 };
 
+/**
+ * Make an element sortable.
+ * TODO: better doc
+ *
+ * @returns {Interactable}
+ */
 var _sortable = function (el, options) {
-    var itemsSelector = options.items;
-    // TODO: comment why I have useless parameters
+    var connectWith = options && options.connectWith;
+    var itemsSelector = options && options.items;
+    // We only need a few of the arguments of interactjs checker function for now
     var _connectedChecker = function (dragEvent, event, dropped, dropzone, dropElement, draggable, draggableElement) {
         var isFromThisSortable = el.contains(draggableElement);
-        var isFromConnectedSortable = options && options.connectWith && draggableElement.closest(options.connectWith);
+        var isFromConnectedSortable = connectWith && draggableElement.closest(connectWith);
         return dropped && (isFromThisSortable || isFromConnectedSortable);
     }
     var interactable = interact(el).dropzone({
         accept: itemsSelector,
         checker: _connectedChecker,
         ondropactivate: function (ev) {
+            // Create the very first placeholder in place of the draggable item
             var draggable = ev.relatedTarget;
             var droppable = ev.target;
             if (droppable.contains(draggable)) {
-                _insertPlaceholder(draggable, droppable, draggable.nextSibling, options.connectWith);
+                _setPlaceholder(draggable, droppable, draggable.nextSibling, connectWith);
             }
+
+            // Set droppable on all items in this sortable
             if (!el.getAttribute('data-sortable-activated')) {
                 el.setAttribute('data-sortable-activated', true);
                 el.querySelectorAll(itemsSelector).forEach(function (element) {
-                    if (!element.classList.contains('o_sortable_placeholder')) {
+                    if (!element.classList.contains(placeholderClass)) {
                         interact(element).dropzone({
                             accept: itemsSelector,
                             checker: _connectedChecker,
                             ondragenter: function (ev) {
                                 var beforeTarget = ev.dragEvent.dy > 0 ? ev.target.nextSibling : ev.target;
                                 var parentTarget = beforeTarget ? beforeTarget.parentNode : ev.target.parentNode;
-                                _insertPlaceholder(ev.target, parentTarget, beforeTarget, options.connectWith);
+                                _setPlaceholder(ev.target, parentTarget, beforeTarget, connectWith);
                             },
                         });
                     }
                 })
             }
 
-            if (options.ondropactivate) {
+            if (options && options.ondropactivate) {
                 options.ondropactivate(ev);
             }
         },
         ondragenter: function (ev) {
+            // If there is no placeholder yet then create one as the last item
             if (!_getPlaceholder(el)) {
-                _insertPlaceholder(ev.relatedTarget, ev.target, null, options.connectWith);
+                _setPlaceholder(ev.relatedTarget, ev.target, null, connectWith);
             }
 
-            if (options.ondragenter) {
+            if (options && options.ondragenter) {
                 options.ondragenter(ev);
             }
         },
         ondrop: function (ev) {
+            // We use the placeholder as an anchor for the item then delete it
             var placeholder = _getPlaceholder(ev.target);
             placeholder.parentNode.insertBefore(ev.relatedTarget, placeholder);
             _cleanPlaceholder(el);
 
-            if (options.ondrop) {
+            if (options && options.ondrop) {
                 options.ondrop(ev);
             }
         },
         ondragleave: function (ev) {
             _cleanPlaceholder(el);
 
-            if (options.ondragleave) {
+            if (options && options.ondragleave) {
                 options.ondragleave(ev);
             }
         },
         ondropdeactivate: function (ev) {
             _cleanPlaceholder(el);
 
-            if (options.ondropdeactivate) {
+            if (options && options.ondropdeactivate) {
                 options.ondropdeactivate(ev);
             }
         }
     })
+
+    // Enable recomputation of distances while dragging
     interact.dynamicDrop(true);
+
+    // Set draggable on items on first pointerdown
     el.addEventListener('pointerdown', function (ev) {
-        var itemClicked = ev.target.closest(itemsSelector);
-        if (itemClicked && !itemClicked.classList.contains('o_sortable_handle')) {
-            itemClicked.classList.add('o_sortable_handle');
+        var item = ev.target.closest(itemsSelector);
+        if (item && !item.classList.contains('o_sortable_handle')) {
+            item.classList.add('o_sortable_handle');
             var itemsOptions = {};
-            if (options.containment) {
+            if (options && options.containment) {
+                // Restrict the items to stay in the area of the sortable
                 itemsOptions.restrict = {
                     restriction: options.containment,
                     elementRect: { left: 0, right: 1, top: 0, bottom: 1 }
                 };
             }
-            _draggable(itemClicked, itemsOptions);
+            _draggable(item, itemsOptions);
         }
     });
     return interactable;
