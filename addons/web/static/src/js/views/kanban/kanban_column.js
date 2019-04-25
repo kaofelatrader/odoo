@@ -268,44 +268,7 @@ var KanbanColumn = Widget.extend({
                 interact(itemClicked).draggable(itemsInteractOptions);
             }
         });
-            // this.$el.sortable({
-            //     connectWith: '.o_kanban_group',
-            //     containment: this.draggable ? false : 'parent',
-            //     revert: 0,
-            //     delay: 0,
-            //     items: '> .o_kanban_record:not(.o_updating)',
-            //     cursor: 'move',
-            //     over: function () {
-            //         self.$el.addClass('o_kanban_hover');
-            //     },
-            //     out: function () {
-            //         self.$el.removeClass('o_kanban_hover');
-            //     },
-            //     start: function (event, ui) {
-            //         ui.item.addClass('o_currently_dragged');
-            //     },
-            //     stop: function (event, ui) {
-            //         var item = ui.item;
-            //         setTimeout(function () {
-            //             item.removeClass('o_currently_dragged');
-            //         });
-            //     },
-            //     update: function (event, ui) {
-            //         var record = ui.item.data('record');
-            //         var index = self.records.indexOf(record);
-            //         record.$el.removeAttr('style');  // jqueryui sortable add display:block inline
-            //         if (index >= 0) {
-            //             if ($.contains(self.$el[0], record.$el[0])) {
-            //                 // resequencing records
-            //                 self.trigger_up('kanban_column_resequence', {ids: self._getIDs()});
-            //             }
-            //         } else {
-            //             // adding record to this column
-            //             ui.item.addClass('o_updating');
-            //             self.trigger_up('kanban_column_add_record', {record: record, ids: self._getIDs()});
-            //         }
-            //     }
-            // });
+
         this.$el.click(function (event) {
             if (self.folded) {
                 self._onToggleFold(event);
