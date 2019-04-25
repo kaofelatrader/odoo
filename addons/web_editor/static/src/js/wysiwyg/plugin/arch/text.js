@@ -48,6 +48,12 @@ return ArchNode.extend({
         if (this.isVirtual() && !options.keepVirtual) {
             return '';
         }
+        if (options.showIDs) {
+            if (this.isVirtual()) {
+                return '[virtual archID="' + this.id + '"/]';
+            }
+            return '[text archID="' + this.id + '"]' + this.nodeValue + '[/text]';
+        }
         return this.nodeValue || '';
     },
     length: function (argument) {

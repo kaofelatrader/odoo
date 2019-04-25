@@ -212,14 +212,16 @@ return Class.extend({
     toString: function (options) {
         options = options || {};
         var string = '';
-        var isVirtual = this.isVirtual() && !options.keepVirtual;
 
-        if (!isVirtual) {
+        if (!this.isVirtual() || options.keepVirtual) {
             string += '<' + this.nodeName;
             var attributes = this.attributes.toString(options);
             if (attributes.length) {
                 string += ' ';
                 string += attributes;
+            }
+            if (options.showIDs) {
+                string += ' archID="' + this.id + '"';
             }
             if (this.isVoid() && !this.childNodes.length) {
                 string += '/';
@@ -229,7 +231,7 @@ return Class.extend({
         this.childNodes.forEach(function (archNode) {
             string += archNode.toString(options);
         });
-        if (!isVirtual && (!this.isVoid() || this.childNodes.length)) {
+        if ((!this.isVirtual() || options.keepVirtual) && (!this.isVoid() || this.childNodes.length)) {
             string += '</' + this.nodeName + '>';
         }
         return string;
