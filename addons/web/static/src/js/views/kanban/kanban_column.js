@@ -174,7 +174,7 @@ var KanbanColumn = Widget.extend({
                 }
             },
             ondragenter: function (event) {
-                console.log('' + self.$el.data('id') + ' enter');
+                event.target.classList.add('o_kanban_hover');
                 if (!getPlaceholder()) {
                     insertPlaceholder(event.relatedTarget, event.target, null);
                 }
@@ -198,7 +198,7 @@ var KanbanColumn = Widget.extend({
                 }
             },
             ondragleave: function (event) {
-                console.log('' + self.$el.data('id') + ' leave');
+                event.target.classList.remove('o_kanban_hover');
                 cleanPlaceholder();
             },
             ondropdeactivate: function (event) {
@@ -212,6 +212,8 @@ var KanbanColumn = Widget.extend({
                 console.log('!!! dragged !!!')
                 var target = event.target;
 
+                target.classList.add('o_currently_dragged');
+
                 target.setAttribute('data-originalHeight', target.style.height);
                 target.setAttribute('data-originalLeft', target.style.left);
                 target.setAttribute('data-originalPosition', target.style.position);
@@ -220,12 +222,11 @@ var KanbanColumn = Widget.extend({
                 target.setAttribute('data-originalZIndex', target.style.zIndex);
 
                 var computedStyle = window.getComputedStyle(target);
-                target.style.height = computedStyle.height;
-                target.style.width = computedStyle.width;
+                target.style.height = computedStyle.getPropertyValue('height');
+                target.style.width = computedStyle.getPropertyValue('width');
 
-                var rect = event.target.getBoundingClientRect();
-                var xPosition = rect.left; // - window.pageXOffset;
-                var yPosition = rect.top - 132; // - window.pageYOffset;
+                var xPosition = target.offsetLeft;
+                var yPosition = target.offsetTop;
                 target.style.position = 'absolute';
                 target.style.zIndex = 1000;
                 target.style.left = xPosition + 'px';
@@ -244,12 +245,14 @@ var KanbanColumn = Widget.extend({
                 target.setAttribute('data-y', yPosition);
             },
             onend: function (event) {
-                event.target.style.height = event.target.getAttribute('data-originalHeight');
-                event.target.style.left = event.target.getAttribute('data-originalLeft');
-                event.target.style.position = event.target.getAttribute('data-originalPosition');
-                event.target.style.top = event.target.getAttribute('data-originalTop');
-                event.target.style.width = event.target.getAttribute('data-originalWidth');
-                event.target.style.zIndex = event.target.getAttribute('data-originalZIndex');
+                var target = event.target;
+                target.style.height = target.getAttribute('data-originalHeight');
+                target.style.left = target.getAttribute('data-originalLeft');
+                target.style.position = target.getAttribute('data-originalPosition');
+                target.style.top = target.getAttribute('data-originalTop');
+                target.style.width = target.getAttribute('data-originalWidth');
+                target.style.zIndex = target.getAttribute('data-originalZIndex');
+                target.classList.remove('o_currently_dragged');
             }
         }
         if (containment) {
