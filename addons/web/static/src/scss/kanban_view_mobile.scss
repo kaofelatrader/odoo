@@ -111,6 +111,15 @@
                 padding-top: $o-navbar-height !important;
                 padding-bottom: $o-navbar-height !important;
 
+                > summary ~ * {
+                    animation: o_searchpanel_sweepdown 0.3s ease-in-out;
+                }
+
+                @keyframes o_searchpanel_sweepdown {
+                    0%    {opacity: 0;}
+                    100%  {opacity: 1;}
+                }
+
                 > summary {
                     @include o-details-modal($bottom: initial);
                     @include o-details-modal-header();
