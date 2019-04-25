@@ -61,11 +61,10 @@ var RootNode = ArchNode.extend({
      * @override
      */
     toString: function (options) {
-        var isVirtual = options && !options.keepVirtual;
-        var string = this._super(options);
-        if (options && options.keepVirtual) {
-            return string.replace(/^[^>]+>/, '').replace(/<[^<]+$/, '');
-        }
+        var string = '';
+        this.childNodes.forEach(function (archNode) {
+            string += archNode.toString(options);
+        });
         return string;
     },
 });
