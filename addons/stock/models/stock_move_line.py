@@ -187,7 +187,7 @@ class StockMoveLine(models.Model):
                         'picking_id': picking.id,
                     })
                     vals['move_id'] = new_move.id
-
+        
         mls = super(StockMoveLine, self).create(vals_list)
 
         for ml in mls:

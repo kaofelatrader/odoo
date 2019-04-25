@@ -1351,7 +1351,7 @@ actual arch.
         qcontext = dict(
             env=self.env,
             user_id=self.env["res.users"].browse(self.env.user.id),
-            res_company=self.env.user.company_id.sudo(),
+            res_company=self.env.company_id.sudo(),
             keep_query=keep_query,
             request=request,  # might be unbound if we're not in an httprequest context
             debug=request.debug if request else False,

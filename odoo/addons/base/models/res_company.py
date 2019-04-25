@@ -154,7 +154,7 @@ class Company(models.Model):
             # select only the currently visible companies (according to rules,
             # which are probably to allow to see the child companies) even if
             # she belongs to some other companies.
-            companies = self.env.user.company_id + self.env.user.company_ids
+            companies = self.env.user.company_ids
             args = (args or []) + [('id', 'in', companies.ids)]
             newself = newself.sudo()
         return super(Company, newself.with_context(context))._name_search(name=name, args=args, operator=operator, limit=limit, name_get_uid=name_get_uid)
@@ -167,31 +167,6 @@ class Company(models.Model):
         backward compatibility and potential override.
         """
         return self.env['res.users']._get_company()
-
-    @api.model
-    @tools.ormcache('self.env.uid', 'company')
-    def _get_company_children(self, company=None):
-        if not company:
-            return []
-        return self.search([('parent_id', 'child_of', [company])]).ids
-
-    @api.multi
-    def _get_partner_hierarchy(self):
-        self.ensure_one()
-        parent = self.parent_id
-        if parent:
-            return parent._get_partner_hierarchy()
-        else:
-            return self._get_partner_descendance([])
-
-    @api.multi
-    def _get_partner_descendance(self, descendance):
-        self.ensure_one()
-        descendance.append(self.partner_id.id)
-        for child_id in self._get_company_children(self.id):
-            if child_id != self.id:
-                descendance = self.browse(child_id)._get_partner_descendance(descendance)
-        return descendance
 
     # deprecated, use clear_caches() instead
     def cache_restart(self):
@@ -266,7 +241,7 @@ class Company(models.Model):
     def action_open_base_onboarding_company(self):
         """ Onboarding step for company basic information. """
         action = self.env.ref('base.action_open_base_onboarding_company').read()[0]
-        action['res_id'] = self.env.user.company_id.id
+        action['res_id'] = self.env.company_id.id
         return action
 
     def set_onboarding_step_done(self, step_name):

@@ -457,7 +457,7 @@ class AccountJournal(models.Model):
 
     #groups_id = fields.Many2many('res.groups', 'account_journal_group_rel', 'journal_id', 'group_id', string='Groups')
     currency_id = fields.Many2one('res.currency', help='The currency used to enter statement', string="Currency", oldname='currency')
-    company_id = fields.Many2one('res.company', string='Company', required=True, index=True, default=lambda self: self.env.user.company_id,
+    company_id = fields.Many2one('res.company', string='Company', required=True, index=True, default=lambda self: self.env.company_id,
         help="Company related to this journal")
 
     refund_sequence = fields.Boolean(string='Dedicated Credit Note Sequence', help="Check this box if you don't want to share the same sequence for invoices and credit notes made from this journal", default=False)
@@ -760,7 +760,7 @@ class AccountJournal(models.Model):
 
     @api.model
     def create(self, vals):
-        company_id = vals.get('company_id', self.env.user.company_id.id)
+        company_id = vals.get('company_id', self.env.company_id.id)
         if vals.get('type') in ('bank', 'cash'):
             # For convenience, the name can be inferred from account number
             if not vals.get('name') and 'bank_acc_number' in vals:
@@ -832,16 +832,16 @@ class AccountJournal(models.Model):
     @api.depends('company_id')
     def _belong_to_company(self):
         for journal in self:
-            journal.belong_to_company = (journal.company_id.id == self.env.user.company_id.id)
+            journal.belong_to_company = (journal.company_id.id == self.env.company_id.id)
 
     @api.multi
     def _search_company_journals(self, operator, value):
         if value:
-            recs = self.search([('company_id', operator, self.env.user.company_id.id)])
+            recs = self.search([('company_id', operator, self.env.company_id.id)])
         elif operator == '=':
-            recs = self.search([('company_id', '!=', self.env.user.company_id.id)])
+            recs = self.search([('company_id', '!=', self.env.company_id.id)])
         else:
-            recs = self.search([('company_id', operator, self.env.user.company_id.id)])
+            recs = self.search([('company_id', operator, self.env.company_id.id)])
         return [('id', 'in', [x.id for x in recs])]
 
     @api.multi
@@ -899,7 +899,7 @@ class AccountTax(models.Model):
     amount_type = fields.Selection(default='percent', string="Tax Computation", required=True, oldname='type',
         selection=[('group', 'Group of Taxes'), ('fixed', 'Fixed'), ('percent', 'Percentage of Price'), ('division', 'Percentage of Price Tax Included')])
     active = fields.Boolean(default=True, help="Set active to false to hide the tax without removing it.")
-    company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.user.company_id)
+    company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company_id)
     children_tax_ids = fields.Many2many('account.tax', 'account_tax_filiation_rel', 'parent_tax', 'child_tax', string='Children Taxes')
     sequence = fields.Integer(required=True, default=1,
         help="The sequence field is used to define order in which the tax lines are applied.")
@@ -1079,7 +1079,7 @@ class AccountTax(models.Model):
             }]
         } """
         if len(self) == 0:
-            company_id = self.env.user.company_id
+            company_id = self.env.company_id
         else:
             company_id = self[0].company_id
         if not currency:

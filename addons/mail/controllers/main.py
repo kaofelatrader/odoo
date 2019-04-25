@@ -69,7 +69,12 @@ class MailController(http.Controller):
             if not RecordModel.sudo(uid).check_access_rights('read', raise_exception=False):
                 return cls._redirect_to_messaging()
             try:
-                record_sudo.sudo(uid).check_access_rule('read')
+                # We need here to extend the "allowed_company_ids" to allow a redirection
+                # to any record that the user can access, regardless of currently visible
+                # records based on the "currently allowed companies".
+                user = request.env['res.users'].sudo().browse(uid)
+                cids = ','.join([str(cid) for cid in user.company_ids.ids])
+                record_sudo.sudo(uid).with_context(allowed_company_ids=cids).check_access_rule('read')
             except AccessError:
                 return cls._redirect_to_messaging()
             else:
@@ -98,6 +103,16 @@ class MailController(http.Controller):
         if view_id:
             url_params['view_id'] = view_id
 
+        if 'company_id' in record_sudo and record_sudo.company_id in user.company_ids:
+            url_params['cids'] = str(record_sudo.company_id.id)
+        else:
+            # Set all the user's companies on the hash to avoid
+            # a crash for records with indirect rules.
+            # If the field company_id doesn't exist on the current record, it could
+            # be possible to have a multi company ir.rule on the record model.
+            # Example: A leave has not company_id field, but there is an ir.rule
+            # based on the company of the leave type.
+            url_params['cids'] = ','.join([str(company_id.id) for company_id in user.company_ids])
         url = '/web?#%s' % url_encode(url_params)
         return werkzeug.utils.redirect(url)
 

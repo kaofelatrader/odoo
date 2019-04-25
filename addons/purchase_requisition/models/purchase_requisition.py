@@ -65,7 +65,7 @@ class PurchaseRequisition(models.Model):
     state_blanket_order = fields.Selection(PURCHASE_REQUISITION_STATES, compute='_set_state')
     is_quantity_copy = fields.Selection(related='type_id.quantity_copy', readonly=True)
     currency_id = fields.Many2one('res.currency', 'Currency', required=True,
-        default=lambda self: self.env.user.company_id.currency_id.id)
+        default=lambda self: self.env.company_id.currency_id.id)
 
     @api.depends('state')
     def _set_state(self):

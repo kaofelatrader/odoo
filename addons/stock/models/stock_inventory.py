@@ -14,7 +14,7 @@ class Inventory(models.Model):
 
     @api.model
     def _default_location_id(self):
-        company_user = self.env.user.company_id
+        company_user = self.env.company_id
         warehouse = self.env['stock.warehouse'].search([('company_id', '=', company_user.id)], limit=1)
         if warehouse:
             return warehouse.lot_stock_id.id

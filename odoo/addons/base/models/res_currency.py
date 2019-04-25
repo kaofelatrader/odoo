@@ -247,7 +247,7 @@ class CurrencyRate(models.Model):
     rate = fields.Float(digits=(12, 6), default=1.0, help='The rate of the currency to the currency of rate 1')
     currency_id = fields.Many2one('res.currency', string='Currency', readonly=True)
     company_id = fields.Many2one('res.company', string='Company',
-                                 default=lambda self: self.env.user.company_id)
+                                 default=lambda self: self.env.company_id)
 
     _sql_constraints = [
         ('unique_name_per_day', 'unique (name,currency_id,company_id)', 'Only one currency rate per day allowed!'),

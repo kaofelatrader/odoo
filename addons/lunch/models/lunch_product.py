@@ -67,7 +67,7 @@ class LunchTopping(models.Model):
     topping_category = fields.Integer('Topping Category', help="This field is a technical field", required=True, default=1)
 
     def name_get(self):
-        currency_id = self.env.user.company_id.currency_id
+        currency_id = self.env.company_id.currency_id
         res = dict(super(LunchTopping, self).name_get())
         for topping in self:
             price = formatLang(self.env, topping.price, currency_obj=currency_id)

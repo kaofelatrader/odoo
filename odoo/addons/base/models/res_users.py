@@ -242,7 +242,7 @@ class Users(models.Model):
 
     @api.model
     def _get_company(self):
-        return self.env.user.company_id
+        return self.env.company_id
 
     # Special behavior for this field: res.company.search() will only return the companies
     # available to the current user (should be the user's companies?), when the user_preference
@@ -787,7 +787,7 @@ class Users(models.Model):
 
     @api.model
     def get_company_currency_id(self):
-        return self.env.user.company_id.currency_id.id
+        return self.env.company_id.currency_id.id
 
     def _crypt_context(self):
         """ Passlib CryptContext instance used to encrypt and verify
@@ -982,7 +982,7 @@ class UsersImplied(models.Model):
         res = super(UsersImplied, self).write(values)
         if values.get('groups_id'):
             # add implied groups for all users
-            for user in self.with_context({}):
+            for user in self:
                 if not user.has_group('base.group_user'):
                     vals = {'groups_id': [(5, 0, 0)] + values['groups_id']}
                     super(UsersImplied, user).write(vals)
