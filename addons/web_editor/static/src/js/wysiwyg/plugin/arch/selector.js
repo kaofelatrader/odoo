@@ -45,8 +45,14 @@ var booleans = "checked|selected|disabled|readonly|required",
                 // Supplemental Plane codepoint (surrogate pair)
                 String.fromCharCode( high >> 10 | 0xD800, high & 0x3FF | 0xDC00 );
     },
-    nthchild: /^\s*(([+-])?([0-9]+)?n\s*)?([+-])?\s*([0-9]+)$/;
-
+    nthchild = /^\s*(([+-])?([0-9]+)?n\s*)?([+-])?\s*([0-9]+)$/,
+    reqExp = {
+        "ID": new RegExp( "^#(" + identifier + ")" ),
+        "CLASS": new RegExp( "^\\.(" + identifier + ")" ),
+        "TAG": new RegExp( "^(" + identifier + "|[*])" ),
+        "ATTR": new RegExp( "^" + attributes ),
+        "PSEUDO": new RegExp( "^" + pseudos ),
+    };
 
 var Selector = AbstractPlugin.extend({
     dependencies: ['Arch'],
@@ -60,20 +66,16 @@ var Selector = AbstractPlugin.extend({
     init: function (parent, params) {
         this._super.apply(this, arguments);
         this._cacheSearchToken = {};
-
-        this._reqExp = {
-            "ID": new RegExp( "^#(" + identifier + ")" ),
-            "CLASS": new RegExp( "^\\.(" + identifier + ")" ),
-            "TAG": new RegExp( "^(" + identifier + "|[*])" ),
-            "ATTR": new RegExp( "^" + attributes ),
-            "PSEUDO": new RegExp( "^" + pseudos ),
-        };
     },
 
     start: function () {
+        var string = 'p, section#eee, .parallax, :not(.o_gallery > .container) > .carousel:first-child span.toto[truc="33"]';
 
-
-        console.log(this._tokenize('section#eee, .parallax, :not(.o_gallery > .container) > .carousel:first span.toto[truc="33"]'));
+        var self = this;
+        setTimeout(function () {
+            console.log(string);
+            console.log(self.search(string));
+        }, 2000);
     },
 
     //--------------------------------------------------------------------------
@@ -85,10 +87,9 @@ var Selector = AbstractPlugin.extend({
      * @param {string} string
      * @param {boolean} [noCache]
      **/
-    search: function (root, string, noCache) {
+    search: function (root, string) {
         var self = this;
         if (typeof root === 'string') {
-            noCache = string;
             string = root;
             root = this.dependencies.Arch._arch;
         } else if (!root) {
@@ -101,9 +102,10 @@ var Selector = AbstractPlugin.extend({
             if (token[0].type !== 'BROWSE') {
                 token = [{
                     type: 'BROWSE',
-                    params: [' '],
+                    identifier: ' ',
                 }].concat(token);
             }
+
             self._searchFromToken([root], token).forEach(function (archNode) {
                 if (ids.indexOf(archNode.id) === -1) {
                     ids.push(archNode.id);
@@ -117,10 +119,10 @@ var Selector = AbstractPlugin.extend({
     // Private
     //--------------------------------------------------------------------------
 
-    _tokenize: function ( selector , noCache) {
+    _tokenize: function ( selector) {
         var matched, match, tokens, type, soFar, groups;
 
-        if (!noCache && this._cacheSearchToken[selector]) {
+        if (this._cacheSearchToken[selector]) {
             return this._cacheSearchToken[selector];
         }
 
@@ -145,8 +147,9 @@ var Selector = AbstractPlugin.extend({
                 if (!type.indexOf('_tokenizeExpr_') && (match = this[ type ]( soFar ))) {
                     matched = true;
                     tokens.push({
-                        type: type,
-                        params: match.slice(1),
+                        type: type.slice(14),
+                        identifier: match[1],
+                        value: match[2],
                     });
                     soFar = soFar.slice( match[0].length );
                 }
@@ -161,22 +164,20 @@ var Selector = AbstractPlugin.extend({
             console.error( selector );
         }
 
-        if (!noCache) {
-            this._cacheSearchToken[selector] = groups;
-        }
+        this._cacheSearchToken[selector] = groups;
 
         return groups;
-    };
+    },
 
 
     _tokenizeExpr_ID: function (string) {
-        return [reqExp.TAG.exec(string)[0].toLowerCase()];
+        return reqExp.ID.exec(string);
     },
     _tokenizeExpr_CLASS: function (string) {
         return reqExp.CLASS.exec(string);
     },
     _tokenizeExpr_TAG: function (string) {
-        return [reqExp.TAG.exec(string)[0].toLowerCase()];
+        return reqExp.TAG.exec(string);
     },
     _tokenizeExpr_ATTR: function (string) {
         var match = reqExp.ATTR.exec(string);
@@ -190,7 +191,7 @@ var Selector = AbstractPlugin.extend({
         if ( match[2] === "~=" ) {
             match[3] = " " + match[3] + " ";
         }
-        return match.slice( 0, 4 );
+        return [match[0], match[1], match.slice( 2, 4 )]
     },
     _tokenizeExpr_BROWSE: function (string) {
         return rcombinators.exec(string);
@@ -228,13 +229,14 @@ var Selector = AbstractPlugin.extend({
     _searchFromToken: function (archNodes, token) {
         for (var k = 0; k < token.length; k++) {
             var t = token[k];
-            archNodes = this['_searchFromToken_' + t.type](archNodes, t.params[0], t.params[1]);
+            archNodes = this['_searchFromToken_' + t.type](archNodes, t.identifier, t.value);
         }
         return archNodes;
     },
 
 
     _getChildren: function (archNode, loop) {
+        var self = this;
         var nodes = [];
         if (archNode.childNodes) {
             archNode.childNodes.forEach(function (archNode) {
@@ -242,16 +244,16 @@ var Selector = AbstractPlugin.extend({
                     nodes.push(archNode);
                 }
                 if (loop) {
-                    nodes.concat(this._getChildren(archNode, loop));
+                    nodes.concat(self._getChildren(archNode, loop));
                 }
             });
         }
         return nodes;
-    }
+    },
     _searchFromTokenLoop: function (archNodes, callback) {
         var nodes = [];
         archNodes.forEach(function (archNode) {
-            if (callback(archNodes, value)) {
+            if (callback(archNode)) {
                 nodes.push(archNode);
             }
         })
@@ -270,8 +272,16 @@ var Selector = AbstractPlugin.extend({
         });
     },
     _searchFromToken_ATTR: function (archNodes, identifier, value) {
-        debugger;
         return this._searchFromTokenLoop(archNodes, function (archNode) {
+            var val = archNode.attributes && archNode.attributes[identifier];
+            if (!attributes) {
+                return false;
+            }
+            val = val.toSting();
+            switch (identifier[0]) {
+                case '=': return val == identifier[1];
+                default: debugger;
+            }
         });
     },
     _searchFromToken_TAG: function (archNodes, identifier) {
@@ -428,19 +438,21 @@ var Selector = AbstractPlugin.extend({
         });
     },
     _searchFromToken_PSEUDO_is: function (archNodes, value) {
+        var self = this;
         return this._searchFromTokenLoop(archNodes, function (archNode) {
-
-            return !this.search(archNode, value).length;
+            return !self.search(archNode, value).length;
         });
     },
     _searchFromToken_PSEUDO_not: function (archNodes, value) {
+        var self = this;
         return this._searchFromTokenLoop(archNodes, function (archNode) {
-            return !this._searchFromToken_PSEUDO_is([archNode], value)[0];
+            return !self._searchFromToken_PSEUDO_is([archNode], value)[0];
         });
     },
     _searchFromToken_PSEUDO_has: function (archNodes, value) {
+        var self = this;
         return this._searchFromTokenLoop(archNodes, function (archNode) {
-            return !!this.search(archNode, value).length;
+            return !!self.search(archNode, value).length;
         });
     },
     _searchFromToken_PSEUDO_val: function (archNodes, value) {
@@ -453,6 +465,9 @@ var Selector = AbstractPlugin.extend({
             return archNode.attributes.textContent().indexOf(value) !== -1;
         });
     },
-};
+});
+
+Manager.addPlugin('Selector', Selector);
+
 
 });
