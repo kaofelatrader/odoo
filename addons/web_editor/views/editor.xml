@@ -70,6 +70,7 @@
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/customNodes.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/renderer.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/ArchPlugin.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/arch/selector.js"/>
 
     <!-- plugins ui -->
 
@@ -97,6 +98,7 @@
 
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/drop/clipboard.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/drop/dropblock.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/drop/dropblockSelector.js"/>
     <!-- <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/drop/dropzone.js"/> -->
 
     <!-- plugins misc -->

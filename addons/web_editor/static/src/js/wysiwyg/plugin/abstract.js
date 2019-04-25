@@ -30,6 +30,7 @@ var AbstractPlugin = Class.extend(mixins.EventDispatcherMixin, ServicesMixin).ex
     /**
      * Use this prop if you want to extend a summernote plugin.
      *
+     * @params {object} parent
      * @params {object} params
      * @params {int} params.id
      * @params {array} params.plugins

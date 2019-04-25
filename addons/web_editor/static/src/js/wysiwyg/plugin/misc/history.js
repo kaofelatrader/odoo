@@ -126,7 +126,7 @@ var HistoryPlugin = AbstractPlugin.extend({
             var step = nodeHistory && nodeHistory[this.stackOffset];
             if (step) {
                 // break the history for each space or ponctuation
-                concatTextHistory = step.nodeValue.replace('\uFEFF', '').split(spacePonctu).length === diffToNew[0].nodeValue.replace('\uFEFF', '').split(spacePonctu).length;
+                concatTextHistory = step.nodeValue.split(spacePonctu).length === diffToNew[0].nodeValue.split(spacePonctu).length;
             }
         }
 

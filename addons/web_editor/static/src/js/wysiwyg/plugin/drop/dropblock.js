@@ -4,9 +4,6 @@ odoo.define('web_editor.wysiwyg.plugin.dropblock', function (require) {
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 
-var $ = require('web_editor.jquery');
-var _ = require('web_editor._');
-
 
 var DropBlock = AbstractPlugin.extend({
     templatesDependencies: ['/web_editor/static/src/xml/wysiwyg_dropblock.xml'],
@@ -34,7 +31,18 @@ var DropBlock = AbstractPlugin.extend({
     },
 
     /**
+     *
      * @override
+     *
+     * @param {Object} parent
+     * @param {Object} params
+     *
+     * @param {Object} params.dropblocks
+     * @param {string} params.dropblocks.title
+     * @param {Object[]} params.dropblocks.blocks
+     * @param {string} params.dropblocks.blocks.title
+     * @param {string} params.dropblocks.blocks.thumbnail
+     * @param {string} params.dropblocks.blocks.html
      **/
     init: function (parent, params) {
         this._super.apply(this, arguments);
@@ -43,6 +51,8 @@ var DropBlock = AbstractPlugin.extend({
         this._blockContainer = document.createElement('dropblock');
         if (this.options.dropblocks) {
             this._createBlocks(this.options.dropblocks);
+        } else {
+            console.error("'DropBlock' plugin should use 'dropblocks' options");
         }
         params.insertBeforeEditable(this._blockContainer);
         params.insertBeforeEditable(this._blockHandle);
@@ -428,6 +438,7 @@ var DropBlock = AbstractPlugin.extend({
         }
     },
     _onDragAndDropStart: function (dragAndDropContents) {
+        console.log(dragAndDropContents);
         this._addDropZone();
     },
     _onMouseDownBlock: function (ev) {

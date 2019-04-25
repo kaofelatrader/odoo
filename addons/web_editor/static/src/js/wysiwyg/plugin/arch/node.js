@@ -431,7 +431,7 @@ return Class.extend({
     firstChild: function () {
         return this.childNodes && this.childNodes.length ? this.childNodes[0] : null;
     },
-    index: function () {
+    index: function (options) {
         return this.parent.childNodes.indexOf(this);
     },
     lastChild: function () {

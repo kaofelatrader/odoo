@@ -122,6 +122,7 @@ var Wysiwyg = Widget.extend({
             styleTags: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre'],
             colors: this._groupColors,
             dropblocks: this._dropblocks,
+            dropblockSelector: this.dropblockSelector,
             plugins: this.options.plugins,
             renderTemplate: this._renderTemplate.bind(this),
             loadTemplates: this._loadTemplates.bind(this),
@@ -219,8 +220,9 @@ var Wysiwyg = Widget.extend({
             var dropblocks = [];
             var dropblockSelector = [];
             var blockCustomisation = [];
+
             var $dropBlockTemplate = $(QWeb.render('web_editor.dropBlockTemplate.custom'));
-            var $snippets = $dropBlockTemplate.filter('#o_scroll').find('.o_panel').each(function () {
+            $dropBlockTemplate.filter('#o_scroll').find('.o_panel').each(function () {
                 var blocks = [];
                 $(this).find('.o_panel_body').children().each(function () {
                     blocks.push({
@@ -234,7 +236,40 @@ var Wysiwyg = Widget.extend({
                     blocks: blocks,
                 });
             });
-            var $snippet_options = $dropBlockTemplate.filter('#snippet_options');
+
+            $dropBlockTemplate.filter('#snippet_options').children().each(function () {
+                var data = $(this).data();
+                dropblockSelector.push({
+                    selector: data.selector,
+                    dropIn: data.dropIn,
+                    dropNear: data.dropNear,
+                });
+
+
+                var menu = [];
+                console.log('----');
+                $(this).children().each(function () {
+                    console.log(this);
+                    var $child = $(this);
+                    if ($child.hasClass('dropdown-submenu')) {
+                        var submenu = [];
+                        $child.each(function () {
+
+                        });
+                    } else {
+
+                    }
+                });
+
+                data.menu = menu;
+                blockCustomisation.push(data);
+            });
+
+            console.log('------------------');
+            console.log(dropblocks);
+            console.log(dropblockSelector);
+            console.log(blockCustomisation);
+            console.log('------------------');
 
             self._dropblocks = dropblocks;
             self._dropblockSelector = dropblockSelector;
