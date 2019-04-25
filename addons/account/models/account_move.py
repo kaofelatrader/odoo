@@ -695,14 +695,16 @@ class AccountMoveLine(models.Model):
         rec = super(AccountMoveLine, self).default_get(fields)
         if 'line_ids' not in self._context:
             return rec
-
+        if {'debit', 'credit', 'partner_id', 'account_id'}.isdisjoint(fields):
+            return rec
         #compute the default credit/debit of the next line in case of a manual entry
+        AccountMove = self.env['account.move']
         balance = 0
-        for line in self.move_id.resolve_2many_commands(
+        for line in AccountMove.resolve_2many_commands(
                 'line_ids', self._context['line_ids'], fields=['credit', 'debit']):
             balance += line.get('debit', 0) - line.get('credit', 0)
         if len(self._context['line_ids']) > 1:
-            lines = self.move_id.resolve_2many_commands('line_ids', self._context['line_ids'][-2:], fields=['partner_id', 'account_id'])
+            lines = AccountMove.resolve_2many_commands('line_ids', self._context['line_ids'][-2:], fields=['partner_id', 'account_id'])
             if lines[0].get('partner_id', False) == lines[1].get('partner_id', False):
                 rec.update({'partner_id': lines[0].get('partner_id', False)})
             if lines[0].get('account_id', False) == lines[1].get('account_id', False):
