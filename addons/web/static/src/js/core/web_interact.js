@@ -49,7 +49,7 @@ var _resetDraggableProperties = function (el, delay) {
  * @returns {Interactable}
  */
 var _draggable = function (el, options) {
-
+    var options = options || {};
     var interactOptions = {
         // On drag start, we prepare the element to be dragged around.
         onstart: function (ev) {
@@ -77,7 +77,7 @@ var _draggable = function (el, options) {
             target.dataset.draggableX = xPosition;
             target.dataset.draggableY = yPosition;
 
-            if (options && options.onstart) {
+            if (options.onstart) {
                 options.onstart(ev);
             }
         },
@@ -95,7 +95,7 @@ var _draggable = function (el, options) {
             target.dataset.draggableX = xPosition;
             target.dataset.draggableY = yPosition;
 
-            if (options && options.onmove) {
+            if (options.onmove) {
                 options.onmove(ev);
             }
         },
@@ -107,13 +107,13 @@ var _draggable = function (el, options) {
         onend: function (ev) {
             ev.target.classList.remove('o_currently_dragged');
 
-            if (options && options.onend) {
+            if (options.onend) {
                 options.onend(ev);
             }
         }
     };
 
-    if (options && options.restrict) {
+    if (options.restrict) {
         interactOptions.restrict = options.restrict;
     }
 
@@ -205,10 +205,11 @@ var _cleanPlaceholder = function (sortable) {
  * @returns {Interactable}
  */
 var _sortable = function (el, options) {
-    var axis = (options && options.axis) ? options.axis: 'y';
-    var handle = options && options.handle;
-    var connectWith = options && options.connectWith;
-    var itemsSelector = options && options.items;
+    var options = options || {};
+    var axis = options.axis || 'y';
+    var handle = options.handle;
+    var connectWith = options.connectWith;
+    var itemsSelector = options.items;
 
     // Checks whether an element is a valid item for this sortable. It needs to
     // either be a children of this sortable (already computed by the check
@@ -263,7 +264,7 @@ var _sortable = function (el, options) {
             }
         }
 
-        if (options && options.ondropactivate) {
+        if (options.ondropactivate) {
             options.ondropactivate(ev);
         }
     };
@@ -279,7 +280,7 @@ var _sortable = function (el, options) {
             _setPlaceholder(el, ev.relatedTarget, null, axis, connectWith);
         }
 
-        if (options && options.ondragenter) {
+        if (options.ondragenter) {
             options.ondragenter(ev);
         }
     };
@@ -291,7 +292,7 @@ var _sortable = function (el, options) {
         placeholder.parentNode.insertBefore(ev.relatedTarget, placeholder);
         _cleanPlaceholder(el);
 
-        if (options && options.ondrop) {
+        if (options.ondrop) {
             options.ondrop(ev);
         }
     };
@@ -305,7 +306,7 @@ var _sortable = function (el, options) {
             ondrop(ev);
         }
 
-        if (options && options.ondropdeactivate) {
+        if (options.ondropdeactivate) {
             options.ondropdeactivate(ev);
         }
     };
@@ -317,7 +318,7 @@ var _sortable = function (el, options) {
         ondropactivate: ondropactivate,
         ondragenter: ondragenter,
         ondrop: ondrop,
-        ondragleave: options && options.ondragleave,
+        ondragleave: options.ondragleave,
         ondropdeactivate: ondropdeactivate
     });
 
@@ -336,11 +337,10 @@ var _sortable = function (el, options) {
             item.classList.add('o_sortable_handle');
             var itemsDraggableOptions = {
                 onend: function(ev) {
-                    var delay = options && options.revert;
-                    _resetDraggableProperties(ev.target, delay);
+                    _resetDraggableProperties(ev.target, options.revert);
                 }
             };
-            if (options && options.containment) {
+            if (options.containment) {
                 // Restrict the items to stay in the designated area
                 itemsDraggableOptions.restrict = {
                     restriction: options.containment,
