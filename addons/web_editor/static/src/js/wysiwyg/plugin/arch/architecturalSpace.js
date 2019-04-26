@@ -26,10 +26,10 @@ ArchNode.include({
         }
 
         if (!this.isText() && !this.isVoid() && !this.isPre()) {
-            var block = this.isBlock() && this.childNodes && !!this.childNodes.length;
+            var block = this.isBlock() && !this.isVoid() && this.childNodes && !!this.childNodes.length;
             if (!block && this.childNodes) {
                 this.childNodes.forEach(function (child) {
-                    block = block || child.isBlock();
+                    block = block || child.isBlock() && !child.isVoid();
                 });
             }
             if (block) {
@@ -38,11 +38,12 @@ ArchNode.include({
             }
         }
 
-        if (!this.parent.parent && !this.nextSibling()) { // don't add space on first level
+        var next = this.nextSibling();
+        if (!this.parent.parent && !next) { // don't add space on first level
             return;
         }
 
-        if (this.isBlock() || this.parent.isBlock() || (this.nextSibling() && this.nextSibling().isBlock())) {
+        if (this.isBlock() && !this.isVoid() || this.parent.isBlock() || (next && next.isBlock() && !next.isVoid())) {
             this.parent.insertAfter(new ArchitecturalSpace(this.params), this);
             this._hasArchitecturalSpace = true;
         }
