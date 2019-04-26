@@ -36,8 +36,8 @@ var _draggable = function (el, options) {
             // it may have a size that is dependent on his parent, in which
             // case absolute positioning would result in different dimensions.
             var computedStyle = window.getComputedStyle(target);
-            target.style.height = computedStyle.getPropertyValue('height');
-            target.style.width = computedStyle.getPropertyValue('width');
+            target.style.height = computedStyle.height;
+            target.style.width = computedStyle.width;
 
             // Absolute positioning in itself
             // We use the same zIndex as jQuery-ui sortable
@@ -125,8 +125,8 @@ var _setPlaceholder = function (sortable, item, anchor, connectWith) {
         var computedStyle = window.getComputedStyle(item);
         placeholder = document.createElement(item.tagName);
         placeholder.classList.add(placeholderClass);
-        placeholder.style.width = computedStyle.getPropertyValue('width');
-        placeholder.style.height = computedStyle.getPropertyValue('height');
+        placeholder.style.width = computedStyle.width;
+        placeholder.style.height = computedStyle.height;
         placeholder.style.backgroundColor = 'lightgray';
     }
 
