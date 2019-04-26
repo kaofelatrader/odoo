@@ -94,11 +94,11 @@ var _getPlaceholder = function (sortable) {
     return sortable.querySelector('.' + placeholderClass);
 };
 
-var _setPlaceholder = function (sortable, node, parent, before, connectWith) {
-    var placeholder = _getPlaceholder(node);
+var _setPlaceholder = function (sortable, item, anchorNode, connectWith) {
+    var placeholder = _getPlaceholder(item);
     if (!placeholder) {
-        var computedStyle = window.getComputedStyle(node);
-        placeholder = document.createElement(node.tagName);
+        var computedStyle = window.getComputedStyle(item);
+        placeholder = document.createElement(item.tagName);
         placeholder.classList.add(placeholderClass);
         placeholder.style.width = computedStyle.getPropertyValue('width');
         placeholder.style.height = computedStyle.getPropertyValue('height');
@@ -114,7 +114,12 @@ var _setPlaceholder = function (sortable, node, parent, before, connectWith) {
         _cleanPlaceholder(sortable);
     }
 
-    parent.insertBefore(placeholder, before);
+    if (anchorNode && anchorNode.classList.contains(placeholderClass)) {
+        anchorNode = anchorNode.nextSibling;
+    }
+
+    var parent = anchorNode ? anchorNode.parentNode: sortable;
+    parent.insertBefore(placeholder, anchorNode);
 };
 
 /**
@@ -166,11 +171,7 @@ var _sortable = function (el, options) {
         var draggable = ev.relatedTarget;
         var droppable = ev.target;
         if (droppable.contains(draggable)) {
-            var nextSibling = draggable.nextSibling;
-            if (nextSibling && nextSibling.classList.contains(placeholderClass)) {
-                nextSibling = nextSibling.nextSibling;
-            }
-            _setPlaceholder(el, draggable, droppable, nextSibling, connectWith);
+            _setPlaceholder(droppable, draggable, draggable.nextSibling, connectWith);
         }
 
         // Set droppable on all items in this sortable
@@ -183,11 +184,7 @@ var _sortable = function (el, options) {
                         checker: _connectedChecker,
                         ondragenter: function (ev) {
                             var beforeTarget = ev.dragEvent.dy > 0 ? ev.target.nextSibling : ev.target;
-                            if (beforeTarget && beforeTarget.classList.contains(placeholderClass)) {
-                                beforeTarget = beforeTarget.nextSibling;
-                            }
-                            var parentTarget = beforeTarget ? beforeTarget.parentNode : ev.target.parentNode;
-                            _setPlaceholder(el, ev.target, parentTarget, beforeTarget, connectWith);
+                            _setPlaceholder(el, ev.target, beforeTarget, connectWith);
                         },
                     });
                 }
@@ -207,7 +204,7 @@ var _sortable = function (el, options) {
             // We need to check for existing placeholders as hovering the
             // placeholder itselfs is considered as hovering the sortable since
             // the placeholder is not considered as an item on its own.
-            _setPlaceholder(el, ev.relatedTarget, ev.target, null, connectWith);
+            _setPlaceholder(el, ev.relatedTarget, null, connectWith);
         }
 
         if (options && options.ondragenter) {
