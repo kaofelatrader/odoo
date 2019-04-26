@@ -22,6 +22,8 @@ return TextNode.extend({
 
         var before = this.nodeValue.match(regExpSpaceBegin)[0];
         var after = before.length < this.nodeValue.length ? this.nodeValue.match(regExpSpaceEnd)[0] : '';
+        before = before === ' ' ? '' : before;
+        after = after === ' ' ? '' : after;
         var text = this.nodeValue.slice(before.length, this.nodeValue.length - after.length);
 
         text = text.replace(regExpSpace, ' ');

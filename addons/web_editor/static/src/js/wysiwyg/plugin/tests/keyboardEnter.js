@@ -456,7 +456,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 start: "b:contents()[0]->3",
                 key: 'ENTER',
             }],
-            test: "<p><b>dom</b></p><p><b>◆&nbsp;to edit</b></p>",
+            test: "<p><b>dom</b></p><p><b>◆ to edit</b></p>",
         },
         {
             name: "in p > b: SHIFT+ENTER -> ENTER",
@@ -468,7 +468,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'ENTER',
             }],
-            test: "<p><b>dom<br/>&#65279;</b></p><p><b>◆&nbsp;to edit</b></p>",
+            test: "<p><b>dom<br/></b></p><p><b>◆ to edit</b></p>",
         },
         {
             name: "in p > b: ENTER -> a'",
@@ -479,7 +479,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'a',
             }],
-            test: "<p><b>dom</b></p><p><b>a◆&nbsp;to edit</b></p>",
+            test: "<p><b>dom</b></p><p><b>a◆ to edit</b></p>",
         },
         {
             name: "in p > b: SHIFT+ENTER",
@@ -489,7 +489,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 key: 'ENTER',
                 shiftKey: true,
             }],
-            test: "<p><b>dom<br/>◆&nbsp;to edit</b></p>",
+            test: "<p><b>dom<br/>◆ to edit</b></p>",
         },
         {
             name: "in p > b: SHIFT+ENTER -> 'a'",
@@ -501,7 +501,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'a',
             }],
-            test: "<p><b>dom<br/>a◆&nbsp;to edit</b></p>",
+            test: "<p><b>dom<br/>a◆ to edit</b></p>",
         },
         {
             name: "in p > b: SHIFT+ENTER -> ENTER -> 'a'",
@@ -515,7 +515,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'a',
             }],
-            test: "<p><b>dom<br/>&#65279;</b></p><p><b>a◆&nbsp;to edit</b></p>",
+            test: "<p><b>dom<br/></b></p><p><b>a◆ to edit</b></p>",
         },
         {
             name: "in span > b: ENTER",
@@ -524,7 +524,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 start: "b:contents()[0]->3",
                 key: 'ENTER',
             }],
-            test: "<span><b>dom</b></span><br/><span><b>◆&nbsp;to edit</b></span>",
+            test: "<p><span><b>dom</b></span></p><p><span><b>◆ to edit</b></span></p>",
         },
         {
             name: "in span > b: SHIFT+ENTER -> ENTER",
@@ -536,7 +536,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'ENTER',
             }],
-            test: "<span><b>dom<br/></b></span><br/><span><b>◆&nbsp;to edit</b></span>",
+            test: "<p><span><b>dom<br/></b></span></p><p><span><b>◆ to edit</b></span></p>",
         },
         {
             name: "in span > b: ENTER -> 'a'",
@@ -547,7 +547,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'a',
             }],
-            test: "<span><b>dom</b></span><br/><span><b>a◆&nbsp;to edit</b></span>",
+            test: "<p><span><b>dom</b></span></p><p><span><b>a◆ to edit</b></span></p>",
         },
         {
             name: "in span > b: SHIFT+ENTER",
@@ -557,7 +557,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
                 key: 'ENTER',
                 shiftKey: true,
             }],
-            test: "<span><b>dom<br/>◆&nbsp;to edit</b></span>",
+            test: "<p><span><b>dom<br/>◆ to edit</b></span></p>",
         },
         {
             name: "in span > b: SHIFT+ENTER -> 'a'",
@@ -569,7 +569,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'a',
             }],
-            test: "<span><b>dom<br/>a◆&nbsp;to edit</b></span>",
+            test: "<p><span><b>dom<br/>a◆ to edit</b></span></p>",
         },
         {
             name: "in span > b: SHIFT+ENTER -> ENTER -> 'a'",
@@ -583,7 +583,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'a',
             }],
-            test: "<span><b>dom<br/></b></span><br/><span><b>a◆&nbsp;to edit</b></span>",
+            test: "<p><span><b>dom<br/></b></span></p><p><span><b>a◆ to edit</b></span></p>",
         },
         {
             name: "in p: 2x SHIFT+ENTER -> 'a'",
@@ -598,7 +598,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'a',
             }],
-            test: "<p>dom<br/><br/>a◆&nbsp;to edit</p>",
+            test: "<p>dom<br/><br/>a◆ to edit</p>",
         },
         {
             name: "in p: ENTER -> SHIFT+ENTER -> 'a'",
@@ -612,7 +612,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 key: 'a',
             }],
-            test: "<p>dom</p><p><br/>a◆&nbsp;to edit</p>",
+            test: "<p>dom</p><p><br/>a◆ to edit</p>",
         },
         {
             name: "in empty-p (p before and after): ENTER -> 'a'",
@@ -629,17 +629,17 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             name: "in p: SHIFT+ENTER at end",
             content: "<p>dom </p><p>to edit</p>",
             steps: [{
-                start: "p:first:contents()[0]->4",
+                start: "p:contents()[0]->4",
                 key: 'ENTER',
                 shiftKey: true,
             }],
-            test: "<p>dom <br/>◆&#65279;</p><p>to edit</p>",
+            test: "<p>dom <br/>◆</p><p>to edit</p>",
         },
         {
             name: "in p: SHIFT+ENTER at end -> '寺'",
             content: "<p>dom </p><p>to edit</p>",
             steps: [{
-                start: "p:first:contents()[0]->4",
+                start: "p:contents()[0]->4",
                 key: 'ENTER',
                 shiftKey: true,
             }, {
