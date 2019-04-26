@@ -9,13 +9,13 @@ function False () { return false; };
 
 ArchNode.include({
     toJSON: function (options) {
-        if (options && options.architecturalSpace) {
+        if (options && options.architecturalSpace && !this._hasArchitecturalSpace) {
             this._addArchitecturalSpaceNodes();
         }
         return this._super.apply(this, arguments);
     },
     toString: function (options) {
-        if (options && options.architecturalSpace) {
+        if (options && options.architecturalSpace && !this._hasArchitecturalSpace) {
             this._addArchitecturalSpaceNodes();
         }
         return this._super.apply(this, arguments);
@@ -34,6 +34,7 @@ ArchNode.include({
             }
             if (block) {
                 this.prepend(new ArchitecturalSpace(this.params), this);
+                this._hasArchitecturalSpace = true;
             }
         }
 
@@ -43,6 +44,7 @@ ArchNode.include({
 
         if (this.isBlock() || this.parent.isBlock() || (this.nextSibling() && this.nextSibling().isBlock())) {
             this.parent.insertAfter(new ArchitecturalSpace(this.params), this);
+            this._hasArchitecturalSpace = true;
         }
     },
     _addArchitecturalSpaceNodes: function () {
