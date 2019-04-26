@@ -189,27 +189,6 @@ var _cleanPlaceholder = function (sortable) {
 };
 
 /**
- * Checks whether an element is a valid item for this droppable. It needs to
- * either be a children of this sortable (already computed by the check
- * argument of interactjs checker function) or, if we are in connectWith
- * mode, be a children of a connected sortable.
- * Note: We only need a few of the arguments of interactjs checker function.
- *
- * @param {InteractEvent} dragEv related dragmove or dragend event
- * @param {Event} ev the original event related to the dragEvent
- * @param {boolean} check value from interactjs default drop checker
- * @param {Interactable} dropzone interactjs object for the droppable element
- * @param {DOMElement} dropEl droppable element
- * @param {Interactable} draggable interactjs object for the draggable element
- * @param {DOMElement} dragEl draggable element
- * @returns {boolean} whether the draggable item is valid for this droppable
- *
- */
-var _check = function (dragEv, ev, check, dropzone, dropEl, draggable, dragEl) {
-    return check && (!connectWith || dragEl.closest(connectWith));
-}
-
-/**
  * Make an element sortable.
  * For more details on the parameters, see the doc of interactjs.
  *
@@ -232,6 +211,27 @@ var _sortable = function (el, options) {
     var connectWith = options.connectWith;
     var itemsSelector = options.items;
 
+    /**
+     * Checks whether an element is a valid item for this droppable. It needs to
+     * either be a children of this sortable (already computed by the drop
+     * argument of interactjs checker function) or, if we are in connectWith
+     * mode, be a children of a connected sortable.
+     * Note: We only need a few of the arguments of interactjs checker function.
+     *
+     * @param {InteractEvent} dragEv related dragmove or dragend event
+     * @param {Event} ev the original event related to the dragEvent
+     * @param {boolean} drop value from interactjs default drop checker
+     * @param {Interactable} dropObj interactjs object of droppable element
+     * @param {DOMElement} dropEl droppable element
+     * @param {Interactable} dragObj interactjs object of draggable element
+     * @param {DOMElement} dragEl draggable element
+     * @returns {boolean} whether the draggable item is valid for this droppable
+     *
+     */
+    var check = function (dragEv, ev, drop, dropObj, dropEl, dragObj, dragEl) {
+        return drop && (!connectWith || dragEl.closest(connectWith));
+    }
+
     // When dragging starts, we need to create a first placeholder and make all
     // items in this sortable droppable so they can react to the dragged item.
     var ondropactivate = function (ev) {
@@ -250,7 +250,7 @@ var _sortable = function (el, options) {
             if (items.length) {
                 var itemsDroppableOptions = {
                     accept: itemsSelector,
-                    checker: _check,
+                    checker: check,
                     ondragenter: function (ev) {
                         var item = ev.target;
                         var anchor = item;
@@ -326,7 +326,7 @@ var _sortable = function (el, options) {
     // Make el interactjs droppable
     var interactable = interact(el).dropzone({
         accept: itemsSelector,
-        checker: _check,
+        checker: check,
         ondropactivate: ondropactivate,
         ondragenter: ondragenter,
         ondrop: ondrop,
