@@ -4,6 +4,39 @@ odoo.define('web.interact', function (require) {
 var placeholderClass = 'o_sortable_placeholder';
 
 /**
+ * Store current values of CSS properties that will change while dragging
+ *
+ * @param {DOMElement} el
+*/
+var _storeDraggableProperties = function(el) {
+    el.dataset.draggableOriginalHeight = el.style.height;
+    el.dataset.draggableOriginalLeft = el.style.left;
+    el.dataset.draggableOriginalPosition = el.style.position;
+    el.dataset.draggableOriginalTop = el.style.top;
+    el.dataset.draggableOriginalWidth = el.style.width;
+    el.dataset.draggableOriginalZIndex = el.style.zIndex;
+};
+
+/**
+ * Reset CSS properties to what they were before dragging
+ *
+ * @param {DOMElement} el
+ * @param {integer} [delay] in ms for the reset animation
+*/
+var _resetDraggableProperties = function (el, delay) {
+    if (delay) {
+        // TODO: revert option animation
+    } else {
+        el.style.height = el.dataset.draggableOriginalHeight;
+        el.style.left = el.dataset.draggableOriginalLeft;
+        el.style.position = el.dataset.draggableOriginalPosition;
+        el.style.top = el.dataset.draggableOriginalTop;
+        el.style.width = el.dataset.draggableOriginalWidth;
+        el.style.zIndex = el.dataset.draggableOriginalZIndex;
+    }
+}
+
+/**
  * Make an element draggable.
  * For more details on the parameters, see the doc of interactjs.
  *
@@ -22,14 +55,7 @@ var _draggable = function (el, options) {
         onstart: function (ev) {
             var target = ev.target;
             target.classList.add('o_currently_dragged');
-
-            // Store current values of CSS properties that are going to change
-            target.dataset.draggableOriginalHeight = target.style.height;
-            target.dataset.draggableOriginalLeft = target.style.left;
-            target.dataset.draggableOriginalPosition = target.style.position;
-            target.dataset.draggableOriginalTop = target.style.top;
-            target.dataset.draggableOriginalWidth = target.style.width;
-            target.dataset.draggableOriginalZIndex = target.style.zIndex;
+            _storeDraggableProperties(target);
 
             // Freeze the dimensions of the element as it appears now, since
             // it may have a size that is dependent on his parent, in which
@@ -74,20 +100,12 @@ var _draggable = function (el, options) {
             }
         },
 
-        // On drag stop, we reset the CSS properties to their original value
+        // On drag end, we remove the currently dragged class.
+        // We don't reset the properties of the element as this would result in
+        // the same state as before dragging. These properties can be accessed
+        // by the user in its own onend function if needed.
         onend: function (ev) {
-            var target = ev.target;
-            if (options && options.revert && false) {
-                // TODO: revert option animation
-            } else {
-                target.style.height = target.dataset.draggableOriginalHeight;
-                target.style.left = target.dataset.draggableOriginalLeft;
-                target.style.position = target.dataset.draggableOriginalPosition;
-                target.style.top = target.dataset.draggableOriginalTop;
-                target.style.width = target.dataset.draggableOriginalWidth;
-                target.style.zIndex = target.dataset.draggableOriginalZIndex;
-                target.classList.remove('o_currently_dragged');
-            }
+            ev.target.classList.remove('o_currently_dragged');
 
             if (options && options.onend) {
                 options.onend(ev);
@@ -95,7 +113,7 @@ var _draggable = function (el, options) {
         }
     };
 
-    if (options.restrict) {
+    if (options && options.restrict) {
         interactOptions.restrict = options.restrict;
     }
 
@@ -317,7 +335,10 @@ var _sortable = function (el, options) {
         if (item && !item.classList.contains('o_sortable_handle')) {
             item.classList.add('o_sortable_handle');
             var itemsDraggableOptions = {
-                revert: options && options.revert,
+                onend: function(ev) {
+                    var delay = options && options.revert;
+                    _resetDraggableProperties(ev.target, delay);
+                }
             };
             if (options && options.containment) {
                 // Restrict the items to stay in the designated area
