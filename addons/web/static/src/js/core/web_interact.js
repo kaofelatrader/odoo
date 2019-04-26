@@ -149,95 +149,108 @@ var _cleanPlaceholder = function (sortable) {
 var _sortable = function (el, options) {
     var connectWith = options && options.connectWith;
     var itemsSelector = options && options.items;
-    // We only need a few of the arguments of interactjs checker function for now
+
+    // Checks whether an element is a valid item for this sortable. It needs to
+    // either be a children of this sortable or a children of a connected one.
+    // Note: We only need a few of the arguments of interactjs checker function.
     var _connectedChecker = function (dragEvent, event, dropped, dropzone, dropElement, draggable, draggableElement) {
         var isFromThisSortable = el.contains(draggableElement);
         var isFromConnectedSortable = connectWith && draggableElement.closest(connectWith);
         return dropped && (isFromThisSortable || isFromConnectedSortable);
     }
+
+    // When dragging starts, we need to create a first placeholder and make all
+    // items in this sortable droppable so they can react to the dragged item.
+    var ondropactivate = function (ev) {
+        // Create the very first placeholder in place of the draggable item
+        var draggable = ev.relatedTarget;
+        var droppable = ev.target;
+        if (droppable.contains(draggable)) {
+            var nextSibling = draggable.nextSibling;
+            if (nextSibling && nextSibling.classList.contains(placeholderClass)) {
+                nextSibling = nextSibling.nextSibling;
+            }
+            _setPlaceholder(el, draggable, droppable, nextSibling, connectWith);
+        }
+
+        // Set droppable on all items in this sortable
+        if (!el.getAttribute('data-sortable-activated')) {
+            el.setAttribute('data-sortable-activated', true);
+            el.querySelectorAll(itemsSelector).forEach(function (element) {
+                if (!element.classList.contains(placeholderClass)) {
+                    interact(element).dropzone({
+                        accept: itemsSelector,
+                        checker: _connectedChecker,
+                        ondragenter: function (ev) {
+                            var beforeTarget = ev.dragEvent.dy > 0 ? ev.target.nextSibling : ev.target;
+                            if (beforeTarget && beforeTarget.classList.contains(placeholderClass)) {
+                                beforeTarget = beforeTarget.nextSibling;
+                            }
+                            var parentTarget = beforeTarget ? beforeTarget.parentNode : ev.target.parentNode;
+                            _setPlaceholder(el, ev.target, parentTarget, beforeTarget, connectWith);
+                        },
+                    });
+                }
+            })
+        }
+
+        if (options && options.ondropactivate) {
+            options.ondropactivate(ev);
+        }
+    };
+
+    // When a dragged item enters the sortable, we create a placeholder at the
+    // end of the sortable, no matter where the dragged item is entering the
+    // sortable from. This is similar to jQuery-ui behavior.
+    var ondragenter = function (ev) {
+        if (!_getPlaceholder(el)) {
+            // We need to check for existing placeholders as hovering the
+            // placeholder itselfs is considered as hovering the sortable since
+            // the placeholder is not considered as an item on its own.
+            _setPlaceholder(el, ev.relatedTarget, ev.target, null, connectWith);
+        }
+
+        if (options && options.ondragenter) {
+            options.ondragenter(ev);
+        }
+    };
+
+    // When a dragged item is dropped in this sortable, we use the placeholder
+    // as an anchor for correctly placing the item then delete the placeholder.
+    var ondrop = function (ev) {
+        var placeholder = _getPlaceholder(ev.target);
+        placeholder.parentNode.insertBefore(ev.relatedTarget, placeholder);
+        _cleanPlaceholder(el);
+
+        if (options && options.ondrop) {
+            options.ondrop(ev);
+        }
+    };
+
+    // When dragging stops, if there is still a placeholder at this point, this
+    // means that we dropped the record outside of any droppable zone, otherwise
+    // the placeholder would have been removed by ondrop. In this case, we
+    // mimmick jQuery-ui behavior and drop it at the last known valid spot.
+    var ondropdeactivate = function (ev) {
+        if (_getPlaceholder(el)) {
+            ondrop(ev);
+        }
+
+        if (options && options.ondropdeactivate) {
+            options.ondropdeactivate(ev);
+        }
+    };
+
+    // Make el interactjs droppable
     var interactable = interact(el).dropzone({
         accept: itemsSelector,
         checker: _connectedChecker,
-        ondropactivate: function (ev) {
-            // Create the very first placeholder in place of the draggable item
-            var draggable = ev.relatedTarget;
-            var droppable = ev.target;
-            if (droppable.contains(draggable)) {
-                var nextSibling = draggable.nextSibling;
-                if (nextSibling && nextSibling.classList.contains(placeholderClass)) {
-                    nextSibling = nextSibling.nextSibling;
-                }
-                _setPlaceholder(el, draggable, droppable, nextSibling, connectWith);
-            }
-
-            // Set droppable on all items in this sortable
-            if (!el.getAttribute('data-sortable-activated')) {
-                el.setAttribute('data-sortable-activated', true);
-                el.querySelectorAll(itemsSelector).forEach(function (element) {
-                    if (!element.classList.contains(placeholderClass)) {
-                        interact(element).dropzone({
-                            accept: itemsSelector,
-                            checker: _connectedChecker,
-                            ondragenter: function (ev) {
-                                var beforeTarget = ev.dragEvent.dy > 0 ? ev.target.nextSibling : ev.target;
-                                if (beforeTarget && beforeTarget.classList.contains(placeholderClass)) {
-                                    beforeTarget = beforeTarget.nextSibling;
-                                }
-                                var parentTarget = beforeTarget ? beforeTarget.parentNode : ev.target.parentNode;
-                                _setPlaceholder(el, ev.target, parentTarget, beforeTarget, connectWith);
-                            },
-                        });
-                    }
-                })
-            }
-
-            if (options && options.ondropactivate) {
-                options.ondropactivate(ev);
-            }
-        },
-        ondragenter: function (ev) {
-            // If there is no placeholder yet then create one as the last item
-            if (!_getPlaceholder(el)) {
-                _setPlaceholder(el, ev.relatedTarget, ev.target, null, connectWith);
-            }
-
-            if (options && options.ondragenter) {
-                options.ondragenter(ev);
-            }
-        },
-        ondrop: function (ev) {
-            // We use the placeholder as an anchor for the item then delete it
-            var placeholder = _getPlaceholder(ev.target);
-            placeholder.parentNode.insertBefore(ev.relatedTarget, placeholder);
-            _cleanPlaceholder(el);
-
-            if (options && options.ondrop) {
-                options.ondrop(ev);
-            }
-        },
-        ondragleave: function (ev) {
-            // if (!connectWith) {
-            //     // Handling of placeholders is generalized for all sortables in
-            //     // connectWith mode, but we're on our own outside of that mode.
-            //     _cleanPlaceholder(el);
-            // }
-
-            if (options && options.ondragleave) {
-                options.ondragleave(ev);
-            }
-        },
-        ondropdeactivate: function (ev) {
-            // if (!connectWith) {
-            //     // Handling of placeholders is generalized for all sortables in
-            //     // connectWith mode, but we're on our own outside of that mode.
-            //     _cleanPlaceholder(el);
-            // }
-
-            if (options && options.ondropdeactivate) {
-                options.ondropdeactivate(ev);
-            }
-        }
-    })
+        ondropactivate: ondropactivate,
+        ondragenter: ondragenter,
+        ondrop: ondrop,
+        ondragleave: options && options.ondragleave,
+        ondropdeactivate: ondropdeactivate
+    });
 
     // Enable recomputation of distances while dragging
     interact.dynamicDrop(true);
