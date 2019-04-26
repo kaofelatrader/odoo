@@ -157,8 +157,13 @@ var TestKeyboard = AbstractPlugin.extend({
 
 
         return defPollTest.then(function () {
-            console.info('%cResult: ' + nOKTests + '/' + nTests + ' passed. ' + (nTests - nOKTests) + ' to go.',
-                'background-color: yellow; color: black');
+            var success = nTests - nOKTests === 0;
+            var message = success ? 'All ' + nTests + ' tests OK.' :
+                'Result: ' + nOKTests + '/' + nTests + ' passed. ' + (nTests - nOKTests) + ' to go.';
+            var bgColor = success ? 'green' : 'yellow';
+            var textColor = success ? 'white' : 'black';
+            var css = 'background-color: ' + bgColor + '; color: ' + textColor + ';';
+            console.info('%c' + message, css);
         });
     },
     keydown: function (target, keyPress) {

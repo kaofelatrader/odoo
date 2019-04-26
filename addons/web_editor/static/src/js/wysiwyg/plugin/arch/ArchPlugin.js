@@ -1090,6 +1090,7 @@ var ArchPlugin = AbstractPlugin.extend({
     },
     _removeAllArchitecturalSpace: function () {
         var self = this;
+        var toRemove = [];
         Object.keys(this._archNodeList).forEach(function (id) {
             id = parseInt(id);
             var archNode = self._getNode(id);
@@ -1098,9 +1099,12 @@ var ArchPlugin = AbstractPlugin.extend({
             }
             archNode.childNodes.forEach(function (child) {
                 if (child.isArchitecturalSpace()) {
-                    child.remove();
+                    toRemove.push(child);
                 }
             });
+        });
+        toRemove.forEach(function (node) {
+            node.remove();
         });
     },
     /**

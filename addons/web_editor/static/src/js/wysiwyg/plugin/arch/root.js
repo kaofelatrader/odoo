@@ -62,9 +62,11 @@ var RootNode = ArchNode.extend({
      */
     toString: function (options) {
         var string = '';
-        this.childNodes.forEach(function (archNode) {
-            string += archNode.toString(options);
-        });
+        var i = 0;
+        while (i < this.childNodes.length) {
+            string += this.childNodes[i].toString(options);
+            i++;
+        };
         return string;
     },
 });

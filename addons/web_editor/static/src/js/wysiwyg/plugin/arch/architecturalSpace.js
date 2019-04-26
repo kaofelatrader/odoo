@@ -9,15 +9,13 @@ function False () { return false; };
 
 ArchNode.include({
     toJSON: function (options) {
-        if (options && options.architecturalSpace && !options.__architecturalSpace) {
-            options.__architecturalSpace = true;
+        if (options && options.architecturalSpace) {
             this._addArchitecturalSpaceNodes();
         }
         return this._super.apply(this, arguments);
     },
     toString: function (options) {
-        if (options && options.architecturalSpace && !options.__architecturalSpace) {
-            options.__architecturalSpace = true;
+        if (options && options.architecturalSpace) {
             this._addArchitecturalSpaceNodes();
         }
         return this._super.apply(this, arguments);
@@ -28,7 +26,7 @@ ArchNode.include({
         }
 
         if (!this.isText() && !this.isVoid() && !this.isPre()) {
-            var block = this.isBlock() && this.childNodes && this.childNodes.length;
+            var block = this.isBlock() && this.childNodes && !!this.childNodes.length;
             if (!block && this.childNodes) {
                 this.childNodes.forEach(function (child) {
                     block = block || child.isBlock();
@@ -48,12 +46,13 @@ ArchNode.include({
         }
     },
     _addArchitecturalSpaceNodes: function () {
-        var childNodes = this.childNodes && this.childNodes.slice();
         this._addArchitecturalSpaceNode();
-        if (childNodes) {
-            childNodes.forEach(function (child) {
-                child._addArchitecturalSpaceNodes();
-            });
+        if (this.childNodes) {
+            var i = 0;
+            while (i < this.childNodes.length) {
+                this.childNodes[i]._addArchitecturalSpaceNodes();
+                i++;
+            };
         }
     },
 });
@@ -81,9 +80,7 @@ var ArchitecturalSpace = TextNode.extend({
         var space = '';
 
         if (!this.__removed && options && options.architecturalSpace) {
-            if (typeof options.architecturalSpace !== 'integer') {
-                options.architecturalSpace = 4;
-            }
+            var indent = typeof options.architecturalSpace === 'integer' ? options.architecturalSpace : 4;
 
             space = '\n';
 
@@ -99,7 +96,7 @@ var ArchitecturalSpace = TextNode.extend({
             level -= (this.nextSibling() ? 0 : 1);
 
             if (level > 0) {
-                space += (new Array(level * options.architecturalSpace + 1).join(' '));
+                space += (new Array(level * indent + 1).join(' '));
             }
         }
         return space;
