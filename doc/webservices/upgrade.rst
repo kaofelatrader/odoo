@@ -426,14 +426,14 @@ should be empty if everything went fine.
 .. _upgrade-api-status-method:
 
 
-Asking to skip the tests 
+Asking to skip the tests
 =========================
 
 This action asks the Upgrade Platform to skip the tests for your request.
 If you don't want Odoo to test and validate the migration, you can bypass the testing stage and directly get the migrated dump.
 
 The ``skip_test`` method
-----------------------
+------------------------
 
 .. py:function:: https://upgrade.odoo.com/database/v1/skip_test
 
@@ -656,4 +656,3 @@ your database dump. Here is a sample session using the 'sftp' client:
     Connected to upgrade.odoo.com.
     sftp> get upgraded_openchs.70.cdump /path/to/upgraded_openchs.70.cdump
     Downloading /upgraded_openchs.70.cdump to /path/to/upgraded_openchs.70.cdump
-
