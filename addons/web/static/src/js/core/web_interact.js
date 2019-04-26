@@ -94,7 +94,7 @@ var _getPlaceholder = function (sortable) {
     return sortable.querySelector('.' + placeholderClass);
 };
 
-var _setPlaceholder = function (node, parent, before, connectWith) {
+var _setPlaceholder = function (sortable, node, parent, before, connectWith) {
     var placeholder = _getPlaceholder(node);
     if (!placeholder) {
         var computedStyle = window.getComputedStyle(node);
@@ -106,7 +106,12 @@ var _setPlaceholder = function (node, parent, before, connectWith) {
     }
 
     if (connectWith) {
-        _cleanConnectedPlaceholders(event.target, connectWith);
+        var sortables = document.querySelectorAll(connectWith)
+        sortables.forEach(function (currentSortable) {
+            _cleanPlaceholder(currentSortable);
+        });
+    } else {
+        _cleanPlaceholder(sortable);
     }
 
     parent.insertBefore(placeholder, before);
@@ -123,24 +128,6 @@ var _cleanPlaceholder = function (sortable) {
         placeholder.remove();
         placeholder = undefined;
     }
-};
-
-/**
- * Clean the placeholders of every sortable connected with originalSortable.
- *
- * @param {DOMElement} originalSortable element ordering the cleaning
- * @param {string} connectWith css selector identifying connected sortables
- */
-var _cleanConnectedPlaceholders = function (originalSortable, connectWith) {
-    var sortables = document.querySelectorAll(connectWith)
-    sortables.forEach(function (currentSortable) {
-        if (currentSortable !== originalSortable) {
-            var placeholder = currentSortable.querySelector('.' + placeholderClass);
-            if (placeholder) {
-                placeholder.remove();
-            }
-        }
-    });
 };
 
 /**
@@ -176,7 +163,11 @@ var _sortable = function (el, options) {
             var draggable = ev.relatedTarget;
             var droppable = ev.target;
             if (droppable.contains(draggable)) {
-                _setPlaceholder(draggable, droppable, draggable.nextSibling, connectWith);
+                var nextSibling = draggable.nextSibling;
+                if (nextSibling && nextSibling.classList.contains(placeholderClass)) {
+                    nextSibling = nextSibling.nextSibling;
+                }
+                _setPlaceholder(el, draggable, droppable, nextSibling, connectWith);
             }
 
             // Set droppable on all items in this sortable
@@ -189,8 +180,11 @@ var _sortable = function (el, options) {
                             checker: _connectedChecker,
                             ondragenter: function (ev) {
                                 var beforeTarget = ev.dragEvent.dy > 0 ? ev.target.nextSibling : ev.target;
+                                if (beforeTarget && beforeTarget.classList.contains(placeholderClass)) {
+                                    beforeTarget = beforeTarget.nextSibling;
+                                }
                                 var parentTarget = beforeTarget ? beforeTarget.parentNode : ev.target.parentNode;
-                                _setPlaceholder(ev.target, parentTarget, beforeTarget, connectWith);
+                                _setPlaceholder(el, ev.target, parentTarget, beforeTarget, connectWith);
                             },
                         });
                     }
@@ -204,7 +198,7 @@ var _sortable = function (el, options) {
         ondragenter: function (ev) {
             // If there is no placeholder yet then create one as the last item
             if (!_getPlaceholder(el)) {
-                _setPlaceholder(ev.relatedTarget, ev.target, null, connectWith);
+                _setPlaceholder(el, ev.relatedTarget, ev.target, null, connectWith);
             }
 
             if (options && options.ondragenter) {
@@ -222,14 +216,22 @@ var _sortable = function (el, options) {
             }
         },
         ondragleave: function (ev) {
-            _cleanPlaceholder(el);
+            // if (!connectWith) {
+            //     // Handling of placeholders is generalized for all sortables in
+            //     // connectWith mode, but we're on our own outside of that mode.
+            //     _cleanPlaceholder(el);
+            // }
 
             if (options && options.ondragleave) {
                 options.ondragleave(ev);
             }
         },
         ondropdeactivate: function (ev) {
-            _cleanPlaceholder(el);
+            // if (!connectWith) {
+            //     // Handling of placeholders is generalized for all sortables in
+            //     // connectWith mode, but we're on our own outside of that mode.
+            //     _cleanPlaceholder(el);
+            // }
 
             if (options && options.ondropdeactivate) {
                 options.ondropdeactivate(ev);
