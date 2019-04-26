@@ -18,11 +18,13 @@ var placeholderClass = 'o_sortable_placeholder';
 var _draggable = function (el, options) {
 
     var interactOptions = {
+
+        // On drag start, we prepare the element to be dragged around.
         onstart: function (ev) {
             var target = ev.target;
-
             target.classList.add('o_currently_dragged');
 
+            // Store current values of CSS properties that are going to change
             target.setAttribute('data-originalHeight', target.style.height);
             target.setAttribute('data-originalLeft', target.style.left);
             target.setAttribute('data-originalPosition', target.style.position);
@@ -30,10 +32,15 @@ var _draggable = function (el, options) {
             target.setAttribute('data-originalWidth', target.style.width);
             target.setAttribute('data-originalZIndex', target.style.zIndex);
 
+            // Freeze the dimensions of the element as it appears now, since
+            // it may have a size that is dependent on his parent, in which
+            // case absolute positioning would result in different dimensions.
             var computedStyle = window.getComputedStyle(target);
             target.style.height = computedStyle.getPropertyValue('height');
             target.style.width = computedStyle.getPropertyValue('width');
 
+            // Absolute positioning in itself
+            // We use the same zIndex as jQuery-ui sortable
             var xPosition = target.offsetLeft;
             var yPosition = target.offsetTop;
             target.style.position = 'absolute';
@@ -41,6 +48,7 @@ var _draggable = function (el, options) {
             target.style.left = xPosition + 'px';
             target.style.top = yPosition + 'px';
 
+            // Store current left and top positions for later update
             target.setAttribute('data-x', xPosition);
             target.setAttribute('data-y', yPosition);
 
@@ -48,8 +56,13 @@ var _draggable = function (el, options) {
                 options.onstart(ev);
             }
         },
+
+        // On drag move, we update the element position with the move delta
         onmove: function (ev) {
             var target = ev.target;
+            // Unfortunately, target.style.left/top returns the values including
+            // units (e.g. "100px") which makes it complicated to use in
+            // computations. Hence our choice to store these properly.
             var xPosition = parseFloat(target.getAttribute('data-x')) + ev.dx;
             var yPosition = parseFloat(target.getAttribute('data-y')) + ev.dy;
             target.style.left = xPosition + 'px';
@@ -61,6 +74,8 @@ var _draggable = function (el, options) {
                 options.onmove(ev);
             }
         },
+
+        // On drag stop, we reset the CSS properties to their original value
         onend: function (ev) {
             var target = ev.target;
             target.style.height = target.getAttribute('data-originalHeight');
@@ -94,7 +109,17 @@ var _getPlaceholder = function (sortable) {
     return sortable.querySelector('.' + placeholderClass);
 };
 
-var _setPlaceholder = function (sortable, item, anchorNode, connectWith) {
+/**
+ * Set a placeholder for a given item before a given anchor in a given sortable.
+ * This function also removes previously existing placeholders if any.
+ *
+ * @param {DOMElement} sortable
+ * @param {DOMElement} item
+ * @param {DOMElement} anchor
+ * @param {string} connectWith
+ * @returns {DOMElement|null}
+ */
+var _setPlaceholder = function (sortable, item, anchor, connectWith) {
     var placeholder = _getPlaceholder(item);
     if (!placeholder) {
         var computedStyle = window.getComputedStyle(item);
@@ -114,12 +139,12 @@ var _setPlaceholder = function (sortable, item, anchorNode, connectWith) {
         _cleanPlaceholder(sortable);
     }
 
-    if (anchorNode && anchorNode.classList.contains(placeholderClass)) {
-        anchorNode = anchorNode.nextSibling;
+    if (anchor && anchor.classList.contains(placeholderClass)) {
+        anchor = anchor.nextSibling;
     }
 
-    var parent = anchorNode ? anchorNode.parentNode: sortable;
-    parent.insertBefore(placeholder, anchorNode);
+    var parent = anchor ? anchor.parentNode: sortable;
+    parent.insertBefore(placeholder, anchor);
 };
 
 /**
@@ -142,13 +167,13 @@ var _cleanPlaceholder = function (sortable) {
  * @param {DOMElement} el
  * @param {Object} [options]
  * @param {string} [options.itemsSelector] selector identifying acceptable items
- * @param {Function} [options.ondropactivate] function called when an accepted item starts dragging
- * @param {Function} [options.ondragenter] function called when a dragging accepted item enters el
- * @param {Function} [options.ondrop] function called when a dragging accepted item is dropped in
- * @param {Function} [options.ondragleave] function called when a dragging accepted item leaves el
- * @param {Function} [options.ondropdectivate] function called when an accepted item stops dragging
- * @param {string} [options.containment] selector identifying the draggable items restriction area
- * @param {string} [options.connectWith] selector identifying other sortables connected to this one
+ * @param {Function} [options.ondropactivate] called on drag start of valid item
+ * @param {Function} [options.ondragenter] called on drag enter of valid item
+ * @param {Function} [options.ondrop] called on drop of valid item
+ * @param {Function} [options.ondragleave] called on drag leave of valid item
+ * @param {Function} [options.ondropdectivate] called on drag stop of valid item
+ * @param {string} [options.containment] selector for restricted items drag area
+ * @param {string} [options.connectWith] selector for other connected sortables
  * @returns {Interactable}
  */
 var _sortable = function (el, options) {
@@ -156,22 +181,23 @@ var _sortable = function (el, options) {
     var itemsSelector = options && options.items;
 
     // Checks whether an element is a valid item for this sortable. It needs to
-    // either be a children of this sortable or a children of a connected one.
+    // either be a children of this sortable (already computed by the check
+    // argument of interactjs checker function) or, if we are in connectWith
+    // mode, be a children of a connected sortable.
     // Note: We only need a few of the arguments of interactjs checker function.
-    var _connectedChecker = function (dragEvent, event, dropped, dropzone, dropElement, draggable, draggableElement) {
-        var isFromThisSortable = el.contains(draggableElement);
-        var isFromConnectedSortable = connectWith && draggableElement.closest(connectWith);
-        return dropped && (isFromThisSortable || isFromConnectedSortable);
+    var _connectedChecker = function (dragEv, ev, check, dropzone, dropEl, draggable, draggableEl) {
+        return check && (!connectWith || draggableEl.closest(connectWith));
     }
 
     // When dragging starts, we need to create a first placeholder and make all
     // items in this sortable droppable so they can react to the dragged item.
     var ondropactivate = function (ev) {
         // Create the very first placeholder in place of the draggable item
-        var draggable = ev.relatedTarget;
         var droppable = ev.target;
+        var draggable = ev.relatedTarget;
+        var anchorNode = draggable.nextSibling;
         if (droppable.contains(draggable)) {
-            _setPlaceholder(droppable, draggable, draggable.nextSibling, connectWith);
+            _setPlaceholder(droppable, draggable, anchorNode, connectWith);
         }
 
         // Set droppable on all items in this sortable
@@ -183,8 +209,13 @@ var _sortable = function (el, options) {
                         accept: itemsSelector,
                         checker: _connectedChecker,
                         ondragenter: function (ev) {
-                            var beforeTarget = ev.dragEvent.dy > 0 ? ev.target.nextSibling : ev.target;
-                            _setPlaceholder(el, ev.target, beforeTarget, connectWith);
+                            var anchor = ev.target;
+                            if (ev.dragEvent.dy > 0) {
+                                // If dragging downward, then anchor after this
+                                // item, so before the next item in the list.
+                                anchor = anchor.nextSibling;
+                            }
+                            _setPlaceholder(el, ev.target, anchor, connectWith);
                         },
                     });
                 }
@@ -259,7 +290,7 @@ var _sortable = function (el, options) {
             item.classList.add('o_sortable_handle');
             var itemsOptions = {};
             if (options && options.containment) {
-                // Restrict the items to stay in the area of the sortable
+                // Restrict the items to stay in the designated area
                 itemsOptions.restrict = {
                     restriction: options.containment,
                     elementRect: { left: 0, right: 1, top: 0, bottom: 1 }
