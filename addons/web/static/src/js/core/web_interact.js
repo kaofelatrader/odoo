@@ -125,9 +125,10 @@ var _setPlaceholder = function (sortable, item, anchor, connectWith) {
         var computedStyle = window.getComputedStyle(item);
         placeholder = document.createElement(item.tagName);
         placeholder.classList.add(placeholderClass);
-        placeholder.style.width = computedStyle.width;
         placeholder.style.height = computedStyle.height;
-        placeholder.style.backgroundColor = 'lightgray';
+        // Uncomment these lines to display the placeholder for debug purposes
+        // placeholder.style.width = computedStyle.width;
+        // placeholder.style.backgroundColor = 'lightgray';
     }
 
     if (connectWith) {
