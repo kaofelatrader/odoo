@@ -18,7 +18,6 @@ var placeholderClass = 'o_sortable_placeholder';
 var _draggable = function (el, options) {
 
     var interactOptions = {
-
         // On drag start, we prepare the element to be dragged around.
         onstart: function (ev) {
             var target = ev.target;
@@ -78,13 +77,17 @@ var _draggable = function (el, options) {
         // On drag stop, we reset the CSS properties to their original value
         onend: function (ev) {
             var target = ev.target;
-            target.style.height = target.dataset.draggableOriginalHeight;
-            target.style.left = target.dataset.draggableOriginalLeft;
-            target.style.position = target.dataset.draggableOriginalPosition;
-            target.style.top = target.dataset.draggableOriginalTop;
-            target.style.width = target.dataset.draggableOriginalWidth;
-            target.style.zIndex = target.dataset.draggableOriginalZIndex;
-            target.classList.remove('o_currently_dragged');
+            if (options && options.revert && false) {
+                // TODO: revert option animation
+            } else {
+                target.style.height = target.dataset.draggableOriginalHeight;
+                target.style.left = target.dataset.draggableOriginalLeft;
+                target.style.position = target.dataset.draggableOriginalPosition;
+                target.style.top = target.dataset.draggableOriginalTop;
+                target.style.width = target.dataset.draggableOriginalWidth;
+                target.style.zIndex = target.dataset.draggableOriginalZIndex;
+                target.classList.remove('o_currently_dragged');
+            }
 
             if (options && options.onend) {
                 options.onend(ev);
@@ -313,15 +316,17 @@ var _sortable = function (el, options) {
         }
         if (item && !item.classList.contains('o_sortable_handle')) {
             item.classList.add('o_sortable_handle');
-            var itemsOptions = {};
+            var itemsDraggableOptions = {
+                revert: options && options.revert,
+            };
             if (options && options.containment) {
                 // Restrict the items to stay in the designated area
-                itemsOptions.restrict = {
+                itemsDraggableOptions.restrict = {
                     restriction: options.containment,
                     elementRect: { left: 0, right: 1, top: 0, bottom: 1 }
                 };
             }
-            _draggable(item, itemsOptions);
+            _draggable(item, itemsDraggableOptions);
         }
     });
     return interactable;
