@@ -116,19 +116,25 @@ var _getPlaceholder = function (sortable) {
  * @param {DOMElement} sortable
  * @param {DOMElement} item
  * @param {DOMElement} anchor
+ * @param {string} axis
  * @param {string} connectWith
  * @returns {DOMElement|null}
  */
-var _setPlaceholder = function (sortable, item, anchor, connectWith) {
+var _setPlaceholder = function (sortable, item, anchor, axis, connectWith) {
     var placeholder = _getPlaceholder(item);
     if (!placeholder) {
         var computedStyle = window.getComputedStyle(item);
         placeholder = document.createElement(item.tagName);
         placeholder.classList.add(placeholderClass);
-        placeholder.style.height = computedStyle.height;
-        // Uncomment these lines to display the placeholder for debug purposes
-        // placeholder.style.width = computedStyle.width;
-        // placeholder.style.backgroundColor = 'lightgray';
+
+        if (axis === 'x') {
+            placeholder.style.width = computedStyle.width;
+        } else if (axis === 'y') {
+            placeholder.style.height = computedStyle.height;
+        } else {
+            // TODO: axis 'both' will be used for nested mode
+            placeholder.style.backgroundColor = 'lightgray';
+        }
     }
 
     if (connectWith) {
@@ -178,6 +184,8 @@ var _cleanPlaceholder = function (sortable) {
  * @returns {Interactable}
  */
 var _sortable = function (el, options) {
+    var axis = (options && options.axis) ? options.axis: 'y';
+    var handle = options && options.handle;
     var connectWith = options && options.connectWith;
     var itemsSelector = options && options.items;
 
@@ -194,33 +202,44 @@ var _sortable = function (el, options) {
     // items in this sortable droppable so they can react to the dragged item.
     var ondropactivate = function (ev) {
         // Create the very first placeholder in place of the draggable item
-        var droppable = ev.target;
-        var draggable = ev.relatedTarget;
-        var anchorNode = draggable.nextSibling;
-        if (droppable.contains(draggable)) {
-            _setPlaceholder(droppable, draggable, anchorNode, connectWith);
+        var sortable = ev.target;
+        var item = ev.relatedTarget;
+        var anchor = item.nextSibling;
+        if (sortable.contains(item)) {
+            _setPlaceholder(sortable, item, anchor, axis, connectWith);
         }
 
         // Set droppable on all items in this sortable
         if (!el.dataset.sortableActivated) {
             el.dataset.sortableActivated = true;
-            el.querySelectorAll(itemsSelector).forEach(function (element) {
-                if (!element.classList.contains(placeholderClass)) {
-                    interact(element).dropzone({
-                        accept: itemsSelector,
-                        checker: _connectedChecker,
-                        ondragenter: function (ev) {
-                            var anchor = ev.target;
-                            if (ev.dragEvent.dy > 0) {
-                                // If dragging downward, then anchor after this
-                                // item, so before the next item in the list.
-                                anchor = anchor.nextSibling;
-                            }
-                            _setPlaceholder(el, ev.target, anchor, connectWith);
-                        },
-                    });
+            var items = el.querySelectorAll(itemsSelector);
+            if (items.length) {
+                var itemsDroppableOptions = {
+                    accept: itemsSelector,
+                    checker: _connectedChecker,
+                    ondragenter: function (ev) {
+                        var item = ev.target;
+                        var anchor = item;
+                        if (axis === 'y' && ev.dragEvent.dy > 0) {
+                            // If dragging downward in y axis mode, then anchor
+                            // after this item, so before the next item.
+                            anchor = anchor.nextSibling;
+                        } else if (axis === 'x' && ev.dragEvent.dx > 0) {
+                            // If dragging rightward in x axis mode, then anchor
+                            // after this item, so before the next item.
+                            anchor = anchor.nextSibling;
+                        } else {
+                            // TODO: axis 'both' will be used for nested mode
+                        }
+                        _setPlaceholder(el, item, anchor, axis, connectWith);
+                    },
                 }
-            })
+                items.forEach(function (element) {
+                    if (!element.classList.contains(placeholderClass)) {
+                        interact(element).dropzone(itemsDroppableOptions);
+                    }
+                })
+            }
         }
 
         if (options && options.ondropactivate) {
@@ -236,7 +255,7 @@ var _sortable = function (el, options) {
             // We need to check for existing placeholders as hovering the
             // placeholder itselfs is considered as hovering the sortable since
             // the placeholder is not considered as an item on its own.
-            _setPlaceholder(el, ev.relatedTarget, null, connectWith);
+            _setPlaceholder(el, ev.relatedTarget, null, axis, connectWith);
         }
 
         if (options && options.ondragenter) {
@@ -286,7 +305,12 @@ var _sortable = function (el, options) {
 
     // Set draggable on items on first pointerdown
     el.addEventListener('pointerdown', function (ev) {
-        var item = ev.target.closest(itemsSelector);
+        var item;
+        // Only allow to drag from the handle if it is defined
+        // Any part of any item is valid for dragging otherwise
+        if (!handle || ev.target.closest(handle)) {
+            item = ev.target.closest(itemsSelector);
+        }
         if (item && !item.classList.contains('o_sortable_handle')) {
             item.classList.add('o_sortable_handle');
             var itemsOptions = {};

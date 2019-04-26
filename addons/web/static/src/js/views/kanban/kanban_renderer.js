@@ -6,6 +6,7 @@ var ColumnQuickCreate = require('web.kanban_column_quick_create');
 var core = require('web.core');
 var KanbanColumn = require('web.KanbanColumn');
 var KanbanRecord = require('web.KanbanRecord');
+var web_interact = require('web.interact');
 var QWeb = require('web.QWeb');
 var session = require('web.session');
 var utils = require('web.utils');
@@ -336,10 +337,11 @@ var KanbanRenderer = BasicRenderer.extend({
         }
         if (this.groupedByM2O) {
             // Enable column sorting
-            this.$el.sortable({
+            web_interact.sortable(this.el, {
                 axis: 'x',
-                items: '> .o_kanban_group',
+                items: '.o_kanban_group',
                 handle: '.o_kanban_header_title',
+                containment: 'parent',
                 cursor: 'move',
                 revert: 150,
                 delay: 100,
