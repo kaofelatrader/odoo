@@ -72,9 +72,9 @@ var PluginsManager = Class.extend(mixins.EventDispatcherMixin).extend({
      * @param {string} value
      * @returns string
      */
-    getEditorValue: function () {
+    getEditorValue: function (value, options) {
         this._each('getEditorValue');
-        return this._plugins.Arch.getValue();
+        return this._plugins.Arch.getValue(options);
     },
     /**
      *

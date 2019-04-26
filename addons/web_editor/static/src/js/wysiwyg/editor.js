@@ -155,7 +155,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      *
      * @returns {String}
      */
-    getValue: function () {
+    getValue: function (options) {
         // var $editable = $(this.editable).clone();
         // $editable.find('.o_wysiwyg_to_remove').remove();
         // $editable.find('[contenteditable]').removeAttr('contenteditable');
@@ -168,7 +168,7 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
         // // $editable.find('a.o_image, span.fa, i.fa').html('');
         // $editable.find('[aria-describedby]').removeAttr('aria-describedby').removeAttr('data-original-title');
 
-        return this._pluginsManager.getEditorValue();
+        return this._pluginsManager.getEditorValue(null, options);
     },
     /**
      * Return true if the content has changed.
@@ -632,14 +632,13 @@ var Editor = Class.extend(mixins.EventDispatcherMixin).extend({
      * @return {any}
      */
     _onGetValue: function (ev) {
-        return ev.data.callback(this.getValue());
+        return ev.data.callback(this.getValue(ev.data.options || {}));
     },
     /**
      * @private
      * @param {jQueryEvent} ev
      */
     _onMouseDown: function (ev) {
-        var self = this;
         if (this._isEditorContent(ev.target)) {
             this._mouseEventFocus();
             this._onMouseDownTime = setTimeout(this._mouseEventFocus.bind(this));

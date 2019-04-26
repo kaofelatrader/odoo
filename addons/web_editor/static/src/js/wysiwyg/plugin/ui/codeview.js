@@ -22,6 +22,10 @@ var CodeViewPlugin = AbstractPlugin.extend({
      */
     init: function (parent, params) {
         this._super.apply(this, arguments);
+        this.getValueOptions = {
+            keepVirtual: true,
+            architecturalSpace: true,
+        };
         this.codeview = this._createCodable();
         params.insertAfterContainer(this.codeview);
     },
@@ -58,13 +62,14 @@ var CodeViewPlugin = AbstractPlugin.extend({
     // Public
     //--------------------------------------------------------------------------
 
-    active: function (value) {
+    active: function (value, options) {
         var self = this;
         if (!this._isActive()) {
             if (value) {
                 this._setCodeViewValue(value);
             } else {
                 this.trigger_up('get_value', {
+                    options: options,
                     callback: function (value) {
                         self._setCodeViewValue(value);
                     },
@@ -88,7 +93,7 @@ var CodeViewPlugin = AbstractPlugin.extend({
         if (this._isActive()) {
             this.deactivate();
         } else {
-            this.active()
+            this.active(null, this.getValueOptions);
         }
     },
 
