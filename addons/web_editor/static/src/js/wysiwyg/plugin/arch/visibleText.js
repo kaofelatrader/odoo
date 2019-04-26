@@ -46,9 +46,7 @@ return TextNode.extend({
                 var next = this.nextSibling();
                 if (!next && !this.isRightEdge(ancestor)) {
                     after = ' ';
-                } else if (next && next.isInline() && (!(next instanceof TextNode) || next.isVisibleText())) {
-                    after = ' ';
-                } else if (isRegularSpace) {
+                } else if (isRegularSpace && next && next.isInline() && (!(next instanceof TextNode) || next.isVisibleText())) {
                     after = ' ';
                 }
             }
