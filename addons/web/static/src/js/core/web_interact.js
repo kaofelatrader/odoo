@@ -5,12 +5,14 @@ var placeholderClass = 'o_sortable_placeholder';
 
 /**
  * Make an element draggable.
- * TODO: better doc
+ * For more details on the parameters, see the doc of interactjs.
  *
  * @param {DOMElement} el
  * @param {Object} [options]
- * @param {string} [options.onstart]
- *      Bla bla bla better doc
+ * @param {Function} [options.onstart] function called when dragging starts
+ * @param {Function} [options.onmove] function called when dragging moves
+ * @param {Function} [options.onend] function called when dragging ends
+ * @param {Object} [options.restrict] dragging area restriction data
  * @returns {Interactable}
  */
 var _draggable = function (el, options) {
@@ -82,8 +84,14 @@ var _draggable = function (el, options) {
     return interact(el).draggable(interactOptions);
 };
 
-var _getPlaceholder = function (el) {
-    return el.querySelector('.' + placeholderClass);
+/**
+ * Returns the placeholder from a given sortable or null if none can be found.
+ *
+ * @param {DOMElement} sortable
+ * @returns {DOMElement|null}
+ */
+var _getPlaceholder = function (sortable) {
+    return sortable.querySelector('.' + placeholderClass);
 };
 
 var _setPlaceholder = function (node, parent, before, connectWith) {
@@ -104,8 +112,13 @@ var _setPlaceholder = function (node, parent, before, connectWith) {
     parent.insertBefore(placeholder, before);
 };
 
-var _cleanPlaceholder = function (el) {
-    var placeholder = _getPlaceholder(el);
+/**
+ * Clean the placeholder from a given sortable.
+ *
+ * @param {DOMElement} sortable
+ */
+var _cleanPlaceholder = function (sortable) {
+    var placeholder = _getPlaceholder(sortable);
     if (placeholder) {
         placeholder.remove();
         placeholder = undefined;
@@ -132,8 +145,18 @@ var _cleanConnectedPlaceholders = function (originalSortable, connectWith) {
 
 /**
  * Make an element sortable.
- * TODO: better doc
+ * For more details on the parameters, see the doc of interactjs.
  *
+ * @param {DOMElement} el
+ * @param {Object} [options]
+ * @param {string} [options.itemsSelector] selector identifying acceptable items
+ * @param {Function} [options.ondropactivate] function called when an accepted item starts dragging
+ * @param {Function} [options.ondragenter] function called when a dragging accepted item enters el
+ * @param {Function} [options.ondrop] function called when a dragging accepted item is dropped in
+ * @param {Function} [options.ondragleave] function called when a dragging accepted item leaves el
+ * @param {Function} [options.ondropdectivate] function called when an accepted item stops dragging
+ * @param {string} [options.containment] selector identifying the draggable items restriction area
+ * @param {string} [options.connectWith] selector identifying other sortables connected to this one
  * @returns {Interactable}
  */
 var _sortable = function (el, options) {
