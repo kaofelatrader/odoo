@@ -25,12 +25,12 @@ var _draggable = function (el, options) {
             target.classList.add('o_currently_dragged');
 
             // Store current values of CSS properties that are going to change
-            target.setAttribute('data-originalHeight', target.style.height);
-            target.setAttribute('data-originalLeft', target.style.left);
-            target.setAttribute('data-originalPosition', target.style.position);
-            target.setAttribute('data-originalTop', target.style.top);
-            target.setAttribute('data-originalWidth', target.style.width);
-            target.setAttribute('data-originalZIndex', target.style.zIndex);
+            target.dataset.draggableOriginalHeight = target.style.height;
+            target.dataset.draggableOriginalLeft = target.style.left;
+            target.dataset.draggableOriginalPosition = target.style.position;
+            target.dataset.draggableOriginalTop = target.style.top;
+            target.dataset.draggableOriginalWidth = target.style.width;
+            target.dataset.draggableOriginalZIndex = target.style.zIndex;
 
             // Freeze the dimensions of the element as it appears now, since
             // it may have a size that is dependent on his parent, in which
@@ -49,8 +49,8 @@ var _draggable = function (el, options) {
             target.style.top = yPosition + 'px';
 
             // Store current left and top positions for later update
-            target.setAttribute('data-x', xPosition);
-            target.setAttribute('data-y', yPosition);
+            target.dataset.draggableX = xPosition;
+            target.dataset.draggableY = yPosition;
 
             if (options && options.onstart) {
                 options.onstart(ev);
@@ -63,12 +63,12 @@ var _draggable = function (el, options) {
             // Unfortunately, target.style.left/top returns the values including
             // units (e.g. "100px") which makes it complicated to use in
             // computations. Hence our choice to store these properly.
-            var xPosition = parseFloat(target.getAttribute('data-x')) + ev.dx;
-            var yPosition = parseFloat(target.getAttribute('data-y')) + ev.dy;
+            var xPosition = parseFloat(target.dataset.draggableX) + ev.dx;
+            var yPosition = parseFloat(target.dataset.draggableY) + ev.dy;
             target.style.left = xPosition + 'px';
             target.style.top = yPosition + 'px';
-            target.setAttribute('data-x', xPosition);
-            target.setAttribute('data-y', yPosition);
+            target.dataset.draggableX = xPosition;
+            target.dataset.draggableY = yPosition;
 
             if (options && options.onmove) {
                 options.onmove(ev);
@@ -78,12 +78,12 @@ var _draggable = function (el, options) {
         // On drag stop, we reset the CSS properties to their original value
         onend: function (ev) {
             var target = ev.target;
-            target.style.height = target.getAttribute('data-originalHeight');
-            target.style.left = target.getAttribute('data-originalLeft');
-            target.style.position = target.getAttribute('data-originalPosition');
-            target.style.top = target.getAttribute('data-originalTop');
-            target.style.width = target.getAttribute('data-originalWidth');
-            target.style.zIndex = target.getAttribute('data-originalZIndex');
+            target.style.height = target.dataset.draggableOriginalHeight;
+            target.style.left = target.dataset.draggableOriginalLeft;
+            target.style.position = target.dataset.draggableOriginalPosition;
+            target.style.top = target.dataset.draggableOriginalTop;
+            target.style.width = target.dataset.draggableOriginalWidth;
+            target.style.zIndex = target.dataset.draggableOriginalZIndex;
             target.classList.remove('o_currently_dragged');
 
             if (options && options.onend) {
@@ -201,8 +201,8 @@ var _sortable = function (el, options) {
         }
 
         // Set droppable on all items in this sortable
-        if (!el.getAttribute('data-sortable-activated')) {
-            el.setAttribute('data-sortable-activated', true);
+        if (!el.dataset.sortableActivated) {
+            el.dataset.sortableActivated = true;
             el.querySelectorAll(itemsSelector).forEach(function (element) {
                 if (!element.classList.contains(placeholderClass)) {
                     interact(element).dropzone({
