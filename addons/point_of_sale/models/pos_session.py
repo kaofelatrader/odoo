@@ -114,8 +114,10 @@ class PosSession(models.Model):
 
     @api.multi
     def _compute_order_count(self):
-        for pos in self:
-            pos.order_count = len(pos.order_ids)
+        orders_data = self.env['pos.order'].read_group([('session_id', 'in', self.ids)], ['session_id'], ['session_id'])
+        sessions_data = {order_data['session_id'][0]: order_data['session_id_count'] for order_data in orders_data}
+        for session in self:
+            session.order_count = sessions_data[session.id] if session.id in sessions_data else 0
 
     @api.multi
     def _compute_picking_count(self):
@@ -351,19 +353,14 @@ class PosSession(models.Model):
 
         return action
 
-    @api.multi
     def action_view_order(self):
-        action = {
-            'name': 'Orders',
+        return {
+            'name': _('Orders'),
             'res_model': 'pos.order',
             'view_mode': 'tree,form',
             'type': 'ir.actions.act_window',
             'domain': [('session_id', 'in', self.ids)],
         }
-        if len(self.order_ids) == 1:
-            action['res_id'] = self.order_ids[0].id
-            action['view_mode'] = 'form'
-        return action
 
     @api.model
     def _alert_old_session(self):
