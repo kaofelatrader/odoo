@@ -1,4 +1,19 @@
 // ------- Kanban View Layout -------
+.test_ok {
+    position: absolute !important;
+    top: 147px !important;
+    right: 15px !important;
+    z-index: 1000 !important;
+    background: #A61300;
+    overflow: auto;
+    // width: 48%;
+    // height: 100px;
+    .o_kanban_expand {
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+}
 .o_kanban_view {
     display: flex;
     align-content: stretch;

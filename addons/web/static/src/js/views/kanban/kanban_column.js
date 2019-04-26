@@ -26,6 +26,7 @@ var KanbanColumn = Widget.extend({
         'click .o_column_edit': '_onEditColumn',
         'click .o_column_delete': '_onDeleteColumn',
         'click .o_kanban_quick_add': '_onAddQuickCreate',
+        'click .o_kanban_overlay_form_view': '_onClickOpenFormOverlay',
         'click .o_kanban_load_more': '_onLoadMore',
         'click .o_kanban_toggle_fold': '_onToggleFold',
         'click .o_column_archive_records': '_onArchiveRecords',
@@ -216,6 +217,16 @@ var KanbanColumn = Widget.extend({
         });
         return this.quickCreateWidget.insertAfter(this.$header);
     },
+    OpenFormOverlay: function () {
+        // todo: in this function we have init a new widget and insert into content
+        // first open the column, and then open the overlay form view
+        // and if it is exist overlay then replaced form view record with new record id
+        // widget 'OpenFormOverlayView'
+        var context = this.data.getContext();
+        context['default_' + this.groupedBy] = viewUtils.getGroupValue(this.data, this.groupedBy);
+        var $div = $('<div class="test_ok">test</div>');
+        return $div.insertAfter($('.o_action_manager .o_content'));
+    },
     /**
      * Closes the quick create widget if it isn't dirty.
      */
@@ -288,6 +299,12 @@ var KanbanColumn = Widget.extend({
      */
     _onAddQuickCreate: function () {
         this.addQuickCreate();
+    },
+    /**
+     * @private
+     */
+    _onClickOpenFormOverlay: function (ev) {
+        this.OpenFormOverlay();
     },
     /**
      * @private
