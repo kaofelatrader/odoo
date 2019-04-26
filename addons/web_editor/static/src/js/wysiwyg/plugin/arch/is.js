@@ -117,6 +117,9 @@ ArchNode.include({
     isBlock: function () {
         return !this.isInline();
     },
+    isBlockFormattingContext: function () {
+        return !this.isInlineFormattingContext();
+    },
     /**
      * Return true if the given node is a line break element (BR).
      *
@@ -225,6 +228,14 @@ ArchNode.include({
     isImg: function () {
         return this.nodeName === 'img';
     },
+    isInlineFormattingContext: function () {
+        if (!this.parent) {
+            return false;
+        }
+        return !this.childNodes || this.childNodes.every(function (child) {
+            return child.isInline();
+        });
+    },
     /**
      * Returns true if the node is within a table.
      *
@@ -289,7 +300,18 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isLeftEdgeOf: function (ancestor) {
+        var node = this;
         while (node && node !== ancestor) {
+            if (!node.isLeftEdge()) {
+                return false;
+            }
+            node = node.parentNode;
+        }
+        return true;
+    },
+    isLeftEdgeOfBlock: function () {
+        var node = this;
+        while (node && !node.isBlock()) {
             if (!node.isLeftEdge()) {
                 return false;
             }
@@ -354,6 +376,16 @@ ArchNode.include({
     isRightEdgeOf: function (ancestor) {
         var node = this;
         while (node && node !== ancestor) {
+            if (!node.isRightEdge()) {
+                return false;
+            }
+            node = node.parentNode;
+        }
+        return true;
+    },
+    isRightEdgeOfBlock: function () {
+        var node = this;
+        while (node && !node.isBlock()) {
             if (!node.isRightEdge()) {
                 return false;
             }

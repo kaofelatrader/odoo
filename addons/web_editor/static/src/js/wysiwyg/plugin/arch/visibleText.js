@@ -20,42 +20,11 @@ return TextNode.extend({
             return this._super();
         }
 
-        var before = this.nodeValue.match(regExpSpaceBegin)[0];
-        var after = before.length < this.nodeValue.length ? this.nodeValue.match(regExpSpaceEnd)[0] : '';
-        before = before === ' ' ? '' : before;
-        after = after === ' ' ? '' : after;
-        var text = this.nodeValue.slice(before.length, this.nodeValue.length - after.length);
-
-        text = text.replace(regExpSpace, ' ');
-
-        if (before.length || text.length) {
-            var ancestor = this.ancestor(this.isBlock);
-
-            if (before.length) {
-                before = '';
-                var prev = this.previousSibling();
-                if (!prev && !this.isLeftEdge(ancestor)) {
-                    before = ' ';
-                } else if (prev && prev.isInline() && (!(prev instanceof TextNode) || prev.isVisibleText())) {
-                    before = ' ';
-                }
-            }
-            if (after.length || !text.length) {
-                var isRegularSpace = /^ +$/.test(after);
-                after = '';
-                var next = this.nextSibling();
-                if (!next && !this.isRightEdge(ancestor)) {
-                    after = ' ';
-                } else if (isRegularSpace && next && next.isInline() && (!(next instanceof TextNode) || next.isVisibleText())) {
-                    after = ' ';
-                }
-            }
-
-            if (!text.length) {
-                text = before.length && after.length ? ' ' : '';
-            } else {
-                text = before + text + after;
-            }
+        var text;
+        if (this.isInlineFormattingContext()) {
+            text = this._removeFormatSpaceInlineContext();
+        } else {
+            text = this._removeFormatSpaceBlockContext();
         }
 
         if (text.length) {
@@ -66,6 +35,31 @@ return TextNode.extend({
         } else {
             this.remove();
         }
+    },
+    _removeFormatSpaceInlineContext: function () {
+        var text = this.nodeValue;
+        var spaceAfterNewline = /(\n)([ \t])*/g;
+        var tabs = /\t/g;
+        var newlines = /\n/g;
+        var consecutiveSpace = /  */g;
+        text = text.replace(spaceAfterNewline, '$1')
+            .replace(tabs, ' ')
+            .replace(newlines, ' ')
+            .replace(consecutiveSpace, ' ');
+        if (this.parent.isLeftEdgeOfBlock()) {
+            var startSpace = /^ */g;
+            text = text.replace(startSpace, '');
+        }
+        if (this.parent.isRightEdgeOfBlock()) {
+            var endSpace = / *$/g;
+            text = text.replace(endSpace, '');
+        }
+        return text;
+    },
+    _removeFormatSpaceBlockContext: function () {
+        // todo
+        // source: https://medium.com/@patrickbrosset/when-does-white-space-matter-in-html-b90e8a7cdd33
+        return this._removeFormatSpaceInlineContext();
     },
 });
 
