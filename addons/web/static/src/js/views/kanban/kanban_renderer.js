@@ -344,9 +344,7 @@ var KanbanRenderer = BasicRenderer.extend({
                 containment: 'parent',
                 cursor: 'move',
                 revert: 150,
-                delay: 100,
                 tolerance: 'pointer',
-                forcePlaceholderSize: true,
                 ondrop: function () {
                     var ids = [];
                     self.$('.o_kanban_group').each(function (index, u) {
@@ -403,12 +401,9 @@ var KanbanRenderer = BasicRenderer.extend({
                 axis: 'both',
                 cursor: 'move',
                 revert: 0,
-                delay: 0,
                 tolerance: 'pointer',
-                forcePlaceholderSize: true,
                 ondrop: function (ev) {
                     var draggable = $(ev.relatedTarget);
-                    console.log(draggable.index());
                     self._moveRecord(draggable.data('record').db_id, draggable.index());
                 },
             });
