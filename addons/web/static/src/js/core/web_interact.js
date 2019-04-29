@@ -243,9 +243,6 @@ var _sortable = function (el, options) {
             tolerated = dropEl.offsetLeft < ev.clientX < dropElRight &&
                 dropEl.offsetTop < ev.clientY < dropElBottom;
         }
-        if (dropEl.classList.contains('o_column_folded')) {
-            console.log(tolerated);
-        }
         var connectValid = !connectWith || dragEl.closest(connectWith);
         return drop && tolerated && connectValid;
     }
