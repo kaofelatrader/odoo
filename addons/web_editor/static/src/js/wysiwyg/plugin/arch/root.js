@@ -62,11 +62,18 @@ var RootNode = ArchNode.extend({
      */
     toString: function (options) {
         var string = '';
-        var i = 0;
-        while (i < this.childNodes.length) {
-            string += this.childNodes[i].toString(options);
-            i++;
-        };
+        var visibleChildren = this.visibleChildren();
+        if (visibleChildren) {
+            if (options && options.architecturalSpace && !this._hasArchitecturalSpace) {
+                visibleChildren.forEach(function (child) {
+                    child._addArchitecturalSpaceNodes();
+                });
+                options.noInsert = true;
+            }
+            this.childNodes.forEach(function (child) {
+                string += child.toString(options);
+            });
+        }
         return string;
     },
 });

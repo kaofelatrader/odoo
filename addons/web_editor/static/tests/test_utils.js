@@ -668,7 +668,7 @@ var testKeyboard = function (wysiwyg, assert, keyboardTests, addTests) {
                 var start = _select(test.test.start);
                 var range = Wysiwyg.getRange($editable[0]);
                 if ((range.sc !== range.ec || range.so !== range.eo) && !test.test.end) {
-                    assert.ok(false, test.name + ": the carret is not colapsed and the 'end' selector in test is missing");
+                    assert.ok(false, test.name + ": the carret is not collapsed and the 'end' selector in test is missing");
                     return;
                 }
                 var end = test.test.end ? _select(test.test.end) : start;

@@ -430,6 +430,15 @@ return Class.extend({
     // Public: Browse
     //--------------------------------------------------------------------------
 
+    childNodesIDs: function () {
+        var ids = [];
+        if (this.childNodes) {
+            this.childNodes.forEach(function (node) {
+                ids.push(node.id);
+            });
+        }
+        return ids;
+    },
     firstChild: function () {
         return this.childNodes && this.childNodes.length ? this.childNodes[0] : null;
     },
@@ -446,6 +455,21 @@ return Class.extend({
     previousSibling: function (fn) {
         var prev = this.parent.childNodes[this.index() - 1];
         return prev && prev._previousSibling(fn);
+    },
+    /**
+     * Return a list of child nodes that are not architectural space.
+     */
+    visibleChildren: function () {
+        if (!this.childNodes) {
+            return;
+        }
+        var visibleChildren = [];
+        this.childNodes.forEach(function (child) {
+            if (!child.isArchitecturalSpace()) {
+                visibleChildren.push(child);
+            }
+        });
+        return visibleChildren;
     },
     ancestor: function (fn) {
         var parent = this;

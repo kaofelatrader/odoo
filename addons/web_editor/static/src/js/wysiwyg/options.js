@@ -36,7 +36,7 @@ return {
         Keyboard: true,
         Jinja: false,
         Iframe: false,
-        // TestKeyboard: true,
+        TestKeyboard: true,
     },
     // toolbar
     toolbar: [

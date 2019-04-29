@@ -9,53 +9,40 @@ function False () { return false; };
 
 ArchNode.include({
     toJSON: function (options) {
-        if (options && options.architecturalSpace && !this._hasArchitecturalSpace) {
+        if (options && options.architecturalSpace && !this._hasArchitecturalSpace && !options.noInsert) {
             this._addArchitecturalSpaceNodes();
         }
         return this._super.apply(this, arguments);
     },
     toString: function (options) {
-        if (options && options.architecturalSpace && !this._hasArchitecturalSpace) {
+        if (options && options.architecturalSpace && !this._hasArchitecturalSpace && !options.noInsert) {
             this._addArchitecturalSpaceNodes();
         }
         return this._super.apply(this, arguments);
     },
+    /**
+     * @see https://google.github.io/styleguide/htmlcssguide.html#General_Formatting
+     */
     _addArchitecturalSpaceNode: function () {
-        if (this.__removed || !this.parent || this.parent.ancestor(this.isPre)) {
+        if (this.__removed || !this.parent || this.ancestor(this.isPre) || this._hasArchitecturalSpace) {
             return;
         }
 
-        if (!this.isText() && !this.isVoid() && !this.isPre()) {
-            var block = this.isBlock() && !this.isVoid() && this.childNodes && !!this.childNodes.length;
-            if (!block && this.childNodes) {
-                this.childNodes.forEach(function (child) {
-                    block = block || child.isBlock() && !child.isVoid();
-                });
+        if (this.isBlock() && (this.parent.isBlock() || this.parent.isRoot() && this.previousSibling())) {
+            this.before(new ArchitecturalSpace(this.params));
+            if (!this.nextSibling()) {
+                this.after(new ArchitecturalSpace(this.params));
             }
-            if (block) {
-                this.prepend(new ArchitecturalSpace(this.params), this);
-                this._hasArchitecturalSpace = true;
-            }
-        }
-
-        var next = this.nextSibling();
-        if (!this.parent.parent && !next) { // don't add space on first level
-            return;
-        }
-
-        if (this.isBlock() && !this.isVoid() || this.parent.isBlock() || (next && next.isBlock() && !next.isVoid())) {
-            this.parent.insertAfter(new ArchitecturalSpace(this.params), this);
             this._hasArchitecturalSpace = true;
         }
     },
     _addArchitecturalSpaceNodes: function () {
         this._addArchitecturalSpaceNode();
-        if (this.childNodes) {
-            var i = 0;
-            while (i < this.childNodes.length) {
-                this.childNodes[i]._addArchitecturalSpaceNodes();
-                i++;
-            };
+        var visibleChildren = this.visibleChildren();
+        if (visibleChildren) {
+            visibleChildren.forEach(function (child) {
+                child._addArchitecturalSpaceNodes();
+            });
         }
     },
 });

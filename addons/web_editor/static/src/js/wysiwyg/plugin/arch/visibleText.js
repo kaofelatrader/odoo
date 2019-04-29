@@ -4,9 +4,6 @@ odoo.define('wysiwyg.plugin.arch.visibleText', function (require) {
 var TextNode = require('wysiwyg.plugin.arch.text');
 function True () { return true; };
 function False () { return false; };
-var regExpSpaceBegin = /^([ \n\r\t\uFEFF]*)/;
-var regExpSpaceEnd = /([ \n\r\t\uFEFF]*)$/;
-var regExpSpace = /[ \t\r\n\uFEFF]+/g;
 
 
 return TextNode.extend({
@@ -36,30 +33,46 @@ return TextNode.extend({
             this.remove();
         }
     },
-    _removeFormatSpaceInlineContext: function () {
+    /**
+     * Return a string with the value of a text node stripped of its format space,
+     * applying the W3 rules for white space processing in an inline context
+     *
+     * @see https://www.w3.org/TR/css-text-3/#white-space-processing
+     * @param {Boolean} behavesLikeBlock true if the node behaves like a block (like in a block context)
+     * @returns {String}
+     */
+    _removeFormatSpaceInlineContext: function (behavesLikeBlock) {
         var text = this.nodeValue;
+        var spaceBeforeNewline = /([ \t])*(\n)/g;
         var spaceAfterNewline = /(\n)([ \t])*/g;
         var tabs = /\t/g;
         var newlines = /\n/g;
         var consecutiveSpace = /  */g;
-        text = text.replace(spaceAfterNewline, '$1')
+        text = text.replace(spaceBeforeNewline, '$2')
+            .replace(spaceAfterNewline, '$1')
             .replace(tabs, ' ')
             .replace(newlines, ' ')
             .replace(consecutiveSpace, ' ');
-        if (this.parent.isLeftEdgeOfBlock()) {
+        if (behavesLikeBlock || this.isLeftEdgeOfBlock()) {
             var startSpace = /^ */g;
             text = text.replace(startSpace, '');
         }
-        if (this.parent.isRightEdgeOfBlock()) {
+        if (behavesLikeBlock || this.isRightEdgeOfBlock()) {
             var endSpace = / *$/g;
             text = text.replace(endSpace, '');
         }
         return text;
     },
+    /**
+     * Return a string with the value of a text node stripped of its format space,
+     * applying the W3 rules for white space processing in a block context (every
+     * unit of content in a block context behaves like a block)
+     *
+     * @see https://www.w3.org/TR/css-text-3/#white-space-processing
+     * @returns {String}
+     */
     _removeFormatSpaceBlockContext: function () {
-        // todo
-        // source: https://medium.com/@patrickbrosset/when-does-white-space-matter-in-html-b90e8a7cdd33
-        return this._removeFormatSpaceInlineContext();
+        return this._removeFormatSpaceInlineContext(true);
     },
 });
 

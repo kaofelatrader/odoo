@@ -51,6 +51,104 @@ ArchNode.include({
         'u',
         'var',
     ],
+    /**
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Inline_elements
+     */
+    inlineTags: [
+        'a',
+        'abbr',
+        'acronym',
+        'audio',
+        'b',
+        'bdi',
+        'bdo',
+        'big',
+        'br',
+        'button',
+        'canvas',
+        'cite',
+        'code',
+        'data',
+        'datalist',
+        'del',
+        'dfn',
+        'em',
+        'embed',
+        'i',
+        'iframe',
+        'img',
+        'input',
+        'ins',
+        'kbd',
+        'label',
+        'map',
+        'mark',
+        'meter',
+        'noscript',
+        'object',
+        'output',
+        'picture',
+        'progress',
+        'q',
+        'ruby',
+        's',
+        'samp',
+        'script',
+        'select',
+        'slot',
+        'small',
+        'span',
+        'strong',
+        'sub',
+        'sup',
+        'svg',
+        'template',
+        'textarea',
+        'time',
+        'u',
+        'tt',
+        'var',
+        'video',
+        'wbr',
+    ],
+    /**
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements
+     */
+    blockTags: [
+        'address',
+        'article',
+        'aside',
+        'blockquote',
+        'details',
+        'dialog',
+        'dd',
+        'div',
+        'dl',
+        'dt',
+        'fieldset',
+        'figcaption',
+        'figure',
+        'footer',
+        'form',
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'header',
+        'hgroup',
+        'hr',
+        'li',
+        'main',
+        'nav',
+        'ol',
+        'p',
+        'pre',
+        'section',
+        'table',
+        'ul',
+    ],
 
     containsOnlyBlank: function () {
         return this.childNodes.every(function (child) {
@@ -232,8 +330,8 @@ ArchNode.include({
         if (!this.parent) {
             return false;
         }
-        return !this.childNodes || this.childNodes.every(function (child) {
-            return child.isInline();
+        return !this.parent.childNodes || this.parent.childNodes.every(function (child) {
+            return child.isInline() || child.isVoid();
         });
     },
     /**
@@ -261,7 +359,7 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isInline: function () {
-        return this.params.formatTags.indexOf(this.nodeName) !== -1;
+        return this.inlineTags.indexOf(this.nodeName) !== -1;
          // &&
          //    !this.isCell() && 
          //    !this.isEditable() &&

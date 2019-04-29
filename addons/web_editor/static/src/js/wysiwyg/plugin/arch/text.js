@@ -34,8 +34,11 @@ return ArchNode.extend({
             return;
         }
 
-        if (archNode.isText() && archNode.isVisibleText() && !archNode.isVirtual()) {
-            this.nodeValue = this.nodeValue.slice(0, offset) + archNode.nodeValue + this.nodeValue.slice(offset);
+        if (archNode.isText() && archNode.isVisibleText()) {
+            // adjacent nbsp's are replaced with regular spaces on insert
+            this.nodeValue = this.nodeValue.slice(0, offset).replace(/\u00A0$/, ' ') +
+                archNode.nodeValue +
+                this.nodeValue.slice(offset).replace(/^\u00A0/, ' ');
             this.params.change(this, offset + archNode.nodeValue.length);
             return;
         }
@@ -114,6 +117,7 @@ return ArchNode.extend({
             this.before(archNode);
             return this;
         }
+        text = text.replace(/^ | $/g, '\u00A0');
 
         if (text.length) {
             archNode = new this.constructor(this.params, text);

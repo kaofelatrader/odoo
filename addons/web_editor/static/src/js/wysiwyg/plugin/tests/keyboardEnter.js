@@ -616,28 +616,28 @@ var TestKeyboardEnter = AbstractPlugin.extend({
         },
         {
             name: "in empty-p (p before and after): ENTER -> 'a'",
-            content: "<p>dom </p><p><br/></p><p>to edit</p>",
+            content: "<p>dom\u00A0</p><p><br/></p><p>to edit</p>",
             steps: [{
                 start: "p:eq(1):contents()[0]->0",
                 key: 'ENTER',
             }, {
                 key: 'a',
             }],
-            test: "<p>dom </p><p><br/></p><p>a◆</p><p>to edit</p>",
+            test: "<p>dom&nbsp;</p><p><br/></p><p>a◆</p><p>to edit</p>",
         },
         {
             name: "in p: SHIFT+ENTER at end",
-            content: "<p>dom </p><p>to edit</p>",
+            content: "<p>dom\u00A0</p><p>to edit</p>",
             steps: [{
                 start: "p:contents()[0]->4",
                 key: 'ENTER',
                 shiftKey: true,
             }],
-            test: "<p>dom <br/>◆</p><p>to edit</p>",
+            test: "<p>dom&nbsp;<br/>◆</p><p>to edit</p>",
         },
         {
             name: "in p: SHIFT+ENTER at end -> '寺'",
-            content: "<p>dom </p><p>to edit</p>",
+            content: "<p>dom\u00A0</p><p>to edit</p>",
             steps: [{
                 start: "p:contents()[0]->4",
                 key: 'ENTER',
@@ -645,7 +645,7 @@ var TestKeyboardEnter = AbstractPlugin.extend({
             }, {
                 keyCode: 23546, /*temple in chinese*/
             }],
-            test: "<p>dom <br/>寺◆</p><p>to edit</p>",
+            test: "<p>dom&nbsp;<br/>寺◆</p><p>to edit</p>",
         },
         {
             name: "in empty-p (div > a after): 3x SHIFT+ENTER -> 'a'",

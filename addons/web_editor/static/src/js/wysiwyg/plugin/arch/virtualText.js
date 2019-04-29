@@ -50,6 +50,10 @@ return TextNode.extend({
     /**
      * @override
      */
+    isVisibleText: False,
+    /**
+     * @override
+     */
     isVirtual: True,
     /**
      * @override

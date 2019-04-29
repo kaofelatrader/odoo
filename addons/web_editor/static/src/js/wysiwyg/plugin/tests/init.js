@@ -5,8 +5,12 @@ var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
 var customNodes = require('wysiwyg.plugin.arch.customNodes');
 
+function True () {
+    return true;
+}
+
 customNodes.TEST = customNodes['TEXT-VIRTUAL'].extend({
-    rangeColaspsed: '\u25C6',
+    rangeCollapsed: '\u25C6',
     rangeStart: '\u25B6',
     rangeEnd: '\u25C0',
 
@@ -15,6 +19,7 @@ customNodes.TEST = customNodes['TEXT-VIRTUAL'].extend({
         this.nodeName = 'TEST';
         this.nodeValue = nodeValue;
     },
+    isVisibleText: True,
     toString: function (options) {
         return this.nodeValue;
     },
@@ -169,7 +174,7 @@ var TestPlugin = AbstractPlugin.extend({
         var archNode;
         var proto = customNodes.TEST.prototype;
         if (range.isCollapsed()) {
-            archNode = new customNodes.TEST(params, proto.rangeColaspsed);
+            archNode = new customNodes.TEST(params, proto.rangeCollapsed);
             this.dependencies.Arch.insert(archNode);
         } else {
             archNode = new customNodes.TEST(params, proto.rangeEnd);
@@ -246,7 +251,7 @@ var TestPlugin = AbstractPlugin.extend({
     },
     _isTestingVirtualNode: function (json) {
         var proto = customNodes.TEST.prototype;
-        return  proto.rangeColaspsed === json.nodeValue ||
+        return  proto.rangeCollapsed === json.nodeValue ||
                 proto.rangeStart === json.nodeValue ||
                 proto.rangeEnd === json.nodeValue;
     },
