@@ -19,6 +19,8 @@
 
                 <t t-call-assets="web.assets_common" t-css="false"/>
                 <t t-call-assets="web.assets_frontend" t-css="false"/>
+
+                <t t-call="web.compiled_assets_tests"/>
             </t>
             <t t-set="head" t-value="head_website + (head or '')"/>
 

@@ -356,6 +356,14 @@
         <script type="text/javascript" src="/web/static/src/js/public/public_widget.js"/>
     </template>
 
+    <!-- Do not direcly call this template, call 'compiled_assets_tests' instead -->
+    <template id="assets_tests" name="Tests Assets">
+    </template>
+
+    <template id="compiled_assets_tests" name="Tests Assets Bundle">
+        <t t-call-assets="web.assets_tests" t-if="request.session.debug == 'tests'"/>
+    </template>
+
     <template id="web.layout" name="Web layout">&lt;!DOCTYPE html&gt;
         <html t-att="html_data or {}">
             <head>
@@ -388,6 +396,7 @@
                 <t t-call-assets="web.assets_frontend" t-js="false"/>
                 <t t-call-assets="web.assets_common" t-css="false"/>
                 <t t-call-assets="web.assets_frontend" t-css="false"/>
+                <t t-call="web.compiled_assets_tests"/>
             </t>
             <t t-set="body_classname" t-value="'bg-100'"/>
 
@@ -750,6 +759,7 @@
                 <t t-call-assets="web.assets_backend" t-js="false"/>
                 <t t-call-assets="web.assets_common" t-css="false"/>
                 <t t-call-assets="web.assets_backend" t-css="false"/>
+                <t t-call="web.compiled_assets_tests"/>
 
                 <![CDATA[
                     <!--[if lt IE 10]>

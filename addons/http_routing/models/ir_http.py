@@ -350,6 +350,10 @@ class IrHttp(models.AbstractModel):
         except Exception as e:
             return cls._handle_exception(e)
 
+        # Store URL debug mode (might be empty) into session
+        if 'debug' in request.httprequest.args:
+            request.session.debug = request.httprequest.args.get('debug')
+
         # For website routes (only), add website params on `request`
         cook_lang = request.httprequest.cookies.get('frontend_lang')
         if request.is_frontend:

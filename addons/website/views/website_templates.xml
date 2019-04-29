@@ -246,6 +246,8 @@
             <t t-call-assets="web.assets_common" t-css="false"/>
             <t t-call-assets="web.assets_frontend" t-css="false"/>
             <t t-call-assets="website.assets_editor" t-css="false" groups="website.group_website_publisher"/>
+
+            <t t-call="web.compiled_assets_tests"/>
         </t>
     </xpath>
     <xpath expr="//header//a[hasclass('navbar-brand')]" position="replace">

@@ -37,6 +37,7 @@
         <t t-call-assets="web.assets_common" t-css="false"/>
         <t t-call-assets="point_of_sale.pos_assets_backend" t-css="false"/>
         <t t-call-assets="point_of_sale.assets"/>
+        <t t-call="web.compiled_assets_tests"/>
 
         <script type="text/javascript" id="loading-script" t-raw="init">
             odoo.define('web.web_client', function (require) {

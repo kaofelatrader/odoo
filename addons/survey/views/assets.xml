@@ -7,6 +7,7 @@
         <script type="text/javascript" src="/web/static/src/js/public/public_widget.js"/>
         <script type="text/javascript" src="/web/static/src/js/services/session.js"></script>
 
+        <t t-call="web.compiled_assets_tests"/>
 
         <t t-call="web._assets_helpers">
           <t t-call="web._assets_frontend_helpers"/>
