@@ -496,7 +496,8 @@ var StatementModel = BasicModel.extend({
         if (!line.reconciliation_proposition.every(function(prop) {return prop.to_check == focus.to_check;})) {
             new WarningDialog(this, {
                 title: _t("Incorrect Operation"),
-                error: {data: {message: _t("You cannot mix items with and without the 'To Check' checkbox ticked.")}}
+            }, {
+                message: _t("You cannot mix items with and without the 'To Check' checkbox ticked.")
             }).open();
             return Promise.resolve();
         }
@@ -626,7 +627,8 @@ var StatementModel = BasicModel.extend({
         if (!line.reconciliation_proposition.slice(0,-1).every(function(prop) {return prop.to_check == values.to_check;})) {
             new WarningDialog(this, {
                 title: _t("Incorrect Operation"),
-                error: {data: {message: _t("You cannot mix items with and without the 'To Check' checkbox ticked.")}}
+            }, {
+                message: _t("You cannot mix items with and without the 'To Check' checkbox ticked.")
             }).open();
             // FIXME: model should not be tied to the DOM !
             $('.create_to_check input').click();

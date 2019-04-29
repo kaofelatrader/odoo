@@ -359,8 +359,7 @@ var AbstractWebClient = Widget.extend(ServiceProviderMixin, KeyboardNavigationMi
         if (data.type === 'dialog') {
             new WarningDialog(this, {
                 title: data.title,
-                error: data,
-            }).open();
+            }, data).open();
         } else {
             this.call('notification', 'notify', e.data);
         }

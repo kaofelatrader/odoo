@@ -212,6 +212,11 @@ class Http(models.AbstractModel):
                 traceback=traceback.format_exc(),
             )
 
+            # only except_orm exceptions contain a message
+            if(isinstance(exception, odoo.exceptions.except_orm)):
+                values['error_message'] = exception.name
+                code = 400
+
             if isinstance(exception, werkzeug.exceptions.HTTPException):
                 if exception.code is None:
                     # Hand-crafted HTTPException likely coming from abort(),
@@ -231,9 +236,6 @@ class Http(models.AbstractModel):
 
                 if type(exception.error) == odoo.exceptions.AccessError:
                     code = 403
-
-            if isinstance(exception, (odoo.exceptions.UserError, odoo.exceptions.ValidationError)):
-                code = 400
 
             values.update(
                 status_message=werkzeug.http.HTTP_STATUS_CODES[code],

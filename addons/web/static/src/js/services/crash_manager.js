@@ -4,6 +4,7 @@ odoo.define('web.CrashManager', function (require) {
 var ajax = require('web.ajax');
 var core = require('web.core');
 var Dialog = require('web.Dialog');
+var Widget = require('web.Widget');
 
 var _t = core._t;
 var _lt = core._lt;
@@ -28,12 +29,16 @@ var CrashManagerDialog = Dialog.extend({
     ),
 
     /**
+     * @param {Object} error
+     * @param {string} error.message    the message in Warning/Error Dialog
+     * @param {string} error.traceback  the traceback in ErrorDialog
      *
      * @constructor
      */
-    init: function (parent, options) {
-        this._super.apply(this, arguments);
-        this.error = options.error;
+    init: function (parent, options, error) {
+        this._super.apply(this, [parent, options]);
+        this.message = error.message;
+        this.traceback = error.traceback;
     },
 });
 
@@ -212,23 +217,27 @@ var CrashManager = core.Class.extend({
             this.show_error(error);
         }
     },
-    show_warning: function(error) {
+    show_warning: function (error) {
         if (!this.active) {
             return;
         }
+        var message = error.data ? error.data.message : error.message;
         return new WarningDialog(this, {
-            title: _.str.capitalize(error.type || error.message) || _t("Odoo Warning"),
+            title: _.str.capitalize(error.type) || _t("Odoo Warning"),
             subtitle: error.data.title,
-            error: error,
+        }, {
+            message: message,
         }).open();
     },
-    show_error: function(error) {
+    show_error: function (error) {
         if (!this.active) {
             return;
         }
         var dialog = new ErrorDialog(this, {
-            title: _.str.capitalize(error.type || error.message) || _t("Odoo Error"),
-            error: error,
+            title: _.str.capitalize(error.type) || _t("Odoo Error"),
+        }, {
+            message: error.message,
+            traceback: error.data.debug,
         });
 
 
@@ -299,7 +308,7 @@ var ExceptionHandler = {
  * Handle redirection warnings, which behave more or less like a regular
  * warning, with an additional redirection button.
  */
-var RedirectWarningHandler = Dialog.extend(ExceptionHandler, {
+var RedirectWarningHandler = Widget.extend(ExceptionHandler, {
     init: function(parent, error) {
         this._super(parent);
         this.error = error;
@@ -307,7 +316,6 @@ var RedirectWarningHandler = Dialog.extend(ExceptionHandler, {
     display: function() {
         var self = this;
         var error = this.error;
-        error.data.message = error.data.arguments[0];
 
         new WarningDialog(this, {
             title: _.str.capitalize(error.type) || _t("Odoo Warning"),
@@ -317,8 +325,9 @@ var RedirectWarningHandler = Dialog.extend(ExceptionHandler, {
                     self.destroy();
                 }},
                 {text: _t("Cancel"), click: function() { self.destroy(); }, close: true}
-            ],
-            error: error,
+            ]
+        }, {
+            message: error.data.arguments[0],
         }).open();
     }
 });
@@ -328,7 +337,7 @@ core.crash_registry.add('odoo.exceptions.RedirectWarning', RedirectWarningHandle
 function session_expired(cm) {
     return {
         display: function () {
-            cm.show_warning({type: _t("Odoo Session Expired"), data: {message: _t("Your Odoo session expired. Please refresh the current web page.")}});
+            cm.show_warning({type: _t("Odoo Session Expired"), message: _t("Your Odoo session expired. Please refresh the current web page.")});
         }
     };
 }
@@ -340,7 +349,7 @@ core.crash_registry.add('504', function (cm) {
         display: function () {
             cm.show_warning({
                 type: _t("Request timeout"),
-                data: {message: _t("The operation was interrupted. This usually means that the current operation is taking too much time.")}});
+                message: _t("The operation was interrupted. This usually means that the current operation is taking too much time.")});
         }
     };
 });
