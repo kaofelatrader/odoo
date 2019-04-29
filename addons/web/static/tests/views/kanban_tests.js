@@ -408,7 +408,7 @@ QUnit.module('Views', {
             groupBy: ['product_id'],
         });
 
-        assert.hasClass(kanban.$('.o_kanban_view'),'ui-sortable',
+        assert.hasClass(kanban.$('.o_kanban_view'),'o_sortable',
             "columns are sortable when grouped by a m2o field");
         assert.hasClass(kanban.$buttons.find('.o-kanban-button-new'),'btn-primary',
             "'create' button should be btn-primary for grouped kanban with at least one column");
@@ -439,7 +439,7 @@ QUnit.module('Views', {
             groupBy: ['foo'],
         });
 
-        assert.doesNotHaveClass(kanban.$('.o_kanban_view'), 'ui-sortable',
+        assert.doesNotHaveClass(kanban.$('.o_kanban_view'), 'o_sortable',
             "columns aren't sortable when not grouped by a m2o field");
         assert.containsN(kanban, '.o_kanban_group', 3, "should have " + 3 + " columns");
         assert.strictEqual(kanban.$('.o_kanban_group:first() .o_column_title').text(), "yop",
@@ -3139,10 +3139,10 @@ QUnit.module('Views', {
             "the old widgets should have been correctly deleted");
 
         // test column drag and drop having an 'Undefined' column
-        await testUtils.dom.dragAndDrop(
-            kanban.$('.o_kanban_header_title:first'),
-            kanban.$('.o_kanban_header_title:last'),
-            {position: 'right'}
+        await testUtils.dom.pointerDragAndDrop(
+            kanban.$('.o_kanban_header_title:first')[0],
+            kanban.$('.o_kanban_header_title:last')[0],
+            { position: 'right' }
         );
         assert.strictEqual(resequencedIDs, undefined,
             "resequencing require at least 2 not Undefined columns");
@@ -3150,17 +3150,17 @@ QUnit.module('Views', {
         kanban.$('.o_column_quick_create input').val('once third column');
         await testUtils.dom.click(kanban.$('.o_column_quick_create button.o_kanban_add'));
         var newColumnID = kanban.$('.o_kanban_group:last').data('id');
-        await testUtils.dom.dragAndDrop(
-            kanban.$('.o_kanban_header_title:first'),
-            kanban.$('.o_kanban_header_title:last'),
-            {position: 'right'}
+        await testUtils.dom.pointerDragAndDrop(
+            kanban.$('.o_kanban_header_title:first')[0],
+            kanban.$('.o_kanban_header_title:last')[0],
+            { position: 'right' }
         );
         assert.deepEqual([3, newColumnID], resequencedIDs,
             "moving the Undefined column should not affect order of other columns")
-        await testUtils.dom.dragAndDrop(
-            kanban.$('.o_kanban_header_title:first'),
-            kanban.$('.o_kanban_header_title:nth(1)'),
-            {position: 'right'}
+        await testUtils.dom.pointerDragAndDrop(
+            kanban.$('.o_kanban_header_title:first')[0],
+            kanban.$('.o_kanban_header_title:nth(1)')[0],
+            { position: 'right' }
         );
         await nextTick(); // wait for resequence after drag and drop
         assert.deepEqual([newColumnID, 3], resequencedIDs,
@@ -4034,7 +4034,7 @@ QUnit.module('Views', {
             groupBy: ['product_id'],
         });
 
-        assert.hasClass(kanban.$('.o_kanban_view'),'ui-sortable',
+        assert.hasClass(kanban.$('.o_kanban_view'),'o_sortable',
             "columns should be sortable");
         assert.containsN(kanban, '.o_kanban_group', 2,
             "should have two columns");
@@ -5600,14 +5600,14 @@ QUnit.module('Views', {
             },
         });
 
-        assert.hasClass(kanban.$('.o_kanban_view'), 'ui-sortable');
+        assert.hasClass(kanban.$('.o_kanban_view'), 'o_sortable');
         assert.strictEqual(kanban.$('.o_kanban_record:not(.o_kanban_ghost)').text(),
             'yopblipgnapblip');
 
         var $record = kanban.$('.o_kanban_view .o_kanban_record:first');
         var $to = kanban.$('.o_kanban_view .o_kanban_record:nth-child(4)');
         envIDs = [2, 3, 4, 1]; // first record of moved after last one
-        await testUtils.dom.dragAndDrop($record, $to, {position: "bottom"});
+        await testUtils.dom.pointerDragAndDrop($record[0], $to[0], { position: "bottom" });
 
         assert.strictEqual(kanban.$('.o_kanban_record:not(.o_kanban_ghost)').text(),
             'blipgnapblipyop');
@@ -5636,13 +5636,13 @@ QUnit.module('Views', {
             },
         });
 
-        assert.doesNotHaveClass(kanban.$('.o_kanban_view'), 'ui-sortable');
+        assert.doesNotHaveClass(kanban.$('.o_kanban_view'), 'o_sortable');
         assert.strictEqual(kanban.$('.o_kanban_record:not(.o_kanban_ghost)').text(),
             'yopblipgnapblip');
 
         var $draggedRecord = kanban.$('.o_kanban_view .o_kanban_record:first');
         var $to = kanban.$('.o_kanban_view .o_kanban_record:nth-child(4)');
-        await testUtils.dom.dragAndDrop($draggedRecord, $to, {position: "bottom"});
+        await testUtils.dom.pointerDragAndDrop($draggedRecord[0], $to[0], {position: "bottom"});
 
         assert.strictEqual(kanban.$('.o_kanban_record:not(.o_kanban_ghost)').text(),
             'yopblipgnapblip');

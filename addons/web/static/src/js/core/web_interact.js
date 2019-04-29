@@ -24,7 +24,7 @@ var _storeDraggableProperties = function(el) {
  * @param {integer} [delay] in ms for the reset animation
 */
 var _resetDraggableProperties = function (el, delay) {
-    if (delay) {
+    if (delay && false) {
         // TODO: revert option animation
     } else {
         el.style.height = el.dataset.draggableOriginalHeight;
@@ -382,12 +382,44 @@ var _sortable = function (el, options) {
             _draggable(item, itemsDraggableOptions);
         }
     });
+
+    el.classList.add('o_sortable');
     return interactable;
 };
+
+/**
+ * Check whether an element has interactions bound to it
+ *
+ * @param {DOMElement} el
+ * @returns {boolean} true if any interact listeners bound to it false otherwise
+ */
+var _isSet = function (el) {
+    return interact.isSet(el);
+};
+
+/**
+ * Recursively unbind the interactions bound to an element and its children
+ *
+ * @param {DOMElement} el
+ */
+var _unSet = function (el) {
+    interact(el).unset();
+    if (el.dataset.sortableActivated) {
+        delete el.dataset.sortableActivated;
+    }
+    el.childNodes.forEach(function (node) {
+        if (_isSet(node)) {
+            _unSet(node);
+        }
+    });
+}
+
 
 return {
     draggable: _draggable,
     sortable: _sortable,
+    isSet: _isSet,
+    unSet: _unSet,
 };
 
 });

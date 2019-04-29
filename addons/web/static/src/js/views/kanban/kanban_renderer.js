@@ -332,8 +332,8 @@ var KanbanRenderer = BasicRenderer.extend({
         });
 
         // remove previous sorting
-        if(this.$el.sortable('instance') !== undefined) {
-            this.$el.sortable('destroy');
+        if (web_interact.isSet(this.el)) {
+            web_interact.unSet(this.el);
         }
         if (this.groupedByM2O) {
             // Enable column sorting
@@ -347,7 +347,7 @@ var KanbanRenderer = BasicRenderer.extend({
                 delay: 100,
                 tolerance: 'pointer',
                 forcePlaceholderSize: true,
-                stop: function () {
+                ondrop: function () {
                     var ids = [];
                     self.$('.o_kanban_group').each(function (index, u) {
                         // Ignore 'Undefined' column
@@ -398,15 +398,18 @@ var KanbanRenderer = BasicRenderer.extend({
         var hasHandle = this.handleField &&
                         (orderedBy.length === 0 || orderedBy[0].name === this.handleField);
         if (hasHandle) {
-            this.$el.sortable({
+            web_interact.sortable(this.el, {
                 items: '.o_kanban_record:not(.o_kanban_ghost)',
+                axis: 'both',
                 cursor: 'move',
                 revert: 0,
                 delay: 0,
                 tolerance: 'pointer',
                 forcePlaceholderSize: true,
-                stop: function (event, ui) {
-                    self._moveRecord(ui.item.data('record').db_id, ui.item.index());
+                ondrop: function (ev) {
+                    var draggable = $(ev.relatedTarget);
+                    console.log(draggable.index());
+                    self._moveRecord(draggable.data('record').db_id, draggable.index());
                 },
             });
         }
