@@ -232,6 +232,9 @@ class Http(models.AbstractModel):
                 if type(exception.error) == odoo.exceptions.AccessError:
                     code = 403
 
+            if isinstance(exception, (odoo.exceptions.UserError, odoo.exceptions.ValidationError)):
+                code = 400
+
             values.update(
                 status_message=werkzeug.http.HTTP_STATUS_CODES[code],
                 status_code=code,
@@ -277,6 +280,8 @@ class Http(models.AbstractModel):
                         values['editable'] = request.uid and request.website.is_publisher()
                 elif code == 403:
                     logger.warn("403 Forbidden:\n\n%s", values['traceback'])
+                elif code == 400:
+                    logger.warn("400: Bad Request:\n\n%s", values['traceback'])
                 try:
                     html = env['ir.ui.view'].render_template('website.%s' % view_id, values)
                 except Exception:

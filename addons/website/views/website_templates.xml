@@ -939,7 +939,7 @@
             <h4 class="card-header">
                 <a data-toggle="collapse" href="#error_main">Error</a>
             </h4>
-            <div id="error_main" class="collapse in">
+            <div id="error_main" class="collapse in show">
                 <div class="card-body">
                     <p t-if="website_controller">The following error was raised in the website controller <code t-esc="website_controller"/></p>
                     <p>
@@ -977,6 +977,20 @@
             </div>
         </div>
     </div>
+</template>
+
+<template id="400">
+    <t t-call="website.layout">
+        <div id="wrap">
+            <div class="container">
+                <h1 class="mt32">400: Bad Request</h1>
+                <p>Oops! Something went wrong. Take a look at the error message below.</p>
+            </div>
+            <t t-if="editable or request.debug">
+                <t t-call="website.http_error_debug"/>
+            </t>
+        </div>
+    </t>
 </template>
 
 <template id="403">
