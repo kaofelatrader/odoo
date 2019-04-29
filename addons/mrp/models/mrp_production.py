@@ -2,7 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, MAXYEAR
 from dateutil.relativedelta import relativedelta
 import math
 
@@ -610,54 +610,86 @@ class MrpProduction(models.Model):
             quantity = order.product_uom_id._compute_quantity(order.product_qty, order.bom_id.product_uom_id) / order.bom_id.product_qty
             boms, lines = order.bom_id.explode(order.product_id, quantity, picking_type=order.bom_id.picking_type_id)
             order._generate_workorders(boms)
-        self.plan_workorders()
+            order._plan_workorders()
         return True
 
     def _get_start_date(self):
         return self.date_start_wo or datetime.now()
 
-    def plan_workorders(self):
+    def _plan_workorders(self):
+        self.ensure_one()
         WorkOrder = self.env['mrp.workorder']
-        ProductUom = self.env['uom.uom']
-        for order in self.filtered(lambda x: x.state == 'planned'):
-            order.workorder_ids.write({'date_planned_start': False, 'date_planned_finished': False})
 
         # Schedule all work orders (new ones and those already created)
-        for order in self:
-            start_date = order._get_start_date()
-            from_date_set = False
-            for workorder in order.workorder_ids:
-                workcenter = workorder.workcenter_id
-                wos = WorkOrder.search([('workcenter_id', '=', workcenter.id), ('date_planned_finished', '<>', False),
-                                        ('state', 'in', ('ready', 'pending', 'progress')),
-                                        ('date_planned_finished', '>=', start_date.strftime(DEFAULT_SERVER_DATETIME_FORMAT))], order='date_planned_start')
+        start_date = self._get_start_date()
+        for workorder in self.workorder_ids:
+            workcenters = workorder.workcenter_id | workorder.workcenter_id.alternative_workcenter_ids
+
+            # extract already planned workorders
+            wos = WorkOrder.search([
+                ('workcenter_id', 'in', workcenters.ids),
+                ('state', 'in', ('ready', 'pending', 'progress')),
+                ('date_planned_finished', '>=', start_date.strftime(DEFAULT_SERVER_DATETIME_FORMAT))],
+                order="date_planned_start"
+            )
+            best_start_date = start_date + relativedelta(year=MAXYEAR)
+            best_finnished_date = start_date
+            for workcenter in workcenters:
+                # get duration expected for this workorder
+                operation = workorder.operation_id
+                cycle_number = float_round(workorder.qty_producing / workcenter.capacity, precision_digits=0, rounding_method='UP')
+                duration_expected = workcenter.time_start + workcenter.time_stop + cycle_number * operation.time_cycle * 100.0 / workcenter.time_efficiency
+
                 from_date = start_date
-                to_date = workcenter.resource_calendar_id.attendance_ids and workcenter.resource_calendar_id.plan_hours(workorder.duration_expected / 60.0, from_date, compute_leaves=True, resource=workcenter.resource_id)
-                if to_date:
-                    if not from_date_set:
-                        # planning 0 hours gives the start of the next attendance
-                        from_date = workcenter.resource_calendar_id.plan_hours(0, from_date, compute_leaves=True, resource=workcenter.resource_id)
-                        from_date_set = True
+                # Check if the workcenter is subject to a schedule
+                has_schedule = workcenter.resource_calendar_id.attendance_ids
+                if has_schedule:
+                    # planning 0 hours gives the start of the next attendance
+                    from_date = workcenter.resource_calendar_id.plan_hours(0, from_date, compute_leaves=True, resource=workcenter.resource_id)
+                    to_date = workcenter.resource_calendar_id.plan_hours(duration_expected / 60.0, from_date, compute_leaves=True, resource=workcenter.resource_id)
                 else:
-                    to_date = from_date + relativedelta(minutes=workorder.duration_expected)
-                # Check interval
-                for wo in wos:
+                    to_date = from_date + relativedelta(minutes=duration_expected)
+                # Check intervals
+                for wo in wos.filtered(lambda wo: wo.workcenter_id == workcenter):
+                    if best_start_date < fields.Datetime.from_string(wo.date_planned_finished):
+                        # wos are ordered by date. There is no need to check the other ones
+                        from_date = best_start_date
+                        to_date = best_finnished_date
+                        break
                     if from_date < fields.Datetime.from_string(wo.date_planned_finished) and (to_date > fields.Datetime.from_string(wo.date_planned_start)):
                         from_date = fields.Datetime.from_string(wo.date_planned_finished)
-                        to_date = workcenter.resource_calendar_id.attendance_ids and workcenter.resource_calendar_id.plan_hours(workorder.duration_expected / 60.0, from_date, compute_leaves=True, resource=workcenter.resource_id)
-                        if not to_date:
-                            to_date = from_date + relativedelta(minutes=workorder.duration_expected)
-                workorder.write({'date_planned_start': from_date, 'date_planned_finished': to_date})
+                        if has_schedule:
+                            to_date = workcenter.resource_calendar_id.plan_hours(duration_expected / 60.0, from_date, compute_leaves=True, resource=workcenter.resource_id)
+                        else:
+                            to_date = from_date + relativedelta(minutes=duration_expected)
 
+                # Check if the slot for this workcenter is better than the best one
+                if best_start_date > from_date:
+                    best_start_date = from_date
+                    best_finnished_date = to_date
+                    best_values = {
+                        'date_planned_start': best_start_date,
+                        'date_planned_finished': best_finnished_date,
+                        'workcenter_id': workcenter.id,
+                        'capacity': workcenter.capacity,
+                        'duration_expected': duration_expected,
+                    }
+
+            workorder.write(best_values)
+
+            # Compute start_date for next workorder
+            if workorder.next_work_order_id:
                 if (workorder.operation_id.batch == 'no') or (workorder.operation_id.batch_size >= workorder.qty_production):
-                    start_date = to_date
+                    start_date = best_finnished_date
                 else:
-                    qty = min(workorder.operation_id.batch_size, workorder.qty_production)
-                    cycle_number = math.ceil(qty / workorder.production_id.product_qty / workcenter.capacity)
+                    workcenter = workorder.workcenter_id
+                    qty = min(workorder.operation_id.batch_size, workorder.qty_producing)
+                    cycle_number = math.ceil(qty / workorder.qty_producing / workcenter.capacity)
                     duration = workcenter.time_start + cycle_number * workorder.operation_id.time_cycle * 100.0 / workcenter.time_efficiency
-                    to_date = workcenter.resource_calendar_id.attendance_ids and workcenter.resource_calendar_id.plan_hours(duration / 60.0, from_date, compute_leaves=True, resource=workcenter.resource_id)
-                    if not to_date:
-                        start_date = from_date + relativedelta(minutes=duration)
+                    if has_schedule:
+                        start_date = workcenter.resource_calendar_id.plan_hours(duration / 60.0, start_date, compute_leaves=True, resource=workcenter.resource_id)
+                    else:
+                        start_date = start_date + relativedelta(minutes=duration)
 
     def button_unplan(self):
         if any(wo.state == 'done' for wo in self.workorder_ids):
@@ -687,32 +719,26 @@ class MrpProduction(models.Model):
                     BoMs
         """
         workorders = self.env['mrp.workorder']
-        bom_qty = bom_data['qty']
 
         # Initial qty producing
+        quantity = max(self.product_qty - sum(self.move_finished_ids.filtered(lambda move: move.product_id == self.product_id).mapped('quantity_done')), 0)
+        if self.product_uom_id.uom_type != 'reference':
+            todo_uom = self.env['uom.uom'].search([('category_id', '=', self.product_uom_id.category_id.id), ('uom_type', '=', 'reference')]).id
+            quantity = quantity * self.product_uom_id.factor_inv
+        else:
+            todo_uom = self.product_uom_id.id
+
         if self.product_id.tracking == 'serial':
             quantity = 1.0
-        else:
-            quantity = self.product_qty - sum(self.move_finished_ids.mapped('quantity_done'))
-            quantity = quantity if (quantity > 0) else 0
 
         for operation in bom.routing_id.operation_ids:
             # create workorder
-            cycle_number = float_round(bom_qty / operation.workcenter_id.capacity, precision_digits=0, rounding_method='UP')
-            duration_expected = (operation.workcenter_id.time_start +
-                                 operation.workcenter_id.time_stop +
-                                 cycle_number * operation.time_cycle * 100.0 / operation.workcenter_id.time_efficiency)
-            if self.product_uom_id.uom_type != 'reference':
-                todo_uom = self.env['uom.uom'].search([('category_id', '=', self.product_uom_id.category_id.id), ('uom_type', '=', 'reference')]).id
-            else:
-                todo_uom = self.product_uom_id.id
             workorder = workorders.create({
                 'name': operation.name,
                 'production_id': self.id,
                 'workcenter_id': operation.workcenter_id.id,
                 'product_uom_id': todo_uom,
                 'operation_id': operation.id,
-                'duration_expected': duration_expected,
                 'state': len(workorders) == 0 and 'ready' or 'pending',
                 'qty_producing': quantity,
                 'capacity': operation.workcenter_id.capacity,

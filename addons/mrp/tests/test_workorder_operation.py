@@ -351,9 +351,9 @@ class TestWorkOrderProcess(TestMrpCommon):
         self.assertEqual(kit_wo.state, 'ready', "Workorder should be in ready state.")
         self.assertEqual(door_wo_1.state, 'ready', "Workorder should be in ready state.")
         self.assertEqual(door_wo_2.state, 'pending', "Workorder should be in pending state.")
-        self.assertEqual(kit_wo.duration_expected, 80, "Workorder duration should be 80 instead of %s." % str(kit_wo.duration_expected))
-        self.assertEqual(door_wo_1.duration_expected, 20, "Workorder duration should be 20 instead of %s." % str(door_wo_1.duration_expected))
-        self.assertEqual(door_wo_2.duration_expected, 20, "Workorder duration should be 20 instead of %s." % str(door_wo_2.duration_expected))
+        self.assertEqual(kit_wo.duration_expected, 960, "Workorder duration should be 960 instead of %s." % str(kit_wo.duration_expected))
+        self.assertEqual(door_wo_1.duration_expected, 480, "Workorder duration should be 480 instead of %s." % str(door_wo_1.duration_expected))
+        self.assertEqual(door_wo_2.duration_expected, 480, "Workorder duration should be 480 instead of %s." % str(door_wo_2.duration_expected))
 
         # subbom: kit for stone tools
         kit_wo.button_start()

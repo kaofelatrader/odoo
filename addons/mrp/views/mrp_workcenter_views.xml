@@ -349,6 +349,12 @@
                                         <div class="o_row">
                                             <field name="oee_target"/> %
                                         </div>
+                                        <field
+                                            name="alternative_workcenter_ids"
+                                            widget="many2many_tags"
+                                            domain="[('id','!=', id)]"
+                                            options="{'no_create': True, 'no_edit': True}"
+                                        />
                                     </group>
                                     <group string="Costing Information" name="costing">
                                         <field name="costs_hour"/>
