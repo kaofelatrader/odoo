@@ -8327,15 +8327,15 @@ QUnit.module('fields', {}, function () {
             });
 
             assert.strictEqual(form.$('.o_kanban_record:not(.o_kanban_ghost)').text(), 'yopblipkawa');
-            assert.doesNotHaveClass(form.$('.o_field_one2many .o_kanban_view'), 'ui-sortable');
+            assert.doesNotHaveClass(form.$('.o_field_one2many .o_kanban_view'), 'o_sortable');
 
             await testUtils.form.clickEdit(form);
 
-            assert.hasClass(form.$('.o_field_one2many .o_kanban_view'), 'ui-sortable');
+            assert.hasClass(form.$('.o_field_one2many .o_kanban_view'), 'o_sortable');
 
             var $record = form.$('.o_field_one2many[name=turtles] .o_kanban_view .o_kanban_record:first');
             var $to = form.$('.o_field_one2many[name=turtles] .o_kanban_view .o_kanban_record:nth-child(3)');
-            await testUtils.dom.dragAndDrop($record, $to, {position: "bottom"});
+            await testUtils.dom.pointerDragAndDrop($record[0], $to[0], {position: "bottom"});
 
             assert.strictEqual(form.$('.o_kanban_record:not(.o_kanban_ghost)').text(), 'blipkawayop');
 
