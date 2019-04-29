@@ -243,8 +243,10 @@ var _sortable = function (el, options) {
             tolerated = dropEl.offsetLeft < ev.clientX < dropElRight &&
                 dropEl.offsetTop < ev.clientY < dropElBottom;
         }
-        var connectValid = !connectWith || dragEl.closest(connectWith);
-        return drop && tolerated && connectValid;
+        var fromThisSortable = el.contains(dragEl);
+        var fromConnectedSortable = connectWith && dragEl.closest(connectWith);
+        var isValidItem = fromThisSortable || fromConnectedSortable;
+        return drop && tolerated && isValidItem;
     }
 
     // When dragging starts, we need to create a first placeholder and make all
