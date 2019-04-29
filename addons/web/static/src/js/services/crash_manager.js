@@ -5,19 +5,53 @@ var ajax = require('web.ajax');
 var core = require('web.core');
 var Dialog = require('web.Dialog');
 
-var QWeb = core.qweb;
 var _t = core._t;
 var _lt = core._lt;
 
 var map_title ={
-    user_error: _lt('Warning'),
-    warning: _lt('Warning'),
-    access_error: _lt('Access Error'),
-    missing_error: _lt('Missing Record'),
-    validation_error: _lt('Validation Error'),
-    except_orm: _lt('Global Business Error'),
-    access_denied: _lt('Access Denied'),
+    user_error: _lt("User Error"),
+    warning: _lt("Warning"),
+    access_error: _lt("Access Error"),
+    missing_error: _lt("Missing Record"),
+    validation_error: _lt("Validation Error"),
+    except_orm: _lt("Global Business Error"),
+    access_denied: _lt("Access Denied"),
 };
+
+/**
+ * An extension of Dialog Widget to render the warnings and errors on the website.
+ * Extend it with your template of choice like ErrorDialog/WarningDialog
+ */
+var CrashManagerDialog = Dialog.extend({
+    xmlDependencies: (Dialog.prototype.xmlDependencies || []).concat(
+        ['/web/static/src/xml/crash_manager.xml']
+    ),
+
+    /**
+     *
+     * @constructor
+     */
+    init: function (parent, options) {
+        this._super.apply(this, arguments);
+        this.error = options.error;
+    },
+});
+
+var ErrorDialog = CrashManagerDialog.extend({
+    template: 'CrashManager.error',
+});
+
+var WarningDialog = CrashManagerDialog.extend({
+    template: 'CrashManager.warning',
+
+    /**
+     * we want to ok button to be focused
+     * @override
+     */
+    open: function () {
+        this._super({shouldFocusButtons: true});
+    },
+});
 
 var CrashManager = core.Class.extend({
     init: function () {
@@ -129,8 +163,8 @@ var CrashManager = core.Class.extend({
             return;
         }
         if (_.has(map_title, error.data.exception_type)) {
-            if(error.data.exception_type === 'except_orm'){
-                if(error.data.arguments[1]) {
+            if (error.data.exception_type === 'except_orm') {
+                if (error.data.arguments[1]) {
                     error = _.extend({}, error,
                                 {
                                     data: _.extend({}, error.data,
@@ -173,21 +207,22 @@ var CrashManager = core.Class.extend({
         if (!this.active) {
             return;
         }
-        return new Dialog(this, {
+        return new WarningDialog(this, {
             size: 'medium',
             title: _.str.capitalize(error.type || error.message) || _t("Odoo Warning"),
             subtitle: error.data.title,
-            $content: $(QWeb.render('CrashManager.warning', {error: error}))
-        }).open({shouldFocusButtons:true});
+            error: error,
+        }).open();
     },
     show_error: function(error) {
         if (!this.active) {
             return;
         }
-        var dialog = new Dialog(this, {
+        var dialog = new ErrorDialog(this, {
             title: _.str.capitalize(error.type || error.message) || _t("Odoo Error"),
-            $content: $(QWeb.render('CrashManager.error', {error: error}))
+            error: error,
         });
+
 
         // When the dialog opens, initialize the copy feature and destroy it when the dialog is closed
         var $clipboardBtn;
@@ -266,7 +301,7 @@ var RedirectWarningHandler = Dialog.extend(ExceptionHandler, {
         var error = this.error;
         error.data.message = error.data.arguments[0];
 
-        new Dialog(this, {
+        new WarningDialog(this, {
             size: 'medium',
             title: _.str.capitalize(error.type) || _t("Odoo Warning"),
             buttons: [
@@ -276,7 +311,7 @@ var RedirectWarningHandler = Dialog.extend(ExceptionHandler, {
                 }},
                 {text: _t("Cancel"), click: function() { self.destroy(); }, close: true}
             ],
-            $content: QWeb.render('CrashManager.warning', {error: error}),
+            error: error,
         }).open();
     }
 });
@@ -288,7 +323,7 @@ function session_expired(cm) {
         display: function () {
             cm.show_warning({type: _t("Odoo Session Expired"), data: {message: _t("Your Odoo session expired. Please refresh the current web page.")}});
         }
-    }
+    };
 }
 core.crash_registry.add('odoo.http.SessionExpiredException', session_expired);
 core.crash_registry.add('werkzeug.exceptions.Forbidden', session_expired);
@@ -300,7 +335,7 @@ core.crash_registry.add('504', function (cm) {
                 type: _t("Request timeout"),
                 data: {message: _t("The operation was interrupted. This usually means that the current operation is taking too much time.")}});
         }
-    }
+    };
 });
 
 return CrashManager;

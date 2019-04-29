@@ -26,13 +26,6 @@ function _genericJsonRpc (fct_name, params, settings, fct) {
     var result = xhr.then(function(result) {
         core.bus.trigger('rpc:result', data, result);
         if (result.error !== undefined) {
-            if (result.error.data.arguments[0] !== "bus.Bus not available in test mode") {
-                if (result.error.data.exception_type === "user_error") {
-                    console.log("Server application error", JSON.stringify(result.error));
-                } else {
-                    console.error("Server application error", JSON.stringify(result.error));
-                }
-            }
             return Promise.reject({type: "server", error: result.error});
         } else {
             return result.result;
