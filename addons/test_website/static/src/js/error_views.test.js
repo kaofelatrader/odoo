@@ -15,8 +15,8 @@ tour.register('test_error_website', {
     },
     {
         content: "rpc user error modal has message",
-        extra_trigger: 'div.o_dialog_warning.modal-body:contains("This is a user rpc test")',
-        trigger: 'button.btn.btn-primary',
+        extra_trigger: 'div.toast-body:contains("This is a user rpc test")',
+        trigger: 'button.o_notification_close',
     },
     {
         content: "trigger rpc access error",
@@ -24,8 +24,8 @@ tour.register('test_error_website', {
     },
     {
         content: "rpc access error modal has message",
-        extra_trigger: 'div.o_dialog_warning.modal-body:contains("This is an access rpc test")',
-        trigger: 'button.btn.btn-primary',
+        extra_trigger: 'div.toast-body:contains("This is an access rpc test")',
+        trigger: 'button.o_notification_close',
     },
     {
         content: "trigger validation rpc error",
@@ -33,8 +33,8 @@ tour.register('test_error_website', {
     },
     {
         content: "rpc validation error modal has message",
-        extra_trigger: 'div.o_dialog_warning.modal-body:contains("This is a validation rpc test")',
-        trigger: 'button.btn.btn-primary',
+        extra_trigger: 'div.toast-body:contains("This is a validation rpc test")',
+        trigger: 'button.o_notification_close',
     },
     {
         content: "trigger rpc missing error",
@@ -42,8 +42,8 @@ tour.register('test_error_website', {
     },
     {
         content: "rpc missing error modal has message",
-        extra_trigger: 'div.o_dialog_warning.modal-body:contains("This is a missing rpc test")',
-        trigger: 'button.btn.btn-primary',
+        extra_trigger: 'div.toast-body:contains("This is a missing rpc test")',
+        trigger: 'button.o_notification_close',
     },
     {
         content: "trigger rpc error 403",
@@ -51,8 +51,8 @@ tour.register('test_error_website', {
     },
     {
         content: "rpc error 403 modal has message",
-        extra_trigger: 'div.o_dialog_warning.modal-body:contains("This is an access denied rpc test")',
-        trigger: 'button.btn.btn-primary',
+        extra_trigger: 'div.toast-body:contains("This is an access denied rpc test")',
+        trigger: 'button.o_notification_close',
     },
     {
         content: "trigger rpc missing error",
@@ -60,8 +60,8 @@ tour.register('test_error_website', {
     },
     {
         content: "rpc missing error modal has message",
-        extra_trigger: 'div.o_dialog_warning.modal-body:contains("This is a karma rpc test")',
-        trigger: 'button.btn.btn-primary',
+        extra_trigger: 'div.toast-body:contains("This is a karma rpc test")',
+        trigger: 'button.o_notification_close',
     },
     {
         content: "trigger rpc error 500",

@@ -60,7 +60,7 @@ var WarningDialog = CrashManagerDialog.extend({
        }, options), error);
     },
     /**
-     * we want to ok button to be focused
+     * Focuses the ok button.
      * @override
      */
     open: function () {
@@ -139,6 +139,13 @@ var CrashManager = core.Class.extend({
     disable: function () {
         this.active = false;
     },
+    notifyConnectionState: function () {
+        if (this.isConnected) {
+            core.bus.trigger('connection_restored');
+        } else {
+            core.bus.trigger('connection_lost');
+        }
+    },
     handleLostConnection: function () {
         var self = this;
         if (!this.isConnected) {
@@ -148,12 +155,12 @@ var CrashManager = core.Class.extend({
         }
         this.isConnected = false;
         var delay = 2000;
-        core.bus.trigger('connection_lost');
+        this.notifyConnectionState();
 
         setTimeout(function checkConnection() {
             ajax.jsonRpc('/web/webclient/version_info', 'call', {}, {shadow:true}).then(function () {
-                core.bus.trigger('connection_restored');
                 self.isConnected = true;
+                self.notifyConnectionState();
             }).guardedCatch(function () {
                 // exponential backoff, with some jitter
                 delay = (delay * 1.5) + 500*Math.random();
@@ -185,7 +192,7 @@ var CrashManager = core.Class.extend({
                                     data: _.extend({}, error.data,
                                         {
                                             message: error.data.arguments[1],
-                                            title: error.data.arguments[0] !== 'Warning' ? (" - " + error.data.arguments[0]) : '',
+                                            title: error.data.arguments[0] !== 'Warning' ? error.data.arguments[0] : '',
                                         })
                                 });
                 }
@@ -206,14 +213,11 @@ var CrashManager = core.Class.extend({
                                 data: _.extend({}, error.data,
                                     {
                                         message: error.data.arguments[0],
-                                        title: map_title[error.data.exception_type] !== 'Warning' ? (" - " + map_title[error.data.exception_type]) : '',
+                                        title: map_title[error.data.exception_type] !== 'Warning' ? map_title[error.data.exception_type] : '',
                                     })
                             });
             }
-
             this.show_warning(error);
-        //InternalError
-
         } else {
             this.show_error(error);
         }
@@ -225,7 +229,7 @@ var CrashManager = core.Class.extend({
         var message = error.data ? error.data.message : error.message;
         return new WarningDialog(this, {
             title: _.str.capitalize(error.type) || _t("Odoo Warning"),
-            subtitle: error.data.title,
+            subtitle: " - " + error.data.title,
         }, {
             message: message,
         }).open();
@@ -360,12 +364,4 @@ return {
     ErrorDialog: ErrorDialog,
     WarningDialog: WarningDialog,
 };
-});
-
-odoo.define('web.crash_manager', function (require) {
-"use strict";
-
-var CrashManager = require('web.CrashManager').CrashManager;
-return new CrashManager();
-
 });

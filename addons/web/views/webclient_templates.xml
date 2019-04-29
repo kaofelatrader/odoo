@@ -231,6 +231,7 @@
         <script type="text/javascript" src="/web/static/src/js/services/data_manager.js"></script>
         <script type="text/javascript" src="/web/static/src/js/services/report_service.js"></script>
         <script type="text/javascript" src="/web/static/src/js/services/session.js"></script>
+        <script type="text/javascript" src="/web/static/src/js/services/crash_manager_instance.js"></script>
         <script type="text/javascript" src="/web/static/src/js/widgets/auto_complete.js"></script>
         <script type="text/javascript" src="/web/static/src/js/widgets/change_password.js"></script>
         <script type="text/javascript" src="/web/static/src/js/tools/debug_manager.js"></script>
@@ -354,6 +355,7 @@
         <script type="text/javascript" src="/web/static/src/js/public/public_root.js"/>
         <script type="text/javascript" src="/web/static/src/js/public/public_root_instance.js"/>
         <script type="text/javascript" src="/web/static/src/js/public/public_widget.js"/>
+        <script type="text/javascript" src="/web/static/src/js/public/public_crash_manager.js"/>
     </template>
 
     <template id="web.layout" name="Web layout">&lt;!DOCTYPE html&gt;
