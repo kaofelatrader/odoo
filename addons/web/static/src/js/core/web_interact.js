@@ -241,10 +241,10 @@ var _sortable = function (el, options) {
     var ondropactivate = function (ev) {
         // Create the very first placeholder in place of the draggable item
         var sortable = ev.target;
-        var item = ev.relatedTarget;
-        var anchor = item.nextSibling;
-        if (sortable.contains(item)) {
-            _setPlaceholder(sortable, item, anchor, axis, connectWith);
+        var draggable = ev.relatedTarget;
+        var anchor = draggable.nextSibling;
+        if (sortable.contains(draggable)) {
+            _setPlaceholder(sortable, draggable, anchor, axis, connectWith);
         }
 
         // Set droppable on all items in this sortable
