@@ -55,6 +55,15 @@ tour.register('test_error_website', {
         trigger: 'button.btn.btn-primary',
     },
     {
+        content: "trigger rpc missing error",
+        trigger: 'a[href="/test_karma_error_json"]',
+    },
+    {
+        content: "rpc missing error modal has message",
+        extra_trigger: 'div.o_dialog_warning.modal-body:contains("This is a karma rpc test")',
+        trigger: 'button.btn.btn-primary',
+    },
+    {
         content: "trigger rpc error 500",
         trigger: 'a[href="/test_internal_error_json"]',
     },
@@ -150,6 +159,27 @@ tour.register('test_error_website', {
     },
     {
         content: "http missing error page debug has traceback closed",
+        trigger: 'body:has(div#error_traceback.collapse:not(.show) pre#exception_traceback)',
+        run: function () {
+            window.location.href = window.location.origin + '/test_karma_error_http';
+        },
+    },
+    {
+        content: "http karma error page has title and message",
+        extra_trigger: 'h1:contains("Oops! Something went wrong.")',
+        trigger: 'div.container pre:contains("This is a karma http test")',
+        run: function () {
+                window.location.href = window.location.origin + '/test_karma_error_http?debug';
+        },
+    },
+    {
+        content: "http karma error page debug has title and message open",
+        extra_trigger: 'h1:contains("Oops! Something went wrong.")',
+        trigger: 'div#error_main.collapse.show pre:contains("This is a karma http test")',
+        run: function () {},
+    },
+    {
+        content: "http karma error page debug has traceback closed",
         trigger: 'body:has(div#error_traceback.collapse:not(.show) pre#exception_traceback)',
         run: function () {
             window.location.href = window.location.origin + '/test_access_denied_http';
