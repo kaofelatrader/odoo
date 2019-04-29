@@ -300,6 +300,7 @@
         <script type="text/javascript" src="/web/static/src/js/views/form/form_renderer.js"></script>
         <script type="text/javascript" src="/web/static/src/js/views/form/form_controller.js"></script>
         <script type="text/javascript" src="/web/static/src/js/views/form/form_view.js"></script>
+        <script type="text/javascript" src="/web/static/src/js/views/form/form_overlay_view.js"></script>
         <script type="text/javascript" src="/web/static/src/js/views/graph/graph_model.js"></script>
         <script type="text/javascript" src="/web/static/src/js/views/graph/graph_controller.js"></script>
         <script type="text/javascript" src="/web/static/src/js/views/graph/graph_renderer.js"></script>

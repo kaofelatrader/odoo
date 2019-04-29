@@ -6,6 +6,7 @@ var core = require('web.core');
 var Dialog = require('web.Dialog');
 var KanbanRecord = require('web.KanbanRecord');
 var RecordQuickCreate = require('web.kanban_record_quick_create');
+var RecordFormOverlay = require('web.form_overlay_view');
 var view_dialogs = require('web.view_dialogs');
 var viewUtils = require('web.viewUtils');
 var Widget = require('web.Widget');
@@ -217,15 +218,22 @@ var KanbanColumn = Widget.extend({
         });
         return this.quickCreateWidget.insertAfter(this.$header);
     },
-    OpenFormOverlay: function () {
+    OpenFormOverlay: function (ev) {
         // todo: in this function we have init a new widget and insert into content
         // first open the column, and then open the overlay form view
         // and if it is exist overlay then replaced form view record with new record id
         // widget 'OpenFormOverlayView'
         var context = this.data.getContext();
         context['default_' + this.groupedBy] = viewUtils.getGroupValue(this.data, this.groupedBy);
-        var $div = $('<div class="test_ok">test</div>');
-        return $div.insertAfter($('.o_action_manager .o_content'));
+        debugger;
+        this.formOverlayWidget = new RecordFormOverlay(this, {
+            context: context,
+            formViewRef: this.quickCreateView,
+            model: this.modelName,
+            res_id: this.data.res_id || undefined,
+            db_id: this.db_id || undefined,
+        });
+        return this.formOverlayWidget.insertAfter($('.o_action_manager .o_content'));
     },
     /**
      * Closes the quick create widget if it isn't dirty.
