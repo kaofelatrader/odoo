@@ -252,9 +252,10 @@ var _sortable = function (el, options) {
             el.dataset.sortableActivated = true;
             var items = el.querySelectorAll(itemsSelector);
             if (items.length) {
-                var itemsDroppableOptions = {
+                var itemsOptions = {
                     accept: itemsSelector,
                     checker: check,
+                    ondropactivate: options.onitemdropactivate,
                     ondragenter: function (ev) {
                         var item = ev.target;
                         var anchor = item;
@@ -266,15 +267,30 @@ var _sortable = function (el, options) {
                             // If dragging rightward in x axis mode, then anchor
                             // after this item, so before the next item.
                             anchor = anchor.nextSibling;
-                        } else {
-                            // TODO: axis 'both' will be used for nested mode
+                        } else if (axis === 'both') {
+                            // TODO: look for dx and dy for direction
+                            anchor = anchor.nextSibling;
                         }
                         _setPlaceholder(el, item, anchor, axis, connectWith);
+                        if (options.onitemdragenter) {
+                            options.onsort(ev);
+                        }
                     },
+                    ondropdeactivate: options.onitemdropdeactivate,
                 }
-                items.forEach(function (element) {
-                    if (!element.classList.contains(placeholderClass)) {
-                        interact(element).dropzone(itemsDroppableOptions);
+                items.forEach(function (item) {
+                    if (!item.classList.contains(placeholderClass)) {
+                        item.dataset.sortableActivated = true;
+                        var droppable = interact(item).dropzone(itemsOptions);
+                        // When we enter here for the first time, ondropactivate
+                        // has already been fired, but it was not fired on the
+                        // children since they were not droppable yet, so we
+                        // need to fire it manually.
+                        if (item !== draggable) {
+                            var ondropactivateEvent = Object.assign({}, ev);
+                            ondropactivateEvent.target = item;
+                            droppable.fire(ondropactivateEvent);
+                        }
                     }
                 })
             }
