@@ -5,7 +5,7 @@ var BasicModel = require('web.BasicModel');
 var field_utils = require('web.field_utils');
 var utils = require('web.utils');
 var session = require('web.session');
-var CrashManager = require('web.CrashManager');
+var WarningDialog = require('web.CrashManager').WarningDialog;
 var core = require('web.core');
 var _t = core._t;
 
@@ -494,10 +494,10 @@ var StatementModel = BasicModel.extend({
         var focus = this._formatQuickCreate(line, _.pick(reconcileModel, fields));
         focus.reconcileModelId = reconcileModelId;
         if (!line.reconciliation_proposition.every(function(prop) {return prop.to_check == focus.to_check;})) {
-            new CrashManager().show_warning({data: {
-                exception_type: _t("Incorrect Operation"),
-                message: _t("You cannot mix items with and without the 'To Check' checkbox ticked.")
-            }});
+            new WarningDialog(this, {
+                title: _t("Incorrect Operation"),
+                error: {data: {message: _t("You cannot mix items with and without the 'To Check' checkbox ticked.")}}
+            }).open();
             return Promise.resolve();
         }
         line.reconciliation_proposition.push(focus);
@@ -624,10 +624,10 @@ var StatementModel = BasicModel.extend({
             line.reconciliation_proposition.push(prop);
         }
         if (!line.reconciliation_proposition.slice(0,-1).every(function(prop) {return prop.to_check == values.to_check;})) {
-            new CrashManager().show_warning({data: {
-                exception_type: _t("Incorrect Operation"),
-                message: _t("You cannot mix items with and without the 'To Check' checkbox ticked.")
-            }});
+            new WarningDialog(this, {
+                title: _t("Incorrect Operation"),
+                error: {data: {message: _t("You cannot mix items with and without the 'To Check' checkbox ticked.")}}
+            }).open();
             // FIXME: model should not be tied to the DOM !
             $('.create_to_check input').click();
             return Promise.resolve();

@@ -45,6 +45,15 @@ var WarningDialog = CrashManagerDialog.extend({
     template: 'CrashManager.warning',
 
     /**
+     * Set size to medium by default
+     * @override
+     */
+    init: function (parent, options, error) {
+        this._super(parent, _.extend({
+            size: 'medium',
+       }, options), error);
+    },
+    /**
      * we want to ok button to be focused
      * @override
      */
@@ -208,7 +217,6 @@ var CrashManager = core.Class.extend({
             return;
         }
         return new WarningDialog(this, {
-            size: 'medium',
             title: _.str.capitalize(error.type || error.message) || _t("Odoo Warning"),
             subtitle: error.data.title,
             error: error,
@@ -302,7 +310,6 @@ var RedirectWarningHandler = Dialog.extend(ExceptionHandler, {
         error.data.message = error.data.arguments[0];
 
         new WarningDialog(this, {
-            size: 'medium',
             title: _.str.capitalize(error.type) || _t("Odoo Warning"),
             buttons: [
                 {text: error.data.arguments[2], classes : "btn-primary", click: function() {
@@ -338,13 +345,17 @@ core.crash_registry.add('504', function (cm) {
     };
 });
 
-return CrashManager;
+return {
+    CrashManager: CrashManager,
+    ErrorDialog: ErrorDialog,
+    WarningDialog: WarningDialog,
+};
 });
 
 odoo.define('web.crash_manager', function (require) {
 "use strict";
 
-var CrashManager = require('web.CrashManager');
+var CrashManager = require('web.CrashManager').CrashManager;
 return new CrashManager();
 
 });
