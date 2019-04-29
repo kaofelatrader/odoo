@@ -3,7 +3,18 @@
     <template id="assets_backend" name="hr assets" inherit_id="web.assets_backend">
         <xpath expr="." position="inside">
             <link rel="stylesheet" type="text/scss" href="/point_of_sale/static/src/scss/pos_dashboard.scss"/>
-            <script type="text/javascript" src="/point_of_sale/static/src/js/tour.js"></script>
+            <script type="text/javascript" src="/point_of_sale/static/src/js/tours/point_of_sale.js"></script>
+        </xpath>
+    </template>
+
+    <template id="assets_tests" name="Point Of Sale Assets Tests" inherit_id="web.assets_tests">
+        <xpath expr="." position="inside">
+            <!--
+            TODO: check this as this file previously named tests.js was into point_of_sale.assets in point_of_sale.xml
+                  and that template was only called by point_of_sale.index in pos_templates.xml in a hardcoded <html>
+                  It means that this field was loaded on it before and not anymore
+             -->
+            <script type="text/javascript" src="/point_of_sale/static/tests/tours/point_of_sale.js"></script>
         </xpath>
     </template>
 </odoo>
