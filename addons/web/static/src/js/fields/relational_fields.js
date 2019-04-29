@@ -2888,6 +2888,36 @@ var FieldReference = FieldMany2One.extend({
     },
 });
 
+
+/**
+ * The FieldSelection widget display a list of fonts in their own font,
+ * using the select2 jquery library
+ */
+var FieldSelectionFont = FieldSelection.extend({
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * @override
+     */
+    start: function () {
+        // init select2
+        function formatState (state) {
+            var $state = $(
+                '<span style="font-family:' + state.text + '">' + state.text + '</span>',
+            );
+            return $state;
+        };
+        this.$el.select2({
+            formatResult: formatState,
+            formatSelection: formatState,
+        });
+        return this._super.apply(this, arguments);
+    },
+});
+
 return {
     FieldMany2One: FieldMany2One,
     Many2oneBarcode: Many2oneBarcode,
@@ -2905,6 +2935,7 @@ return {
     KanbanFieldMany2ManyTags: KanbanFieldMany2ManyTags,
 
     FieldRadio: FieldRadio,
+    FieldSelectionFont: FieldSelectionFont,
     FieldSelectionBadge: FieldSelectionBadge,
     FieldSelection: FieldSelection,
     FieldStatus: FieldStatus,

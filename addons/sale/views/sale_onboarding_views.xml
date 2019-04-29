@@ -9,7 +9,7 @@
             <t t-set="done_text">Looks great!</t>
             <t t-set="btn_text">Customize</t>
             <t t-set="method" t-value="'action_open_sale_onboarding_quotation_layout'" />
-            <t t-set="model" t-value="'res.company'" />
+            <t t-set="model" t-value="'company.document.layout'" />
             <t t-set="state" t-value="state.get('account_onboarding_invoice_layout_state')" />
         </t>
     </template>
@@ -72,7 +72,7 @@
     <!-- QUOTATION LAYOUT -->
     <record id="sale_onboarding_quotation_layout_form" model="ir.ui.view">
         <field name="name">sale.onboarding.quotation.layout.form</field>
-        <field name="model">res.company</field>
+        <field name="model">company.document.layout</field>
         <field name="inherit_id" ref="base.view_company_document_template_form" />
         <field name="mode">primary</field>
         <field name="priority">1000</field>
@@ -88,7 +88,7 @@
     <record id="action_open_sale_onboarding_quotation_layout" model="ir.actions.act_window">
         <field name="name">Configure your document layout</field>
         <field name="type">ir.actions.act_window</field>
-        <field name="res_model">res.company</field>
+        <field name="res_model">company.document.layout</field>
         <field name="view_mode">form</field>
         <field name="view_type">form</field>
         <field name="view_id" ref="sale_onboarding_quotation_layout_form" />

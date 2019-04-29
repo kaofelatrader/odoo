@@ -1564,7 +1564,10 @@ class ReportController(http.Controller):
     def report_routes(self, reportname, docids=None, converter=None, **data):
         report = request.env['ir.actions.report']._get_report_from_name(reportname)
         context = dict(request.env.context)
-
+        # some additional context is needed by the report_assets_common bundle in order to
+        # load the company scss attachment
+        # company_id = request.env['res.users'].browse(context['uid']).company_id
+        # context['company_scss_url'] = company_id.scss_url
         if docids:
             docids = [int(i) for i in docids.split(',')]
         if data.get('options'):

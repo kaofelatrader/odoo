@@ -20,6 +20,7 @@ var session = require('web.session');
 var utils = require('web.utils');
 var view_dialogs = require('web.view_dialogs');
 var field_utils = require('web.field_utils');
+var colorpicker = require('web.colorpicker');
 
 var qweb = core.qweb;
 var _t = core._t;
@@ -3004,6 +3005,55 @@ var AceEditor = DebouncedField.extend({
     },
 });
 
+
+/**
+ * The FieldColor widget give a visual representation of a color
+ * Clicking on it bring up an instance of ColorpickerDialog
+ */
+var FieldColor = AbstractField.extend({
+    template: 'FieldColor',
+    supportedFieldTypes: ['char'],
+    events: {
+        'click .o_field_color': '_onColorClick',
+    },
+    custom_events: {
+        'colorpicker:saved': '_onColorSaved',
+    },
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+    * @private
+    * @override
+    */
+    _render: function () {
+        this.$('.o_field_color').css('background-color', this.value);
+    },
+
+    //--------------------------------------------------------------------------
+    // Handlers
+    //--------------------------------------------------------------------------
+
+    /**
+    * @private
+    * @param {Event} ev
+    */
+    _onColorClick: function (ev) {
+        ev.stopPropagation();
+        this.colorpicker = new colorpicker(this, {defaultColor: this.value}).open();
+    },
+    /**
+    * @private
+    * @param {Event} ev
+    */
+    _onColorSaved: function (ev) {
+        ev.stopPropagation();
+        this._setValue(ev.data.cssColor);
+        this.trigger_up('color:change', this);
+    }
+});
+
 return {
     TranslatableFieldMixin: TranslatableFieldMixin,
     DebouncedField: DebouncedField,
@@ -3047,6 +3097,7 @@ return {
     CharCopyClipboard: CharCopyClipboard,
     JournalDashboardGraph: JournalDashboardGraph,
     AceEditor: AceEditor,
+    FieldColor: FieldColor,
 };
 
 });

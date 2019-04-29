@@ -161,7 +161,7 @@ class Documenter(object):
         try:
             return self._generate(all_members=all_members)
         except Exception as e:
-            raise DocumenterError("Failed to document %s" % self.item) from e
+            raise DocumenterError("Failed to document %s" % self.item)
     def _generate(self, all_members=False):
         objname = self.item.name
         prefixed = (self.item['sourcemodule'].name + '.' + objname) if self.item['sourcemodule'] else None

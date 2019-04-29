@@ -57,6 +57,10 @@ class Company(models.Model):
     company_registry = fields.Char()
     paperformat_id = fields.Many2one('report.paperformat', 'Paper format', default=lambda self: self.env.ref('base.paperformat_euro', raise_if_not_found=False))
     external_report_layout_id = fields.Many2one('ir.ui.view', 'Document Template')
+    font = fields.Selection([("Lato", "Lato"), ("Roboto", "Roboto"), ("OpenSans", "OpenSans"), ("Montserrat", "Montserrat"), ("Oswald", "Oswald"), ("Raleway", "Raleway")], default="Lato")
+    primary_color = fields.Char(default="#000000")
+    secondary_color = fields.Char(default="#000000")
+    scss_url = fields.Char(default="/web/static/src/scss/res_company_default.scss")
     _sql_constraints = [
         ('name_uniq', 'unique (name)', 'The company name must be unique !')
     ]
@@ -234,6 +238,10 @@ class Company(models.Model):
             currency = self.env['res.currency'].browse(values['currency_id'])
             if not currency.active:
                 currency.write({'active': True})
+        # Update the scss attachment if changes were made to colors or font
+        if (values.keys() & {'primary_color', 'secondary_color', 'font'}):
+            datas = self._compute_scss(values)
+            self._update_scss_attachment(datas)
 
         return super(Company, self).write(values)
 
@@ -305,3 +313,40 @@ class Company(models.Model):
             main_company = self.env['res.company'].sudo().search([], limit=1, order="id")
 
         return main_company
+
+    @api.multi
+    def _compute_scss(self, values):
+        """ compute and encode scss data """
+        for company in self:
+            # use the new values when they exist, otherwise use the old ones
+            data = '$o-company-primary-color:{};'.format(
+                values['primary_color'] if 'primary_color' in values else company.primary_color)
+            data += '$o-company-secondary-color:{};'.format(
+                values['secondary_color'] if 'secondary_color' in values else company.secondary_color)
+            data += '$o-company-font:{};'.format(
+                values['font'] if 'font' in values else company.font)
+            # data must be properly encoded before storage
+            return base64.b64encode((data).encode("utf-8"))
+
+    @api.multi
+    def _update_scss_attachment(self, datas):
+        """ update/create the company scss attachment """
+        for company in self:
+            ir_attachment = company.env["ir.attachment"]
+            url = '/web/static/src/scss/res_company_{}.scss'.format(company.id)
+            scss_attachment = ir_attachment.search([("url", '=', url)])
+            if scss_attachment: # update the existing attachment
+                scss_attachment.write({"datas": datas})
+            else: # create a new attachment and update the scss url
+                new_attachment = {
+                    'name': url,
+                    'type': "binary",
+                    'mimetype': "text/scss",
+                    'datas': datas,
+                    'datas_fname': url.split("/")[-1],
+                    'url': url,
+                }
+                ir_attachment.create(new_attachment)
+            company.scss_url = url
+            # clear the qweb cache to make the changes effective
+            company.env["ir.qweb"].clear_caches()
