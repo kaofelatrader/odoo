@@ -48,6 +48,14 @@ class Employee(models.Model):
         """
         return self.search([])._get_contracts(date_from, date_to, states=states)
 
+    def write(self, vals):
+        res = super(Employee, self).write(vals)
+        if vals.get('contract_id'):
+            for employee in self:
+                employee.resource_calendar_id.transfer_leaves_to(employee.contract_id.resource_calendar_id, employee.resource_id)
+                employee.resource_calendar_id = employee.contract_id.resource_calendar_id
+        return res
+
 
 class Contract(models.Model):
     _name = 'hr.contract'

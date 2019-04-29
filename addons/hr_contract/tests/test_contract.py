@@ -1,22 +1,16 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 from datetime import datetime, date
-from odoo.tests.common import TransactionCase
 from odoo.exceptions import ValidationError
 from dateutil.relativedelta import relativedelta
+from odoo.addons.hr_contract.tests.common import TestContractBase
 
 
-class TestHrContracts(TransactionCase):
+class TestHrContracts(TestContractBase):
 
     def setUp(self):
         super(TestHrContracts, self).setUp()
         self.contracts = self.env['hr.contract'].with_context(tracking_disable=True)
-        self.employee = self.env['hr.employee'].create({
-            'name': 'Richard',
-            'gender': 'male',
-            'birthday': '1984-05-01',
-            'country_id': self.ref('base.be'),
-        })
 
     def create_contract(self, state, start, end=None):
         return self.env['hr.contract'].create({

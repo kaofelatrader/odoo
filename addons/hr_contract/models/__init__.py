@@ -3,3 +3,4 @@
 
 from . import hr_contract
 from . import res_users
+from . import resource
