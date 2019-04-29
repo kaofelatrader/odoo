@@ -19,24 +19,6 @@
         <!-- Address Format:
                 street
                 street2
-                City State_name Zip
-                Country_name -->
-        <record id="view_partner_address_street_city_state_zip_country" model="ir.ui.view">
-            <field name="name">view partner address form</field>
-            <field name="model">res.partner</field>
-            <field name="inherit_id" ref="base.view_partner_address"/>
-            <field name="mode">primary</field>
-            <field name="arch" type="xml">
-                <xpath expr="//field[@name='zip']" position="replace"/>
-                <xpath expr="//field[@name='state_id']" position="after">
-                    <field name="zip" placeholder="ZIP" class="o_address_zip"/>
-                </xpath>
-            </field>
-        </record>
-
-        <!-- Address Format:
-                street
-                street2
                 City Zip
                 Country_name -->
         <record id="view_partner_address_street_city_zip_country" model="ir.ui.view">
