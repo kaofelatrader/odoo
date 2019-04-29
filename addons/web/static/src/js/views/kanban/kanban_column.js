@@ -223,17 +223,23 @@ var KanbanColumn = Widget.extend({
         // first open the column, and then open the overlay form view
         // and if it is exist overlay then replaced form view record with new record id
         // widget 'OpenFormOverlayView'
+        if (this.formOverlayWidget) {
+            return Promise.reject();
+        }
+        var data = ev.data;
         var context = this.data.getContext();
         context['default_' + this.groupedBy] = viewUtils.getGroupValue(this.data, this.groupedBy);
-        debugger;
+        var $kanbanView = $('.o_action_manager .o_content .o_kanban_view');
         this.formOverlayWidget = new RecordFormOverlay(this, {
             context: context,
             formViewRef: this.quickCreateView,
             model: this.modelName,
-            res_id: this.data.res_id || undefined,
-            db_id: this.db_id || undefined,
+            res_id: data && data.res_id || undefined,
+            db_id: data && data.db_id || undefined,
         });
-        return this.formOverlayWidget.insertAfter($('.o_action_manager .o_content'));
+        $kanbanView.addClass('o_kanban_overlay_form_view');
+        context['form_overlay_heigh'] = $kanbanView.height();
+        return this.formOverlayWidget.insertAfter($kanbanView);
     },
     /**
      * Closes the quick create widget if it isn't dirty.
@@ -312,7 +318,7 @@ var KanbanColumn = Widget.extend({
      * @private
      */
     _onClickOpenFormOverlay: function (ev) {
-        this.OpenFormOverlay();
+        this.OpenFormOverlay(ev);
     },
     /**
      * @private

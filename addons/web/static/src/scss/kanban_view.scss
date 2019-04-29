@@ -1,12 +1,13 @@
 // ------- Kanban View Layout -------
 .o_form_overlay_view {
     position: absolute !important;
-    top: 132px !important;
-    right: 1px !important;
+    top: 0px;
+    right: 0px;
     z-index: 1000 !important;
     background: #A61300;
     overflow: auto;
-    width: 48%;
+    max-width: 70%;
+    min-width: 40%;
     // height: 100px;
     .o_kanban_expand {
         position: absolute;
@@ -21,9 +22,17 @@
         bottom: 0;
         width: 10px;
         cursor: w-resize;
-        z-index: inherit;
+        z-index: 2;
     }
 }
+// for overlay view
+.o_kanban_overlay_form_view {
+    width: 40%;
+    min-width: 30%;
+    max-width: 60%;
+    overflow: auto;
+}
+
 .o_kanban_view {
     display: flex;
     align-content: stretch;

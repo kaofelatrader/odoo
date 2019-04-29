@@ -25,6 +25,10 @@ var FormOverlayView = Widget.extend({
         'click .o_form_overlay_view_expand': '_onExpandClicked', // open form view in full screen
         // if we not use exist form control panel
         'click .o_form_overlay_cancel': '_onCancelClicked', // discard the form overlay view
+        'mousedown #resizable': function (ev) {
+            this.isResizing = true;
+            this.lastDownX = ev.clientX;
+        },
     },
 
     /**
@@ -37,7 +41,6 @@ var FormOverlayView = Widget.extend({
      * @param {string} options.model
      */
     init: function (parent, options) {
-        debugger;
         // set the value what are required to open form overlay view
         this._super.apply(this, arguments);
         this.context = options.context;
@@ -47,9 +50,10 @@ var FormOverlayView = Widget.extend({
         this.res_id = options.res_id; // to open form view, when click on record
         this.db_id = options.db_id; // related db for save record
         this._disabled = false; // to prevent from creating multiple records (e.g. on double-clicks)
+        this.isResizing = false; 
+        this.lastDownX = 0;
     },
     willStart: function () {
-        debugger;
         // Loads the form fieldsView (if provided) or instantiates the form view with default view
         // and starts the form controller
         var self = this;
@@ -96,7 +100,10 @@ var FormOverlayView = Widget.extend({
         // 'Action Menu' and 'Pager'
         this.$el.append('<div id="resizable" class="o_resizeble"></div>');
         this.$el.append(this.controller.$el);
-
+        this.$el.height(this.context.form_overlay_heigh);
+        // for resizing
+        $(document).on('mousemove', this._onMouseMoveOverlay.bind(this))
+        .on('mouseup', this._onMouseUpOverlay.bind(this));
         return this._super.apply(this, arguments);
     },
     //--------------------------------------------------------------------------
@@ -112,9 +119,22 @@ var FormOverlayView = Widget.extend({
     _onCancelClicked: function () {
         // trigger form view discard method
     },
-    _onResizeFormOverlayView: function () {
+    _onMouseMoveOverlay: function (ev) {
         // handle resizable form overlay view
-    }, 
+        if (!this.isResizing) 
+            return;
+
+        var $content = this.$el.parents('div.o_content');
+        var offsetRight = $content.width() - (ev.clientX - $content.offset().left);
+        var offsetLeft = $content.width() - offsetRight;
+        // TODO: for kanban and list
+        $('.o_kanban_view').css('width', offsetLeft);
+        this.$el.css('width', offsetRight);
+    },
+    _onMouseUpOverlay: function (ev) {
+        // stop resizing
+        this.isResizing = false; 
+    },
 });
 return FormOverlayView;
 });
