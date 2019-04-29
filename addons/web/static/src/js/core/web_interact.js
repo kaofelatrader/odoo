@@ -214,6 +214,7 @@ var _sortable = function (el, options) {
     var handle = options.handle;
     var connectWith = options.connectWith;
     var itemsSelector = options.items;
+    var tolerance = options.tolerance;
 
     /**
      * Checks whether an element is a valid item for this droppable. It needs to
@@ -233,7 +234,20 @@ var _sortable = function (el, options) {
      *
      */
     var check = function (dragEv, ev, drop, dropObj, dropEl, dragObj, dragEl) {
-        return drop && (!connectWith || dragEl.closest(connectWith));
+        var tolerated = true;
+        if (tolerance === 'pointer') {
+            // Interactjs does not implement tolerance pointer from jQuery-ui.
+            // We want to check if the pointer is inside the droppable.
+            var dropElRight = dropEl.offsetLeft + dropEl.offsetWidth;
+            var dropElBottom = dropEl.offsetTop + dropEl.offsetHeight;
+            tolerated = dropEl.offsetLeft < ev.clientX < dropElRight &&
+                dropEl.offsetTop < ev.clientY < dropElBottom;
+        }
+        if (dropEl.classList.contains('o_column_folded')) {
+            console.log(tolerated);
+        }
+        var connectValid = !connectWith || dragEl.closest(connectWith);
+        return drop && tolerated && connectValid;
     }
 
     // When dragging starts, we need to create a first placeholder and make all
