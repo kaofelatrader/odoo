@@ -646,7 +646,7 @@ class SaleOrder(models.Model):
         confirmation_template = self.env['ir.config_parameter'].sudo().get_param('sale.default_confirmation_template', False)
         if confirmation_template:
             for order in self:
-                order.with_context(confirmation_mail=True, force_send=True).message_post_with_template(int(confirmation_template), composition_mode='comment', notif_layout="mail.mail_notification_paynow")
+                order.with_context(force_send=True).message_post_with_template(int(confirmation_template), composition_mode='comment', notif_layout="mail.mail_notification_paynow")
 
     @api.multi
     def force_quotation_send(self):
