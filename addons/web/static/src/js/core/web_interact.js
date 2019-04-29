@@ -148,14 +148,18 @@ var _setPlaceholder = function (sortable, item, anchor, axis, connectWith) {
         placeholder = document.createElement(item.tagName);
         placeholder.classList.add(placeholderClass);
 
+        // Placeholder must have content to have a size in some CSS situations
+        var placeholderContent = document.createElement('div');
         if (axis === 'x') {
-            placeholder.style.width = computedStyle.width;
+            placeholderContent.style.width = computedStyle.width;
         } else if (axis === 'y') {
-            placeholder.style.height = computedStyle.height;
-        } else {
-            // TODO: axis 'both' will be used for nested mode
-            placeholder.style.backgroundColor = 'lightgray';
+            placeholderContent.style.height = computedStyle.height;
+        } else if (axis === 'both') {
+            placeholderContent.style.width = computedStyle.width;
+            placeholderContent.style.height = computedStyle.height;
+            placeholderContent.style.backgroundColor = 'lightgray';
         }
+        placeholder.appendChild(placeholderContent);
     }
 
     if (connectWith) {
