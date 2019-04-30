@@ -224,7 +224,7 @@ var TestKeyboardChar = AbstractPlugin.extend({
                 '   </tr>\n' +
                 '</tbody></table>',
             steps: [{
-                start: "td:eq(1):contents()[0]->12",
+                start: "p:eq(1):contents()[0]->0",
                 key: 'a',
             }],
             test:   '<table><tbody>' +
@@ -301,7 +301,7 @@ var TestKeyboardChar = AbstractPlugin.extend({
                 start: "p:contents()[0]->11",
                 key: ' ',
             }],
-            test: '<p>dom to edit&nbsp;◆</p>',
+            test: '<p>dom to edit ◆</p>',
         },
         {
             name: "' ' within p",
@@ -310,7 +310,7 @@ var TestKeyboardChar = AbstractPlugin.extend({
                 start: "p:contents()[0]->2",
                 key: ' ',
             }],
-            test: '<p>do&nbsp;◆m to edit</p>',
+            test: '<p>do ◆m to edit</p>',
         },
         {
             name: "' ' before space within p",
@@ -319,7 +319,7 @@ var TestKeyboardChar = AbstractPlugin.extend({
                 start: "p:contents()[0]->3",
                 key: ' ',
             }],
-            test: '<p>dom&nbsp;◆ to edit</p>',
+            test: '<p>dom ◆ to edit</p>',
         },
         {
             name: "' ' after space within p",
@@ -341,7 +341,7 @@ var TestKeyboardChar = AbstractPlugin.extend({
             }, {
                 key: ' ',
             }],
-            test: '<p>&nbsp;&nbsp;&nbsp;◆dom to edit</p>',
+            test: '<p>&nbsp;&nbsp; ◆dom to edit</p>',
         },
         {
             name: "3x ' ' at end of p",
@@ -354,7 +354,7 @@ var TestKeyboardChar = AbstractPlugin.extend({
             }, {
                 key: ' ',
             }],
-            test: '<p>dom to edit&nbsp;&nbsp;&nbsp;◆</p>',
+            test: '<p>dom to edit &nbsp; ◆</p>',
         },
         {
             name: "3x ' ' within p",
@@ -367,7 +367,7 @@ var TestKeyboardChar = AbstractPlugin.extend({
             }, {
                 key: ' ',
             }],
-            test: '<p>do&nbsp;&nbsp;&nbsp;◆m to edit</p>',
+            test: '<p>do &nbsp; ◆m to edit</p>',
         },
         {
             name: "3x ' ' before space in p",
@@ -380,7 +380,7 @@ var TestKeyboardChar = AbstractPlugin.extend({
             }, {
                 key: ' ',
             }],
-            test: '<p>dom&nbsp;&nbsp;&nbsp;◆ to edit</p>',
+            test: '<p>dom &nbsp; ◆ to edit</p>',
         },
         {
             name: "3x ' ' after space in p",
@@ -393,7 +393,7 @@ var TestKeyboardChar = AbstractPlugin.extend({
             }, {
                 key: ' ',
             }],
-            test: '<p>dom &nbsp;&nbsp;&nbsp;◆to edit</p>',
+            test: '<p>dom &nbsp; &nbsp;◆to edit</p>',
         },
         {
             name: "'a' in unbreakable with font",

@@ -35,11 +35,7 @@ return ArchNode.extend({
         }
 
         if (archNode.isText() && archNode.isVisibleText()) {
-            // adjacent nbsp's are replaced with regular spaces on insert
-            this.nodeValue = this.nodeValue.slice(0, offset).replace(/\u00A0$/, ' ') +
-                archNode.nodeValue +
-                this.nodeValue.slice(offset).replace(/^\u00A0/, ' ');
-            this.params.change(this, offset + archNode.nodeValue.length);
+            this._insertTextInText(archNode.nodeValue, offset);
             return;
         }
 
@@ -138,6 +134,29 @@ return ArchNode.extend({
     //--------------------------------------------------------------------------
 
     _applyRulesPropagation: function () {},
+    /**
+     * Return a string  with clean handling of no-break spaces, which need to be replaced
+     * by spaces when inserting next to them, while regular spaces can't ever be successive
+     * or at the edges of the node.
+     *
+     * @param {String} text
+     * @returns {String}
+     */
+    _handleNbsps: function (text) {
+        return text.replace(/\u00A0/g, ' ').replace(/  /g, ' \u00A0').replace(/^ | $/g, '\u00A0');
+    },
+    /**
+     * Insert a string in a text node (this) at given offset.
+     *
+     * @param {String} text
+     * @param {Number} offset
+     */
+    _insertTextInText(text, offset) {
+        var start = this.nodeValue.slice(0, offset);
+        var end = this.nodeValue.slice(offset);
+        this.nodeValue = this._handleNbsps(start + text + end);
+        this.params.change(this, offset + text.length);
+    },
     _removeSide: function (offset, isLeft) {
         if (isLeft && offset <= 0 || !isLeft && offset >= this.length()) {
             var next = this[isLeft ? 'previousSibling' : 'nextSibling']();
