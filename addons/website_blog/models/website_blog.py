@@ -134,7 +134,8 @@ class BlogPost(models.Model):
             <section class="s_text_block">
                 <div class="container">
                     <div class="row">
-                        <div class="col-lg-12 mb16 mt16">
+                        <div class="col-lg-12 mb16">
+                            <h5 class="o_default_snippet_text">''' + _("Start writing here...") + '''</h5>
                             <p class="o_default_snippet_text">''' + _("Start writing here...") + '''</p>
                         </div>
                     </div>
@@ -148,7 +149,7 @@ class BlogPost(models.Model):
     active = fields.Boolean('Active', default=True)
     cover_properties = fields.Text(
         'Cover Properties',
-        default='{"background-image": "none", "background-color": "oe_black", "opacity": "0.2", "resize_class": ""}')
+        default='{"background-image": "none", "background-color": "oe_black", "opacity": "0.2", "resize_class": "cover_mid"}')
     blog_id = fields.Many2one('blog.blog', 'Blog', required=True, ondelete='cascade')
     tag_ids = fields.Many2many('blog.tag', string='Tags')
     content = fields.Html('Content', default=_default_content, translate=html_translate, sanitize=False)

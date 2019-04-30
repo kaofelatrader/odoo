@@ -97,7 +97,7 @@ WysiwygMultizone.include({
                 params: {
                     post_id: parseInt($el.closest('[name="blog_post"], .website_blog').find('[data-oe-model="blog.post"]').first().data('oe-id'), 10),
                     cover_properties: {
-                        'background-image': $el.children('.o_blog_cover_image').css('background-image').replace(/"/g, '').replace(window.location.protocol + "//" + window.location.host, ''),
+                        'background-image': $el.find('.o_blog_cover_image').css('background-image').replace(/"/g, '').replace(window.location.protocol + "//" + window.location.host, ''),
                         'background-color': $el.attr('data-filterColor'),
                         'opacity': $el.attr('data-filterValue'),
                         'resize_class': $el.attr('data-coverClass'),
@@ -141,8 +141,8 @@ options.registry.blog_cover = options.Class.extend({
     init: function () {
         this._super.apply(this, arguments);
 
-        this.$image = this.$target.children('.o_blog_cover_image');
-        this.$filter = this.$target.children('.o_blog_cover_filter');
+        this.$image = this.$target.find('.o_blog_cover_image');
+        this.$filter = this.$target.find('.o_blog_cover_filter');
     },
     /**
      * @override

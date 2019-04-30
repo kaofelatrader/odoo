@@ -49,8 +49,9 @@ class WebsiteBlog(http.Controller):
     ], type='http', auth="public", website=True)
     def blogs(self, page=1, **post):
         domain = request.website.website_domain()
+
         Blog = request.env['blog.blog']
-        blogs = Blog.search(domain, limit=2)
+        blogs = Blog.search(domain, order="create_date asc")
         if len(blogs) == 1:
             return werkzeug.utils.redirect('/blog/%s' % slug(blogs[0]), code=302)
 
@@ -63,12 +64,18 @@ class WebsiteBlog(http.Controller):
             page=page,
             step=self._blog_post_per_page,
         )
+        date_begin, date_end = post.get('date_begin'), post.get('date_end')
+        if date_begin and date_end:
+            domain += [("post_date", ">=", date_begin), ("post_date", "<=", date_end)]
         posts = BlogPost.search(domain, offset=(page - 1) * self._blog_post_per_page, limit=self._blog_post_per_page)
         blog_url = QueryURL('', ['blog', 'tag'])
-        return request.render("website_blog.latest_blogs", {
-            'posts': posts,
+        return request.render("website_blog.all_blogs", {
+            'blog_posts': posts,
             'pager': pager,
+            'blogs': blogs,
             'blog_url': blog_url,
+            'nav_list': self.nav_list(),
+            'blog_posts_cover_properties': [json.loads(b.cover_properties) for b in posts],
         })
 
     @http.route([
@@ -224,6 +231,9 @@ class WebsiteBlog(http.Controller):
         pager_end = page * self._post_comment_per_page
         comments = blog_post.website_message_ids[pager_begin:pager_end]
 
+        domain = request.website.website_domain()
+        blogs = blog.search(domain, order="create_date asc")
+
         tag = None
         if tag_id:
             tag = request.env['blog.tag'].browse(int(tag_id))
@@ -255,6 +265,7 @@ class WebsiteBlog(http.Controller):
             'blog': blog,
             'blog_post': blog_post,
             'blog_post_cover_properties': json.loads(blog_post.cover_properties),
+            'blogs': blogs,
             'main_object': blog_post,
             'nav_list': self.nav_list(blog),
             'enable_editor': enable_editor,

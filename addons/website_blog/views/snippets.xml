@@ -14,7 +14,7 @@
                 <a href="#" class="dropdown-item">Size</a>
                 <div class="dropdown-menu" role="menu">
                     <a role="menuitem" href="#" class="dropdown-item" data-select-class="cover container-fluid cover_full">Full Screen</a>
-                    <a role="menuitem" href="#" class="dropdown-item" data-select-class="cover container-fluid cover_narrow">Mid screen</a>
+                    <a role="menuitem" href="#" class="dropdown-item" data-select-class="cover container-fluid cover_mid">Mid screen</a>
                     <a role="menuitem" href="#" class="dropdown-item" data-select-class="cover container cover_narrow">Narrow</a>
                 </div>
             </div>
