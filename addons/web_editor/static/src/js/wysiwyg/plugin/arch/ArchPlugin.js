@@ -1059,7 +1059,9 @@ var ArchPlugin = AbstractPlugin.extend({
             if (next === virtualTextNodeEnd) {
                 return true;
             }
-            toRemove.push(next);
+            if (!next.childNodes || !next.childNodes.length) {
+                toRemove.push(next);
+            }
             return false;
         });
 
