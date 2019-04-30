@@ -253,7 +253,7 @@ var ArchPlugin = AbstractPlugin.extend({
      * @returns {string}
      **/
     getValue: function (options) {
-        return this._arch.toString(options || {});
+        return this._arch.toString(options || {}).trim();
     },
     addCustomRule: function (callback, children) {
         this.customRules.push([callback, children]);

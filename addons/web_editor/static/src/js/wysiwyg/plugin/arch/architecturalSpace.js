@@ -24,7 +24,7 @@ ArchNode.include({
      * @see https://google.github.io/styleguide/htmlcssguide.html#General_Formatting
      */
     _addArchitecturalSpaceNode: function () {
-        if (this.__removed || !this.parent || this.ancestor(this.isPre) || this._hasArchitecturalSpace) {
+        if (this.__removed || !this.parent || this.parent.ancestor(this.isPre) || this._hasArchitecturalSpace) {
             return;
         }
 

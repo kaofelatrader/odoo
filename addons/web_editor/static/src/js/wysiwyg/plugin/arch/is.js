@@ -359,7 +359,7 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isInline: function () {
-        return this.inlineTags.indexOf(this.nodeName) !== -1;
+        return this.inlineTags.concat('font').indexOf(this.nodeName) !== -1;
          // &&
          //    !this.isCell() && 
          //    !this.isEditable() &&

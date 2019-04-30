@@ -69,7 +69,7 @@ var TestArchAndRules = AbstractPlugin.extend({
                     }
 
                     <span>OKI</span>
-                </pre><section><block><p>% if toto: TOTO %end</p></block></section><p><i>iiii</i><iframe data-src="/test"/><b>bbb</b></p>`,
+                </pre><section><block><p>% if toto: TOTO %end</p></block></section><p><i>iiii</i> <iframe data-src="/test"/> <b>bbb</b></p>`,
         },
     ],
     domsArchitecturalSpace: [
@@ -107,32 +107,20 @@ var TestArchAndRules = AbstractPlugin.extend({
                     <i>iiii</i> <iframe data-src="/test"/> <b>bbb</b>
                 </p>
             `,
-            test: `<p>
-    Bonjour,
-    <br/>
-    <b>comment va-<i>tu</i> ?</b>
-</p>
+            test: `<p>Bonjour,<br/><b>comment va-<i>tu</i> ?</b></p>
 <table>
     <tbody>
         <tr>
-            <td>
-                wrong TD
-            </td>
+            <td>wrong TD</td>
         </tr>
         <tr>
-            <td>
-                free text in table
-            </td>
+            <td>free text in table</td>
         </tr>
     </tbody>
 </table>
-<p>
-    <i><font color="red">comment</font> <font color="blue">va-<b>tu</b></font> ?</i>
-</p>
+<p><i><font color="red">comment</font> <font color="blue">va-<b>tu</b></font> ?</i></p>
 <div>
-    <p>
-        text dans div ? if (div) { console.log('div'); }
-    </p>
+    <p>text dans div ? if (div) { console.log('div'); }</p>
 </div>
 <pre> 
                     if (tata) {
@@ -143,16 +131,10 @@ var TestArchAndRules = AbstractPlugin.extend({
                 </pre>
 <section>
     <block>
-        <p>
-            % if toto: TOTO %end
-        </p>
+        <p>% if toto: TOTO %end</p>
     </block>
 </section>
-<p>
-    <i>iiii</i>
-    <iframe data-src="/test"/>
-    <b>bbb</b>
-</p>`,
+<p><i>iiii</i> <iframe data-src="/test"/> <b>bbb</b></p>`,
         },
     ],
 
