@@ -83,61 +83,61 @@ var TestKeyboardChar = AbstractPlugin.extend({
                 end: "font:contents()[1]->4",
                 key: 'a',
             }],
-            test: "<p>a◆</p>",
+            test: "<h1 class=\"a\"><font style=\"font-size: 62px;\"><b>a◆</b></font></h1>",
         },
         {
             name: "'a' before an image",
-            content: '<p>xxx <img src="/web_editor/static/src/img/transparent.png"> yyy</p>',
+            content: '<p>xxx <img src="/web_editor/static/src/img/transparent.png"/> yyy</p>',
             steps: [{
                 start: "p:contents()[0]->4",
                 key: 'a',
             }],
-            test: '<p>xxx a◆<img data-src="/web_editor/static/src/img/transparent.png"> yyy</p>',
+            test: '<p>xxx a◆<img src="/web_editor/static/src/img/transparent.png"/> yyy</p>',
         },
         {
             name: "'a' before an image (2)",
-            content: '<p>xxx <img src="/web_editor/static/src/img/transparent.png"> yyy</p>',
+            content: '<p>xxx <img src="/web_editor/static/src/img/transparent.png"/> yyy</p>',
             steps: [{
                 start: "img->0",
                 key: 'a',
             }],
-            test: '<p>xxx a◆<img data-src="/web_editor/static/src/img/transparent.png"> yyy</p>',
+            test: '<p>xxx a◆<img src="/web_editor/static/src/img/transparent.png"/> yyy</p>',
         },
         {
             name: "'a' before an image in table",
-            content: '<table><tbody><tr><td><p>xxx</p></td><td><p><img src="/web_editor/static/src/img/transparent.png"></p></td><td><p>yyy</p></td></tr></tbody></table>',
+            content: '<table><tbody><tr><td><p>xxx</p></td><td><p><img src="/web_editor/static/src/img/transparent.png"/></p></td><td><p>yyy</p></td></tr></tbody></table>',
             steps: [{
                 start: "img->0",
                 key: 'a',
             }],
-            test: '<table><tbody><tr><td><p>xxx</p></td><td><p>a◆<img data-src="/web_editor/static/src/img/transparent.png"></p></td><td><p>yyy</p></td></tr></tbody></table>',
+            test: '<table><tbody><tr><td><p>xxx</p></td><td><p>a◆<img src="/web_editor/static/src/img/transparent.png"/></p></td><td><p>yyy</p></td></tr></tbody></table>',
         },
         {
             name: "'a' on invisible text before an image in table",
-            content: '<table><tbody><tr><td><p>xxx</p></td><td><p><img src="/web_editor/static/src/img/transparent.png"></p></td><td><p>yyy</p></td></tr></tbody></table>',
+            content: '<table><tbody><tr><td><p>xxx</p></td><td><p><img src="/web_editor/static/src/img/transparent.png"/></p></td><td><p>yyy</p></td></tr></tbody></table>',
             steps: [{
                 start: "p:eq(1)->0",
                 key: 'a',
             }],
-            test: '<table><tbody><tr><td><p>xxx</p></td><td><p>a◆<img data-src="/web_editor/static/src/img/transparent.png"></p></td><td><p>yyy</p></td></tr></tbody></table>',
+            test: '<table><tbody><tr><td><p>xxx</p></td><td><p>a◆<img src="/web_editor/static/src/img/transparent.png"/></p></td><td><p>yyy</p></td></tr></tbody></table>',
         },
         {
             name: "'a' before an image in table without spaces",
-            content: '<table><tbody><tr><td><p>xxx</p></td><td><p><img src="/web_editor/static/src/img/transparent.png"></p></td><td><p>yyy</p></td></tr></tbody></table>',
+            content: '<table><tbody><tr><td><p>xxx</p></td><td><p><img src="/web_editor/static/src/img/transparent.png"/></p></td><td><p>yyy</p></td></tr></tbody></table>',
             steps: [{
                 start: "img->0",
                 key: 'a',
             }],
-            test: '<table><tbody><tr><td><p>xxx</p></td><td><p>a◆<img data-src="/web_editor/static/src/img/transparent.png"></p></td><td><p>yyy</p></td></tr></tbody></table>',
+            test: '<table><tbody><tr><td><p>xxx</p></td><td><p>a◆<img src="/web_editor/static/src/img/transparent.png"/></p></td><td><p>yyy</p></td></tr></tbody></table>',
         },
         {
             name: "'a' before an image in table without spaces (2)",
-            content: '<table><tbody><tr><td><p>xxx</p></td><td><p><img src="/web_editor/static/src/img/transparent.png"></p></td><td><p>yyy</p></td></tr></tbody></table>',
+            content: '<table><tbody><tr><td><p>xxx</p></td><td><p><img src="/web_editor/static/src/img/transparent.png"/></p></td><td><p>yyy</p></td></tr></tbody></table>',
             steps: [{
                 start: "td:eq(1)->0",
                 key: 'a',
             }],
-            test: '<table><tbody><tr><td><p>xxx</p></td><td><p>a◆<img data-src="/web_editor/static/src/img/transparent.png"></p></td><td><p>yyy</p></td></tr></tbody></table>',
+            test: '<table><tbody><tr><td><p>xxx</p></td><td><p>a◆<img src="/web_editor/static/src/img/transparent.png"/></p></td><td><p>yyy</p></td></tr></tbody></table>',
         },
         {
             name: "'a' before an image in table with spaces",
@@ -148,7 +148,7 @@ var TestKeyboardChar = AbstractPlugin.extend({
                 '           <p>xxx</p>\n' +
                 '       </td>\n' +
                 '       <td>\n' +
-                '           <p><img src="/web_editor/static/src/img/transparent.png"></p>\n' +
+                '           <p><img src="/web_editor/static/src/img/transparent.png"/></p>\n' +
                 '       </td>\n' +
                 '       <td>\n' +
                 '           <p>yyy</p>\n' +
@@ -159,18 +159,18 @@ var TestKeyboardChar = AbstractPlugin.extend({
                 start: "img->0",
                 key: 'a',
             }],
-            test:   '<table><tbody>\n' +
-                    '   <tr>\n' +
-                    '       <td>\n' +
-                    '           <p>xxx</p>\n' +
-                    '       </td>\n' +
-                    '       <td>\n' +
-                    '           <p>a◆<img data-src="/web_editor/static/src/img/transparent.png"></p>\n' +
-                    '       </td>\n' +
-                    '       <td>\n' +
-                    '           <p>yyy</p>\n' +
-                    '       </td>\n' +
-                    '   </tr>\n' +
+            test:   '<table><tbody>' +
+                        '<tr>' +
+                            '<td>' +
+                                '<p>xxx</p>' +
+                            '</td>' +
+                            '<td>' +
+                                '<p>a◆<img src="/web_editor/static/src/img/transparent.png"/></p>' +
+                            '</td>' +
+                            '<td>' +
+                                '<p>yyy</p>' +
+                            '</td>' +
+                        '</tr>' +
                     '</tbody></table>',
         },
         {
@@ -182,7 +182,7 @@ var TestKeyboardChar = AbstractPlugin.extend({
                 '           <p>xxx</p>\n' +
                 '       </td>\n' +
                 '       <td>\n' +
-                '           <p><img src="/web_editor/static/src/img/transparent.png"></p>\n' +
+                '           <p><img src="/web_editor/static/src/img/transparent.png"/></p>\n' +
                 '       </td>\n' +
                 '       <td>\n' +
                 '           <p>yyy</p>\n' +
@@ -193,18 +193,18 @@ var TestKeyboardChar = AbstractPlugin.extend({
                 start: "td:eq(1)->1",
                 key: 'a',
             }],
-            test:   '<table><tbody>\n' +
-                    '   <tr>\n' +
-                    '       <td>\n' +
-                    '           <p>xxx</p>\n' +
-                    '       </td>\n' +
-                    '       <td>\n' +
-                    '           <p>a◆<img data-src="/web_editor/static/src/img/transparent.png"></p>\n' +
-                    '       </td>\n' +
-                    '       <td>\n' +
-                    '           <p>yyy</p>\n' +
-                    '       </td>\n' +
-                    '   </tr>\n' +
+            test:   '<table><tbody>' +
+                        '<tr>' +
+                            '<td>' +
+                                '<p>xxx</p>' +
+                            '</td>' +
+                            '<td>' +
+                                '<p>a◆<img src="/web_editor/static/src/img/transparent.png"/></p>' +
+                            '</td>' +
+                            '<td>' +
+                                '<p>yyy</p>' +
+                            '</td>' +
+                        '</tr>' +
                     '</tbody></table>',
         },
         {
@@ -216,7 +216,7 @@ var TestKeyboardChar = AbstractPlugin.extend({
                 '           <p>xxx</p>\n' +
                 '       </td>\n' +
                 '       <td>\n' +
-                '           <p><img src="/web_editor/static/src/img/transparent.png"></p>\n' +
+                '           <p><img src="/web_editor/static/src/img/transparent.png"/></p>\n' +
                 '       </td>\n' +
                 '       <td>\n' +
                 '           <p>yyy</p>\n' +
@@ -227,18 +227,18 @@ var TestKeyboardChar = AbstractPlugin.extend({
                 start: "td:eq(1):contents()[0]->12",
                 key: 'a',
             }],
-            test:   '<table><tbody>\n' +
-                    '   <tr>\n' +
-                    '       <td>\n' +
-                    '           <p>xxx</p>\n' +
-                    '       </td>\n' +
-                    '       <td>\n' +
-                    '           <p>a◆<img data-src="/web_editor/static/src/img/transparent.png"></p>\n' +
-                    '       </td>\n' +
-                    '       <td>\n' +
-                    '           <p>yyy</p>\n' +
-                    '       </td>\n' +
-                    '   </tr>\n' +
+            test:   '<table><tbody>' +
+                        '<tr>' +
+                            '<td>' +
+                                '<p>xxx</p>' +
+                            '</td>' +
+                            '<td>' +
+                                '<p>a◆<img src="/web_editor/static/src/img/transparent.png"/></p>' +
+                            '</td>' +
+                            '<td>' +
+                                '<p>yyy</p>' +
+                            '</td>' +
+                        '</tr>' +
                     '</tbody></table>',
         },
         /* TODO: fix... This test can't be reproduced manually so what is it supposed to simulate?
