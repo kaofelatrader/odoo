@@ -7,7 +7,7 @@ Reference
 .. toctree::
     :titlesonly:
 
-    reference/orm
+    reference/orm_test
     reference/data
     reference/actions
     reference/views

@@ -1,4 +1,5 @@
 :banner: banners/orm_api.jpg
+:orphan:
 
 .. _reference/orm:
 
@@ -575,7 +576,7 @@ Model Reference
       stores none of them: the values themselves remain stored on the linked
       record.
 
-      .. warning::
+      .. ??? .. warning::
 
           if the same field is defined on multiple
           :attr:`~odoo.models.Model._inherits`-ed
@@ -598,45 +599,69 @@ Model Reference
   .. rubric:: CRUD
 
   .. automethod:: create
+        :noindex:
   .. automethod:: browse
+        :noindex:
   .. automethod:: unlink
+        :noindex:
   .. automethod:: write
+        :noindex:
 
   .. automethod:: read
+        :noindex:
   .. automethod:: read_group
+        :noindex:
 
   .. rubric:: Searching
 
   .. automethod:: search
+        :noindex:
   .. automethod:: search_count
+        :noindex:
   .. automethod:: name_search
+        :noindex:
 
   .. rubric:: Recordset operations
 
   .. autoattribute:: ids
+        :noindex:
   .. automethod:: ensure_one
+        :noindex:
   .. automethod:: exists
+        :noindex:
   .. automethod:: filtered
+        :noindex:
   .. automethod:: sorted
+        :noindex:
   .. automethod:: mapped
+        :noindex:
 
   .. rubric:: Environment swapping
 
   .. automethod:: sudo
+      :noindex:
   .. automethod:: with_context
+      :noindex:
   .. automethod:: with_env
+      :noindex:
 
   .. rubric:: Fields and views querying
 
   .. automethod:: fields_get
+      :noindex:
   .. automethod:: fields_view_get
+      :noindex:
 
   .. rubric:: Miscellaneous methods
 
   .. automethod:: default_get
+      :noindex:
   .. automethod:: copy
+      :noindex:
   .. automethod:: name_get
+      :noindex:
   .. automethod:: name_create
+      :noindex:
 
   .. _reference/orm/model/automatic:
 
@@ -655,7 +680,7 @@ Model Reference
 
     Date at which the record was created
 
-    :type: :class:`~odoo.field.Datetime`
+    :type: :class:`~odoo.fields.Datetime`
 
   .. attribute:: create_uid
 
@@ -846,12 +871,10 @@ fetching the start/end of a period are exposed through both
 These helpers are also available by importing `odoo.tools.date_utils`.
 
 .. autoclass:: odoo.fields.Date
-    :show-inheritance:
     :members: today, context_today, to_date, to_string, start_of, end_of, add, subtract
     :noindex:
 
 .. autoclass:: odoo.fields.Datetime
-    :show-inheritance:
     :members: now, today, context_timestamp, to_datetime, to_string, start_of, end_of, add, subtract
     :noindex:
 
@@ -884,7 +907,7 @@ Relational fields
     :show-inheritance:
     :noindex:
 
-.. _reference/orm/inheritance:
+.. .. _reference/orm/inheritance:
 
 Inheritance and extension
 =========================
@@ -990,7 +1013,7 @@ and it's possible to write directly on the delegated field:
 .. warning:: when using delegation inheritance, methods are *not* inherited,
              only fields
 
-.. _reference/orm/domains:
+.. .. _reference/orm/domains:
 
 Domains
 =======
