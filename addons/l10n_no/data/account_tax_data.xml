@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
 
         <record id="tax1" model="account.tax.template">
             <field name="chart_template_id" ref="no_chart_template"/>
@@ -148,7 +147,7 @@
                 (0,0, {
                     'factor_percent': 100,
                     'repartition_type': 'base',
-                    'plus_tag_ids': [ref('account_tax_report_line_import_tax_25')],
+                    'plus_tag_ids': [ref('account_tax_report_line_service_purchase_domestic_25')],
                 }),
                 (0,0, {
                     'factor_percent': 100,
@@ -161,7 +160,7 @@
                 (0,0, {
                     'factor_percent': 100,
                     'repartition_type': 'base',
-                    'minus_tag_ids': [ref('account_tax_report_line_import_tax_25')],
+                    'minus_tag_ids': [ref('account_tax_report_line_service_purchase_domestic_25')],
                 }),
                 (0,0, {
                     'factor_percent': 100,
@@ -172,7 +171,7 @@
             ]"/>
         </record>
 
-         <record id="tax4" model="account.tax.template">
+         <record id="tax4b" model="account.tax.template">
             <field name="chart_template_id" ref="no_chart_template"/>
             <field name="name">Inngående 25% mva i utlandet</field>
             <field name="description">Inngående 25% mva i utlandet</field>
@@ -184,6 +183,7 @@
                 (0,0, {
                     'factor_percent': 100,
                     'repartition_type': 'base',
+                    'plus_tag_ids': [ref('account_tax_report_line_import_tax_25')],
                 }),
                 (0,0, {
                     'factor_percent': 100,
@@ -196,6 +196,7 @@
                 (0,0, {
                     'factor_percent': 100,
                     'repartition_type': 'base',
+                    'minus_tag_ids': [ref('account_tax_report_line_import_tax_25')],
                 }),
                 (0,0, {
                     'factor_percent': 100,
@@ -218,7 +219,6 @@
                 (0,0, {
                     'factor_percent': 100,
                     'repartition_type': 'base',
-                    'plus_tag_ids': [ref('account_tax_report_line_import_tax_15')],
                 }),
                 (0,0, {
                     'factor_percent': 100,
@@ -231,7 +231,6 @@
                 (0,0, {
                     'factor_percent': 100,
                     'repartition_type': 'base',
-                    'minus_tag_ids': [ref('account_tax_report_line_import_tax_15')],
                 }),
                 (0,0, {
                     'factor_percent': 100,
@@ -242,7 +241,7 @@
             ]"/>
         </record>
 
-        <record id="tax5" model="account.tax.template">
+        <record id="tax5b" model="account.tax.template">
             <field name="chart_template_id" ref="no_chart_template"/>
             <field name="name">Inngående 15% mva i utlandet</field>
             <field name="description">Inngående 15% mva i utlandet</field>
@@ -254,6 +253,7 @@
                 (0,0, {
                     'factor_percent': 100,
                     'repartition_type': 'base',
+                    'plus_tag_ids': [ref('account_tax_report_line_import_tax_15')],
                 }),
                 (0,0, {
                     'factor_percent': 100,
@@ -266,6 +266,7 @@
                 (0,0, {
                     'factor_percent': 100,
                     'repartition_type': 'base',
+                    'minus_tag_ids': [ref('account_tax_report_line_import_tax_15')],
                 }),
                 (0,0, {
                     'factor_percent': 100,
@@ -386,7 +387,6 @@
                 (0,0, {
                     'factor_percent': 100,
                     'repartition_type': 'base',
-                    'plus_tag_ids': [ref('account_tax_report_line_domestic_turnover_0')],
                 }),
                 (0,0, {
                     'factor_percent': 100,
@@ -398,7 +398,6 @@
                 (0,0, {
                     'factor_percent': 100,
                     'repartition_type': 'base',
-                    'minus_tag_ids': [ref('account_tax_report_line_domestic_turnover_0')],
                 }),
                 (0,0, {
                     'factor_percent': 100,
@@ -408,5 +407,106 @@
             ]"/>
         </record>
 
-    </data>
+        <record id="tax9" model="account.tax.template">
+            <field name="chart_template_id" ref="no_chart_template"/>
+            <field name="name">Utgående fritatt mva</field>
+            <field name="description">Utgående fritatt mva</field>
+            <field name="amount">0</field>
+            <field name="amount_type">percent</field>
+            <field name="type_tax_use">sale</field>
+            <field name="tax_group_id" ref="tax_group_0"/>
+            <field name="invoice_repartition_line_ids" eval="[(5,0,0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                    'plus_tag_ids': [ref('account_tax_report_line_domestic_turnover_exempt')],
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('chart2704'),
+                }),
+            ]"/>
+            <field name="refund_repartition_line_ids" eval="[(5,0,0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                    'minus_tag_ids': [ref('account_tax_report_line_domestic_turnover_exempt')],
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('chart2704'),
+                }),
+            ]"/>
+        </record>
+
+        <record id="tax10" model="account.tax.template">
+            <field name="chart_template_id" ref="no_chart_template"/>
+            <field name="name">Utgående fritatt mva  i utlandet</field>
+            <field name="description">Utgående fritatt mva i utlandet</field>
+            <field name="amount">0</field>
+            <field name="amount_type">percent</field>
+            <field name="type_tax_use">sale</field>
+            <field name="tax_group_id" ref="tax_group_0"/>
+            <field name="invoice_repartition_line_ids" eval="[(5,0,0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                    'plus_tag_ids': [ref('account_tax_report_line_domestic_turnover_abroad_exempt')],
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('chart2704'),
+                }),
+            ]"/>
+            <field name="refund_repartition_line_ids" eval="[(5,0,0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                    'minus_tag_ids': [ref('account_tax_report_line_domestic_turnover_abroad_exempt')],
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('chart2704'),
+                }),
+            ]"/>
+        </record>
+
+        <record id="tax11" model="account.tax.template">
+            <field name="chart_template_id" ref="no_chart_template"/>
+            <field name="name">Inngående fritatt mva</field>
+            <field name="description">Inngående fritatt mva</field>
+            <field name="amount">0</field>
+            <field name="amount_type">percent</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="tax_group_id" ref="tax_group_0"/>
+            <field name="invoice_repartition_line_ids" eval="[(5,0,0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                    'plus_tag_ids': [ref('account_tax_report_line_import_tax_exempt')],
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('chart2704'),
+                }),
+            ]"/>
+            <field name="refund_repartition_line_ids" eval="[(5,0,0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                    'minus_tag_ids': [ref('account_tax_report_line_import_tax_exempt')],
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('chart2704'),
+                }),
+            ]"/>
+        </record>
+
 </odoo>
