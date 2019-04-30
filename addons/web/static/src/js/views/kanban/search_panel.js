@@ -138,13 +138,17 @@ var SearchPanel = Widget.extend({
                 parentId: value[parentField] && value[parentField][0] || false,
             });
         });
-        Object.keys(category.values).forEach(function (valueId) {
+        values.map(function (value) {
+            return value.id;
+        }).forEach(function (valueId) {
             var value = category.values[valueId];
             if (value.parentId) {
                 category.values[value.parentId].childrenIds.push(value.id);
             }
         });
-        category.rootIds = Object.keys(category.values).filter(function (valueId) {
+        category.rootIds = values.map(function (value) {
+            return value.id;
+        }).filter(function (valueId) {
             var value = category.values[valueId];
             return value.parentId === false;
         });
