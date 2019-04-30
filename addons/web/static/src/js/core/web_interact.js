@@ -260,10 +260,13 @@ var _sortable = function (el, options) {
     // When dragging starts, we need to create a first placeholder and make all
     // items in this sortable droppable so they can react to the dragged item.
     var ondropactivate = function (ev) {
-        // Create the very first placeholder in place of the draggable item
+        // Create the very first placeholder in the spot of the draggable item
         var sortable = ev.target;
         var draggable = ev.relatedTarget;
         var anchor = draggable.nextSibling;
+        if (sortable.contains(draggable)) {
+            _setPlaceholder(sortable, draggable, anchor, axis, connectWith);
+        }
 
         // Set droppable on all items in this sortable
         if (itemsSelector && !el.dataset.sortableItemsActivated) {
@@ -320,10 +323,6 @@ var _sortable = function (el, options) {
                     itemsInteractable.fire(ondropactivateEvent);
                 }
             });
-
-            if (sortable.contains(draggable)) {
-                _setPlaceholder(sortable, draggable, anchor, axis, connectWith);
-            }
         }
 
         if (options.ondropactivate) {
