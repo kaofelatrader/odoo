@@ -631,22 +631,19 @@ return Class.extend({
             }
         }
         __goUp = false;
-        if (!next) {
+        if (!next || next.isArchitecturalSpace()) {
             var index = this.index();
             index += isPrev ? -1 : 1;
             next = this.parent.childNodes[index];
         }
-        if (!next) {
+        if (!next || next.isArchitecturalSpace()) {
             __goUp = true;
             next = this.parent[isPrev ? 'previousSibling' : 'nextSibling']();
-            while (next && next.isArchitecturalSpace()) {
-                next = next[isPrev ? 'previousSibling' : 'nextSibling']();
-            }
-            if (next) {
-                next = next[isPrev ? 'lastChild' : 'firstChild']();
+            if (next && !next.isArchitecturalSpace()) {
+                next = next[isPrev ? 'lastChild' : 'firstChild']() || next;
             }
         }
-        if (!next || !__closestUnbreakable.contains(next)) {
+        if (!next || !__closestUnbreakable.contains(next) || next.isArchitecturalSpace()) {
             var insertMethod = __closestUnbreakable[this.lastChild() ? 'prepend' : 'append'].bind(__closestUnbreakable);
             var virtualTextNode = this.params.create();
             insertMethod(virtualTextNode);

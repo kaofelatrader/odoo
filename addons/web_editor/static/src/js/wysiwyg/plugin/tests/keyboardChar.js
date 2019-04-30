@@ -63,7 +63,7 @@ var TestKeyboardChar = AbstractPlugin.extend({
                 end: "i:contents()[0]->1",
                 key: 'a',
             }],
-            test: "<p><b>dom</b></p><p>a◆</p>", // should it keep the b instead ?
+            test: "<p><b>dom</b></p><p><b>a◆</b></p>", // should it keep the b instead ?
         },
         {
             name: "'a' on a selection of all the contents of a complex dom",

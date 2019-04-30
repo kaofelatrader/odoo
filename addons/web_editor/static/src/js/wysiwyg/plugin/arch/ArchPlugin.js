@@ -1064,7 +1064,11 @@ var ArchPlugin = AbstractPlugin.extend({
         });
 
         toRemove.forEach(function (archNode) {
+            var parent = archNode.parent;
             archNode.remove();
+            if (parent && parent.parent && parent.isEmpty() && !parent.contains(virtualTextNodeBegin)) {
+                parent.remove();
+            }
         });
 
         var merged = true;
@@ -1079,7 +1083,6 @@ var ArchPlugin = AbstractPlugin.extend({
 
         this._removeAllVirtualText([virtualTextNodeBegin.id]);
 
-        // the the range in the arch but not in the dom, wait redraw
         this._setRangeWithIDs({
             scID: virtualTextNodeBegin.id,
             so: 0,
