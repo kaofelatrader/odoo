@@ -242,19 +242,9 @@ var _sortable = function (el, options) {
      *
      */
     var check = function (dragEv, ev, drop, dropObj, dropEl, dragObj, dragEl) {
-        var tolerated = true;
-        if (tolerance === 'pointer') {
-            // Interactjs does not implement tolerance pointer from jQuery-ui.
-            // We want to check if the pointer is inside the droppable.
-            var dropElRight = dropEl.offsetLeft + dropEl.offsetWidth;
-            var dropElBottom = dropEl.offsetTop + dropEl.offsetHeight;
-            tolerated = dropEl.offsetLeft < ev.clientX < dropElRight &&
-                dropEl.offsetTop < ev.clientY < dropElBottom;
-        }
         var fromThisSortable = el.contains(dragEl);
-        var fromConnectedSortable = connectWith && dragEl.closest(connectWith);
-        var isValidItem = fromThisSortable || fromConnectedSortable;
-        return drop && tolerated && isValidItem;
+        var fromConnectedSortable = connectWith && !!dragEl.closest(connectWith);
+        return drop && (fromThisSortable || fromConnectedSortable);
     }
 
     // When dragging starts, we need to create a first placeholder and make all
