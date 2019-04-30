@@ -1066,8 +1066,10 @@ var ArchPlugin = AbstractPlugin.extend({
         toRemove.forEach(function (archNode) {
             var parent = archNode.parent;
             archNode.remove();
-            if (parent && parent.parent && parent.isEmpty() && !parent.contains(virtualTextNodeBegin)) {
+            while (parent && parent.isEmpty() && !parent.contains(virtualTextNodeBegin)) {
+                var newParent = parent.parent;
                 parent.remove();
+                parent = newParent;
             }
         });
 
