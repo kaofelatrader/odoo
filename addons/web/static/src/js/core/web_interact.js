@@ -213,6 +213,7 @@ var _sortable = function (el, options) {
     var axis = options.axis || 'y';
     var handle = options.handle;
     var connectWith = options.connectWith;
+    var containment = options.containment;
     var itemsSelector = options.items;
     var tolerance = options.tolerance;
 
@@ -385,10 +386,13 @@ var _sortable = function (el, options) {
                     _resetDraggableProperties(ev.target, options.revert);
                 }
             };
-            if (options.containment) {
+            if (handle) {
+                itemsDraggableOptions.allowFrom = handle;
+            }
+            if (containment) {
                 // Restrict the items to stay in the designated area
                 itemsDraggableOptions.restrict = {
-                    restriction: options.containment,
+                    restriction: containment,
                     elementRect: { left: 0, right: 1, top: 0, bottom: 1 }
                 };
             }
