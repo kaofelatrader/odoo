@@ -201,6 +201,7 @@ var _cleanPlaceholder = function (sortable) {
  * @param {string} [options.itemsSelector] selector identifying acceptable items
  * @param {Function} [options.ondropactivate] called on drag start of valid item
  * @param {Function} [options.ondragenter] called on drag enter of valid item
+ * @param {Function} [options.onsort] called on sorting items while dragging
  * @param {Function} [options.ondrop] called on drop of valid item
  * @param {Function} [options.ondragleave] called on drag leave of valid item
  * @param {Function} [options.ondropdectivate] called on drag stop of valid item
@@ -300,8 +301,8 @@ var _sortable = function (el, options) {
                         anchor = anchor.nextSibling;
                     }
                     _setPlaceholder(el, dragEl, anchor, axis, connectWith);
-                    if (options.onitemdragenter) {
-                        options.onitemdragenter(ev);
+                    if (options.onsort) {
+                        options.onsort(ev);
                     }
                 },
                 ondropdeactivate: options.onitemdropdeactivate,
