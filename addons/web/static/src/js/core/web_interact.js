@@ -142,41 +142,43 @@ var _getPlaceholder = function (sortable) {
  * @returns {DOMElement|null}
  */
 var _setPlaceholder = function (sortable, item, anchor, axis, connectWith) {
-    var placeholder = _getPlaceholder(item);
-    if (!placeholder) {
-        var computedStyle = window.getComputedStyle(item);
-        placeholder = document.createElement(item.tagName);
-        placeholder.classList.add(placeholderClass);
+    // Only update the placeholder if it would move it somewhere else
+    if (!anchor || !anchor.classList.contains(placeholderClass)) {
+        var placeholder = _getPlaceholder(item);
+        if (!placeholder) {
+            // Generate a brand new placeholder
+            var computedStyle = window.getComputedStyle(item);
+            placeholder = document.createElement(item.tagName);
+            placeholder.classList.add(placeholderClass);
 
-        // Placeholder must have content to have a size in some CSS situations
-        var placeholderContent = document.createElement('div');
-        if (axis === 'x') {
-            placeholderContent.style.width = computedStyle.width;
-        } else if (axis === 'y') {
-            placeholderContent.style.height = computedStyle.height;
-        } else if (axis === 'both') {
-            placeholderContent.style.width = computedStyle.width;
-            placeholderContent.style.height = computedStyle.height;
-            placeholderContent.style.backgroundColor = 'lightgray';
+            // Placeholder must have content to have a size in some CSS situations
+            var placeholderContent = document.createElement('div');
+            if (axis === 'x') {
+                placeholderContent.style.width = computedStyle.width;
+            } else if (axis === 'y') {
+                placeholderContent.style.height = computedStyle.height;
+            } else if (axis === 'both') {
+                placeholderContent.style.width = computedStyle.width;
+                placeholderContent.style.height = computedStyle.height;
+                placeholderContent.style.backgroundColor = 'lightgray';
+            }
+            placeholder.appendChild(placeholderContent);
         }
-        placeholder.appendChild(placeholderContent);
-    }
 
-    if (connectWith) {
-        var sortables = document.querySelectorAll(connectWith)
-        sortables.forEach(function (currentSortable) {
-            _cleanPlaceholder(currentSortable);
-        });
-    } else {
-        _cleanPlaceholder(sortable);
-    }
+        // Clean previous placeholders
+        if (connectWith) {
+            var sortables = document.querySelectorAll(connectWith)
+            sortables.forEach(function (currentSortable) {
+                _cleanPlaceholder(currentSortable);
+            });
+        } else {
+            _cleanPlaceholder(sortable);
+        }
 
-    if (anchor && anchor.classList.contains(placeholderClass)) {
-        anchor = anchor.nextSibling;
+        // Placeholder insertion per se
+        var parent = anchor ? anchor.parentNode: sortable;
+        parent.insertBefore(placeholder, anchor);
     }
-
-    var parent = anchor ? anchor.parentNode: sortable;
-    parent.insertBefore(placeholder, anchor);
 };
 
 /**
@@ -188,7 +190,6 @@ var _cleanPlaceholder = function (sortable) {
     var placeholder = _getPlaceholder(sortable);
     if (placeholder) {
         placeholder.remove();
-        placeholder = undefined;
     }
 };
 
