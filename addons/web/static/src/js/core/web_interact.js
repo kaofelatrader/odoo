@@ -294,7 +294,6 @@ var _sortable = function (el, options) {
                 }
                 items.forEach(function (item) {
                     if (!item.classList.contains(placeholderClass)) {
-                        item.dataset.sortableActivated = true;
                         var droppable = interact(item).dropzone(itemsOptions);
                         // When we enter here for the first time, ondropactivate
                         // has already been fired, but it was not fired on the
@@ -380,9 +379,11 @@ var _sortable = function (el, options) {
             item = ev.target.closest(itemsSelector);
         }
         if (item && !item.classList.contains('o_sortable_handle')) {
-            item.classList.add('o_sortable_handle');
             var itemsDraggableOptions = {
                 onend: function(ev) {
+                    // Sortable items reset their CSS style if they are dropped.
+                    // Their position in the DOM will be updated by the handlers
+                    // of the droppable so we can undo absolute positioning etc.
                     _resetDraggableProperties(ev.target, options.revert);
                 }
             };
@@ -397,6 +398,7 @@ var _sortable = function (el, options) {
                 };
             }
             _draggable(item, itemsDraggableOptions);
+            item.classList.add('o_sortable_handle');
         }
     });
 
