@@ -18,7 +18,7 @@ class CompanyDocumentLayout(models.TransientModel):
 
     company_id = fields.Many2one('res.company', required=True)
 
-    logo = fields.Binary(related='company_id.logo', readonly=False, context="")
+    logo = fields.Binary(related='company_id.logo', readonly=False)
     report_header = fields.Text(related='company_id.report_header', readonly=False)
     report_footer = fields.Text(related='company_id.report_footer', readonly=False)
     paperformat_id = fields.Many2one(related='company_id.paperformat_id', readonly=False)
@@ -46,7 +46,7 @@ class CompanyDocumentLayout(models.TransientModel):
     @api.onchange('primary_color', 'secondary_color')
     def onchange_colors(self):
         for wizard in self:
-            # only use default colors if the USER changed the colors, not the code
+            # stop using default colors if the user manually selected a color
             if wizard.env.context.get('user_selected'):
                 wizard.use_default_colors = False
             wizard._compute_preview()
@@ -63,13 +63,8 @@ class CompanyDocumentLayout(models.TransientModel):
         """ compute a qweb based preview to display on the wizard """
         for wizard in self:
             ir_qweb = wizard.env['ir.qweb']
-            import pdb; pdb.set_trace()
-            #logo = wizard.env['res.company'].browse[wizard.company_id].logo
+            #FIXME workaround, need to figure out how to get the binary field data, not the size
+            wizard.logo = None;
             wizard.preview = ir_qweb.render('web.layout_preview', {
-                'logo'                          : wizard.logo,
-                'external_report_layout_id_key' : wizard.external_report_layout_id.key,
-                'font'                          : wizard.font,
-                'primary_color'                 : wizard.primary_color,
-                'secondary_color'               : wizard.secondary_color,
-                'res_company'                   : wizard.company_id,
+                'company'                : wizard,
             })

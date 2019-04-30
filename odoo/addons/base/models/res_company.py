@@ -60,7 +60,7 @@ class Company(models.Model):
     font = fields.Selection([("Lato", "Lato"), ("Roboto", "Roboto"), ("OpenSans", "OpenSans"), ("Montserrat", "Montserrat"), ("Oswald", "Oswald"), ("Raleway", "Raleway")], default="Lato")
     primary_color = fields.Char(default="#000000")
     secondary_color = fields.Char(default="#000000")
-    scss_url = fields.Char(default="/web/static/src/scss/res_company_default.scss")
+    scss_url = fields.Char()
     _sql_constraints = [
         ('name_uniq', 'unique (name)', 'The company name must be unique !')
     ]

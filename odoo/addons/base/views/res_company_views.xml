@@ -172,11 +172,6 @@
             <field name="mode">primary</field>
             <field name="priority">2048</field>
             <field name="arch" type="xml">
-                <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/report.scss"/>
-                <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/layout_standard.scss"/>
-                <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/layout_background.scss"/>
-                <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/layout_boxed.scss"/>
-                <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/layout_clean.scss"/>
                 <form class="o_company_document_layout">
                     <group>
                         <group>
@@ -185,10 +180,11 @@
                             <field name="report_footer" string="Footer" placeholder="e.g. Opening hours, bank accounts (one per line)" />
                             <field name="paperformat_id" widget="selection" />
                             <field name="external_report_layout_id" widget="radio" domain="[('key', 'ilike', 'external_layout_')]" />
-                            <field name="font" widget="selection" />
+                            <!-- TODO fix the font and color widget -->
+                            <field name="font" widget="font" />
                             <field name="primary_color" widget="color" context="{'user_selected':True}" />
                             <field name="secondary_color" widget="color" context="{'user_selected':True}" />
-                            <label for="reset_hook" class="link" string="Reset to default" />
+                            <label for="reset_hook" string="Reset to default" />
                             <field name="reset_hook" invisible="1" />
                             <field name="use_default_colors" invisible="1" />
                         </group>

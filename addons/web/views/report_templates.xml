@@ -19,6 +19,8 @@
 
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/fonts.scss" />
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/res_company_default.scss"/>
+        <!-- FIXME t-call-assets does not seem to inherit the context from his parent -->
+        <!-- <link rel="stylesheet" type="text/scss" t-att-href="res_company.scss_url"/> -->
 
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/report.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/layout_standard.scss"/>
@@ -59,6 +61,9 @@
                 <meta charset="utf-8"/>
                 <meta name="viewport" content="initial-scale=1"/>
                 <title><t t-esc="title or 'Odoo Report'"/></title>
+                <!-- <xpath expr="//link[@href='/web/static/src/scss/res_company_default.scss']" position="replace">
+                    <link rel="stylesheet" type="text/scss" t-att-href="res_company.scss_url"/>
+                </xpath> -->
                 <t t-call-assets="web.report_assets_common" t-js="false"/>
                 <t t-call-assets="web.assets_common" t-css="false"/>
                 <t t-call-assets="web.report_assets_common" t-css="false"/>
@@ -340,13 +345,6 @@
             </t>
         </t>
 
-        <t t-if="company.scss_url">
-            <t t-raw="company.scss_url" />
-            <xpath expr="//link[@href='/web/static/src/scss/res_company_default.scss']" position="attributes">
-                <attribute name="href"><t t-raw="company.scss_url" /></attribute>
-            </xpath>
-        </t>
-
         <t t-if="company.external_report_layout_id" t-call="{{company.external_report_layout_id.key}}"><t t-raw="0"/></t>
         <t t-else="else" t-call="web.external_layout_standard"><t t-raw="0"/></t>
 
@@ -422,38 +420,36 @@
     </template>
     <!-- Used by CompanyDocumentLayout to display a dynamic preview -->
     <template id="layout_preview">
-        <t t-call="web.html_container">
-        <div class="o_report_layout_background" t-attf-style="font-family: {{font}};">
+        <div class="page" t-attf-style="font-family: {{company.font}};">
             <div class="header">
-                <img t-if="logo" t-att-src="image_data_uri(logo)" class="float-left" alt="Logo"/>
+                <img t-if="company.logo" t-att-src="image_data_uri(company.logo)" class="float-left" alt="Logo"/>
                 <hr />
-                <h2 t-attf-style="color: {{primary_color}}">Invoice INV/2019/0005</h2>
+                <h2 t-attf-style="color: {{company.primary_color}}">Invoice INV/2019/0005</h2>
                 <div class="row o_layout_information">
                     <div class="col-auto">
                         <strong>
-                            <span t-attf-style="color: {{secondary_color}}">Invoice Date:</span>
+                            <span t-attf-style="color: {{company.secondary_color}}">Invoice Date:</span>
                         </strong>
                         <p>12/25/2016</p>
                     </div>
                     <div class="col-auto">
                         <strong>
-                            <span t-attf-style="color: {{secondary_color}}">Due Date:</span>
+                            <span t-attf-style="color: {{company.secondary_color}}">Due Date:</span>
                         </strong>
                         <p>01/24/2017</p>
                     </div>
                     <div class="col-auto">
                         <strong>
-                            <span t-attf-style="color: {{secondary_color}}">Reference:</span>
+                            <span t-attf-style="color: {{company.secondary_color}}">Reference:</span>
                         </strong>
                         <p>INV/2019/0005/05</p>
                     </div>
                 </div>
             </div>
-           
             <div t-attf-class="article">
                 <table class="table table-sm">
                     <thead>
-                        <tr t-attf-style="color: {{secondary_color}}">
+                        <tr t-attf-style="color: {{company.secondary_color}}">
                             <th>Description</th>
                             <th>Quantity</th>
                             <th>Unit Price</th>
@@ -489,7 +485,7 @@
                             <table class="table table-sm">
                                 <tr class="o_subtotal">
                                     <td>
-                                        <strong t-attf-style="color: {{primary_color}}">Subtotal</strong>
+                                        <strong t-attf-style="color: {{company.primary_color}}">Subtotal</strong>
                                     </td>
                                     <td>
                                         <span>$ 1630.00</span>
@@ -497,7 +493,7 @@
                                 </tr>
                                 <tr class="o_total">
                                     <td>
-                                        <strong t-attf-style="color: {{primary_color}}">Total</strong>
+                                        <strong t-attf-style="color: {{company.primary_color}}">Total</strong>
                                     </td>
                                     <td>
                                         <span>$ 1630.00</span>
@@ -518,7 +514,6 @@
                 </div>
             </div>
         </div>
-        </t>
     </template>
 
     <report id="action_report_internalpreview"

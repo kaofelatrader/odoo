@@ -2910,13 +2910,28 @@ var FieldSelectionFont = FieldSelection.extend({
             );
             return $state;
         };
-        this.$el.select2({
-            formatResult: formatState,
-            formatSelection: formatState,
-        });
+        // this.$el.select2({
+        //     formatResult: formatState,
+        //     formatSelection: formatState,
+        // });
         return this._super.apply(this, arguments);
     },
 });
+
+// $().select2({
+//     formatResult: function (state) {
+//         var $state = $(
+//             '<span style="font-family:' + state.text + '">' + state.text + '</span>',
+//         );
+//         return $state;
+//     },
+//     formatSelection: function (state) {
+//         var $state = $(
+//             '<span style="font-family:' + state.text + '">' + state.text + '</span>',
+//         );
+//         return $state;
+//     },
+// });
 
 return {
     FieldMany2One: FieldMany2One,
