@@ -289,8 +289,9 @@ var _sortable = function (el, options) {
                 accept: itemsSelector,
                 checker: check,
                 ondropactivate: options.onitemdropactivate,
-                ondragenter: function (ev) {
-                    var dragEl = ev.relatedTarget;
+                ondropmove: function (ev) {
+                    var draggable = ev.relatedTarget;
+
                     var anchor = ev.target;
                     if (axis === 'y' && ev.dragEvent.dy > 0) {
                         // If dragging downward in y axis mode, then anchor
@@ -304,7 +305,9 @@ var _sortable = function (el, options) {
                         // TODO: look for dx and dy for direction
                         anchor = anchor.nextSibling;
                     }
-                    _setPlaceholder(el, dragEl, anchor, axis, connectWith);
+
+                    _setPlaceholder(el, draggable, anchor, axis, connectWith);
+
                     if (options.onsort) {
                         options.onsort(ev);
                     }
