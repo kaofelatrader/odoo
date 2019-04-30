@@ -160,11 +160,23 @@ var RunningTourActionHelper = core.Class.extend({
             clientX: elementCenter.left,
             clientY: elementCenter.top,
         }));
-        values.$element[0].dispatchEvent(new PointerEvent("pointermove", {
-            bubbles: true,
-            clientX: toCenter.left,
-            clientY: toCenter.top,
-        }));
+        if (elementCenter.left > toCenter.left) {
+            for (var i = elementCenter.left; i >= toCenter.left; i--) {
+                values.$element[0].dispatchEvent(new PointerEvent("pointermove", {
+                    bubbles: true,
+                    clientX: i,
+                    clientY: toCenter.top,
+                }));
+            }
+        } else {
+            for (var i = elementCenter.left; i <= toCenter.left; i++) {
+                values.$element[0].dispatchEvent(new PointerEvent("pointermove", {
+                    bubbles: true,
+                    clientX: i,
+                    clientY: toCenter.top,
+                }));
+            }
+        }
         values.$element[0].dispatchEvent(new PointerEvent("pointerup", {
             bubbles: true,
             clientX: toCenter.left,

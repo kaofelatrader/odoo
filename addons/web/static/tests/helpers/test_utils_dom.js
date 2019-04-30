@@ -182,13 +182,25 @@ async function pointerDragAndDrop(el, to, options) {
     }
 
     // await concurrency.delay(1000);
-
-    var pointerMoveEvent = new PointerEvent("pointermove", {
-        bubbles: true,
-        clientX: toOffset.left,
-        clientY: toOffset.top,
-    });
-    el.dispatchEvent(pointerMoveEvent);
+    if (elementCenter.top > toOffset.top) {
+        for (var i = elementCenter.top; i >= toOffset.top; i--) {
+            var pointerMoveEvent = new PointerEvent("pointermove", {
+                bubbles: true,
+                clientX: toOffset.left,
+                clientY: i,
+            });
+            el.dispatchEvent(pointerMoveEvent);
+        }
+    } else {
+        for (var i = elementCenter.top; i <= toOffset.top; i++) {
+            var pointerMoveEvent = new PointerEvent("pointermove", {
+                bubbles: true,
+                clientX: toOffset.left,
+                clientY: i,
+            });
+            el.dispatchEvent(pointerMoveEvent);
+        }
+    }
 
     if (!options.disableDrop) {
         var pointerUpEvent = new PointerEvent("pointerup", {
