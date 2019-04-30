@@ -166,6 +166,13 @@ var KanbanColumn = Widget.extend({
             this.quickCreateWidget.on_attach_callback();
         }
     },
+    /**
+     * @override
+     */
+    destroy: function () {
+        web_interact.unset(this.el);
+        return this._super.apply(this, arguments)
+    },
 
     //--------------------------------------------------------------------------
     // Public

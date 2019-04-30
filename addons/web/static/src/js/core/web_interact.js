@@ -257,55 +257,51 @@ var _sortable = function (el, options) {
         var sortable = ev.target;
         var draggable = ev.relatedTarget;
         var anchor = draggable.nextSibling;
-        if (sortable.contains(draggable)) {
-            _setPlaceholder(sortable, draggable, anchor, axis, connectWith);
-        }
 
         // Set droppable on all items in this sortable
-        if (!el.dataset.sortableActivated) {
-            el.dataset.sortableActivated = true;
-            var items = el.querySelectorAll(itemsSelector);
-            if (items.length) {
-                var itemsOptions = {
-                    accept: itemsSelector,
-                    checker: check,
-                    ondropactivate: options.onitemdropactivate,
-                    ondragenter: function (ev) {
-                        var dragEl = ev.relatedTarget;
-                        var anchor = ev.target;
-                        if (axis === 'y' && ev.dragEvent.dy > 0) {
-                            // If dragging downward in y axis mode, then anchor
-                            // after this item, so before the next item.
-                            anchor = anchor.nextSibling;
-                        } else if (axis === 'x' && ev.dragEvent.dx > 0) {
-                            // If dragging rightward in x axis mode, then anchor
-                            // after this item, so before the next item.
-                            anchor = anchor.nextSibling;
-                        } else if (axis === 'both') {
-                            // TODO: look for dx and dy for direction
-                            anchor = anchor.nextSibling;
-                        }
-                        _setPlaceholder(el, dragEl, anchor, axis, connectWith);
-                        if (options.onitemdragenter) {
-                            options.onsort(ev);
-                        }
-                    },
-                    ondropdeactivate: options.onitemdropdeactivate,
-                }
-                items.forEach(function (item) {
-                    if (!item.classList.contains(placeholderClass)) {
-                        var droppable = interact(item).dropzone(itemsOptions);
-                        // When we enter here for the first time, ondropactivate
-                        // has already been fired, but it was not fired on the
-                        // children since they were not droppable yet, so we
-                        // need to fire it manually.
-                        if (item !== draggable) {
-                            var ondropactivateEvent = Object.assign({}, ev);
-                            ondropactivateEvent.target = item;
-                            droppable.fire(ondropactivateEvent);
-                        }
+        if (itemsSelector && !el.dataset.sortableItemsActivated) {
+            el.dataset.sortableItemsActivated = true;
+            var itemsInteractable = interact(itemsSelector).dropzone({
+                accept: itemsSelector,
+                checker: check,
+                ondropactivate: options.onitemdropactivate,
+                ondragenter: function (ev) {
+                    var dragEl = ev.relatedTarget;
+                    var anchor = ev.target;
+                    if (axis === 'y' && ev.dragEvent.dy > 0) {
+                        // If dragging downward in y axis mode, then anchor
+                        // after this item, so before the next item.
+                        anchor = anchor.nextSibling;
+                    } else if (axis === 'x' && ev.dragEvent.dx > 0) {
+                        // If dragging rightward in x axis mode, then anchor
+                        // after this item, so before the next item.
+                        anchor = anchor.nextSibling;
+                    } else if (axis === 'both') {
+                        // TODO: look for dx and dy for direction
+                        anchor = anchor.nextSibling;
                     }
-                })
+                    _setPlaceholder(el, dragEl, anchor, axis, connectWith);
+                    if (options.onitemdragenter) {
+                        options.onitemdragenter(ev);
+                    }
+                },
+                ondropdeactivate: options.onitemdropdeactivate,
+            });
+            // When we enter here for the first time, ondropactivate
+            // has already been fired, but it was not fired on the
+            // children since they were not droppable yet, so we
+            // need to fire it manually.
+            el.querySelectorAll(itemsSelector).forEach(function (item) {
+                if (item !== draggable) {
+                    var ondropactivateEvent = Object.assign({}, ev);
+                    ondropactivateEvent.dropzone = itemsInteractable;
+                    ondropactivateEvent.target = item;
+                    itemsInteractable.fire(ondropactivateEvent);
+                }
+            });
+
+            if (sortable.contains(draggable)) {
+                _setPlaceholder(sortable, draggable, anchor, axis, connectWith);
             }
         }
 
@@ -417,28 +413,28 @@ var _isSet = function (el) {
 };
 
 /**
- * Recursively unbind the interactions bound to an element and its children
+ * Unbind the interactions bound to an element by interactjs
  *
  * @param {DOMElement} el
  */
-var _unSet = function (el) {
-    interact(el).unset();
-    if (el.dataset.sortableActivated) {
-        delete el.dataset.sortableActivated;
-    }
-    el.childNodes.forEach(function (node) {
-        if (_isSet(node)) {
-            _unSet(node);
+var _unset = function (el) {
+    var interactable = interact(el);
+    if (interactable.options.drop.enabled) {
+        // Unset draggable items
+        var itemsSelector = interactable.options.drop.accept;
+        if (itemsSelector && el.dataset.sortableItemsActivated) {
+            delete el.dataset.sortableItemsActivated;
+            interact(itemsSelector).unset();
         }
-    });
-}
-
+    }
+    interactable.unset();
+};
 
 return {
     draggable: _draggable,
     sortable: _sortable,
     isSet: _isSet,
-    unSet: _unSet,
+    unset: _unset,
 };
 
 });

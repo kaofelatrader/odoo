@@ -333,8 +333,9 @@ var KanbanRenderer = BasicRenderer.extend({
 
         // remove previous sorting
         if (web_interact.isSet(this.el)) {
-            web_interact.unSet(this.el);
+            web_interact.unset(this.el);
         }
+
         if (this.groupedByM2O) {
             // Enable column sorting
             web_interact.sortable(this.el, {
