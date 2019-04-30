@@ -49,6 +49,7 @@ var FormOverlayView = Widget.extend({
         this.model = options.model;
         this.res_id = options.res_id; // to open form view, when click on record
         this.db_id = options.db_id; // related db for save record
+        this.mode = options.mode;
         this._disabled = false; // to prevent from creating multiple records (e.g. on double-clicks)
         this.isResizing = false; 
         this.lastDownX = 0;
@@ -86,6 +87,7 @@ var FormOverlayView = Widget.extend({
                 ids: self.res_id ? [self.res_id] : [],
                 currentId: self.res_id || undefined,
                 userContext: self.getSession().user_context,
+                mode: 'edit', // open from view record in editable mode
             });
             return formView.getController(self).then(function (controller) {
                 self.controller = controller;
@@ -100,6 +102,7 @@ var FormOverlayView = Widget.extend({
         // 'Action Menu' and 'Pager'
         this.$el.append('<div id="resizable" class="o_resizeble"></div>');
         this.$el.append(this.controller.$el);
+        // TODO: dynamic
         this.$el.height(this.context.form_overlay_heigh);
         // for resizing
         $(document).on('mousemove', this._onMouseMoveOverlay.bind(this))

@@ -20,6 +20,7 @@ var KanbanColumn = Widget.extend({
     custom_events: {
         cancel_quick_create: '_onCancelQuickCreate',
         quick_create_add_record: '_onQuickCreateAddRecord',
+        open_overlay_form_record: '_onOpenOverlayFormRecord',
         tweak_column: '_onTweakColumn',
         tweak_column_records: '_onTweakColumnRecords',
     },
@@ -234,8 +235,9 @@ var KanbanColumn = Widget.extend({
             context: context,
             formViewRef: this.quickCreateView,
             model: this.modelName,
-            res_id: data && data.res_id || undefined,
-            db_id: data && data.db_id || undefined,
+            res_id: data && data.res_id,
+            db_id: data && data.db_id,
+            mode: data && data.mode,
         });
         $kanbanView.addClass('o_kanban_overlay_form_view');
         context['form_overlay_heigh'] = $kanbanView.height();
@@ -376,6 +378,9 @@ var KanbanColumn = Widget.extend({
      */
     _onQuickCreateAddRecord: function (event) {
         this.trigger_up('quick_create_record', event.data);
+    },
+    _onOpenOverlayFormRecord: function (ev) {
+        this.OpenFormOverlay(ev);
     },
     /**
      * @private
