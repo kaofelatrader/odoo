@@ -224,8 +224,10 @@ var KanbanColumn = Widget.extend({
         // first open the column, and then open the overlay form view
         // and if it is exist overlay then replaced form view record with new record id
         // widget 'OpenFormOverlayView'
+        debugger;
         if (this.formOverlayWidget) {
-            return Promise.reject();
+            this.formOverlayWidget.destroy();
+            this.formOverlayWidget = false;
         }
         var data = ev.data;
         var context = this.data.getContext();
