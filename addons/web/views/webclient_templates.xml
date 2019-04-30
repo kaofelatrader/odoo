@@ -65,6 +65,8 @@
 
         <link rel="stylesheet" type="text/less" href="/web/static/src/scss/fontawesome_overriden.scss"/>
 
+        <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/attachment_preview.scss"/>
+
         <script type="text/javascript" src="/web/static/lib/es6-promise/es6-promise-polyfill.js"></script>
         <script type="text/javascript" src="/web/static/lib/unhandled-rejection-polyfill/unhandled-rejection-polyfill.js"></script>
         <script type="text/javascript" src="/web/static/lib/underscore/underscore.js"></script>
@@ -192,7 +194,6 @@
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/search_view_extra.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/data_export.scss"/>
         <link rel="stylesheet" type="text/scss" href="/base/static/src/scss/onboarding.scss"/>
-        <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/attachment_preview.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/notification.scss"/>
 
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/base_settings.scss"/>
