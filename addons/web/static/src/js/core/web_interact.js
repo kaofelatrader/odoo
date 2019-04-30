@@ -288,6 +288,7 @@ var _sortable = function (el, options) {
             var itemsInteractable = interact(itemsSelector).dropzone({
                 accept: itemsSelector,
                 checker: check,
+                overlap: tolerance || 'center',
                 ondropactivate: options.onitemdropactivate,
                 ondropmove: function (ev) {
                     var dropEl = ev.target;
@@ -399,6 +400,7 @@ var _sortable = function (el, options) {
     var interactable = interact(el).dropzone({
         accept: itemsSelector,
         checker: check,
+        overlap: tolerance || 'center',
         ondropactivate: ondropactivate,
         ondragenter: ondragenter,
         ondrop: ondrop,
