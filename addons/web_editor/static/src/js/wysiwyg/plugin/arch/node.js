@@ -602,61 +602,93 @@ return Class.extend({
         }
     },
     /**
-     * Next or previous node, following the leaf
-     * - go to the first child (or last) if exist (and the node in not unbreakable or architectural)
-     * - go to next sibbling
-     * - when the is no next sibling, go to the parent
-     * - go to then next node
-     * - go to the first child...
-     *
-     * if begin in an unbreakable, stop before go out this unbreakable and before stop
-     * try to insert a virtual node and check it.
+     * Return the next or previous node until predicate hit or end of tree,
+     * following a pre-order tree traversal.
+     * This ignores architectural space and prevents getting out of an unbreakable node.
+     * If no suitable previous/next node is found, a virtual text node will be inserted and
+     * returned. If the insertion is not allowed, the last found legal node is returned.
+     * If no predicate function is provided, just give the previous/next node.
      *
      * @param {boolean} isPrev true to get the previous node, false for the next node
-     * @param {function} [fn] called on this and get the next point as param
-     *          return true if the next node is available
-     * @param {boolean} __closestUnbreakable: internal flag
-     * @param {boolean} __goUp: internal flag
+     * @param {function (ArchNode)} [pred] called on this and takes the previous/next node as argument
+     *          return true if the requested node was found
      * @returns {ArchNode}
      **/
-    _prevNextUntil: function (isPrev, fn, __closestUnbreakable, __goUp) {
-        if (!__closestUnbreakable) {
-            __closestUnbreakable = this.ancestor(this.isUnbreakable);
-        }
-        var next;
-        if (!__goUp && !this.isUnbreakable()) {
-            var deeper = isPrev ? this.lastChild() : this.firstChild();
-            if (deeper !== this) {
-                next = deeper;
+    _prevNextUntil: function (isPrev, pred) {
+        var next = this._walk(isPrev);
+        if (!next || next.isUnbreakable()) {
+            if (this.isEditable() && !this.isRoot()) {
+                var virtualText = this.params.create();
+                this[isPrev ? 'before' : 'after'](virtualText);
+                return virtualText;
             }
+            return this;
         }
-        __goUp = false;
-        if (!next || next.isArchitecturalSpace()) {
-            var index = this.index();
-            index += isPrev ? -1 : 1;
-            next = this.parent.childNodes[index];
+        if (next.isArchitecturalSpace()) {
+            return next._prevNextUntil(isPrev, pred);
         }
-        if (!next || next.isArchitecturalSpace()) {
-            __goUp = true;
-            next = this.parent[isPrev ? 'previousSibling' : 'nextSibling']();
-            if (next && !next.isArchitecturalSpace()) {
-                next = next[isPrev ? 'lastChild' : 'firstChild']() || next;
-            }
+        if (!pred || pred.call(this, next)) {
+            return next;
         }
-        if (!next || !__closestUnbreakable.contains(next) || next.isArchitecturalSpace()) {
-            var insertMethod = __closestUnbreakable[this.lastChild() ? 'prepend' : 'append'].bind(__closestUnbreakable);
-            var virtualTextNode = this.params.create();
-            insertMethod(virtualTextNode);
-            if (!virtualTextNode.isEditable() || (fn && !fn.call(this, virtualTextNode))) {
-                virtualTextNode.remove();
-                return;
-            }
-            return virtualTextNode;
-        }
-        if (fn && !fn.call(this, next)) {
-            return next._prevNextUntil(isPrev, fn, __closestUnbreakable, __goUp);
+        return next._prevNextUntil(isPrev, pred);
+    },
+    /**
+     * Return the next or previous node (if any), following a pre-order tree traversal.
+     * Return null if no node was found.
+     * If a function is provided, apply it to the node that was found, if any.
+     *
+     * @param {Boolean} isPrev true to get the previous node, false for the next node
+     * @param {Function (ArchNode)} [fn] called on this and takes the previous/next node as argument
+     */
+    _walk: function (isPrev, fn) {
+        var next = this[isPrev ? '_walkPrev' : '_walkNext']();
+        if (next && fn) {
+            fn.call(this, next);
         }
         return next;
+    },
+    /**
+     * Return the next node (if any), following a pre-order tree traversal.
+     * Return null if no node was found.
+     *
+     * @returns {ArchNode|null}
+     */
+    _walkNext: function () {
+        if (this.childNodes && this.childNodes.length) {
+            return this.firstChild();
+        }
+        var next = this;
+        while (next.parent) {
+            var parent = next.parent;
+            var index = next.index();
+            if (parent && parent.childNodes.length > index + 1) {
+                return parent.childNodes[index + 1];
+            }
+            next = parent;
+        }
+        return null;
+    },
+    /**
+     * Return the previous node (if any), following a pre-order tree traversal.
+     * Return null if no node was found.
+     *
+     * @returns {ArchNode|null}
+     */
+    _walkPrev: function () {
+        var prev = this;
+        if (prev.parent) {
+            var parent = prev.parent;
+            var index = prev.index();
+            if (parent && index - 1 >= 0) {
+                prev = parent.childNodes[index - 1];
+                while (prev.childNodes && prev.childNodes.length) {
+                    prev = prev.lastChild();
+                }
+                return prev;
+            }
+            return parent;
+        }
+        return null;
     },
 });
 
