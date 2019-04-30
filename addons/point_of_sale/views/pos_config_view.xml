@@ -152,7 +152,7 @@
                             <div class="o_setting_right_pane">
                                 <label for="is_posbox" string="IoT Box"/>
                                 <div class="text-muted">
-                                    Connect devices to your PoS (ticket printer, barcode scanner, scale, etc.)
+                                    Connect devices to your PoS (receipt printer, barcode scanner, scale, etc.)
                                 </div>
                                 <div class="content-group" attrs="{'invisible' : [('is_posbox', '=', False)]}">
                                     <div class="row mt16">
