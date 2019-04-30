@@ -13,6 +13,7 @@ var core = require('web.core');
 var Domain = require('web.Domain');
 var view_dialogs = require('web.view_dialogs');
 var viewUtils = require('web.viewUtils');
+var RecordFormOverlay = require('web.form_overlay_view');
 
 var _t = core._t;
 var qweb = core.qweb;
@@ -22,6 +23,7 @@ var KanbanController = BasicController.extend({
     custom_events: _.extend({}, BasicController.prototype.custom_events, {
         quick_create_add_column: '_onAddColumn',
         quick_create_record: '_onQuickCreateRecord',
+        open_form_overlay_view: '_onOpenFormOverlayView',
         resequence_columns: '_onResequenceColumn',
         button_clicked: '_onButtonClicked',
         kanban_record_delete: '_onRecordDelete',
@@ -52,6 +54,8 @@ var KanbanController = BasicController.extend({
         this.on_create = params.on_create;
         this.hasButtons = params.hasButtons;
         this.quickCreateEnabled = params.quickCreateEnabled;
+        this.overlayFormViewEnabled = params.overlayFormViewEnabled;
+        this.overlayFormViewID = params.overlayFormViewID;
 
         // the following attributes are used when there is a searchPanel
         this._searchPanel = params.searchPanel;
@@ -501,6 +505,34 @@ var KanbanController = BasicController.extend({
                     },
                 }).open().opened(onFailure);
             });
+    },
+    _onOpenFormOverlayView: function (ev) {
+        if (this.formOverlayWidget) {
+            this._onClickDiscard(ev);
+        }
+
+        var columnState = this.model.get(this.handle, {raw: true}),
+            context = columnState.getContext(),
+            groupedBy = columnState.groupedBy[0],
+            values = ev.data;
+
+        context['default_' + groupedBy] = viewUtils.getGroupValue(columnState, groupedBy);
+
+        var $kanbanView = $('.o_action_manager .o_content .o_kanban_view');
+        this.formOverlayWidget = new RecordFormOverlay(this, {
+            context: context,
+            formViewID: this.overlayFormViewID,
+            model: this.modelName,
+            res_id: values && values.res_id,
+            db_id:  values && values.res_id,
+        });
+        $kanbanView.addClass('o_kanban_overlay_form_view');
+        context['form_overlay_heigh'] = $kanbanView.height();
+        return this.formOverlayWidget.insertAfter($kanbanView);
+    },
+    _onClickDiscard: function (ev) {
+        this.formOverlayWidget.destroy();
+        this.formOverlayWidget = null;
     },
     /**
      * @private

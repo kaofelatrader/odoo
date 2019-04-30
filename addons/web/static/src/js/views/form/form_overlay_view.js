@@ -59,27 +59,12 @@ var FormOverlayView = Widget.extend({
         // and starts the form controller
         var self = this;
         var superWillStart = this._super.apply(this, arguments);
-        var viewsLoaded;
-        if (this.formViewRef && !this.formViewID) {
-            var views = [[false, 'form']];
-            var context = _.extend({}, this.context, {
-                form_view_ref: this.formViewRef,
-            });
+        var views = typeof(this.formViewID) === "number" ? [[this.formViewID, 'form']] : [[false, 'form']],
+            context = _.extend({}, this.context, {
+                form_view_ref: this.formViewID,
+            }),
             viewsLoaded = this.loadViews(this.model, context, views);
-        } else if (this.formViewID) {
-            viewsLoaded = this.loadViews(this.model, context, [[this.formViewID, 'form']]);
-        } else {
-            var fieldsView = {};
-            fieldsView.arch = '<form>' +
-                '<field name="display_name" placeholder="Title" modifiers=\'{"required": true}\'/>' +
-            '</form>';
-            var fields = {
-                display_name: {string: 'Display name', type: 'char'},
-            };
-            fieldsView.fields = fields;
-            fieldsView.viewFields = fields;
-            viewsLoaded = Promise.resolve({form: fieldsView});
-        }
+
         viewsLoaded = viewsLoaded.then(function (fieldsViews) {
             var formView = new WebFormView(fieldsViews.form, {
                 context: self.context,

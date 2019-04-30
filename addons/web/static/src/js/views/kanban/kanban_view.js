@@ -87,6 +87,7 @@ var KanbanView = BasicView.extend({
         this.controllerParams.on_create = archAttrs.on_create;
         this.controllerParams.hasButtons = true;
         this.controllerParams.quickCreateEnabled = this.rendererParams.quickCreateEnabled;
+        this.controllerParams.overlayFormViewEnabled = this.rendererParams.overlayFormViewEnabled;
 
 
         if (config.device.isMobile) {

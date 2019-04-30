@@ -45,9 +45,9 @@ var BasicView = AbstractView.extend({
         this.rendererParams.viewType = this.viewType;
 
         var formView = _.findWhere(params.actionViews, {type: 'form'});
-        this.overlayFormViewID = formView ? formView.viewID : null;
-        this.controllerParams.overlayFormViewID = this.overlayFormViewID;
+        this.overlayFormViewID = formView ? formView.fieldsView.view_id : null;
 
+        this.controllerParams.overlayFormViewID = this.overlayFormViewID;
         this.controllerParams.confirmOnDelete = true;
         this.controllerParams.archiveEnabled = 'active' in this.fields;
         this.controllerParams.hasButtons =

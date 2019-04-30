@@ -6,7 +6,6 @@ var core = require('web.core');
 var Dialog = require('web.Dialog');
 var KanbanRecord = require('web.KanbanRecord');
 var RecordQuickCreate = require('web.kanban_record_quick_create');
-var RecordFormOverlay = require('web.form_overlay_view');
 var view_dialogs = require('web.view_dialogs');
 var viewUtils = require('web.viewUtils');
 var Widget = require('web.Widget');
@@ -20,7 +19,6 @@ var KanbanColumn = Widget.extend({
     custom_events: {
         cancel_quick_create: '_onCancelQuickCreate',
         quick_create_add_record: '_onQuickCreateAddRecord',
-        open_overlay_form_record: '_onOpenOverlayFormRecord',
         tweak_column: '_onTweakColumn',
         tweak_column_records: '_onTweakColumnRecords',
     },
@@ -219,32 +217,6 @@ var KanbanColumn = Widget.extend({
         });
         return this.quickCreateWidget.insertAfter(this.$header);
     },
-    OpenFormOverlay: function (ev) {
-        // todo: in this function we have init a new widget and insert into content
-        // first open the column, and then open the overlay form view
-        // and if it is exist overlay then replaced form view record with new record id
-        // widget 'OpenFormOverlayView'
-        debugger;
-        if (this.formOverlayWidget) {
-            this.formOverlayWidget.destroy();
-            this.formOverlayWidget = false;
-        }
-        var data = ev.data;
-        var context = this.data.getContext();
-        context['default_' + this.groupedBy] = viewUtils.getGroupValue(this.data, this.groupedBy);
-        var $kanbanView = $('.o_action_manager .o_content .o_kanban_view');
-        this.formOverlayWidget = new RecordFormOverlay(this, {
-            context: context,
-            formViewRef: this.quickCreateView,
-            model: this.modelName,
-            res_id: data && data.res_id,
-            db_id: data && data.db_id,
-            mode: data && data.mode,
-        });
-        $kanbanView.addClass('o_kanban_overlay_form_view');
-        context['form_overlay_heigh'] = $kanbanView.height();
-        return this.formOverlayWidget.insertAfter($kanbanView);
-    },
     /**
      * Closes the quick create widget if it isn't dirty.
      */
@@ -322,7 +294,7 @@ var KanbanColumn = Widget.extend({
      * @private
      */
     _onClickOpenFormOverlay: function (ev) {
-        this.OpenFormOverlay(ev);
+        this.trigger_up('open_form_overlay_view', {db_id: this.db_id});
     },
     /**
      * @private
@@ -380,9 +352,6 @@ var KanbanColumn = Widget.extend({
      */
     _onQuickCreateAddRecord: function (event) {
         this.trigger_up('quick_create_record', event.data);
-    },
-    _onOpenOverlayFormRecord: function (ev) {
-        this.OpenFormOverlay(ev);
     },
     /**
      * @private

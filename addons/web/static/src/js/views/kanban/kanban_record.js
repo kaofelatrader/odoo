@@ -218,7 +218,7 @@ var KanbanRecord = Widget.extend({
         }
         var editMode = this.$el.hasClass('oe_kanban_global_click_edit');
         if (this.overlayFormViewEnabled) {
-            this.trigger_up('open_overlay_form_record', {
+            this.trigger_up('open_form_overlay_view', {
                 res_id: this.state.res_id,
                 db_id: this.db_id,
                 mode: editMode ? 'edit' : 'readonly',
