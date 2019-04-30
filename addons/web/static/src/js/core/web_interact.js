@@ -204,8 +204,13 @@ var _cleanPlaceholder = function (sortable) {
  * @param {Function} [options.ondrop] called on drop of valid item
  * @param {Function} [options.ondragleave] called on drag leave of valid item
  * @param {Function} [options.ondropdectivate] called on drag stop of valid item
+ * @param {string} [options.axis] sortable axis (default: 'y')
  * @param {string} [options.containment] selector for restricted items drag area
  * @param {string} [options.connectWith] selector for other connected sortables
+ * @param {string} [options.handle] restrict dragging to this selector
+ * @param {string} [options.tolerance] overlaps are computed with respect to the
+ *        element being dragged. Set this parameter to 'pointer' to compute the
+ *        overlaps relative to the pointer itself rather than the element.
  * @returns {Interactable}
  */
 var _sortable = function (el, options) {
@@ -261,6 +266,20 @@ var _sortable = function (el, options) {
         // Set droppable on all items in this sortable
         if (itemsSelector && !el.dataset.sortableItemsActivated) {
             el.dataset.sortableItemsActivated = true;
+            // It is very important that we call interact on the itemsSelector
+            // directly rather than each of the nodes matching this selector
+            // separately. Calling interact with a selector matching a single
+            // node or calling it with the node itself would yield two different
+            // interactable objects. This is absolutely critical to the way we
+            // are using sortable in Odoo as each kanban column is, at the same
+            // time, a sortable for records AND one of the items of the sortable
+            // view itself, since columns themselves are sortable. In other
+            // words, columns need to be a dropzone because we can drop records
+            // in it, but it also needs to be a dropzone to react to other
+            // columns being dragged over it. However, that you can't setup two
+            // different dropzones on the same interactable object, so we set
+            // the dropzone of the sortable parent on the node itself while we
+            // set the dropzones of the items on the selector.
             var itemsInteractable = interact(itemsSelector).dropzone({
                 accept: itemsSelector,
                 checker: check,
@@ -420,7 +439,7 @@ var _isSet = function (el) {
 var _unset = function (el) {
     var interactable = interact(el);
     if (interactable.options.drop.enabled) {
-        // Unset draggable items
+        // Unset draggable items of sortable
         var itemsSelector = interactable.options.drop.accept;
         if (itemsSelector && el.dataset.sortableItemsActivated) {
             delete el.dataset.sortableItemsActivated;
