@@ -290,26 +290,46 @@ var _sortable = function (el, options) {
                 checker: check,
                 ondropactivate: options.onitemdropactivate,
                 ondropmove: function (ev) {
-                    var draggable = ev.relatedTarget;
+                    var dropEl = ev.target;
+                    var dragEl = ev.relatedTarget;
 
-                    var anchor = ev.target;
-                    if (axis === 'y' && ev.dragEvent.dy > 0) {
-                        // If dragging downward in y axis mode, then anchor
-                        // after this item, so before the next item.
-                        anchor = anchor.nextSibling;
-                    } else if (axis === 'x' && ev.dragEvent.dx > 0) {
-                        // If dragging rightward in x axis mode, then anchor
-                        // after this item, so before the next item.
-                        anchor = anchor.nextSibling;
-                    } else if (axis === 'both') {
-                        // TODO: look for dx and dy for direction
-                        anchor = anchor.nextSibling;
+                    var shouldMakeWay = true;
+                    // We trust interactjs for overlap pointer and center, but
+                    // for the case of items, we want to make way only if the
+                    // center of the dragged element has crossed the center of
+                    // of the dropzone element, while interactjs center only
+                    // tests if the center of the dragged element is currently
+                    // inside the dropzone area, which is not enough for this.
+                    if (axis === 'y' && tolerance !== 'pointer') {
+                        var dropY = dropEl.offsetTop + dropEl.offsetHeight / 2;
+                        var dragY = dragEl.offsetTop + dragEl.offsetHeight / 2;
+                        shouldMakeWay = ev.dragEvent.dy > 0 === dragY > dropY;
+                    } else if (axis === 'x' && tolerance !== 'pointer') {
+                        var dropX = dropEl.offsetLeft + dropEl.offsetWidth / 2;
+                        var dragX = dragEl.offsetLeft + dragEl.offsetWidth / 2;
+                        shouldMakeWay = ev.dragEvent.dx > 0 === dragX > dropX;
                     }
 
-                    _setPlaceholder(el, draggable, anchor, axis, connectWith);
+                    if (shouldMakeWay) {
+                        var anchor = ev.target;
+                        if (axis === 'y' && ev.dragEvent.dy > 0) {
+                            // If dragging downward in y axis mode, then anchor
+                            // after this item, so before the next item.
+                            anchor = anchor.nextSibling;
+                        } else if (axis === 'x' && ev.dragEvent.dx > 0) {
+                            // If dragging rightward in x axis mode, then anchor
+                            // after this item, so before the next item.
+                            anchor = anchor.nextSibling;
+                        } else if (axis === 'both') {
+                            // TODO: look for dx and dy for direction
+                            anchor = anchor.nextSibling;
+                        }
 
-                    if (options.onsort) {
-                        options.onsort(ev);
+                        _setPlaceholder(el, dragEl, anchor, axis, connectWith);
+
+                        if (options.onsort) {
+                            options.onsort(ev);
+                        }
                     }
                 },
                 ondropdeactivate: options.onitemdropdeactivate,
