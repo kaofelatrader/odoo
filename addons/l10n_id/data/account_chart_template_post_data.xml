@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="l10n_id" model="account.chart.template">
+    <record id="l10n_id_chart" model="account.chart.template">
         <field name="property_account_receivable_id" ref="a_1_121001"/>
         <field name="property_account_payable_id" ref="a_2_110001"/>
         <field name="property_account_expense_categ_id" ref="a_5_100001"/>

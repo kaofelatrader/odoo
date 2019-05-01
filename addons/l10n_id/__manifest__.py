@@ -6,7 +6,7 @@
     'version': '1.0',
     'category': 'Localization',
     'description': """
-This is the latest Indonesian Odoo localisation necessary to run Odoo accounting for SME's with:
+This is the latest Indonesian Odoo localisation necessary to run Odoo accounting for SMEs with:
 =================================================================================================
     - generic Indonesian chart of accounts
     - tax structure""",
