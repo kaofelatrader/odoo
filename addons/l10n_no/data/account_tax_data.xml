@@ -171,6 +171,52 @@
             ]"/>
         </record>
 
+        <record id="tax4_reverse" model="account.tax.template">
+            <field name="chart_template_id" ref="no_chart_template"/>
+            <field name="name">Inngående 25% mva</field>
+            <field name="description">Inngående 25% mva</field>
+            <field name="amount">25</field>
+            <field name="amount_type">percent</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="tax_group_id" ref="tax_group_25"/>
+            <field name="invoice_repartition_line_ids" eval="[(5,0,0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                    'plus_tag_ids': [ref('account_tax_report_line_service_purchase_domestic_25')],
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('chart2711'),
+                }),
+                (0,0, {
+                    'factor_percent': -100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('chart2711'),
+                    'plus_tag_ids': [ref('account_tax_report_line_domestic_turnover_reverse_tax_liability')],
+                }),
+            ]"/>
+            <field name="refund_repartition_line_ids" eval="[(5,0,0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                    'minus_tag_ids': [ref('account_tax_report_line_service_purchase_domestic_25')],
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('chart2711'),
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('chart2711'),
+                    'minus_tag_ids': [ref('account_tax_report_line_domestic_turnover_reverse_tax_liability')],
+                }),
+            ]"/>
+        </record>
+
          <record id="tax4b" model="account.tax.template">
             <field name="chart_template_id" ref="no_chart_template"/>
             <field name="name">Inngående 25% mva i utlandet</field>

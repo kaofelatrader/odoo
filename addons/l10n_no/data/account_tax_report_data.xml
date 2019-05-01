@@ -50,6 +50,15 @@
         <field name="country_id" ref="base.no"/>
     </record>
 
+    <record id="account_tax_report_line_domestic_turnover_reverse_tax_liability" model="account.tax.report.line">
+        <field name="name">Domestic turnover with reverse tax liability</field>
+        <field name="tag_name">Domestic turnover with reverse tax liability</field>
+        <field name="code">NOTAX_01041</field>
+        <field name="sequence" eval="0"/>
+        <field name="parent_line_id" ref="account_tax_report_line_total_turnover_sale"/>
+        <field name="country_id" ref="base.no"/>
+    </record>
+
     <record id="account_tax_report_line_domestic_turnover_abroad_exempt" model="account.tax.report.line">
         <field name="name">Exports of goods and services exempt from Value Added Tax</field>
         <field name="tag_name">Exports of goods and services exempt from Value Added Tax</field>
