@@ -29,6 +29,18 @@ odoo.define('payment.payment_form', function (require) {
             $('[data-toggle="tooltip"]').tooltip();
         },
 
+        disableButton: function (button) {
+            $(button).attr('disabled', true);
+            $(button).children('.fa-lock').removeClass('fa-lock');
+            $(button).prepend('<span class="o_loader"><i class="fa fa-refresh fa-spin"></i>&nbsp;</span>');
+        },
+
+        enableButton: function (button) {
+            $(button).attr('disabled', false);
+            $(button).children('.fa').addClass('fa-lock');
+            $(button).find('span.o_loader').remove();
+        },
+
         payEvent: function (ev) {
             ev.preventDefault();
             var form = this.el;
@@ -83,10 +95,7 @@ odoo.define('payment.payment_form', function (require) {
                         return;
                     }
 
-                    $(button).attr('disabled', true);
-                    $(button).children('.fa-plus-circle').removeClass('fa-plus-circle')
-                    $(button).prepend('<span class="o_loader"><i class="fa fa-refresh fa-spin"></i>&nbsp;</span>');
-
+                    this.disableButton(button);
                     var verify_validity = this.$el.find('input[name="verify_validity"]');
 
                     if (verify_validity.length>0) {
@@ -121,15 +130,10 @@ odoo.define('payment.payment_form', function (require) {
                             }
                         }
                         // here we remove the 'processing' icon from the 'add a new payment' button
-                        $(button).attr('disabled', false);
-                        $(button).children('.fa').addClass('fa-plus-circle')
-                        $(button).find('span.o_loader').remove();
+                        self.enableButton(button);
                     }).fail(function (message, data) {
                         // if the rpc fails, pretty obvious
-                        $(button).attr('disabled', false);
-                        $(button).children('.fa').addClass('fa-plus-circle')
-                        $(button).find('span.o_loader').remove();
-
+                        self.enableButton(button);
                         self.displayError(
                             _t('Server Error'),
                             _t("We are not able to add your payment method at the moment.") +
@@ -144,6 +148,8 @@ odoo.define('payment.payment_form', function (require) {
                     if ($tx_url.length === 1) {
                         // if the user wants to save his credit card info
                         var form_save_token = acquirer_form.find('input[name="o_payment_form_save_token"]').prop('checked');
+                        this.disableButton(button);
+
                         // then we call the route to prepare the transaction
                         ajax.jsonRpc($tx_url[0].value, 'call', {
                             'acquirer_id': parseInt(acquirer_id),
@@ -169,12 +175,14 @@ odoo.define('payment.payment_form', function (require) {
                                 }
                             }
                             else {
+                                this.enableButton(button);
                                 self.displayError(
                                     _t('Server Error'),
                                     _t("We are not able to redirect you to the payment form.")
                                 );
                             }
                         }).fail(function (message, data) {
+                            this.enableButton(button);
                             self.displayError(
                                 _t('Server Error'),
                                 _t("We are not able to redirect you to the payment form. ") +
@@ -191,6 +199,7 @@ odoo.define('payment.payment_form', function (require) {
                     }
                 }
                 else {  // if the user is using an old payment then we just submit the form
+                    this.disableButton(button);
                     form.submit();
                 }
             }
