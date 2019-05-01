@@ -169,6 +169,19 @@
         </field>
     </record>
 
+    <record id="lunch_product_action" model="ir.actions.act_window">
+        <field name="name">Products</field>
+        <field name="res_model">lunch.product</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+            Create a new product for lunch
+            </p><p>
+            A product is defined by its name, category, price and vendor.
+            </p>
+        </field>
+    </record>
+
     <record id="lunch_product_category_view_tree" model="ir.ui.view">
         <field name="name">Product category Tree</field>
         <field name="model">lunch.product.category</field>
@@ -185,6 +198,14 @@
         <field name="arch" type="xml">
             <form string="Product Categories Form">
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="action" name="%(lunch.lunch_product_action)d"
+                            context="{'search_default_category_id': active_id,'default_category_id': active_id}"
+                            attrs="{'invisible': [('product_count', '=', 0)]}"
+                            icon="fa-cutlery">
+                            <field string="Products" name="product_count" widget="statinfo"/>
+                        </button>
+                    </div>
                     <div class="oe_title">
                         <label for="name" class="oe-edit-only"/>
                         <h1>
@@ -193,8 +214,8 @@
                     </div>
                     <group>
                         <group>
-                            <field name="topping_label_1"/>
-                            <field name="topping_quantity_1"/>
+                            <field name="topping_label_1" string='Topping 1 Label'/>
+                            <field name="topping_quantity_1" string='Topping 1 Quantity'/>
                         </group>
                         <div>
                             <field name="topping_ids_1" nolabel="1">
@@ -206,8 +227,8 @@
                             </field>
                         </div>
                         <group>
-                            <field name="topping_label_2"/>
-                            <field name="topping_quantity_2"/>
+                            <field name="topping_label_2" string='Topping 2 Label'/>
+                            <field name="topping_quantity_2" string='Topping 2 Quantity'/>
                         </group>
                         <div>
                             <field name="topping_ids_2" nolabel="1">
@@ -219,8 +240,8 @@
                             </field>
                         </div>
                         <group>
-                            <field name="topping_label_3"/>
-                            <field name="topping_quantity_3"/>
+                            <field name="topping_label_3" string='Topping 3 Label'/>
+                            <field name="topping_quantity_3" string='Topping 3 Quantity'/>
                         </group>
                         <div>
                             <field name="topping_ids_3" nolabel="1">
@@ -234,19 +255,6 @@
                     </group>
                 </sheet>
             </form>
-        </field>
-    </record>
-
-    <record id="lunch_product_action" model="ir.actions.act_window">
-        <field name="name">Products</field>
-        <field name="res_model">lunch.product</field>
-        <field name="view_mode">tree,kanban,form</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-            Create a new product for lunch
-            </p><p>
-            A product is defined by its name, category, price and vendor.
-            </p>
         </field>
     </record>
 
@@ -272,7 +280,7 @@
         <field name="view_mode">tree,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-            Create a new lunch category
+            Create a new product category
             </p><p>
             Here you can access all categories for the lunch products.
             </p>

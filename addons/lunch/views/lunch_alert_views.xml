@@ -16,7 +16,7 @@
         <field name="model">lunch.alert</field>
         <field name="arch" type="xml">
             <tree>
-                <field name="active"/>
+                <field name="active" widget="boolean_toggle"/>
                 <field name="message"/>
                 <field name="available_today"/>
             </tree>

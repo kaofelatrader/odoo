@@ -14,7 +14,7 @@ class LunchAlert(models.Model):
     _description = 'Lunch Alert'
     _rec_name = 'message'
 
-    message = fields.Html('Message', required=True)
+    message = fields.Text('Message', required=True)
 
     until = fields.Date('Show Until')
     recurrency_monday = fields.Boolean('Monday')

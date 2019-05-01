@@ -33,6 +33,16 @@ class LunchProductCategory(models.Model):
         ('0_more', 'None or More'),
         ('1_more', 'One or More'),
         ('1', 'Only One')], default='0_more', required=True)
+    product_count = fields.Integer(
+        compute='_compute_product',
+        help="The number of products related to this category",
+    )
+
+    def _compute_product(self):
+        product_data = self.env['lunch.product'].read_group([('category_id', 'in', self.ids)], ['category_id'], ['category_id'])
+        mapped_data = dict([(product['category_id'][0], product['category_id_count']) for product in product_data])
+        for product in self:
+            product.product_count = mapped_data.get(product.id, 0)
 
     @api.model
     def create(self, vals):
