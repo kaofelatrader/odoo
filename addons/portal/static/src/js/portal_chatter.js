@@ -77,38 +77,29 @@ var PortalComposer = publicWidget.Widget.extend({
         var files = ev.target.files,
             attachments = this.get('attachmentIDs');
 
-        if (attachments.length + files.length > 10) {
-            this.display_alert(_t("Oops! You can not upload more than 10 files."));
-        }
-        else if (!_.isEmpty(_.filter(files, function (file) { 
-                return (file.size / 1024 / 1024) > 25;
-            } ))) {
-            this.display_alert(_t("Oops! You can not upload a file larger than 25MB."));
-        }
-        else {
-            _.each(files, function (file) {
-                var duplicateAttachment = _.findWhere(attachments, {name: file.name});
-                if (duplicateAttachment) {
-                    attachments = _.without(attachments, duplicateAttachment);
-                }
-            });
-            this.$('form.o_form_binary_form').submit();
-            this.$attachmentButton.prop('disabled', true);
-            this.$composerSendButton.prop('disabled', true);
-            var uploadAttachments = _.map(files, function (file) {
-                return {
-                    'id': 0,
-                    'name': file.name,
-                    'filename': file.name,
-                    'url': '',
-                    'upload': true,
-                    'mimetype': '',
-                };
-            });
-            attachments = attachments.concat(uploadAttachments);
-            this.set('attachmentIDs', attachments);
-            this.$('.o_portal_chatter_warning').remove();
-        }
+        _.each(files, function (file) {
+            var duplicateAttachment = _.findWhere(attachments, {name: file.name});
+            if (duplicateAttachment) {
+                attachments = _.without(attachments, duplicateAttachment);
+            }
+        });
+        this.$('form.o_form_binary_form').submit();
+        this.$attachmentButton.prop('disabled', true);
+        this.$composerSendButton.prop('disabled', true);
+        var uploadAttachments = _.map(files, function (file) {
+            return {
+                'id': 0,
+                'name': file.name,
+                'filename': file.name,
+                'url': '',
+                'upload': true,
+                'mimetype': '',
+                'access_token': file.access_token,
+            };
+        });
+        attachments = attachments.concat(uploadAttachments);
+        this.set('attachmentIDs', attachments);
+        this.$('.o_portal_chatter_warning').remove();
     },
     /**
      * @private
@@ -154,13 +145,14 @@ var PortalComposer = publicWidget.Widget.extend({
                         'filename': file.filename,
                         'mimetype': file.mimetype,
                         'url': session.url('/web/content', {'id': file.id, download: true}),
+                        'access_token': file.access_token,
                     });
                 }
             }
         }.bind(this));
 
         this.set('attachmentIDs', attachments);
-        document.getElementById('attachment_ids').setAttribute("value", _.pluck(attachments, 'id'));
+        document.getElementById('attachment_tokens').setAttribute("value", _.pluck(attachments, 'access_token'));
         this.$attachmentButton.prop('disabled', false);
         this.$composerSendButton.prop('disabled', false);
     },
@@ -170,10 +162,6 @@ var PortalComposer = publicWidget.Widget.extend({
      */
     _onClickFilePicker: function (ev) {
         var filePicker = this.$('input[type=file]');
-        if (this.get('attachmentIDs').length >= 10) {
-            this.display_alert(_t("Oops! You can not upload more than 10 files."));
-            return;
-        }
         if (!_.isEmpty(filePicker)) {
             filePicker[0].click();
         }

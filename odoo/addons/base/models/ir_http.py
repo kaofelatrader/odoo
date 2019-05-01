@@ -10,6 +10,7 @@ import os
 import re
 import sys
 
+import unicodedata
 import werkzeug
 import werkzeug.exceptions
 import werkzeug.routing
@@ -22,6 +23,7 @@ from odoo.exceptions import AccessDenied, AccessError
 from odoo.http import request, STATIC_CACHE, content_disposition
 from odoo.tools import pycompat, consteq
 from odoo.tools.mimetypes import guess_mimetype
+from odoo.tools.translate import _
 from odoo.modules.module import get_resource_path, get_module_path
 
 _logger = logging.getLogger(__name__)
@@ -413,3 +415,43 @@ class IrHttp(models.AbstractModel):
             return werkzeug.utils.redirect(content, code=301)
         elif status != 200:
             return request.not_found()
+
+    def _neuter_mimetype(self, mimetype, user):
+        wrong_type = 'ht' in mimetype or 'xml' in mimetype or 'svg' in mimetype
+        if wrong_type and not user._is_system():
+            return 'text/plain'
+        return mimetype
+
+    def _process_uploaded_files(self, files, model, res_id):
+        args = []
+        for ufile in files:
+
+            AttachmentSudo = request.env['ir.attachment'].sudo()
+            filename = ufile.filename
+            if request.httprequest.user_agent.browser == 'safari':
+                # Safari sends NFD UTF-8 (where é is composed by 'e' and [accent])
+                # we need to send it the same stuff, otherwise it'll fail
+                filename = unicodedata.normalize('NFD', ufile.filename)
+
+            try:
+                attachment = AttachmentSudo.create({
+                    'name': filename,
+                    'datas': base64.encodebytes(ufile.read()),
+                    'datas_fname': filename,
+                    'res_model': model,
+                    'res_id': int(res_id)
+                })
+                attachment.generate_access_token()
+                attachment._post_add_create()
+            except Exception:
+                args.append({'error': _("Something horrible happened")})
+                _logger.exception("Fail to upload attachment %s" % ufile.filename)
+            else:
+                args.append({
+                    'filename': filename,
+                    'mimetype': self._neuter_mimetype(ufile.content_type, http.request.env.user),
+                    'id': attachment.id,
+                    'size': attachment.file_size,
+                    'access_token': attachment.access_token,
+                })
+        return args

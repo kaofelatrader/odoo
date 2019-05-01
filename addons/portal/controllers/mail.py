@@ -21,9 +21,6 @@ from odoo.exceptions import AccessError, MissingError
 
 _logger = logging.getLogger(__name__)
 
-MAX_FILE_SIZE_TO_UPOLAD = 25
-MAX_FILE_TO_UPOLAD = 10
-
 
 def _check_special_access(res_model, res_id, token='', _hash='', pid=False):
     record = request.env[res_model].browse(res_id).sudo()
@@ -36,7 +33,7 @@ def _check_special_access(res_model, res_id, token='', _hash='', pid=False):
         raise Forbidden()
 
 
-def _message_post_helper(res_model, res_id, message, attachment_ids=None, token='', nosubscribe=True, **kw):
+def _message_post_helper(res_model, res_id, message, token='', nosubscribe=True, **kw):
     """ Generic chatter function, allowing to write on *any* object that inherits mail.thread. We
         distinguish 2 cases:
             1/ If a token is specified, all logged in users will be able to write a message regardless
@@ -59,7 +56,6 @@ def _message_post_helper(res_model, res_id, message, attachment_ids=None, token=
                             post messages.
         :param string pid: identifier of the res.partner used to sign the hash
         :param bool nosubscribe: set False if you want the partner to be set as follower of the object when posting (default to True)
-        :param list attachment_ids: if any attachments are added to message.
 
         The rest of the kwargs are passed on to message_post()
     """
@@ -91,11 +87,11 @@ def _message_post_helper(res_model, res_id, message, attachment_ids=None, token=
         author_id = kw.get('pid')
 
     kw.pop('csrf_token', None)
+    kw.pop('attachment_ids', None)
     kw.pop('hash', None)
     kw.pop('pid', None)
     return record.with_context(mail_create_nosubscribe=nosubscribe).message_post(body=message,
                                                                                    message_type=kw.pop('message_type', "comment"),
-                                                                                   attachment_ids=attachment_ids,
                                                                                    subtype=kw.pop('subtype', "mt_comment"),
                                                                                    author_id=author_id,
                                                                                    **kw)
@@ -116,24 +112,21 @@ class PortalChatter(http.Controller):
                 raise
         return document_sudo
 
-    def _neuter_mimetype(self, mimetype, user):
-        wrong_type = 'ht' in mimetype or 'xml' in mimetype or 'svg' in mimetype
-        if wrong_type and not user._is_system():
-            return 'text/plain'
-        return mimetype
-
     @http.route(['/mail/chatter_post'], type='http', methods=['POST'], auth='public', website=True)
-    def portal_chatter_post(self, res_model, res_id, message, attachment_ids=None, **kw):
+    def portal_chatter_post(self, res_model, res_id, message, attachment_tokens=None, **kw):
         url = request.httprequest.referrer
-        if attachment_ids:
-            attachment_ids = literal_eval(attachment_ids)
-            if isinstance(attachment_ids, int):
-                attachment_ids = [attachment_ids]
-        if message or attachment_ids:
+        message_id = False
+        if message:
             # message is received in plaintext and saved in html
             message = plaintext2html(message)
-            _message_post_helper(res_model=res_model, res_id=int(res_id), message=message, attachment_ids=attachment_ids, **kw)
-            url = url + "#discussion"
+            message_id = _message_post_helper(res_model=res_model, res_id=int(res_id), message=message, **kw)
+
+        if attachment_tokens:
+                attachment_tokens = [x for x in attachment_tokens.split(',')]
+                attachment_id = request.env['ir.attachment'].sudo().search([('access_token', 'in', attachment_tokens)])
+                message_id.attachment_ids = [(6, 0, attachment_id.ids)]
+
+        url = url + "#discussion"
         return request.redirect(url)
 
     @http.route('/mail/chatter_init', type='json', auth='public', website=True)
@@ -190,7 +183,6 @@ class PortalChatter(http.Controller):
 
         access_token = kwargs.get('access_token')
         res_id = int(id)
-        args = []
 
         try:
             if request.env.user.has_group('base.group_public') and not access_token:
@@ -199,73 +191,8 @@ class PortalChatter(http.Controller):
         except (AccessError, MissingError):
             raise Forbidden()
 
-        if len(files) > MAX_FILE_TO_UPOLAD:
-            args.append({'error': _("Oops! You can not upload more than 10 files.")})
-            return out % (json.dumps(callback), json.dumps(args))
-
-        AttachmentSudo = request.env['ir.attachment'].sudo()
-
-        for ufile in files:
-            data = ufile.read()
-            file_size = len(data) * 3 / 4
-            if (file_size / 1024.0 / 1024.0) > MAX_FILE_SIZE_TO_UPOLAD:
-                args.append({'error': _("Oops! You can not upload a file larger than 25MB.")})
-
-            filename = ufile.filename
-            if request.httprequest.user_agent.browser == 'safari':
-                # Safari sends NFD UTF-8 (where é is composed by 'e' and [accent])
-                # we need to send it the same stuff, otherwise it'll fail
-                filename = unicodedata.normalize('NFD', ufile.filename)
-            try:
-                attachment = AttachmentSudo.create({
-                    'name': filename,
-                    'datas': base64.encodebytes(data),
-                    'datas_fname': filename,
-                    'res_model': model,
-                    'res_id': res_id,
-                })
-            except Exception:
-                args.append({'error': _("Unable to upload attachment")})
-                _logger.exception("Unable to upload attachment")
-            else:
-                args.append({
-                    'filename': filename,
-                    'mimetype': self._neuter_mimetype(ufile.content_type, http.request.env.user),
-                    'id': attachment.id,
-                    'size': attachment.file_size
-                })
-
+        args = request.env['ir.http']._process_uploaded_files(files, model, res_id)
         return out % (json.dumps(callback), json.dumps(args))
-
-    @http.route('/portal/content/<int:attachment_id>', type='http', auth="public")
-    def download_attachment(self, attachment_id, model, id, access_token=False, download=None, **kw):
-        res_id = int(id)
-
-        try:
-            if request.env.user.has_group('base.group_public') and not access_token:
-                raise AccessError(_("Do not have access to the document."))
-            document_sudo = self._document_check_access(model, res_id, access_token=access_token)
-        except (AccessError, MissingError):
-            raise Forbidden()
-
-        record = document_sudo.website_message_ids.mapped('attachment_ids').filtered(lambda x: x.id == int(attachment_id))
-
-        if record.res_model != model and record.res_id != res_id:
-            raise AccessError(_("Do not have access to the document."))
-
-        status, content_base64, filename, mimetype, filehash = request.env['ir.http']._binary_record_content(
-            record, filename=None, default_mimetype='application/octet-stream')
-
-        status, headers, content_base64 = request.env['ir.http']._binary_set_headers(
-            status, content_base64, filename, mimetype, unique=False, filehash=filehash, download=download)
-
-        if status != 200:
-            return request.env['ir.http']._response_by_status(status, headers, content_base64)
-        content = base64.b64decode(content_base64)
-        headers.append(('Content-Length', len(content)))
-        response = request.make_response(content, headers)
-
-        return response
 
 
 class MailController(MailController):

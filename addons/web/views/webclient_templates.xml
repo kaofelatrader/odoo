@@ -49,6 +49,7 @@
         <link rel="stylesheet" type="text/css" href="/web/static/lib/select2-bootstrap-css/select2-bootstrap.css"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/lib/tempusdominus/tempusdominus.scss"/>
 
+        <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/attachment_preview.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/fonts.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/ui.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/ui_extra.scss"/>
@@ -65,7 +66,6 @@
 
         <link rel="stylesheet" type="text/less" href="/web/static/src/scss/fontawesome_overriden.scss"/>
 
-        <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/attachment_preview.scss"/>
 
         <script type="text/javascript" src="/web/static/lib/es6-promise/es6-promise-polyfill.js"></script>
         <script type="text/javascript" src="/web/static/lib/unhandled-rejection-polyfill/unhandled-rejection-polyfill.js"></script>
@@ -162,6 +162,7 @@
 
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/webclient_extra.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/webclient_layout.scss"/>
+        <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/attachment_preview.scss"/>
 
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/webclient.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/domain_selector.scss"/>
