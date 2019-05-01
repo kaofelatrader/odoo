@@ -409,6 +409,21 @@
         </button>
     </div>
 </t>
+
+<t t-name="FormOverlayView.buttons">
+    <div class="o_form_overlay_buttons_edit" role="toolbar" aria-label="Main actions">
+        <button type="button" class="btn btn-primary o_form_overlay_button_save" accesskey="s">
+            Save
+        </button>
+        <button type="button" class="btn btn-secondary o_form_overlay_button_cancel" accesskey="j">
+            Discard
+        </button>
+        <button type="button" class="btn btn-secondary o_form_overlay_button_expand" accesskey="j">
+            <i class="fa fa-expand" aria-label="Expand Form View" title="Expand Form View"/>
+        </button>
+    </div>
+</t>
+
 <t t-name="SaveCancelButton.tooltip">
     <div class="oe_tooltip_string" role="alert">
         <div class="tooltip-inner">

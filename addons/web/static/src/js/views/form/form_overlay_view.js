@@ -20,11 +20,9 @@ var qweb = core.qweb;
 var FormOverlayView = Widget.extend({
     className: 'o_form_overlay_view',
     events: {
-        // if we not use exist form control panel
-        'click .o_form_overlay_view_save': '_onSaveClicked', // save open record and remove from overlay view in dome
-        'click .o_form_overlay_view_expand': '_onExpandClicked', // open form view in full screen
-        // if we not use exist form control panel
-        'click .o_form_overlay_cancel': '_onCancelClicked', // discard the form overlay view
+        'click .o_form_overlay_button_save': '_onSaveClicked', // save open record and remove from overlay view in dome
+        'click .o_form_overlay_button_expand': '_onExpandClicked', // open form view in full screen
+        'click .o_form_overlay_button_cancel': '_onCancelClicked', // discard the form overlay view
         'mousedown #resizable': function (ev) {
             this.isResizing = true;
             this.lastDownX = ev.clientX;
@@ -73,6 +71,7 @@ var FormOverlayView = Widget.extend({
                 currentId: self.res_id || undefined,
                 userContext: self.getSession().user_context,
                 mode: 'edit', // open from view record in editable mode
+                // withControlPanel: false,
             });
             return formView.getController(self).then(function (controller) {
                 self.controller = controller;
@@ -86,6 +85,8 @@ var FormOverlayView = Widget.extend({
         // or use form controller panel to show navigation bar and 'save', 'discard' button not include 
         // 'Action Menu' and 'Pager'
         this.$el.append('<div id="resizable" class="o_resizeble"></div>');
+        this.$el.append(qweb.render('FormOverlayView.buttons'));
+        this.controller.$el.find('.o_cp_controller').hide();
         this.$el.append(this.controller.$el);
         // TODO: dynamic
         this.$el.height(this.context.form_overlay_heigh);

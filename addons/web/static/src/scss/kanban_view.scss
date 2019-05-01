@@ -1,4 +1,6 @@
 // ------- Kanban View Layout -------
+
+// show overlay form view on kanban view
 .o_form_overlay_view {
     position: absolute !important;
     top: 0px;
@@ -7,12 +9,7 @@
     overflow: auto;
     max-width: 70%;
     min-width: 40%;
-    // height: 100px;
-    .o_kanban_expand {
-        position: absolute;
-        top: 0;
-        right: 0;
-    }
+
     > #resizable {
         position: absolute;
         padding: 8px;
@@ -20,10 +17,28 @@
         top: 0;
         bottom: 0;
         width: 10px;
-        cursor: w-resize;
+        cursor: ew-resize;
         z-index: inherit;
     }
+
+    > .o_form_overlay_buttons_edit {
+        padding: 10px 10px 10px;
+        margin-top: 4px;
+        background: white;
+        margin-bottom: 4px;
+        border: 1px solid gray('300');
+        > .o_form_overlay_button_expand {
+            float: right;
+        }
+    }
+
+    .o_form_view {
+        .o_form_statusbar {
+            border: 1px solid gray('300');
+        }
+    }
 }
+
 // for overlay view
 .o_kanban_overlay_form_view {
     width: 40%;
