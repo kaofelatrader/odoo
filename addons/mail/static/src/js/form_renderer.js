@@ -37,6 +37,28 @@ FormRenderer.include({
         }
         return this._super.apply(this, arguments);
     },
+    /**
+     * set the follower preferences dropdown visibility
+     *
+     * @override
+     * @returns {Object}
+     */
+    getLocalState: function () {
+        var state = this._super.apply(this, arguments);
+        state['open_followers_following_dropdown'] = this.$('.o_followers_actions .o_subtypes_list').hasClass('show');
+        return state;
+    },
+    /**
+     * keep the follower preferences dropdown open until user clicks out of it.
+     *
+     * @override
+     */
+    setLocalState: function (state) {
+        this._super.apply(this, arguments);
+        if (state.open_followers_following_dropdown) {
+            this.$('div.o_subtypes_list > .dropdown-toggle.o_followers_following').dropdown('show');
+        }
+    },
 
     //--------------------------------------------------------------------------
     // Private
