@@ -84,12 +84,12 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
     },
     {
         name: "in p (p > span.a before - span.a after): BACKSPACE (must merge them)",
-        content: '<p><span class="a">dom to </span></p><p><span class="a">edit</span></p>',
+        content: '<p><span class="a">dom to</span></p><p><span class="a">edit</span></p>',
         steps: [{
             start: "p:eq(1):contents()[0]->0",
             key: 'BACKSPACE',
         }],
-        test: "<p><span class=\"a\">dom to ◆edit</span></p>",
+        test: "<p><span class=\"a\">dom to◆edit</span></p>",
     },
     {
         name: "in p (b before): BACKSPACE",
@@ -102,12 +102,12 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
     },
     {
         name: "in p (div > span.a before - span.a after): BACKSPACE at beginning (must do nothing)",
-        content: "<div><span class=\"a\">dom to&nbsp;</span></div><p><span class=\"a\">edit</span></p>",
+        content: "<div><p><span class=\"a\">dom to&nbsp;</span></p></div><p><span class=\"a\">edit</span></p>",
         steps: [{
-            start: "p:contents()[0]->0",
+            start: "p:eq(1):contents()[0]->0",
             key: 'BACKSPACE',
         }],
-        test: "<div><span class=\"a\">dom to&nbsp;</span></div><p><span class=\"a\">◆edit</span></p>",
+        test: "<div><p><span class=\"a\">dom to&nbsp;</span></p></div><p><span class=\"a\">◆edit</span></p>",
     },
     {
         name: "in p: BACKSPACE on partial selection",
@@ -130,67 +130,13 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
         test: "<p>d◆edit</p>",
     },
     {
-        name: "in p: BACKSPACE within text, with space at beginning",
-        content: "<p>     dom to edit</p>",
-        steps: [{
-            start: "p:contents()[0]->10",
-            key: 'BACKSPACE',
-        }],
-        test: "<p>dom ◆o edit</p>",
-    },
-    {
-        name: "in p: BACKSPACE within text, with one space at beginning",
-        content: "<p> dom to edit</p>",
-        steps: [{
-            start: "p:contents()[0]->6",
-            key: 'BACKSPACE',
-        }],
-        test: "<p>&nbsp;dom ◆o edit</p>",
-    },
-    {
-        name: "in p: BACKSPACE within text, with space at end",
-        content: "<p>dom to edit     </p>",
-        steps: [{
-            start: "p:contents()[0]->5",
-            key: 'BACKSPACE',
-        }],
-        test: "<p>dom ◆o edit</p>",
-    },
-    {
-        name: "in p: BACKSPACE within text, with one space at end",
-        content: "<p>dom to edit </p>",
-        steps: [{
-            start: "p:contents()[0]->5",
-            key: 'BACKSPACE',
-        }],
-        test: "<p>dom ◆o edit&nbsp;</p>",
-    },
-    {
-        name: "in p: BACKSPACE within text, with space at beginning and end",
-        content: "<p>     dom to edit     </p>",
-        steps: [{
-            start: "p:contents()[0]->10",
-            key: 'BACKSPACE',
-        }],
-        test: "<p>dom ◆o edit</p>",
-    },
-    {
-        name: "in p: BACKSPACE within text, with one space at beginning and one at end",
-        content: "<p> dom to edit </p>",
-        steps: [{
-            start: "p:contents()[0]->6",
-            key: 'BACKSPACE',
-        }],
-        test: "<p>&nbsp;dom ◆o edit&nbsp;</p>",
-    },
-    {
         name: "in p: BACKSPACE after \\w<br>\\w",
         content: "<p>dom to edi<br>t</p>",
         steps: [{
             start: "p:contents()[2]->1",
             key: 'BACKSPACE',
         }],
-        test: "<p>dom to edi<br>&#65279;◆</p>",
+        test: "<p>dom to edi<br/>◆</p>",
     },
     {
         name: "in p: BACKSPACE -> 'a' within text, after \\s\\w",
@@ -201,7 +147,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
         }, {
             key: 'a',
         }],
-        test: "<p>dom&nbsp;a◆</p>",
+        test: "<p>dom a◆</p>",
     },
     {
         name: "in pre: BACKSPACE within text, with space at beginning",
