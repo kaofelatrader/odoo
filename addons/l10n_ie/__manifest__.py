@@ -21,7 +21,6 @@
         'data/account.chart.template.csv',
         'data/account.account.tag.csv',
         'data/account.tax.template.csv',
-        'data/res.country.state.csv',
         'data/account_chart_template_configuration_data.xml',
     ],
 }
