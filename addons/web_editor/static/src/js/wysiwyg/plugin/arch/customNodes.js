@@ -51,8 +51,10 @@ customNodes.br = ArchNode.extend({
 //       contains the class "fa"
 // => see ArchPlugin._createArchNode
 customNodes.FONTAWESOME = ArchNode.extend({
+    isFormatNode: False,
     isIcon: True,
     isInline: True,
+    isInlineFormatNode: False,
     isMedia: True,
     isVoid: True,
     split: function () {
