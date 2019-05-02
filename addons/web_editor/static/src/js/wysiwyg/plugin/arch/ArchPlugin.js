@@ -739,7 +739,9 @@ var ArchPlugin = AbstractPlugin.extend({
         this._resetChange();
         if (this.getRange().isCollapsed()) {
             this._removeSide(true);
-            this._changes[0].isRange = true;
+            if (this._changes.length) {
+                this._changes[0].isRange = true;
+            }
         } else {
             this._removeFromRange();
         }
@@ -749,7 +751,9 @@ var ArchPlugin = AbstractPlugin.extend({
         this._resetChange();
         if (this.getRange().isCollapsed()) {
             this._removeSide(false);
-            this._changes[0].isRange = true;
+            if (this._changes.length) {
+                this._changes[0].isRange = true;
+            }
         } else {
             this._removeFromRange();
         }

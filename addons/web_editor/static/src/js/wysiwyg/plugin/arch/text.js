@@ -170,7 +170,7 @@ return ArchNode.extend({
             next[isLeft ? 'removeLeft' : 'removeRight'](nextOffset);
         } else if (this.length() === 1) {
             if (!this.previousSibling() || !this.nextSibling()) {
-                this.after(new VirtualText(this.params));
+                this.after(this.params.create());
             }
             this.remove();
         } else {
