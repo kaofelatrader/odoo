@@ -419,10 +419,18 @@ var ActionpadWidget = PosBaseWidget.extend({
         this._super();
         this.$('.pay').click(function(){
             var order = self.pos.get_order();
+            var has_empty_lot_box = false;
             var has_valid_product_lot = _.every(order.orderlines.models, function(line){
+                if (line.product.tracking == "serial" && line.quantity != 1) {
+                    has_empty_lot_box = true;
+                    return false;
+                }
                 return line.has_valid_product_lot();
             });
-            if(!has_valid_product_lot){
+
+            if(has_empty_lot_box) {
+                order.display_lot_popup();
+            } else if(!has_valid_product_lot){
                 self.gui.show_popup('confirm',{
                     'title': _t('Empty Serial/Lot Number'),
                     'body':  _t('One or more product(s) required serial/lot number.'),
