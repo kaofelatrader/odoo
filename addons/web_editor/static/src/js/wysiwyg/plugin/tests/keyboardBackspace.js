@@ -75,7 +75,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
     },
     {
         name: "in p (p > span.a before - span.b after): BACKSPACE at beginning (must attach them)",
-        content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">edit</span></p>",
+        content: '<p><span class="a">dom to</span></p><p><span class="b">edit</span></p>',
         steps: [{
             start: "p:eq(1):contents()[0]->0",
             key: 'BACKSPACE',
@@ -84,7 +84,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
     },
     {
         name: "in p (p > span.a before - span.a after): BACKSPACE (must merge them)",
-        content: "<p><span class=\"a\">dom to </span></p><p><span class=\"a\">edit</span></p>",
+        content: '<p><span class="a">dom to </span></p><p><span class="a">edit</span></p>',
         steps: [{
             start: "p:eq(1):contents()[0]->0",
             key: 'BACKSPACE',
@@ -98,7 +98,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
             start: "p:contents()[1]->0",
             key: 'BACKSPACE',
         }],
-        test: "<p><b>do◆</b>&nbsp;to edit</p>",
+        test: "<p><b>do◆</b> to edit</p>",
     },
     {
         name: "in p (div > span.a before - span.a after): BACKSPACE at beginning (must do nothing)",

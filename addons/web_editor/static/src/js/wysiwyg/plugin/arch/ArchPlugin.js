@@ -805,24 +805,29 @@ var ArchPlugin = AbstractPlugin.extend({
     _indentText: function (outdent) {},
     _removeSide: function (isLeft) {
         var archNode = this._getNode(this._range.scID);
-        if (this.getRange().isCollapsed()) {
-            var offset = this._range.so;
-            var next = archNode[isLeft ? 'previousSibling' : 'nextSibling']();
-            while (next && archNode.isVirtual()) {
-                archNode = next;
-                offset = archNode.length();
-                next = archNode[isLeft ? 'previousSibling' : 'nextSibling']();
-            }
-            var child = archNode[isLeft ? 'lastChild' : 'firstChild']();
-            while (child && !archNode.isText()) {
-                archNode = child;
-                offset = isLeft ? archNode.length() : 0;
-                child = archNode[isLeft ? 'lastChild' : 'firstChild']();
-            }
-            archNode[isLeft ? 'removeLeft' : 'removeRight'](offset);
-        } else {
-            archNode.remove();
+        var virtualText = this._createArchNode();
+        archNode.insert(virtualText, this._range.so);
+        var next = virtualText[isLeft ? 'previousSibling' : 'nextSibling'](function (sibling) {
+            return !sibling || !sibling.isVirtual();
+        });
+        var parent = virtualText.parent;
+        while (!next && parent && !parent.isRoot()) {
+            next = parent[isLeft ? 'previousSibling' : 'nextSibling']();
+            parent = parent.parent;
         }
+        if (!next) {
+            return;
+        }
+        while (next.parent && next.parent.isEmpty() && !next.parent.isRoot()) {
+            next = next.parent;
+        }
+        if (next.isEmpty()) {
+            return next.remove();
+        }
+        if (!next.parent || next.parent !== virtualText.parent) {
+            return virtualText.parent.deleteEdge(isLeft);
+        }
+        return next[isLeft ? 'removeLeft' : 'removeRight'](isLeft ? archNode.length() : 0);
     },
 
     importUpdate: function (changes, range) {

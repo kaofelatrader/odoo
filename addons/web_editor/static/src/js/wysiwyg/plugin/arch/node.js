@@ -277,16 +277,33 @@ return Class.extend({
         return this._changeParent(archNode, this.childNodes.length);
     },
     deleteEdge: function (isLeft) {
-        var next = this[isLeft ? 'previousSibling' : 'nextSibling']();
-        if (!next) {
-            return;
+        var node = this;
+        var edges = [];
+        while (node && !node.isRoot()) {
+            edges.push(node);
+            if (!node.parent || !node[isLeft ? 'isLeftEdgeOf' : 'isRightEdgeOf'](node.parent)) {
+                break;
+            }
+            node = node.parent;
         }
-        if (this.nodeName === next.nodeName) {
-            this.childNodes.forEach(function (node) {
-                next[isLeft ? 'append' : 'prepend'](node);
-            });
-            this.remove();
-        }
+        edges.reverse().forEach(function (node) {
+            var next = node[isLeft ? 'previousSibling' : 'nextSibling']();
+            if (!next) {
+                return;
+            }
+            if (node._isMergeableWith(next)) {
+                node.childNodes.forEach(function (node) {
+                    next[isLeft ? 'append' : 'prepend'](node);
+                });
+                node.remove();
+            }
+        });
+    },
+    _isMergeableWith: function (node) {
+        var haveSameNodeNames = this.nodeName === node.nodeName;
+        var haveSameAttributes = this.attributes.isEqual(node.attributes);
+        var haveSameClasses = this.className.isEqual(node.className);
+        return haveSameNodeNames && haveSameAttributes && haveSameClasses;
     },
     insertAfter: function (archNode, ref) {
         return this._changeParent(archNode, ref.index() + 1);
@@ -348,13 +365,14 @@ return Class.extend({
         if (!this.childNodes.length) {
             return this.remove();
         }
-        return this.childNodes[offset].removeLeft();
+        return this.childNodes[offset - 1].removeLeft(this.childNodes[offset - 1].length());
     },
     removeRight: function (offset) {
         if (!this.childNodes.length) {
             return this.remove();
         }
-        return this.childNodes[offset].removeRight();},
+        return this.childNodes[offset].removeRight(0);
+    },
     split: function (offset) {
         if (this.isUnbreakable()) {
             console.warn("cannot split an unbreakable node");
