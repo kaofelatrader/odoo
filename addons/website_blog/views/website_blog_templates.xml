@@ -64,7 +64,7 @@
 
         <t t-call="website_blog.blogs_nav"/>
 
-        <section id="o_wblog_index_content" t-attf-class="#{'o_wblog_page_cards_bg' if opt_posts_list_cards_design else ''}">
+        <section id="o_wblog_index_content" t-attf-class="#{'o_wblog_page_cards_bg' if opt_blog_cards_design else ''}">
             <div class="container">
                 <div class="row">
                     <div id="o_wblog_blogs_latest_posts" class="col py-4">
@@ -96,7 +96,7 @@
 <!--   ◉  Option: All Blogs: Posts List: Cards design -->
 <template id="opt_all_blogs_cards_design" name="Use 'cards' design" inherit_id="website_blog.all_blogs" active="False" customize_show="True">
     <xpath expr="//section[@id='o_wblog_index_content']" position="before">
-        <t t-set="opt_posts_list_cards_design" t-value="true"/>
+        <t t-set="opt_blog_cards_design" t-value="true"/>
     </xpath>
 </template>
 
@@ -165,40 +165,52 @@
 ============================================================================ -->
 <template id="blog_post_short" name="Blog Posts">
     <t t-call="website_blog.index">
-        <t t-set="head">
+
+        <t t-set="opt_blog_cards_design" t-value="False"/>
+        <t t-set="opt_blog_list_view" t-value="False"/>
+        <t t-set="opt_blog_sidebar_show" t-value="False"/>
+
+
+        <t t-set="head" t-if="blog">
             <link t-att-href="'/blog/%s/feed' % (blog.id)" type="application/atom+xml" rel="alternate" title="Atom Feed"/>
             <meta t-if="len(active_tag_ids) > 0" name="robots" t-attf-content="#{len(active_tag_ids) > 1 and 'noindex,'} nofollow"/>
         </t>
         <div class="oe_structure" id="oe_structure_website_blog_post_short_1"/>
 
-        <section class="oe_structure" id="o_wblog_blog_cover">
-            <div t-attf-class="o_blog_cover_container cover container-fluid py-5">
-                <div class="o_blog_cover_component o_blog_cover_image" style="background-image:url('https://source.unsplash.com/N47B_zibNGo/1000x400') "/>
-                <div class="o_blog_cover_component o_blog_cover_filter oe_black" style="opacity: 0.2;"/>
-                <div class="position-relative text-center">
-                    <h1 class="text-white" t-field="blog.name"/>
-                    <h3 class="text-white" t-field="blog.subtitle"/>
+        <t name="o_wblog_blog_top">
+            <section t-if="blog" class="oe_structure">
+                <div class="container py-4">
+                    <h1 class="display-4" t-field="blog.name"/>
+                    <h4 t-field="blog.subtitle"/>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <t t-call="website_blog.blogs_nav">
-            <t t-set="additionnal_classes" t-value="'py-0'"/>
+            <section t-elif="blogs" id="o_wblog_blog_cover_default" class="container-fluid bg-200">
+                <div class="alert alert-info alert-dismissable mt16 w-lg-75 mx-auto" groups="website.group_website_publisher" role="status">
+                   <button type="button" class="close" data-dismiss="alert" aria-label="Close">&amp;times;</button>
+                   <h4 class="alert-heading">This page is great to improve your <strong>Search Engine Optimization</strong></h4>
+                   <p>
+                       You can review titles, keywords and descriptions of all blogs at once.<br/>
+                       You should <strong>add a banner on the top</strong> as it is a frequent landing page for new visitors.
+                   </p>
+                   <div class="font-italic font-weight-bold">- This box will not be visible to your visitors -</div>
+                </div>
+            </section>
         </t>
 
-        <section id="o_wblog_index_content" t-attf-class="#{'o_wblog_page_cards_bg' if opt_posts_list_cards_design else ''}">
+        <section id="o_wblog_index_content" t-attf-class="#{'o_wblog_page_cards_bg' if opt_blog_cards_design else ''}">
             <div class="container">
-                <div class="row">
-                    <div id="o_wblog_blogs_latest_posts" class="col py-4">
+                <div t-attf-class="row #{'justify-content-between' if opt_blog_sidebar_show else 'justify-content-center'}">
+                    <div id="o_wblog_blog_posts_container" t-attf-class="col py-4 #{'o_wblog_read_width' if opt_blog_list_view else ''}">
+
                         <t t-call="website_blog.posts_list">
+                            <t t-if="not blog" t-set="posts_list_show_parent_blog" t-value="True"/>
                             <t t-set="has_sidebar" t-value="opt_blog_sidebar_show"/>
                         </t>
+
                         <t t-call="website.pager" >
                             <t t-set="classname">justify-content-center</t>
                         </t>
-                    </div>
-                    <div t-if="opt_blog_sidebar_show" class="col-12 col-sm-12 col-md-3 py-4">
-                        <t t-call="website_blog.sidebar_blog_single"/>
                     </div>
                 </div>
             </div>
@@ -210,14 +222,20 @@
 
 <!--   ◉  Option: Blog: Sidebar : Show -->
 <template id="opt_blog_sidebar_show" name="Show Sidebar" inherit_id="website_blog.blog_post_short" active="False" customize_show="True">
-    <xpath expr="//section[@id='o_wblog_index_content']" position="before">
-        <t t-set="opt_blog_sidebar_show" t-value="true"/>
+    <xpath expr="//t[@t-set='opt_blog_sidebar_show']" position="replace">
+        <t t-set="opt_blog_sidebar_show" t-value="True"/>
+    </xpath>
+
+    <xpath expr="//div[@id='o_wblog_blog_posts_container']" position="after">
+        <div class="col-12 col-sm-12 col-md-3 py-4">
+            <t t-call="website_blog.sidebar_blog_single"/>
+        </div>
     </xpath>
 </template>
 
 <!--   ◉  Option: Blog: Show latest-post as top banner  -->
-<template id="opt_blog_cover_post" name="Top banner - Use Last post" inherit_id="website_blog.blog_post_short" active="True" customize_show="True">
-    <xpath expr="//section[@id='o_wblog_blog_cover']" position="replace">
+<template id="opt_blog_cover_post" name="Top banner - Use Last post" inherit_id="website_blog.blog_post_short" active="False" customize_show="True">
+    <xpath expr="//t[@name='o_wblog_blog_top']" position="replace">
 
         <!-- In the general post list, exclude the first post since it will be shown here -->
         <t t-set="posts_list_exclude_first" t-value="True"/>
@@ -227,24 +245,40 @@
 
             <t t-call="website_blog.blog_cover">
                 <t t-set="cover_properties" t-value="blog_posts_cover_properties[blog_post_index]"/>
-                <t t-set="additionnal_classes" t-value="'cover py-4'"/>
+                <t t-set="additionnal_classes" t-value="'o_wblog_blog_top_cover d-flex align-items-center py-4 '"/>
                 <t t-set="use_filters" t-value="True"/>
 
                 <div class="container h-100">
                     <div class="row">
-                        <div class="col-12 col-sm text-center text-md-left order-md-2">
-                            <div class="pl-md-5">
-                                <h1 class="text-white" t-field="blog.name"/>
-                                <h3 class="text-white" t-field="blog.subtitle"/>
+                        <div class="col-12 col-sm text-center text-sm-left d-flex align-items-center">
+                            <div class="pr-md-5 w-100">
+                                <t t-if="blog">
+                                    <h1 class="text-white display-4" t-field="blog.name"/>
+                                    <h3 class="text-white" t-field="blog.subtitle"/>
+                                </t>
+                                <t t-else="">
+                                    <h1 class="text-white display-4">Welcome</h1>
+                                </t>
                             </div>
                         </div>
-                        <div class="col-12 col-md-6 col-lg-4 p-0">
-                            <div class="bg-white rounded-sm p-3 overflow-hidden">
-                                <h4 t-field="blog_post.name" id="blog_post_name" t-att-data-blog-id="blog_post.id" placeholder="Blog Post Title"/>
-                                <p t-field="blog_post.subtitle" placeholder="Subtitle"/>
-                                <hr/>
-                                <a t-attf-href="/blog/#{slug(blog_post.blog_id)}/post/#{slug(blog_post)}" class="btn btn-primary">Read more</a>
-                                <span class="bg-warning small py-1 px-2 position-absolute" style="top:0; right:0"><b>Latest Post</b></span>
+
+                        <div class="col-12 col-md-6 col-lg-5">
+                            <div class="bg-white rounded-sm overflow-hidden">
+                                <div class="d-flex justify-content-end">
+                                    <span t-if="blog" class="bg-warning small py-1 px-2"><b>Latest</b></span>
+                                </div>
+                                <div class="px-3 pb-3 pt-2">
+                                    <h4 t-field="blog_post.name" id="blog_post_name" t-att-data-blog-id="blog_post.id" placeholder="Blog Post Title"/>
+                                    <p t-field="blog_post.subtitle" placeholder="Subtitle"/>
+                                    <div class="d-flex justify-content-between">
+                                        <div t-if="not blog" class="small text-nowrap text-truncate font-weight-bold">
+                                            <i class="fa fa-folder-open text-muted"/> <small class="font-weight-bold">in</small>
+                                            <a t-attf-href="#{blog_url(blog=blog_post.blog_id)}" t-field="blog_post.blog_id"/>
+                                        </div>
+                                        <a t-attf-href="/blog/#{slug(blog_post.blog_id)}/post/#{slug(blog_post)}" class="btn btn-primary">Read more</a>
+
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -263,15 +297,24 @@
     </xpath>
 </template>
 
-<!--   ◉  Option: Blog: Blogs Nav : Hide -->
-<template id="opt_blog_blogs_nav_hide" name="Hide Blogs Navigation" inherit_id="website_blog.blog_post_short" active="False" customize_show="True">
-    <xpath expr="//t[@t-call='website_blog.blogs_nav']" position="replace"/>
+<!--   ◉  Option: Blog: Blogs Nav : Show -->
+<template id="opt_blog_blogs_nav_hide" name="Blogs Navigation" inherit_id="website_blog.blog_post_short" active="True" customize_show="True">
+    <xpath expr="//section[@id='o_wblog_index_content']" position="before">
+        <t t-call="website_blog.blogs_nav"/>
+    </xpath>
 </template>
 
 <!--   ◉  Option: Blog: Posts List: Cards design -->
 <template id="opt_blog_cards_design" name="Use 'cards' design" inherit_id="website_blog.blog_post_short" active="False" customize_show="True">
-    <xpath expr="//section[@id='o_wblog_index_content']" position="before">
-        <t t-set="opt_posts_list_cards_design" t-value="true"/>
+    <xpath expr="//t[@t-set='opt_blog_cards_design']" position="replace">
+        <t t-set="opt_blog_cards_design" t-value="true"/>
+    </xpath>
+</template>
+
+<!--   ◉  Option: Blog: Show Posts as List : Enable -->
+<template id="opt_blog_list_view" name="Show Posts as List" inherit_id="website_blog.blog_post_short" active="False" customize_show="True">
+    <xpath expr="//t[@t-set='opt_blog_list_view']" position="replace">
+        <t t-set="opt_blog_list_view" t-value="True"/>
     </xpath>
 </template>
 

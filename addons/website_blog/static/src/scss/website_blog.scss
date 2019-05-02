@@ -36,13 +36,14 @@
         background-color: rgba(black, 0.005);
     }
 
-    .read_width {
+    .o_wblog_read_width {
         max-width: 700px;
     }
 
     .blog_content {
         min-height: 350px !important;
-        max-width: 700px;
+        // Set a slight more readible font-size, eventually replaced by snippets
+        // or by the editor.
         font-size: 1rem;
 
         a.oe_mail_expand:after {
@@ -61,6 +62,7 @@
     div#blog_angle_down {
         @include size(50px);
         background-color: rgba(black, 0.5);
+
         &:hover {
             background-color: rgba(black, 0.7);
         }
@@ -116,13 +118,9 @@
                 padding: 3rem $grid-gutter-width*0.5;
             }
         }
-        &.o_list_cover {
-            // Show empty cover with any bg-color
-            box-shadow: inset 0 0 0 1px rgba(white, 0.3);
-            background: rgba(black, 0.1);
 
-            padding-top: 33%;
-            height: auto!important;
+        &.o_wblog_blog_top_cover {
+            min-height: 30vh;
         }
 
         &.cover_footer {
@@ -130,6 +128,21 @@
             height: 65vh;
             background-color: #B8B8B8;
             cursor: pointer;
+        }
+    }
+
+    #o_wblog_blog_posts {
+        .o_blog_cover_container {
+            // Show empty covers with any page bg-color
+            box-shadow: inset 0 0 0 1px rgba(white, 0.3);
+            background: rgba(black, 0.1);
+
+            padding-top: 33%;
+            height: auto!important;
+        }
+
+        &.o_wblog_list_view .o_blog_cover_container {
+            padding-top: 20%;
         }
     }
 

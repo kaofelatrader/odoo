@@ -69,7 +69,7 @@ class WebsiteBlog(http.Controller):
             domain += [("post_date", ">=", date_begin), ("post_date", "<=", date_end)]
         posts = BlogPost.search(domain, offset=(page - 1) * self._blog_post_per_page, limit=self._blog_post_per_page)
         blog_url = QueryURL('', ['blog', 'tag'])
-        return request.render("website_blog.all_blogs", {
+        return request.render("website_blog.blog_post_short", {
             'blog_posts': posts,
             'pager': pager,
             'blogs': blogs,

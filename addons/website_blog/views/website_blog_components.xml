@@ -5,11 +5,11 @@
 <!-- ======   Template: Blogs Navbar   =========================================
 ============================================================================ -->
 <template id="website_blog.blogs_nav" name="Blogs Bar Template">
-    <nav t-attf-class="navbar navbar-light bg-light navbar-expand border-bottom #{additionnal_classes if additionnal_classes else ''}">
+    <nav t-attf-class="navbar navbar-expand-sm navbar-light #{additionnal_classes if additionnal_classes else ''}">
         <div class="container">
-            <ul class="navbar-nav mx-auto">
+            <ul class="navbar-nav">
                 <li class="nav-item">
-                    <span class="nav-link disabled">Blogs:</span>
+                    <span class="nav-link disabled pl-0">Blogs:</span>
                 </li>
                 <li t-if="len(blogs) > 1" class="nav-item">
                     <a href="/blog" t-attf-class="nav-link #{(not blog) and 'active' or ''}">
@@ -35,7 +35,9 @@
 ◉  Option: Show Teaser & Tags
 ============================================================================ -->
 <template id="website_blog.posts_list" name="Posts List">
-    <div id="o_wblog_posts_list">
+    <div id="o_wblog_blog_posts" t-att-class="'o_wblog_list_view' if opt_blog_list_view else ''">
+
+        <t t-set="opt_posts_list_show_share" t-value="False"/>
 
         <!-- Allow to filter post by published state. Visible only in edit-mode
              end if both published/unpublished number is > 0 -->
@@ -67,36 +69,46 @@
             </div>
         </div>
 
-        <!-- t-attf-class="pb-4 px-2 col-12 #{'col-sm-6 col-lg-4 col-xl-3' if (not has_sidebar) else 'col-md-6 col-xl-4'}"> -->
-
-        <!-- Loop through posts: exlude first post if already shown as top banner, adapt grid if sidebar is active -->
         <div class="row mx-n2">
+            <!-- Define post's classes according to the enabled options -->
+            <t t-if="has_sidebar and not opt_blog_list_view" t-set="post_size" t-value="'col-md-6 col-xl-4'"/>
+            <t t-elif="not has_sidebar and not opt_blog_list_view" t-set="post_size" t-value="'col-sm-6 col-lg-4 col-xl-3'"/>
+
+            <!-- Loop through posts: exlude first post if already shown as top
+                 banner, adapt grid if sidebar is active -->
             <div t-foreach="blog_posts" t-as="blog_post"
                  t-if="not (blog_post_index == 0 and posts_list_exclude_first)"
-                 t-attf-class="pb-4 px-2 col-12 #{'col-sm-6 col-lg-4 col-xl-3' if (not has_sidebar) else 'col-md-6 col-xl-4'}">
+                 t-attf-class="pb-4 px-2 col-12 #{post_size}">
 
-                <article t-attf-class="o_wblog_posts_list_post position-relative #{'card h-100' if opt_posts_list_cards_design else ''}" name="blog_post">
-                    <div t-attf-class="o_wblog_posts_list_post_body #{'card-body' if opt_posts_list_cards_design else 'pt-2'}">
-                        <a t-attf-href="/blog/#{slug(blog_post.blog_id)}/post/#{slug(blog_post)}" t-field="blog_post.name" class="my-0 h6 d-block o_blog_post_title">Untitled Post</a>
+                <article t-attf-class="o_wblog_posts_list_post position-relative #{'card h-100' if opt_blog_cards_design else ''}" name="blog_post">
+                    <div t-attf-class="o_wblog_posts_list_post_body #{'card-body' if opt_blog_cards_design else 'pt-2'}">
+                        <a t-attf-href="/blog/#{slug(blog_post.blog_id)}/post/#{slug(blog_post)}"
+                           t-field="blog_post.name"
+                           t-attf-class="my-0 d-block o_blog_post_title #{'h4' if opt_blog_list_view else 'h6'}">Untitled Post</a>
 
                         <div t-if="not opt_posts_list_show_cover and opt_posts_list_show_author" class="text-muted small mt-2">
                             by <span t-field="blog_post.author_id"/>
                         </div>
                     </div>
 
-                    <div t-attf-class="o_wblog_posts_list_post_footer #{'card-footer' if opt_posts_list_cards_design else 'py-2'}">
+                    <div t-attf-class="o_wblog_posts_list_post_footer #{'card-footer' if opt_blog_cards_design else 'py-2'}">
                         <div class="o_wblog_posts_list_post_footer_info d-flex align-items-center flex-wrap mb-1 w-100">
-                            <div class="d-flex flex-grow-1 justify-content-between small">
-                                <b t-if="not opt_posts_list_show_post_stats" t-field="blog_post.post_date" t-options='{"format": "MMMM d, yyyy"}'/>
-                                <t t-else="opt_posts_list_show_post_stats">
-                                    <b t-field="blog_post.post_date" t-options='{"format": "MMM d, yyyy"}'/>
+                            <div class="d-flex flex-grow-1 justify-content-between small flex-wrap">
+                                <t t-if="opt_posts_list_show_post_stats">
+                                    <b t-field="blog_post.post_date" class="text-nowrap pr-2" t-options='{"format": "MMM d, yyyy"}'/>
                                     <b class="text-nowrap pl-2"><i class="fa fa-comment text-muted mr-1"/><t t-esc="len(blog_post.message_ids)"/></b>
                                     <b class="text-nowrap pl-2"><i class="fa fa-binoculars text-muted mr-1"/><t t-esc="blog_post.visits"/></b>
                                 </t>
-                                <b class="text-nowrap text-truncate pl-2" t-if="posts_list_show_parent_blog">
+                                <b t-else="" t-field="blog_post.post_date" t-options='{"format": "MMMM d, yyyy"}'/>
+                                <b t-if="posts_list_show_parent_blog" t-attf-class="text-nowrap  text-truncate #{'pl-4' if opt_blog_list_view else 'pl-2'}">
                                     <i class="fa fa-folder-open text-muted"/>
                                     <a t-attf-href="#{blog_url(blog=blog_post.blog_id)}" t-field="blog_post.blog_id"/>
                                 </b>
+                                <div t-if="opt_posts_list_show_share" t-att-class="'w-100 pt-1' if (not opt_blog_list_view and posts_list_show_parent_blog) else 'flex-grow-1'">
+                                    <t t-call="website_blog.social_links_list">
+                                        <t t-set="additionnal_classes">text-right</t>
+                                    </t>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -113,14 +125,13 @@
         <t t-set="opt_posts_list_show_cover" t-value="true"/>
     </xpath>
     <xpath expr="//article/div" position="before">
-        <a t-if="opt_posts_list_show_cover"
-           t-attf-href="/blog/#{slug(blog_post.blog_id)}/post/#{slug(blog_post)}"
-           t-attf-class="text-decoration-none overflow-hidden d-block #{'card-img-top' if opt_posts_list_cards_design else ''}"
+        <a t-attf-href="/blog/#{slug(blog_post.blog_id)}/post/#{slug(blog_post)}"
+           t-attf-class="text-decoration-none overflow-hidden d-block #{'card-img-top' if opt_blog_cards_design else ''}"
            t-att-style="'opacity:0.6;' if not blog_post.website_published else ''">
 
             <t t-call="website_blog.blog_cover">
                 <t t-set="cover_properties" t-value="blog_posts_cover_properties[blog_post_index]"/>
-                <t t-set="additionnal_classes" t-value="'cover o_list_cover overflow-hidden' + (' rounded-sm' if not opt_posts_list_cards_design else '' ) "/>
+                <t t-set="additionnal_classes" t-value="'cover' + (' rounded-sm' if not opt_blog_cards_design else '' )"/>
 
                 <t t-if="opt_posts_list_show_author" t-call="website_blog.post_author">
                     <t t-set="additionnal_classes" t-value="'o_wblog_post_list_author text-white px-2 pb-2 pt-3 w-100'"/>
@@ -133,13 +144,8 @@
 
 <!--   ◉  Option: Posts List: Show Share Links ^^^^^^^^   -->
 <template id="opt_posts_list_show_share" name="Share links" inherit_id="website_blog.posts_list" active="False" customize_show="True">
-    <xpath expr="//div[hasclass('o_wblog_posts_list_post_footer_info')]" position="after">
-        <div t-attf-class="text-right #{'w-100 pt-1' if posts_list_show_blog else ''}">
-            <a href="#" class="fa fa-twitter-square text-twitter o_twitter" aria-label="Twitter" title="Share on Twitter"/>
-            <a href="#" class="fa fa-facebook-square text-facebook o_facebook" aria-label="Facebook" title="Share on Facebook"/>
-            <a href="#" class="fa fa-linkedin-square text-linkedin o_linkedin" aria-label="LinkedIn" title="Share on LinkedIn"/>
-            <a href="#" class="fa fa-google-plus-square text-google-plus o_google" aria-label="Google Plus" title="Share on Google Plus"/>
-        </div>
+    <xpath expr="//t[@t-set='opt_posts_list_show_share']" position="replace">
+        <t t-set="opt_posts_list_show_share" t-value="True"/>
     </xpath>
 </template>
 
@@ -151,7 +157,7 @@
 </template>
 
 <!--   ◉  Option: Posts List: Show Post Stats ^^^^^^^^   -->
-<template id="opt_posts_list_show_post_stats" name="Statistics" inherit_id="website_blog.posts_list" active="False" customize_show="True">
+<template id="opt_posts_list_show_post_stats" name="Comments/Views stats" inherit_id="website_blog.posts_list" active="False" customize_show="True">
     <xpath expr="//div/div" position="before">
         <t t-set="opt_posts_list_show_post_stats" t-value="true"/>
     </xpath>
@@ -205,7 +211,7 @@
 </template>
 
 <!--   ◉  Option: Sidebar Blog Single: Show About Us ^^^^^^^^  -->
-<template id="opt_sidebar_blog_single_about" name="About Us" priority="1" inherit_id="website_blog.sidebar_blog_single" active="False" customize_show="True">
+<template id="opt_sidebar_blog_single_about" name="About Us" priority="1" inherit_id="website_blog.sidebar_blog_single" active="True" customize_show="True">
     <xpath expr="//div[@id='o_wblog_sidebar']" position="inside">
         <t t-call="website_blog.about_us"/>
     </xpath>
@@ -325,12 +331,23 @@
 <!-- ======   Template: COVER   ================================================
 ============================================================================ -->
 <template id="blog_cover">
-    <div t-attf-class="o_blog_cover_container #{use_size and cover_properties.get('resize_class') or ''} #{additionnal_classes or ''}">
-        <div class="o_wblog_cover_wrapper h-100">
+    <div t-attf-class="o_blog_cover_container overflow-hidden #{use_size and cover_properties.get('resize_class') or ''} #{additionnal_classes or ''}">
+        <div class="o_wblog_cover_wrapper h-100 w-100">
             <div class="o_blog_cover_component o_blog_cover_image" t-attf-style="background-image: #{cover_properties.get('background-image')};"/>
             <div t-if="use_filters" t-attf-class="o_blog_cover_component o_blog_cover_filter #{cover_properties.get('background-color')}" t-attf-style="opacity: #{cover_properties.get('opacity', 0.0)};"/>
             <t t-raw="0"/>
         </div>
+    </div>
+</template>
+
+<!-- ======   Template: Social links list   ====================================
+============================================================================ -->
+<template id="website_blog.social_links_list">
+    <div t-attf-class="#{additionnal_classes or ''}">
+        <a href="#" class="fa fa-twitter-square text-twitter o_twitter" aria-label="Twitter" title="Share on Twitter"/>
+        <a href="#" class="fa fa-facebook-square text-facebook o_facebook" aria-label="Facebook" title="Share on Facebook"/>
+        <a href="#" class="fa fa-linkedin-square text-linkedin o_linkedin" aria-label="LinkedIn" title="Share on LinkedIn"/>
+        <a href="#" class="fa fa-google-plus-square text-google-plus o_google" aria-label="Google Plus" title="Share on Google Plus"/>
     </div>
 </template>
 
