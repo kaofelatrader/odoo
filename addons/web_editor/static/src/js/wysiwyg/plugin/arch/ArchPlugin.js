@@ -743,7 +743,8 @@ var ArchPlugin = AbstractPlugin.extend({
                 this._changes[0].isRange = true;
             }
         } else {
-            this._removeFromRange();
+            var virtualText = this._removeFromRange();
+            virtualText.parent.deleteEdge(true);
         }
         this._updateRendererFromChanges();
     },
@@ -755,7 +756,8 @@ var ArchPlugin = AbstractPlugin.extend({
                 this._changes[0].isRange = true;
             }
         } else {
-            this._removeFromRange();
+            var virtualText = this._removeFromRange();
+            virtualText.parent.deleteEdge(false);
         }
         this._updateRendererFromChanges();
     },
@@ -822,12 +824,22 @@ var ArchPlugin = AbstractPlugin.extend({
             next = next.parent;
         }
         if (next.isEmpty()) {
+            if (isLeft && !next.isVoid()) {
+                var thisAncestor = next.nextSibling(function (sibling) {
+                    return !sibling.isText();
+                });
+                next.empty();
+                thisAncestor.childNodes.forEach(function (child) {
+                    next.append(child);
+                });
+                return thisAncestor.remove();
+            }
             return next.remove();
         }
         if (!next.parent || next.parent !== virtualText.parent) {
             return virtualText.parent.deleteEdge(isLeft);
         }
-        return next[isLeft ? 'removeLeft' : 'removeRight'](isLeft ? archNode.length() : 0);
+        return next[isLeft ? 'removeLeft' : 'removeRight'](isLeft ? next.length() : 0);
     },
 
     importUpdate: function (changes, range) {
@@ -1100,6 +1112,7 @@ var ArchPlugin = AbstractPlugin.extend({
             scID: virtualTextNodeBegin.id,
             so: 0,
         });
+        return virtualTextNodeBegin;
     },
     /**
      * Remove all virtual text nodes from the Arch, except the optional
@@ -1111,7 +1124,7 @@ var ArchPlugin = AbstractPlugin.extend({
         var self = this;
         Object.keys(this._archNodeList).forEach(function (id) {
             id = parseInt(id);
-            if (except.indexOf(id) !== -1) {
+            if (except && except.indexOf(id) !== -1) {
                 return;
             }
             var archNode = self._getNode(id);

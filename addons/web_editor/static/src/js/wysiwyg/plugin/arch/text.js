@@ -113,7 +113,9 @@ return ArchNode.extend({
             this.before(archNode);
             return this;
         }
-        text = text.replace(/^ | $/g, '\u00A0');
+        if (!this.ancestor(this.isPre)) {
+            text = text.replace(/^ | $/g, '\u00A0');
+        }
 
         if (text.length) {
             archNode = new this.constructor(this.params, text);
@@ -154,7 +156,8 @@ return ArchNode.extend({
     _insertTextInText(text, offset) {
         var start = this.nodeValue.slice(0, offset);
         var end = this.nodeValue.slice(offset);
-        this.nodeValue = this._handleNbsps(start + text + end);
+        var isInPre = !!this.ancestor(this.isPre);
+        this.nodeValue = isInPre ? start + text + end : this._handleNbsps(start + text + end);
         this.params.change(this, offset + text.length);
     },
     _removeSide: function (offset, isLeft) {

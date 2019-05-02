@@ -192,7 +192,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
             start: "pre:contents()[0]->10",
             key: 'BACKSPACE',
         }],
-        test: "<pre>     ◆dom o edit     </pre>",
+        test: "<pre>     dom ◆o edit     </pre>",
     },
     {
         name: "in pre: BACKSPACE within text, with one space at beginning and one at end",
