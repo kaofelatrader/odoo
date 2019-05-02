@@ -129,7 +129,7 @@ var RunningTourActionHelper = core.Class.extend({
         values.$element.trigger($.Event("mousemove", {which: 1, pageX: toCenter.left, pageY: toCenter.top}));
         values.$element.trigger($.Event("mouseup", {which: 1, pageX: toCenter.left, pageY: toCenter.top}));
      },
-    _pointer_drag_and_drop: function (values, to, steps) {
+    _pointer_drag_and_drop: function (values, to) {
         var $to;
         if (to) {
             $to = get_jquery_element_from_selector(to);
@@ -160,14 +160,19 @@ var RunningTourActionHelper = core.Class.extend({
             clientX: elementCenter.left,
             clientY: elementCenter.top,
         }));
-        var nbSteps = steps || 3;
+
+        var distanceX = Math.abs(toCenter.left - elementCenter.left);
+        var distanceY = Math.abs(toCenter.top - elementCenter.top);
+        var nbSteps = Math.ceil(Math.min(distanceX, distanceY));
+        var limitX = toCenter.left > elementCenter.left ? Math.min: Math.max;
+        var limitY = toCenter.top > elementCenter.top ? Math.min: Math.max;
         for (var i = 1; i <= nbSteps; i++) {
             var deltaX = (toCenter.left - elementCenter.left) * (i / nbSteps);
             var deltaY = (toCenter.top - elementCenter.top) * (i / nbSteps);
             values.$element[0].dispatchEvent(new PointerEvent("pointermove", {
                 bubbles: true,
-                clientX: elementCenter.left + deltaX,
-                clientY: elementCenter.top + deltaY,
+                clientX: limitX(elementCenter.left + deltaX, toCenter.left),
+                clientY: limitY(elementCenter.top + deltaY, toCenter.top),
             }));
         }
         values.$element[0].dispatchEvent(new PointerEvent("pointerup", {
