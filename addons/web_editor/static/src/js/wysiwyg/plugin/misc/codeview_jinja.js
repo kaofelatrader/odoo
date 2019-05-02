@@ -31,7 +31,6 @@ var JinjaPlugin = AbstractPlugin.extend({
         return value;
     },
     start: function () {
-        var self = this;
         var promise = this._super();
         this.dependencies.Arch.addStructureRule([null], [this._isArchJinja.bind(this)]);
         this.dependencies.Arch.addCustomRule(this._splitTextArchNode.bind(this), [this._hasArchJinja.bind(this)]);

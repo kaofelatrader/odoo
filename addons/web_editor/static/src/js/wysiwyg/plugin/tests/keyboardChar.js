@@ -274,6 +274,7 @@ var TestKeyboardChar = AbstractPlugin.extend({
                 start: "span:contents(0)->11",
             },
         },
+        */
         {
             name: "'a' on all contents of p starting with an icon",
             content: '<p><span class="fa fa-star"></span>bbb</p>',
@@ -284,7 +285,6 @@ var TestKeyboardChar = AbstractPlugin.extend({
             }],
             test: '<p>a◆</p>',
         },
-        */
         {
             name: "' ' at start of p",
             content: '<p>dom to edit</p>',
@@ -402,7 +402,7 @@ var TestKeyboardChar = AbstractPlugin.extend({
                 start: "p:contents(2)->2",
                 key: 'a',
             }],
-            test: '<div class="unbreakable"><p>dom <span class="fa fa-heart"></span>toa◆ edit</p></div>',
+            test: '<div class="unbreakable"><p>dom <span class="fa fa-heart"/>toa◆ edit</p></div>',
         },
         {
             name: "'a' on begin of unbreakable inline node",

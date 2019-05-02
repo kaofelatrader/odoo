@@ -1153,11 +1153,31 @@ var ArchPlugin = AbstractPlugin.extend({
             c.archNode.applyRules();
         });
     },
+    /**
+     * Return a className if param contains it.
+     *
+     * @param {String [][]|String} param as passed to _createArchNode
+     * @returns {String}
+     */
+    _classNameFromParam: function (param) {
+        var className = '';
+        if (!param || !Array.isArray(param)) {
+            return className;
+        }
+        param.forEach(function (p) {
+            if (p.length && p[0] === 'class') {
+                className = p[1];
+                return;
+            }
+        });
+        return className;
+    },
     _createArchNode: function (nodeName, param) {
         if (!nodeName || nodeName === 'TEXT-VIRTUAL') {
             return new VirtualText(this._arch.params);
         } else if (nodeName !== 'TEXT') {
-            var Constructor = customNodes[nodeName] || ArchNode;
+            var isFontAwesome = this._hasStringClass(this._classNameFromParam(param), 'fa');
+            var Constructor = customNodes[isFontAwesome ? 'FONTAWESOME' : nodeName] || ArchNode;
             return new Constructor(this._arch.params, nodeName, param instanceof Array ? param : (param && param.attributes || []));
         } else {
             return new VisibleText(this._arch.params, typeof param === 'string' ? param : (param && param.nodeValue || ''));
@@ -1209,6 +1229,21 @@ var ArchPlugin = AbstractPlugin.extend({
     _getNode: function (idOrElement) {
         var archNodeId = typeof idOrElement === 'number' ? idOrElement : this._renderer.whoIsThisNode(idOrElement);
         return this._archNodeList[archNodeId];
+    },
+    /**
+     * Return true if the given `classString` contains the `classToFind`.
+     *
+     * @param {String} classString
+     * @param {String} classToFind
+     * @returns {Boolean}
+     */
+    _hasStringClass: function (classString, classToFind) {
+        var expressions = [
+            classToFind + ' ',
+            ' ' + classToFind,
+            '^' + classToFind + '$',
+        ];
+        return new RegExp(expressions.join('|')).test(classString);
     },
     _removeFromArch: function (archNode) {
         var self = this;

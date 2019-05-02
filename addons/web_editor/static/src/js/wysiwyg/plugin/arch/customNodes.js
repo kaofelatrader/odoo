@@ -47,6 +47,18 @@ customNodes.br = ArchNode.extend({
     },
 });
 
+// Note: this custom node can have any nodeName but
+//       contains the class "fa"
+// => see ArchPlugin._createArchNode
+customNodes.FONTAWESOME = ArchNode.extend({
+    isIcon: True,
+    isInline: True,
+    isMedia: True,
+    isVoid: True,
+    split: function () {
+        return;
+    },
+});
 
 return customNodes;
 
