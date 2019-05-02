@@ -42,6 +42,12 @@ customNodes.br = ArchNode.extend({
         this.parent.insert(archNode, this.index() + 1);
     },
     isBR: True,
+    removeLeft: function () {
+        this.remove();
+    },
+    removeRight: function () {
+        this.remove();
+    },
     split: function () {
         return;
     },
@@ -57,6 +63,12 @@ customNodes.FONTAWESOME = ArchNode.extend({
     isInlineFormatNode: False,
     isMedia: True,
     isVoid: True,
+    removeLeft: function () {
+        this.remove();
+    },
+    removeRight: function () {
+        this.remove();
+    },
     split: function () {
         return;
     },

@@ -166,7 +166,8 @@ return ArchNode.extend({
                 }
                 return;
             }
-            next[isLeft ? 'removeLeft' : 'removeRight'](0);
+            var nextOffset = isLeft ? (next.childNodes ? next.childNodes.length : next.length()) : 0;
+            next[isLeft ? 'removeLeft' : 'removeRight'](nextOffset);
         } else if (this.length() === 1) {
             if (!this.previousSibling() || !this.nextSibling()) {
                 this.after(new VirtualText(this.params));

@@ -344,6 +344,17 @@ return Class.extend({
         this.parent = null;
         this.__removed = true;
     },
+    removeLeft: function (offset) {
+        if (!this.childNodes.length) {
+            return this.remove();
+        }
+        return this.childNodes[offset].removeLeft();
+    },
+    removeRight: function (offset) {
+        if (!this.childNodes.length) {
+            return this.remove();
+        }
+        return this.childNodes[offset].removeRight();},
     split: function (offset) {
         if (this.isUnbreakable()) {
             console.warn("cannot split an unbreakable node");
