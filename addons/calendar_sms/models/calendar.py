@@ -19,6 +19,7 @@ class CalendarEvent(models.Model):
 
     def _do_sms_reminder(self):
         """ Send an SMS text reminder to attendees that haven't declined the event """
+        all_sms = self.env['sms.sms']
         for event in self:
             template = self.env.ref('calendar_sms.sms_reminder_template', False)
             if template:
@@ -32,10 +33,11 @@ class CalendarEvent(models.Model):
                 'content': content,
                 'country_id': recipient['partner_id'].country_id.id,
                 'user_id': event.user_id.id
-            } for recipient in self.env.get['mail.thread']._get_sms_recipients(self._name, event.id)]
+            } for recipient in self.env.get['sms.sms']._get_sms_recipients(self._name, event.id)]
             sms_ids = self.env['sms.sms'].create(values)
-            sms_ids._send()
+            all_sms |= sms_ids
             event.message_post_send_sms(note_msg, sms_ids)
+        all_sms._send()
 
 
 class CalendarAlarm(models.Model):

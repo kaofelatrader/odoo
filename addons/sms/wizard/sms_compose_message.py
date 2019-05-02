@@ -58,7 +58,7 @@ class SendSMS(models.TransientModel):
         records = self._get_records(model)
         if self.env.context.get('default_composition_mode') != 'mass_sms' \
             and not self.env.context.get('default_recipient_ids'):
-            recipients = self.env['mail.thread']._get_sms_recipients(active_model, records.id)
+            recipients = self.env['sms.sms']._get_sms_recipients(active_model, records.id)
             missing_numbers = []
             for recipient in recipients:
                 if not recipient['number']:
@@ -86,7 +86,7 @@ class SendSMS(models.TransientModel):
             values = []
             if self.composition_mode == 'mass_sms':
                 # We need to compute the recipients
-                for recipient in self.env['mail.thread']._get_sms_recipients(active_model, record.id):
+                for recipient in self.env['sms.sms']._get_sms_recipients(active_model, record.id):
                     partner_id = recipient['partner_id']
                     values.append({
                         'name': partner_id and partner_id.display_name or recipient['number'],
@@ -105,10 +105,10 @@ class SendSMS(models.TransientModel):
                         'country_id': country_id
                     })
             sms_ids = self.env['sms.sms'].create(values)
-            sms_ids._send()
             all_sms |= sms_ids
             if hasattr(record, 'message_post_send_sms'):
                 record.message_post_send_sms(body.replace('\n', '<br/>'), sms_ids)
+        all_sms._send()
         all_sms._notify_sms_update()
 
     @api.multi

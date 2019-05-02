@@ -26,6 +26,7 @@ class SmsSms(models.Model):
     name = fields.Char(string='Recipient name')
     number = fields.Char()
     content = fields.Text()
+    credit = fields.Float(default=0)
 
     user_id = fields.Many2one('res.users', 'Sender', default=lambda self: self.env.user.id)
     country_id = fields.Many2one('res.country')
@@ -41,8 +42,53 @@ class SmsSms(models.Model):
     error_code = fields.Selection([
         ('missing_number', 'Missing Number'),
         ('wrong_number_format', 'Wrong Number Format'),
-        ('insufficient_credit', 'Insufficient Credit')
+        ('insufficient_credit', 'Insufficient Credit'),
+        ('server_error', 'Server Error')
     ])
+
+    @api.model
+    def _get_sms_recipients(self, res_model, res_id):
+        """
+        Return a list of dict with the following form: 
+        {
+            partner_id: The partner if known
+            number: The number to which send the sms
+        }
+
+        By default, we try to find res.partner records on record and compute
+        the recipients to which send SMS.
+
+        Models could implement _get_default_sms_recipients in order to provide
+        the right recipients to which send SMS.
+
+        :param res_model: Model of the record
+        :param res_id: Id of the record
+
+        :return: list of dict
+        """
+        record = self.env[res_model].browse(res_id)
+        partners = self.env['res.partner']
+        if hasattr(record, '_get_default_sms_recipients'):
+            partners |= record._get_default_sms_recipients()
+        else:
+            if 'partner_id' in record._fields:
+                partners |= record.mapped('partner_id')
+            if 'partner_ids' in record._fields:
+                partners |= record.mapped('partner_ids')
+        recipients = []
+        field_name = self.env.context.get('field_name')
+        if field_name:
+            recipients.append({
+                'partner_id': partners[:1],
+                'number': record[field_name]
+            })
+        else:
+            for partner in partners:
+                recipients.append({
+                    'partner_id': partner,
+                    'number': partner.mobile or partner.phone
+                })
+        return recipients
 
     @api.multi
     def _get_sanitized_number(self):
@@ -64,6 +110,7 @@ class SmsSms(models.Model):
     def _send(self):
         """ This method try to send SMS after checking the number (presence and
             formatting). """
+        to_send = []
         for record in self:
             if not record.number:
                 record.write({
@@ -78,17 +125,36 @@ class SmsSms(models.Model):
                     'error_code': 'wrong_number_format'
                 })
                 continue
-            try:
-                self.env['sms.api']._send_sms([number], record.content)
-                record.write({
-                    'state': 'sent',
-                    'error_code': False
-                })
-            except InsufficientCreditError:
+            to_send.append({
+                'res_id': record.id,
+                'number': number,
+                'content': record.content
+            })
+        result = False
+        try:
+            result = self.env['sms.api']._send_multi_sms(to_send)
+        except Exception:
+            for record in self:
                 record.write({
                     'state': 'error',
-                    'error_code': 'insufficient_credit'
+                    'error_code': 'server_error',
+                    'credit': 0
                 })
+        if result:
+            for r in result:
+                record = self.browse(r['res_id'])
+                if 'error' in r:
+                    if r['error'] in ('insufficient_credit', 'wrong_number_format', 'server_error'):
+                        record.write({
+                            'state': 'error',
+                            'error_code': r['error']
+                        })
+                else:
+                    record.write({
+                        'state': 'sent',
+                        'error_code': False,
+                        'credit': r['credit']
+                    })
     
     @api.multi
     def _cancel(self):
