@@ -18,8 +18,9 @@
         <link href="/web/static/lib/fontawesome/css/font-awesome.css" rel="stylesheet" type="text/css"/>
 
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/fonts.scss" />
-        <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/res_company_default.scss"/>
-        <!-- FIXME t-call-assets does not seem to inherit the context from his parent -->
+        <!-- TODO clean the previous multicompany support attempt -->
+        <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/res_company_1.scss"/>
+        <!-- t-call-assets does not seem to inherit the context from his parent -->
         <!-- <link rel="stylesheet" type="text/scss" t-att-href="res_company.scss_url"/> -->
 
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/report.scss"/>
@@ -61,9 +62,6 @@
                 <meta charset="utf-8"/>
                 <meta name="viewport" content="initial-scale=1"/>
                 <title><t t-esc="title or 'Odoo Report'"/></title>
-                <!-- <xpath expr="//link[@href='/web/static/src/scss/res_company_default.scss']" position="replace">
-                    <link rel="stylesheet" type="text/scss" t-att-href="res_company.scss_url"/>
-                </xpath> -->
                 <t t-call-assets="web.report_assets_common" t-js="false"/>
                 <t t-call-assets="web.assets_common" t-css="false"/>
                 <t t-call-assets="web.report_assets_common" t-css="false"/>

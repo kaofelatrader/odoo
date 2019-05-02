@@ -13,10 +13,15 @@ class CompanyDocumentLayout(models.TransientModel):
         Wizard to customise the company document layout and display a live preview
     """
 
+    @api.model
+    def _get_current_company(self):
+        # return the current company
+        return self.env['res.users'].browse(self._uid).company_id
+
     _name = 'company.document.layout'
     _description = 'Company Document Layout'
 
-    company_id = fields.Many2one('res.company', required=True)
+    company_id = fields.Many2one('res.company', default=_get_current_company)
 
     logo = fields.Binary(related='company_id.logo', readonly=False)
     report_header = fields.Text(related='company_id.report_header', readonly=False)
