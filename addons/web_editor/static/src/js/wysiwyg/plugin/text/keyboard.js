@@ -221,7 +221,7 @@ var KeyboardPlugin = AbstractPlugin.extend({
         var range = this.dependencies.Arch.getRange();
 
         // Special cases
-        if (range.isCollapsed()) {
+        /* if (range.isCollapsed()) {
 
             // Do nothing if on left edge of a table cell
             var point = range.getStartPoint();
@@ -245,15 +245,15 @@ var KeyboardPlugin = AbstractPlugin.extend({
             }
         }
 
-        var needOutdent = this.utils.isInList(range.sc) && range.getStartPoint().isEdgeOfTag('LI', 'left');
+        var needOutdent = this.utils.isInList(range.sc) && range.getStartPoint().isEdgeOfTag('LI', 'left'); */
         var didDelete;
-        if (!needOutdent || !range.isCollapsed()) {
+        // if (!needOutdent || !range.isCollapsed()) {
             didDelete = this._handleDeletion(true);
-        }
+        /* }
         if (!didDelete && needOutdent) {
             this.dependencies.Arch.setRange(range.getPoints());
             this.dependencies.Paragraph.outdent(null, range);
-        }
+        } */
 
         return true;
     },
