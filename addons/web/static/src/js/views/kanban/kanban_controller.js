@@ -24,6 +24,7 @@ var KanbanController = BasicController.extend({
         quick_create_add_column: '_onAddColumn',
         quick_create_record: '_onQuickCreateRecord',
         open_form_overlay_view: '_onOpenFormOverlayView',
+        discard_form_overlay_view: '_onClickDiscard',
         resequence_columns: '_onResequenceColumn',
         button_clicked: '_onButtonClicked',
         kanban_record_delete: '_onRecordDelete',
@@ -511,12 +512,17 @@ var KanbanController = BasicController.extend({
             this._onClickDiscard(ev);
         }
 
-        var columnState = this.model.get(this.handle, {raw: true}),
-            context = columnState.getContext(),
-            groupedBy = columnState.groupedBy[0],
-            values = ev.data;
+        var data = ev.data;
+        if (data && !data.context) {
+            var columnState = this.model.get(this.handle, {raw: true}),
+                context = columnState.getContext(),
+                groupedBy = columnState.groupedBy[0],
+                values = ev.data;
 
-        context['default_' + groupedBy] = viewUtils.getGroupValue(columnState, groupedBy);
+            context['default_' + groupedBy] = viewUtils.getGroupValue(columnState, groupedBy);
+        } else {
+            context = data.context;
+        }
 
         var $kanbanView = $('.o_action_manager .o_content .o_kanban_view');
         this.formOverlayWidget = new RecordFormOverlay(this, {
@@ -524,7 +530,7 @@ var KanbanController = BasicController.extend({
             formViewID: this.overlayFormViewID,
             model: this.modelName,
             res_id: values && values.res_id,
-            db_id:  values && values.res_id,
+            db_id:  values && values.db_id,
         });
         $kanbanView.addClass('o_kanban_overlay_form_view');
         context['form_overlay_heigh'] = $kanbanView.height();

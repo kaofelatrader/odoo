@@ -294,7 +294,10 @@ var KanbanColumn = Widget.extend({
      * @private
      */
     _onClickOpenFormOverlay: function (ev) {
-        this.trigger_up('open_form_overlay_view', {db_id: this.db_id});
+        // for default stage_id
+        var context = this.data.getContext();
+        context['default_' + this.groupedBy] = viewUtils.getGroupValue(this.data, this.groupedBy);
+        this.trigger_up('open_form_overlay_view', {db_id: this.db_id, context: context});
     },
     /**
      * @private
