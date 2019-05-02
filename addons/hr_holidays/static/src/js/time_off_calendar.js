@@ -150,17 +150,25 @@ odoo.define('hr_holidays.dashboard.view_custo', function(require) {
          */
         _onNewTimeOff: function () {
             var self = this;
-            this.do_action({
-                type: 'ir.actions.act_window',
-                res_model: 'hr.leave',
-                view_type: 'form',
-                views: [[false,'form']],
-                target: 'new',
-            }, {
+            // action hr_leave_action_my
+            // action hr_leave_action_my_request
+
+            this.do_action('hr_holidays.hr_leave_action_my_request', {
                 on_close: function () {
                     self.reload();
                 }
             });
+            // this.do_action({
+            //     type: 'ir.actions.act_window',
+            //     res_model: 'hr.leave',
+            //     view_type: 'form',
+            //     views: [['hr_holidays.hr_leave_view_form','form']],
+            //     target: 'new',
+            // }, {
+            //     on_close: function () {
+            //         self.reload();
+            //     }
+            // });
         },
 
         /**
