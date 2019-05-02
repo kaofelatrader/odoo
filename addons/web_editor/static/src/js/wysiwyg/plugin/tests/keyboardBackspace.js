@@ -341,7 +341,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
             start: "li:contents()[0]->0",
             key: 'BACKSPACE',
         }],
-        test: "<p>toto</p><p>◆&nbsp;<img data-src=\"/web_editor/static/src/img/transparent.png\"></p>",
+        test: "<p>toto</p><p>◆&nbsp;<img data-src=\"/web_editor/static/src/img/transparent.png\"/></p>",
     },
     {
         name: "in empty-indented-li (other li - no other indented-li): BACKSPACE",
@@ -456,7 +456,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
             end: "i:contents()[0]->1",
             key: 'BACKSPACE',
         }],
-        test: "<p><b>do</b>◆ove</p>",
+        test: "<p><b>do◆</b>ove</p>",
     },
     {
         name: "in complex-dom: BACKSPACE on selection of all contents",
@@ -466,7 +466,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
             end: "i:contents()[0]->1",
             key: 'BACKSPACE',
         }],
-        test: "<p><br/>◆</p>",
+        test: "<p><b><br/>◆</b></p>",
     },
     {
         name: "in p: BACKSPACE after br",
@@ -484,7 +484,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
             start: "b:eq(1):contents()[0]->0",
             key: 'BACKSPACE',
         }],
-        test: "<span><b>dom<br/>◆&nbsp;to edit</b></span>",
+        test: "<p><span><b>dom<br/>◆&nbsp;to edit</b></span></p>",
     },
     {
         name: "in complex-dom (span > b -> ENTER in contents): 2 x BACKSPACE",
@@ -495,7 +495,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
         }, {
             key: 'BACKSPACE',
         }],
-        test: "<span><b>dom<br/>◆&nbsp;to edit</b></span>",
+        test: "<p><span><b>dom<br/>◆&nbsp;to edit</b></span></p>",
     },
     {
         name: "in p (hr before): BACKSPACE",
@@ -513,7 +513,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
             start: "p:eq(1)->2",
             key: 'BACKSPACE',
         }],
-        test: '<p>dom not to edit</p><p><br id="br-1"/><br id="br-3"/>◆<br id="br-4"/></p><p>dom not to edit</p>',
+        test: '<p>dom not to edit</p><p><br id="br-1"/><br id="br-2"/>◆<br id="br-4"/></p><p>dom not to edit</p>',
     },
     {
         name: "in p with multi br[id] (p before and after) (2)",
@@ -522,7 +522,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
             start: "br:eq(2)->0",
             key: 'BACKSPACE',
         }],
-        test: '<p>dom not to edit</p><p><br id="br-1"/><br id="br-3"/>◆<br id="br-4"/></p><p>dom not to edit</p>',
+        test: '<p>dom not to edit</p><p><br id="br-1"/><br id="br-2"/>◆<br id="br-4"/></p><p>dom not to edit</p>',
     },
     {
         name: "in p with multi br[id] (p before and after): 2x BACKSPACE",
@@ -533,7 +533,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
         }, {
             key: 'BACKSPACE',
         }],
-        test: '<p>dom not to edit</p><p><br id="br-3"/>◆<br id="br-4"/></p><p>dom not to edit</p>',
+        test: '<p>dom not to edit</p><p><br id="br-1"/>◆<br id="br-4"/></p><p>dom not to edit</p>',
     },
     {
         name: "in p with multi br (p before and after) (1)",
@@ -648,7 +648,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
         }, {
             key: 'a',
         }],
-        test: '<p>a◆</p>',
+        test: '<h1>a◆</h1>',
     },
     {
         name: "in h1: BACKSPACE on full selection -> DELETE -> 'a'",
@@ -662,7 +662,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
         }, {
             key: 'a',
         }],
-        test: '<p>a◆</p>',
+        test: '<h1>a◆</h1>',
     },
 
     // merging non-similar blocks
