@@ -9,7 +9,7 @@ class HrContract(models.Model):
 
     car_id = fields.Many2one('fleet.vehicle', string='Company Car',
         domain=lambda self: self._get_available_cars_domain(),
-        default=lambda self: self.env['fleet.vehicle'].search([('driver_id', '=', self.employee_id.address_home_id.id)], limit=1),
+        default=lambda self: self.env['fleet.vehicle'].sudo().search([('driver_id', '=', self.employee_id.address_home_id.id)], limit=1),
         track_visibility="onchange",
         help="Employee's company car.")
     car_atn = fields.Float(compute='_compute_car_atn_and_costs', string='ATN Company Car', store=True)
@@ -26,8 +26,9 @@ class HrContract(models.Model):
     def _compute_car_atn_and_costs(self):
         for contract in self:
             if not contract.new_car and contract.car_id:
-                contract.car_atn = contract.car_id.atn
-                contract.company_car_total_depreciated_cost = contract.car_id.total_depreciated_cost
+                car = contract.car_id.sudo()
+                contract.car_atn = car.atn
+                contract.company_car_total_depreciated_cost = car.total_depreciated_cost
             elif contract.new_car and contract.new_car_model_id:
                 contract.car_atn = contract.new_car_model_id.default_atn
                 contract.company_car_total_depreciated_cost = contract.new_car_model_id.default_total_depreciated_cost
@@ -35,7 +36,7 @@ class HrContract(models.Model):
     @api.depends('name')
     def _compute_available_cars_amount(self):
         for contract in self:
-            contract.available_cars_amount = self.env['fleet.vehicle'].search_count([('driver_id', '=', False)])
+            contract.available_cars_amount = self.env['fleet.vehicle'].sudo().search_count([('driver_id', '=', False)])
 
     @api.depends('name')
     def _compute_max_unused_cars(self):
@@ -47,7 +48,7 @@ class HrContract(models.Model):
     @api.onchange('employee_id')
     def _onchange_employee_id(self):
         super(HrContract, self)._onchange_employee_id()
-        self.car_id = self.env['fleet.vehicle'].search([('driver_id', '=', self.employee_id.address_home_id.id)], limit=1)
+        self.car_id = self.env['fleet.vehicle'].sudo().search([('driver_id', '=', self.employee_id.address_home_id.id)], limit=1)
         return {'domain': {'car_id': self._get_available_cars_domain()}}
 
     @api.onchange('transport_mode')

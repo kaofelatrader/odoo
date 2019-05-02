@@ -61,7 +61,7 @@ class FleetVehicle(models.Model):
 
     @api.depends('fuel_type', 'car_value', 'acquisition_date', 'co2')
     def _compute_car_atn(self):
-        for car in self:
+        for car in self.sudo():
             car.atn = car._get_car_atn(car.acquisition_date, car.car_value, car.fuel_type, car.co2)
 
     @api.depends('model_id', 'license_plate', 'log_contracts', 'acquisition_date',
