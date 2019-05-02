@@ -124,6 +124,8 @@ function dragAndDrop($el, $to, options) {
  * @param {boolean} [options.withTrailingClick=false] if true, this utility
  *   function will also trigger a click on the target after the mouseup event
  *   (this is actually what happens when a drag and drop operation is done)
+ * @param {integer} [options.steps=3] number of intermediate move events to
+ *   trigger between the origin and destination points
  */
 async function pointerDragAndDrop(el, to, options) {
     options = options || {};
@@ -182,24 +184,16 @@ async function pointerDragAndDrop(el, to, options) {
     }
 
     // await concurrency.delay(1000);
-    if (elementCenter.top > toOffset.top) {
-        for (var i = elementCenter.top; i >= toOffset.top; i--) {
-            var pointerMoveEvent = new PointerEvent("pointermove", {
-                bubbles: true,
-                clientX: toOffset.left,
-                clientY: i,
-            });
-            el.dispatchEvent(pointerMoveEvent);
-        }
-    } else {
-        for (var i = elementCenter.top; i <= toOffset.top; i++) {
-            var pointerMoveEvent = new PointerEvent("pointermove", {
-                bubbles: true,
-                clientX: toOffset.left,
-                clientY: i,
-            });
-            el.dispatchEvent(pointerMoveEvent);
-        }
+
+    var nbSteps = options.steps || 3;
+    for (var i = 1; i <= nbSteps; i++) {
+        var deltaX = (toOffset.left - elementCenter.left) * (i / nbSteps);
+        var deltaY = (toOffset.top - elementCenter.top) * (i / nbSteps);
+        el.dispatchEvent(new PointerEvent("pointermove", {
+            bubbles: true,
+            clientX: elementCenter.left + deltaX,
+            clientY: elementCenter.top + deltaY,
+        }));
     }
 
     if (!options.disableDrop) {
