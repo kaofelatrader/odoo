@@ -232,7 +232,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
             start: "p:eq(1)->1",
             key: 'BACKSPACE',
         }],
-        test: "<ul><li><p><br></p></li></ul><p><br/>◆</p>",
+        test: "<ul><li><p><br/></p></li></ul><p><br/>◆</p>",
     },
     {
         name: "in ul > indented-li (no other li - p before): BACKSPACE at beginning",
@@ -359,7 +359,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
             start: "ul ul li:contents()[0]->0",
             key: 'BACKSPACE',
         }],
-        test: "<ul><li><p>toto</p></li><li><br/>◆</li><ul><li><br></li></ul><li><p>tutu</p></li></ul>",
+        test: "<ul><li><p>toto</p></li><li><br/>◆</li><ul><li><br/></li></ul><li><p>tutu</p></li></ul>",
     },
     {
         name: "in empty-indented-li (no other li, no other indented-li): BACKSPACE",
@@ -585,7 +585,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
         }, {
             key: 'a',
         }],
-        test: '<table class="table table-bordered"><tbody><tr><td><p><br></p></td><td><p>a◆</p></td></tr></tbody></table>',
+        test: '<table class="table table-bordered"><tbody><tr><td><p><br/></p></td><td><p>a◆</p></td></tr></tbody></table>',
     },
     {
         name: "in td (td before): 2x BACKSPACE -> 'a' after first character",

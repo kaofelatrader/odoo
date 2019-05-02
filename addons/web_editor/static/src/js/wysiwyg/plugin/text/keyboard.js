@@ -217,44 +217,31 @@ var KeyboardPlugin = AbstractPlugin.extend({
      * @returns {Boolean} true if case is handled and event default must be prevented
      */
     _onBackspace: function (e) {
-        var self = this;
         var range = this.dependencies.Arch.getRange();
 
         // Special cases
-        /* if (range.isCollapsed()) {
+        if (range.isCollapsed()) {
 
             // Do nothing if on left edge of a table cell
-            var point = range.getStartPoint();
+            /* var point = range.getStartPoint();
             if (point.node.childNodes[point.offset]) {
                 point.node = point.node.childNodes[point.offset];
                 point.offset = this.utils.nodeLength(point.node);
             }
             if (point.isLeftEdgeOfTag('TD')) {
                 return true;
-            }
+            } */
 
             // Outdent if on left edge of an indented block
-            point = range.getStartPoint();
-            var isIndented = !!this.utils.ancestor(point.node, function (n) {
-                var style = self.utils.isCell(n) ? 'paddingLeft' : 'marginLeft';
-                return n.tagName && !!parseFloat(n.style[style] || 0);
-            });
-            if (point.isLeftEdgeOfBlock() && isIndented) {
-                this.dependencies.Paragraph.outdent(null, range);
+            var liAncestor = this.utils.ancestor(range.sc, this.utils.isLi);
+            var isOnLeftEdgeOfLi = liAncestor && range.getStartPoint().isLeftEdgeOf(liAncestor);
+            if (isOnLeftEdgeOfLi) {
+                this.dependencies.Arch.outdent();
                 return true;
             }
         }
 
-        var needOutdent = this.utils.isInList(range.sc) && range.getStartPoint().isEdgeOfTag('LI', 'left'); */
-        var didDelete;
-        // if (!needOutdent || !range.isCollapsed()) {
-            didDelete = this._handleDeletion(true);
-        /* }
-        if (!didDelete && needOutdent) {
-            this.dependencies.Arch.setRange(range.getPoints());
-            this.dependencies.Paragraph.outdent(null, range);
-        } */
-
+        this._handleDeletion(true);
         return true;
     },
     /**

@@ -791,7 +791,9 @@ var ArchPlugin = AbstractPlugin.extend({
                 return archAncestor.isLi();
             }) || archNode;
             var lastChild = liAncestor.lastChild();
-            if (lastChild && !lastChild.isDeepEmpty()) {
+            if (archNode.length()) {
+                archNode.params.change(archNode, this._range.so);
+            } else if (lastChild && !lastChild.isDeepEmpty()) {
                 lastChild.params.change(lastChild, lastChild.length());
             } else {
                 if (lastChild) {
