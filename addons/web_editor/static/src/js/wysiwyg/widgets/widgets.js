@@ -1,7 +1,7 @@
 odoo.define('wysiwyg.widgets', function (require) {
 'use strict';
 
-var Dialog = require('wysiwyg.widgets.Dialog');
+var WeDialog = require('wysiwyg.widgets.Dialog');
 var AltDialog = require('wysiwyg.widgets.AltDialog');
 var MediaDialog = require('wysiwyg.widgets.MediaDialog');
 var LinkDialog = require('wysiwyg.widgets.LinkDialog');
@@ -11,7 +11,7 @@ var ColorpickerDialog = require('wysiwyg.widgets.ColorpickerDialog');
 var media = require('wysiwyg.widgets.media');
 
 return {
-    Dialog: Dialog,
+    Dialog: WeDialog,
     AltDialog: AltDialog,
     MediaDialog: MediaDialog,
     LinkDialog: LinkDialog,

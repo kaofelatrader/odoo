@@ -3,7 +3,7 @@ odoo.define('wysiwyg.widgets.MediaDialog', function (require) {
 
 var core = require('web.core');
 var MediaModules = require('wysiwyg.widgets.media');
-var Dialog = require('wysiwyg.widgets.Dialog');
+var WeDialog = require('wysiwyg.widgets.Dialog');
 
 var _t = core._t;
 
@@ -12,15 +12,15 @@ var _t = core._t;
  * new image, font awsome or video and can change a media into an other
  * media.
  */
-var MediaDialog = Dialog.extend({
+var MediaDialog = WeDialog.extend({
     template: 'wysiwyg.widgets.media',
-    xmlDependencies: Dialog.prototype.xmlDependencies.concat(
+    xmlDependencies: WeDialog.prototype.xmlDependencies.concat(
         ['/web_editor/static/src/xml/wysiwyg.xml']
     ),
-    events: _.extend({}, Dialog.prototype.events, {
+    events: _.extend({}, WeDialog.prototype.events, {
         'click a[data-toggle="tab"]': '_onTabChange',
     }),
-    custom_events: _.extend({}, Dialog.prototype.custom_events || {}, {
+    custom_events: _.extend({}, WeDialog.prototype.custom_events || {}, {
         save_request: '_onSaveRequest',
     }),
 

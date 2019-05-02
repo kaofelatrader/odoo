@@ -2,16 +2,16 @@ odoo.define('wysiwyg.widgets.AltDialog', function (require) {
 'use strict';
 
 var core = require('web.core');
-var Dialog = require('wysiwyg.widgets.Dialog');
+var WeDialog = require('wysiwyg.widgets.Dialog');
 
 var _t = core._t;
 
 /**
  * Let users change the alt & title of a media.
  */
-var AltDialog = Dialog.extend({
+var AltDialog = WeDialog.extend({
     template: 'wysiwyg.widgets.alt',
-    xmlDependencies: Dialog.prototype.xmlDependencies.concat(
+    xmlDependencies: WeDialog.prototype.xmlDependencies.concat(
         ['/web_editor/static/src/xml/wysiwyg.xml']
     ),
 

@@ -2,19 +2,19 @@ odoo.define('wysiwyg.widgets.LinkDialog', function (require) {
 'use strict';
 
 var core = require('web.core');
-var Dialog = require('wysiwyg.widgets.Dialog');
+var WeDialog = require('wysiwyg.widgets.Dialog');
 
 var _t = core._t;
 
 /**
  * Allows to customize link content and style.
  */
-var LinkDialog = Dialog.extend({
+var LinkDialog = WeDialog.extend({
     template: 'wysiwyg.widgets.link',
-    xmlDependencies: (Dialog.prototype.xmlDependencies || []).concat([
+    xmlDependencies: (WeDialog.prototype.xmlDependencies || []).concat([
         '/web_editor/static/src/xml/wysiwyg.xml'
     ]),
-    events: _.extend({}, Dialog.prototype.events || {}, {
+    events: _.extend({}, WeDialog.prototype.events || {}, {
         'input': '_onAnyChange',
         'change': '_onAnyChange',
         'input input[name="url"]': '_onURLInput',

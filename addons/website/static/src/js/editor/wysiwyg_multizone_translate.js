@@ -3,13 +3,13 @@ odoo.define('web_editor.wysiwyg.multizone.translate', function (require) {
 
 var core = require('web.core');
 var webDialog = require('web.Dialog');
-var Dialog = require('wysiwyg.widgets.Dialog');
+var WeDialog = require('wysiwyg.widgets.Dialog');
 var WysiwygMultizone = require('web_editor.wysiwyg.multizone');
 
 var _t = core._t;
 
 
-var AttributeTranslateDialog = Dialog.extend({
+var AttributeTranslateDialog = WeDialog.extend({
     /**
      * @constructor
      */

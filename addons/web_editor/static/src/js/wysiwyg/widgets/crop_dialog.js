@@ -2,16 +2,16 @@ odoo.define('wysiwyg.widgets.CropImageDialog', function (require) {
 'use strict';
 
 var core = require('web.core');
-var Dialog = require('wysiwyg.widgets.Dialog');
+var WeDialog = require('wysiwyg.widgets.Dialog');
 
 var _t = core._t;
 
 /**
  * CropImageDialog widget. Let users crop an image.
  */
-var CropImageDialog = Dialog.extend({
+var CropImageDialog = WeDialog.extend({
     template: 'wysiwyg.widgets.crop_image',
-    xmlDependencies: Dialog.prototype.xmlDependencies.concat(
+    xmlDependencies: WeDialog.prototype.xmlDependencies.concat(
         ['/web_editor/static/src/xml/wysiwyg.xml']
     ),
     jsLibs: [
@@ -20,7 +20,7 @@ var CropImageDialog = Dialog.extend({
     cssLibs: [
         '/web_editor/static/lib/cropper/css/cropper.css',
     ],
-    events: _.extend({}, Dialog.prototype.events, {
+    events: _.extend({}, WeDialog.prototype.events, {
         'click .o_crop_options [data-event]': '_onCropOptionClick',
     }),
 
