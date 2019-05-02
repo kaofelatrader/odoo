@@ -821,8 +821,12 @@ ListRenderer.include({
             });
         }
 
-        if (this.addTrashIcon && !this.advancedColumns.length) {
-            $thead.find('tr').append($('<th>', {class: 'o_list_record_remove_header'}));
+        if (this.addTrashIcon) {
+            if (!this.advancedColumns.length) {
+                $thead.find('tr').append($('<th>', {class: 'o_list_record_remove_header'}));
+            } else {
+                $thead.find('tr th.o_advanced_column').addClass('o_list_record_remove_header');
+            }
         }
         return $thead;
     },

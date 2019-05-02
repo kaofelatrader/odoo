@@ -66,7 +66,6 @@ var ListRenderer = BasicRenderer.extend({
         this.editable = params.editable;
         this.isGrouped = this.state.groupedBy.length > 0;
         this.groupbys = params.groupbys;
-        this._processColumns(params.columnInvisibleFields || {});
     },
     start: function () {
         // Need to override start and call _processColumns from here as 
@@ -339,7 +338,7 @@ var ListRenderer = BasicRenderer.extend({
             class: 'dropdown-menu dropdown-menu-right o_advanced_column_dropdown',
         });
         _.map(this.advancedColumns, function (col) {
-            var txt = self.state.fields[col.attrs.name].string +
+            var txt = (col.attrs.string || self.state.fields[col.attrs.name].string) +
                 (config.debug && " (" + col.attrs.name + ")" || '');
             var $label = $('<label>', {
                 text: txt,
