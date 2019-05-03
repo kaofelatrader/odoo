@@ -26,12 +26,19 @@ var _storeDraggableProperties = function(el) {
 */
 var _resetDraggableProperties = function (el) {
     el.style.height = el.dataset.draggableOriginalHeight;
+    delete el.dataset.draggableOriginalHeight;
     el.style.left = el.dataset.draggableOriginalLeft;
+    delete el.dataset.draggableOriginalLeft;
     el.style.position = el.dataset.draggableOriginalPosition;
+    delete el.dataset.draggableOriginalPosition;
     el.style.top = el.dataset.draggableOriginalTop;
+    delete el.dataset.draggableOriginalTop;
     el.style.transition = el.dataset.draggableOriginalTransition;
+    delete el.dataset.draggableOriginalTransition;
     el.style.width = el.dataset.draggableOriginalWidth;
+    delete el.dataset.draggableOriginalWidth;
     el.style.zIndex = el.dataset.draggableOriginalZIndex;
+    delete el.dataset.draggableOriginalZIndex;
 
     // Interactjs draggable displays a 'move' cursor when hovering an element
     // that has previously been set to draggable. As long as we do not set
