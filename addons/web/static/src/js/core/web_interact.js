@@ -485,7 +485,7 @@ var _unset = function (el) {
 };
 
 /**
- * Override options with given values
+ * Override target interactable options with given values
  *
  * @param {DOMElement|string} target identifier for interactable
  * @param {Object} options parameter keys to override in interactable target
