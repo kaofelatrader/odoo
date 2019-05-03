@@ -206,8 +206,8 @@ var _cleanPlaceholder = function (sortable) {
  * @param {Function} [options.ondragleave] called on drag leave of valid item
  * @param {Function} [options.ondropdectivate] called on drag stop of valid item
  * @param {string} [options.axis] sortable axis (default: 'y')
- * @param {string} [options.containment] selector for restricted items drag area
  * @param {string} [options.connectWith] selector for other connected sortables
+ * @param {string} [options.containment] selector for restricted items drag area
  * @param {string} [options.handle] restrict dragging to this selector
  * @param {string} [options.revert] time in ms for animation when dropped
  * @param {string} [options.tolerance] overlaps are computed with respect to the
@@ -218,9 +218,9 @@ var _cleanPlaceholder = function (sortable) {
 var _sortable = function (el, options) {
     var options = options || {};
     var axis = options.axis || 'y';
-    var handle = options.handle;
     var connectWith = options.connectWith;
     var containment = options.containment;
+    var handle = options.handle;
     var itemsSelector = options.items;
     var tolerance = options.tolerance;
 
@@ -427,7 +427,8 @@ var _sortable = function (el, options) {
     // Enable recomputation of distances while dragging
     interact.dynamicDrop(true);
 
-    // Set draggable on items on first pointerdown
+    // Set draggable on items on first pointerdown as some items might not be in
+    // the dom yet so we can't just simply draggable on them now.
     el.addEventListener('pointerdown', function (ev) {
         var item;
         // Only allow to drag from the handle if it is defined
