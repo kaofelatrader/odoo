@@ -17,11 +17,8 @@
 
         <link href="/web/static/lib/fontawesome/css/font-awesome.css" rel="stylesheet" type="text/css"/>
 
-        <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/fonts.scss" />
-        <!-- TODO clean the previous multicompany support attempt -->
-        <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/res_company_1.scss"/>
-        <!-- t-call-assets does not seem to inherit the context from his parent -->
-        <!-- <link rel="stylesheet" type="text/scss" t-att-href="res_company.scss_url"/> -->
+        <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/report_fonts.scss" />
+        <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/res_company.scss"/>
 
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/report.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/layout_standard.scss"/>
@@ -416,102 +413,119 @@
             </t>
         </t>
     </template>
-    <!-- Used by CompanyDocumentLayout to display a dynamic preview -->
-    <template id="layout_preview">
-        <div class="page" t-attf-style="font-family: {{company.font}};">
-            <div class="header">
-                <img t-if="company.logo" t-att-src="image_data_uri(company.logo)" class="float-left" alt="Logo"/>
-                <hr />
-                <h2 t-attf-style="color: {{company.primary_color}}">Invoice INV/2019/0005</h2>
-                <div class="row o_layout_information">
-                    <div class="col-auto">
-                        <strong>
-                            <span t-attf-style="color: {{company.secondary_color}}">Invoice Date:</span>
-                        </strong>
-                        <p>12/25/2016</p>
-                    </div>
-                    <div class="col-auto">
-                        <strong>
-                            <span t-attf-style="color: {{company.secondary_color}}">Due Date:</span>
-                        </strong>
-                        <p>01/24/2017</p>
-                    </div>
-                    <div class="col-auto">
-                        <strong>
-                            <span t-attf-style="color: {{company.secondary_color}}">Reference:</span>
-                        </strong>
-                        <p>INV/2019/0005/05</p>
-                    </div>
-                </div>
-            </div>
-            <div t-attf-class="article">
-                <table class="table table-sm">
-                    <thead>
-                        <tr t-attf-style="color: {{company.secondary_color}}">
-                            <th>Description</th>
-                            <th>Quantity</th>
-                            <th>Unit Price</th>
-                            <th>Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>[SKU001] Server</td>
-                            <td>2.000</td>
-                            <td>190.00</td>
-                            <td class="o_price_total">$ 380.00</td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <span>[SKU002] Computer</span>
-                            </td>
-                            <td>
-                                <span>1.000</span>
-                            </td>
-                            <td>
-                                <span>1250.00</span>
-                            </td>
-                            <td class="o_price_total">
-                                <span>$ 1250.00</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="clearfix">
-                    <div class="row">
-                        <div t-attf-class="col-5 ml-auto">
-                            <table class="table table-sm">
-                                <tr class="o_subtotal">
-                                    <td>
-                                        <strong t-attf-style="color: {{company.primary_color}}">Subtotal</strong>
-                                    </td>
-                                    <td>
-                                        <span>$ 1630.00</span>
-                                    </td>
-                                </tr>
-                                <tr class="o_total">
-                                    <td>
-                                        <strong t-attf-style="color: {{company.primary_color}}">Total</strong>
-                                    </td>
-                                    <td>
-                                        <span>$ 1630.00</span>
-                                    </td>
-                                </tr>
-                            </table>
+
+    <template id="layout_preview" name="layout preview">
+        &lt;!DOCTYPE html&gt;
+        <html>
+            <head>
+                <meta charset="utf-8"/>
+                <meta name="viewport" content="initial-scale=1"/>
+                <title>Layout Preview</title>
+                <t t-call-assets="web.report_assets_common" t-js="false"/>
+            </head>
+            <body t-att-class="'container' if not full_width else 'container-fluid'">
+                <div id="wrapwrap">
+                    <main>
+                        <!-- TODO set the class of the page, header, article and footer dynamicaly -->
+                        <div  class="page" t-attf-style="font-family: {{company.font}};">
+                            <div class="header">
+                                <!-- FIXME need to figure out how to get the binary field data, not the size -->
+                                <!-- <img t-if="company.logo" t-att-src="image_data_uri(company.logo)" class="float-left" alt="Logo"/> -->
+                                <hr />
+                                <h2 t-attf-style="color: {{company.primary_color}}">Invoice INV/2019/0005</h2>
+                                <div class="row o_layout_information">
+                                    <div class="col-auto">
+                                        <strong>
+                                            <span t-attf-style="color: {{company.secondary_color}}">Invoice Date:</span>
+                                        </strong>
+                                        <p>12/25/2016</p>
+                                    </div>
+                                    <div class="col-auto">
+                                        <strong>
+                                            <span t-attf-style="color: {{company.secondary_color}}">Due Date:</span>
+                                        </strong>
+                                        <p>01/24/2017</p>
+                                    </div>
+                                    <div class="col-auto">
+                                        <strong>
+                                            <span t-attf-style="color: {{company.secondary_color}}">Reference:</span>
+                                        </strong>
+                                        <p>INV/2019/0005/05</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="article">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr t-attf-style="color: {{company.secondary_color}}">
+                                            <th>Description</th>
+                                            <th>Quantity</th>
+                                            <th>Unit Price</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>[SKU001] Server</td>
+                                            <td>2.000</td>
+                                            <td>190.00</td>
+                                            <td class="o_price_total">$ 380.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <span>[SKU002] Computer</span>
+                                            </td>
+                                            <td>
+                                                <span>1.000</span>
+                                            </td>
+                                            <td>
+                                                <span>1250.00</span>
+                                            </td>
+                                            <td class="o_price_total">
+                                                <span>$ 1250.00</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="clearfix">
+                                    <div class="row">
+                                        <div t-attf-class="col-5 ml-auto">
+                                            <table class="table table-sm">
+                                                <tr class="o_subtotal">
+                                                    <td>
+                                                        <strong t-attf-style="color: {{company.primary_color}}">Subtotal</strong>
+                                                    </td>
+                                                    <td>
+                                                        <span>$ 1630.00</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="o_total">
+                                                    <td>
+                                                        <strong t-attf-style="color: {{company.primary_color}}">Total</strong>
+                                                    </td>
+                                                    <td>
+                                                        <span>$ 1630.00</span>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div t-attf-class="footer">
+                                <div class="text-center" style="border-top: 1px solid;">
+                                    <ul class="list-inline mb4">
+                                        <li class="list-inline-item">+1 (650) 691-3277</li>
+                                        <li class="list-inline-item">info@exemple.com</li>
+                                        <li class="list-inline-item">exemple.com</li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    </main>
                 </div>
-            </div>
-            <div t-attf-class="footer">
-                <div class="text-center" style="border-top: 1px solid;">
-                    <ul class="list-inline mb4">
-                        <li class="list-inline-item">+1 (650) 691-3277</li>
-                        <li class="list-inline-item">info@exemple.com</li>
-                        <li class="list-inline-item">exemple.com</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+            </body>
+        </html>
     </template>
 
     <report id="action_report_internalpreview"

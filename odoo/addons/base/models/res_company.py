@@ -336,7 +336,7 @@ class Company(models.Model):
                 company.scss_attachment.write({"datas": datas})
             else: # create a new attachment
                 ir_attachment = company.env["ir.attachment"]
-                url = '/web/static/src/scss/res_company.scss'.format(company.id)
+                url = '/web/static/src/scss/res_company.scss'
                 new_attachment = {
                     'name': url,
                     'type': "binary",

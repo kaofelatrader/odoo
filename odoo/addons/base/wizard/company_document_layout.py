@@ -10,7 +10,7 @@ _logger = logging.getLogger(__name__)
 
 class CompanyDocumentLayout(models.TransientModel):
     """
-        Wizard to customise the company document layout and display a live preview
+        Customise the company document layout and display a live preview
     """
 
     @api.model
@@ -68,8 +68,7 @@ class CompanyDocumentLayout(models.TransientModel):
         """ compute a qweb based preview to display on the wizard """
         for wizard in self:
             ir_qweb = wizard.env['ir.qweb']
-            #FIXME workaround, need to figure out how to get the binary field data, not the size
-            wizard.logo = None;
+            #FIXME cause some occasionnal "missing variable" warnings, need more testing
             wizard.preview = ir_qweb.render('web.layout_preview', {
-                'company'                : wizard,
+                'company'       : wizard,
             })

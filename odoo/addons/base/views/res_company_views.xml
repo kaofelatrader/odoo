@@ -180,7 +180,7 @@
                             <field name="report_footer" string="Footer" placeholder="e.g. Opening hours, bank accounts (one per line)" />
                             <field name="paperformat_id" widget="selection" />
                             <field name="external_report_layout_id" widget="radio" domain="[('key', 'ilike', 'external_layout_')]" />
-                            <!-- TODO fix the font and color widget -->
+                            <!-- TODO fix the color widget -->
                             <field name="font" widget="font" />
                             <field name="primary_color" widget="color" context="{'user_selected':True}" />
                             <field name="secondary_color" widget="color" context="{'user_selected':True}" />
