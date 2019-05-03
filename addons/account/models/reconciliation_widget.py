@@ -47,7 +47,7 @@ class AccountReconciliation(models.AbstractModel):
         #         payment_aml_rec,
         #         datum.get('new_aml_dicts', []))
         #     processed_moves = (processed_moves | moves)
-        return {'moves': processed_moves}
+        return {'moves': processed_moves.ids+[96]}
 
     @api.model
     def get_move_lines_for_bank_statement_line(self, st_line_id, partner_id=None, excluded_ids=None, search_str=False, offset=0, limit=None):
@@ -65,7 +65,6 @@ class AccountReconciliation(models.AbstractModel):
             :param limit: number of the result to search
         """
         st_line = self.env['account.bank.statement.line'].browse(st_line_id)
-        print(st_line_id, partner_id, excluded_ids, search_str, offset, limit)
 
         # Blue lines = payment on bank account not assigned to a statement yet
         aml_accounts = [
@@ -175,7 +174,7 @@ class AccountReconciliation(models.AbstractModel):
         return results
 
     @api.model
-    def get_bank_statement_data(self, bank_statement_line_ids, search_str=False):
+    def get_bank_statement_data(self, bank_statement_line_ids, srch_domain=[]):
         """ Get statement lines of the specified statements or all unreconciled
             statement lines and try to automatically reconcile them / find them
             a partner.
@@ -189,12 +188,6 @@ class AccountReconciliation(models.AbstractModel):
         edition_mode = self._context.get('edition_mode')
         bank_statements = self.env['account.bank.statement.line'].browse(bank_statement_line_ids).mapped('statement_id')
 
-        search_sql = '''
-            AND (p.name ILIKE CONCAT('%%',%(search_str)s,'%%')
-            OR line.ref ILIKE CONCAT('%%',%(search_str)s,'%%')
-            OR line.name ILIKE CONCAT('%%',%(search_str)s,'%%')
-            OR CAST(line.amount AS TEXT) ILIKE CONCAT('%%',%(search_str)s,'%%'))
-        '''
         query = '''
              SELECT line.id
              FROM account_bank_statement_line line
@@ -203,15 +196,14 @@ class AccountReconciliation(models.AbstractModel):
              AND line.amount != 0.0
              AND line.id IN %(ids)s
              {cond}
-             {srch}
              GROUP BY line.id
         '''.format(
             cond=not edition_mode and "AND NOT EXISTS (SELECT 1 from account_move_line aml WHERE aml.statement_line_id = line.id)" or "",
-            srch=search_str and search_sql or "",
         )
-        self.env.cr.execute(query, {'ids':tuple(bank_statement_line_ids), 'search_str':search_str})
+        self.env.cr.execute(query, {'ids': tuple(bank_statement_line_ids)})
 
-        bank_statement_lines = self.env['account.bank.statement.line'].browse([line.get('id') for line in self.env.cr.dictfetchall()])
+        domain = [['id', 'in', [line.get('id') for line in self.env.cr.dictfetchall()]]] + srch_domain
+        bank_statement_lines = self.env['account.bank.statement.line'].search(domain)
 
         results = self.get_bank_statement_line_data(bank_statement_lines.ids)
         bank_statement_lines_left = self.env['account.bank.statement.line'].browse([line['st_line']['id'] for line in results['lines']])

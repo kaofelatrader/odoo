@@ -14,11 +14,12 @@ var QWeb = core.qweb;
 var StatementAction = AbstractAction.extend({
     hasControlPanel: true,
     withSearchBar: true,
+    loadControlPanel: true,
     title: core._t('Bank Reconciliation'),
     contentTemplate: 'reconciliation',
     custom_events: {
         change_mode: '_onAction',
-        toggle_panel: '_onActionTogglePanel',
+        force_update: '_forceUpdate',
         change_filter: '_onAction',
         change_offset: '_onAction',
         change_partner: '_onAction',
@@ -33,9 +34,7 @@ var StatementAction = AbstractAction.extend({
         close_statement: '_onCloseStatement',
         load_more: '_onLoadMore',
         reload: 'reload',
-    },
-    events: {
-        'change .o_searchview_input': '_onSearch',
+        search: '_onSearch',
     },
     config: _.extend({}, AbstractAction.prototype.config, {
         // used to instantiate the model
@@ -62,6 +61,7 @@ var StatementAction = AbstractAction.extend({
         this._super.apply(this, arguments);
         this.action_manager = parent;
         this.params = params;
+        this.controlPanelParams.modelName = 'account.bank.statement.line';
         this.model = new this.config.Model(this, {
             modelName: "account.reconciliation.widget",
             defaultDisplayQty: params.params && params.params.defaultDisplayQty || this.config.defaultDisplayQty,
@@ -136,13 +136,15 @@ var StatementAction = AbstractAction.extend({
                 initialState.valuenow = valuenow;
                 initialState.context = self.model.getContext();
                 self.renderer.showRainbowMan(initialState);
+                self.remove_cp();
             }else{
-                // Create a notification if some lines has been reconciled automatically.
+                // Create a notification if some lines have been reconciled automatically.
                 if(initialState.valuenow > 0)
                     self.renderer._renderNotifications(self.model.statement.notifications);
                 self._openFirstLine();
+                self.renderer.$('[data-toggle="tooltip"]').tooltip();
+                self.do_show();
             }
-            self.renderer.$('[data-toggle="tooltip"]').tooltip()
         });
     },
 
@@ -158,7 +160,7 @@ var StatementAction = AbstractAction.extend({
 
         return this.renderer.prependTo(self.$('.o_form_sheet')).then(function() {
             return self._renderLinesOrRainbow().then(function() {
-                self.do_show()
+                self.do_show();
                 return sup.apply(self, args);
             });
         });
@@ -183,6 +185,12 @@ var StatementAction = AbstractAction.extend({
             });
             this.renderer.$progress = this.$pager;
         }
+    },
+
+    remove_cp: function() {
+        this.updateControlPanel({
+            clear: true,
+        });
     },
 
     //--------------------------------------------------------------------------
@@ -228,6 +236,13 @@ var StatementAction = AbstractAction.extend({
         }
         return handle;
     },
+
+    _forceUpdate: function() {
+        var self = this;
+        _.each(this.model.lines, function(handle) {
+            self._getWidget(handle).update(line);
+        })
+    },
     /**
      * render line widget and append to view
      *
@@ -270,24 +285,21 @@ var StatementAction = AbstractAction.extend({
         var line = this.model.getLine(handle);
         var mode = line.mode;
         this.model[_.str.camelize(event.name)](handle, event.data.data).then(function () {
-            self._getWidget(handle).update(line);
-            if (mode === 'inactive' && line.mode !== 'inactive') {
-                _.each(self.model.lines, function (line, _handle) {
-                    if (line.mode !== 'inactive' && _handle !== handle) {
-                        self.model.changeMode(_handle, 'inactive');
-                        var widget = self._getWidget(_handle);
-                        if (widget) {
-                            widget.update(line);
+            try {
+                self._getWidget(handle).update(line);
+                if (mode === 'inactive' && line.mode !== 'inactive') {
+                    _.each(self.model.lines, function (line, _handle) {
+                        if (line.mode !== 'inactive' && _handle !== handle) {
+                            self.model.changeMode(_handle, 'inactive');
+                            var widget = self._getWidget(_handle);
+                            if (widget) {
+                                widget.update(line);
+                            }
                         }
-                    }
-                });
-            }
+                    });
+                }
+            } catch (err) {} // _getWidget() might be undefined due to concurency when we validate, then the interface tries to update itself
         });
-    },
-
-    _onActionTogglePanel: function(event) {
-        this.$('.o_notebook').toggleClass('d-none', true);
-        event.target.$el.find('.o_notebook')[0].classList.remove('d-none');
     },
 
     /**
@@ -295,9 +307,8 @@ var StatementAction = AbstractAction.extend({
      * @param {OdooEvent} ev
      */
     _onSearch: function (ev) {
-        var self = this;
         ev.stopPropagation();
-        this.model.search_str = $('.o_searchview_input').val();
+        this.model.domain = ev.data.domain;
         this.reload();
     },
 
@@ -327,6 +338,7 @@ var StatementAction = AbstractAction.extend({
                 view_type: 'form',
                 view_mode: 'form',
             });
+            $('.o_reward').remove();
         });
     },
     /**

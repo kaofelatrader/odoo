@@ -11,13 +11,18 @@ var _t = core._t;
 LineRenderer.include({
     events: _.extend(
         {},
-        LineRenderer.prototype.events, 
-        {'click .accounting_view caption .js_open_so': '_onOpenSaleOrder'}
+        LineRenderer.prototype.events,
+        {'click .o_notebook .js_open_so': '_onOpenSaleOrder'}
     ),
 
     _onOpenSaleOrder: function (event) {
         event.preventDefault();
         this.trigger_up('open_sale_orders');
+    },
+
+    update: function (state) {
+        this._super(state);
+        this.$('[href*="notebook_page_saleorder"]').click();
     },
 });
 
@@ -57,7 +62,7 @@ StatementAction.include({
                 views: [[false, 'form']],
                 target: 'current',
                 res_id: line.sale_order_ids[0],
-            }, 
+            },
             {
                 on_reverse_breadcrumb: function() {self.trigger_up('reload');},
             });

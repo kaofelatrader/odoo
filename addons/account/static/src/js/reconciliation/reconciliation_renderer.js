@@ -58,9 +58,7 @@ var StatementRenderer = Widget.extend(FieldManagerMixin, {
             defs.push(def);
         }
 
-        if (this.model.context && this.model.context.args && this.model.context.args.search) {
-            $('.o_searchview_input').val(self.model.context.args.search);
-        }
+        $(document).on('keydown', self._onKeyDown);
         return Promise.all(defs);
     },
     /**
@@ -68,7 +66,47 @@ var StatementRenderer = Widget.extend(FieldManagerMixin, {
      */
     destroy: function () {
         this._super();
-        $('body').off('keyup', this.enterHandler);
+        $(document).off('keydown', this._onKeyDown);
+    },
+
+    _onKeyDown: function (e) {
+        if (e.target.classList.contains('o_input')) {
+            // do not interfere with the input widgets
+            return
+        }
+        // Enter
+        if (e.originalEvent.code === 'Enter') {
+            var button = $('.o_reconciliation_line:not([data-mode="inactive"]) .accounting_view .o_buttons button:visible');
+            if (button.hasClass('btn-primary') || (button.hasClass('btn-secondary') && e.ctrlKey)) {
+                button.click();
+            }
+        }
+
+        // ArrowUp and ArrowDown
+        var line;
+        if (['ArrowUp', 'ArrowDown'].includes(e.originalEvent.code)) {
+            e.stopPropagation();
+            e.preventDefault();
+            line = $('.o_reconciliation_line:not([data-mode="inactive"])')[0];
+            if (line && e.originalEvent.code === 'ArrowUp') {
+                do {
+                    line = line.previousSibling;
+                } while (line && $(line).find('.o_buttons button:visible:enabled').length === 0);
+            }
+            else if (line && e.originalEvent.code === 'ArrowDown') {
+                do {
+                    line = line.nextSibling;
+                } while (line && $(line).find('.o_buttons button:visible:enabled').length === 0);
+            }
+        }
+        if (!line) {
+            line = $('.o_reconciliation_line:not([data-mode="inactive"])')[0];
+        }
+        if ($(line).length && ['ArrowUp', 'ArrowDown'].includes(e.originalEvent.code)) {
+            $('.o_reconciliation_line').attr('data-mode', 'inactive');
+            $(line).find('.accounting_view .o_buttons button:visible')[0].scrollIntoView(true);
+            $(line).find('.accounting_view').click();
+        }
     },
     //--------------------------------------------------------------------------
     // Public
@@ -95,7 +133,6 @@ var StatementRenderer = Widget.extend(FieldManagerMixin, {
         $done.find('*').addClass('o_reward_subcontent');
         $done.find('.button_close_statement').click(this._onCloseBankStatement.bind(this));
         $done.find('.button_back_to_statement').click(this._onGoToBankStatement.bind(this));
-        this.$el.children().hide();
         // display rainbowman after full reconciliation
         if (session.show_effect) {
             this.trigger_up('show_effect', {
@@ -209,6 +246,7 @@ var StatementRenderer = Widget.extend(FieldManagerMixin, {
         if (journalId) {
             journalId = parseInt(journalId);
         }
+        $('.o_reward').remove();
         this.do_action({
             name: 'Bank Statements',
             res_model: 'account.bank.statement',
@@ -690,7 +728,6 @@ var LineRenderer = Widget.extend(FieldManagerMixin, {
      */
     _onTogglePanel: function () {
         this.trigger_up('change_mode', {'data': 'match'});
-        this.trigger_up('toggle_panel');
     },
     /**
      * @private
@@ -809,6 +846,7 @@ var LineRenderer = Widget.extend(FieldManagerMixin, {
      */
     _onValidate: function () {
         this.trigger_up('validate');
+        this.trigger_up('force_update');
     }
 });
 

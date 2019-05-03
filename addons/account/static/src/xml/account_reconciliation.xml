@@ -58,7 +58,7 @@
             <t t-if="context.journal_id">
                 <button class="button_back_to_statement btn btn-secondary" t-att-data_journal_id='context.journal_id'>Go to bank statement(s)</button>
             </t>
-            <t t-if="context['active_model'] === 'account.bank.statement.line'">
+            <t t-if="context['active_model'] === 'account.bank.statement'">
                 <button class="button_close_statement btn btn-primary" style="display: inline-block;">Close statement</button>
             </t>
         </p>
@@ -93,10 +93,10 @@
                 <t t-call="reconciliation.line.balance"/>
             </tfoot>
         </table>
-        <div class="o_notebook d-none">
+        <div class="o_notebook">
             <ul class="nav nav-tabs ml-0 mr-0">
-                <li class="nav-item"><a data-toggle="tab" disable_anchor="true" t-attf-href="#notebook_page_matching_#{state.st_line.id}" class="nav-link active" role="tab" aria-selected="true">Matching</a></li>
-                <li class="nav-item"><a data-toggle="tab" disable_anchor="true" t-attf-href="#notebook_page_misc_#{state.st_line.id}" class="nav-link" role="tab" aria-selected="false">Miscellaneous</a></li>
+                <li class="nav-item" t-attf-title="{{'Match statement with existing lines&lt;br&gt;* Black line: they are dark&lt;br&gt;* Blue lines: they are like the color of the see'}}" data-toggle="tooltip"><a data-toggle="tab" disable_anchor="true" t-attf-href="#notebook_page_matching_#{state.st_line.id}" class="nav-link active" role="tab" aria-selected="true">Matching</a></li>
+                <li class="nav-item" title="Create a counterpart" data-toggle="tooltip"><a data-toggle="tab" disable_anchor="true" t-attf-href="#notebook_page_misc_#{state.st_line.id}" class="nav-link" role="tab" aria-selected="false">Miscellaneous</a></li>
             </ul>
             <div class="tab-content">
                 <div class="tab-pane active" t-attf-id="notebook_page_matching_#{state.st_line.id}">

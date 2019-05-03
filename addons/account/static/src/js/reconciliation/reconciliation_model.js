@@ -110,6 +110,7 @@ var StatementModel = BasicModel.extend({
         this.valuenow = 0;
         this.valuemax = 0;
         this.alreadyDisplayed = [];
+        this.domain = [];
         this.defaultDisplayQty = options && options.defaultDisplayQty || 10;
         this.limitMoveLines = options && options.limitMoveLines || 15;
     },
@@ -321,8 +322,8 @@ var StatementModel = BasicModel.extend({
         var self = this;
         this.context = context;
         this.statement_line_ids = context.statement_line_ids;
-        if (!this.statement_line_ids) {
-            // This could be undefined if the user pressed F5, tkae everything as fallback instead of rainbowman
+        if (this.statement_line_ids === undefined) {
+            // This could be undefined if the user pressed F5, take everything as fallback instead of rainbowman
             return self._rpc({
                 model: 'account.bank.statement.line',
                 method: 'search_read',
@@ -380,7 +381,7 @@ var StatementModel = BasicModel.extend({
         var def_statement = this._rpc({
                 model: 'account.reconciliation.widget',
                 method: 'get_bank_statement_data',
-                kwargs: {"bank_statement_line_ids":self.statement_line_ids, "search_str":self.search_str || ''},
+                kwargs: {"bank_statement_line_ids":self.statement_line_ids, "search_str":self.domain}, // WHAT THE ACTUAL FUCK ?
                 context: self.context,
             })
             .then(function (statement) {
@@ -1263,7 +1264,11 @@ var StatementModel = BasicModel.extend({
      * @returns {Deferred}
      */
     _validatePostProcess: function (data) {
-        debugger
+        var self = this;
+        _.each(this.lines, function(line) {
+            line.reconciliation_proposition = line.reconciliation_proposition.filter(p => !data['moves'].includes(p.id));
+            self._computeLine(line);
+        })
         return Promise.resolve();
     },
 });

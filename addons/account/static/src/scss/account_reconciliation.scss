@@ -90,9 +90,9 @@
 
     .o_reconciliation_line {
         margin-bottom: 30px;
-        opacity: 0.7;
+        opacity: 0.6;
 
-        &:hover {
+        &:hover, &:not([data-mode="inactive"]) {
             opacity: 1;
         }
         table {
@@ -209,29 +209,17 @@
         }
 
         /* Match view & Create view */
+        > .o_notebook {
+            display: none;
+        }
 
         > .o_notebook > .tab-content > div {
             border: 1px solid #ddd;
             border-top: 0;
         }
 
-        > .match, > .create {
-            display: none;
-            max-height: 0px;
-            overflow: hidden;
-            margin-bottom: 5px;
-            transition: max-height 250ms ease 0s;
-        }
-        &[data-mode="match"] > .match {
+        &:not([data-mode="inactive"]) > .o_notebook {
             display: block;
-            max-height: none;
-            overflow: visible;
-            transition: max-height 400ms ease 0s;
-        }
-        &[data-mode="create"] > .create {
-            display: block;
-            max-height: 210px;
-            transition: max-height 400ms ease 0s;
         }
     }
 
