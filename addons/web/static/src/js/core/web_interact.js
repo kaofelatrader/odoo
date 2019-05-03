@@ -222,7 +222,6 @@ var _sortable = function (el, options) {
     var connectWith = options.connectWith;
     var containment = options.containment;
     var itemsSelector = options.items;
-    var revert = options.revert;
     var tolerance = options.tolerance;
 
     /**
@@ -382,6 +381,13 @@ var _sortable = function (el, options) {
 
         var placeholder = _getPlaceholder(ev.target);
         if (placeholder) {
+            // Revert is a custom option of sortable that is overridden in tests
+            var revert;
+            if ('revert' in interact(el).options) {
+                revert = interact(el).options.revert;
+            } else {
+                revert = options.revert;
+            }
             var move = function () {
                 placeholder.parentNode.insertBefore(draggable, placeholder);
                 _cleanPlaceholder(sortable);
@@ -478,11 +484,29 @@ var _unset = function (el) {
     interactable.unset();
 };
 
+/**
+ * Override options with given values
+ *
+ * @param {DOMElement|string} target identifier for interactable
+ * @param {Object} options parameter keys to override in interactable target
+ * @returns {Interactable|undefined} interactable object corresponding to target
+ */
+var _option = function (target, options) {
+    if (_isSet(target)) {
+        var interactable = interact(target);
+        if (options) {
+            Object.assign(interactable.options, options);
+        }
+        return interactable;
+    }
+};
+
 return {
     draggable: _draggable,
     sortable: _sortable,
     isSet: _isSet,
     unset: _unset,
+    option: _option,
 };
 
 });

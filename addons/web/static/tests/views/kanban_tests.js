@@ -8,6 +8,7 @@ var KanbanRenderer = require('web.KanbanRenderer');
 var KanbanView = require('web.KanbanView');
 var mixins = require('web.mixins');
 var testUtils = require('web.test_utils');
+var web_interact = require('web.interact');
 var Widget = require('web.Widget');
 var widgetRegistry = require('web.widget_registry');
 
@@ -3054,10 +3055,8 @@ QUnit.module('Views', {
         testUtils.mock.patch(KanbanRenderer, {
             _renderGrouped: function () {
                 this._super.apply(this, arguments);
-                // set delay and revert animation time to 0 so dummy drag and drop works
-                if (this.$el.sortable('instance')) {
-                    this.$el.sortable('option', {delay: 0, revert: 0});
-                }
+                // set revert animation time to 0 so dummy drag and drop works
+                web_interact.option(this.el, { revert: 0 });
             },
         });
 
