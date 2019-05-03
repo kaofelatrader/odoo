@@ -221,7 +221,7 @@ class SnailmailLetter(models.Model):
             else:
                 # adding the web logo from the company for future possible customization
                 document.update({
-                    'company_logo': letter.company_id.logo_web.decode('utf-8'),
+                    'company_logo': letter.company_id.logo.decode('utf-8'),
                 })
                 attachment = letter._fetch_attachment()
                 if attachment:
