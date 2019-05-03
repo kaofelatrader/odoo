@@ -313,8 +313,19 @@ var _sortable = function (el, options) {
                             // after this item, so before the next item.
                             anchor = anchor.nextSibling;
                         } else if (axis === 'both') {
-                            // TODO: look for dx and dy for direction
-                            anchor = anchor.nextSibling;
+                            // If dragging downard, then anchor after this item.
+                            // However, if dragging upward, then look at the X
+                            // delta. Only anchor after this item if the move
+                            // is more vertical than it is horizontal. This is
+                            // to reflect the fact that the browser fills the
+                            // space on the screen horizontally first then, when
+                            // there is no more room, fills it vertically.
+                            var dy = ev.dragEvent.dy;
+                            var dx = ev.dragEvent.dx;
+                            var moreVertical = Math.abs(dy) > Math.abs(dx)
+                            if (dy > 0 || (dx > 0 && moreVertical)) {
+                                anchor = anchor.nextSibling;
+                            }
                         }
 
                         _setPlaceholder(el, dragEl, anchor, axis, connectWith);
