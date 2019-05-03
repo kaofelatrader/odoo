@@ -110,6 +110,17 @@ class Lang(models.Model):
         self.filtered(lambda l: not l.active).write({'active': True})
         return self
 
+    # TODO v13, remove me
+    @api.model
+    def load_lang(self, lang, lang_name=None):
+        _logger.warning("Call to deprecated method load_lang, use _create_lang or _activate_lang instead")
+        language = self._lang_get(lang)
+        if language:
+            language._activate_lang()
+        else:
+            self._create_lang(lang, lang_name=lang_name)
+
+
     @api.model
     def _create_lang(self, lang, lang_name=None):
         """ Create the given language if necessary, and make it active. """
