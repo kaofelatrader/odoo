@@ -209,6 +209,7 @@ var _cleanPlaceholder = function (sortable) {
  * @param {string} [options.containment] selector for restricted items drag area
  * @param {string} [options.connectWith] selector for other connected sortables
  * @param {string} [options.handle] restrict dragging to this selector
+ * @param {string} [options.revert] time in ms for animation when dropped
  * @param {string} [options.tolerance] overlaps are computed with respect to the
  *        element being dragged. Set this parameter to 'pointer' to compute the
  *        overlaps relative to the pointer itself rather than the element.
