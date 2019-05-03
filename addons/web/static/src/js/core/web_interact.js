@@ -243,7 +243,7 @@ var _sortable = function (el, options) {
      */
     var check = function (dragEv, ev, drop, dropObj, dropEl, dragObj, dragEl) {
         var fromThisSortable = el.contains(dragEl);
-        var fromConnectedSortable = connectWith && !!dragEl.closest(connectWith);
+        var fromConnectedSortable = connectWith && dragEl.closest(connectWith);
         return drop && (fromThisSortable || fromConnectedSortable);
     }
 
