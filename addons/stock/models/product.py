@@ -367,9 +367,6 @@ class Product(models.Model):
                         res['fields']['qty_available']['string'] = _('Produced Qty')
         return res
 
-    def action_update_quantity_on_hand(self):
-        return self.product_tmpl_id.with_context({'default_product_id': self.id}).action_update_quantity_on_hand()
-
     def action_view_routes(self):
         return self.mapped('product_tmpl_id').action_view_routes()
 
@@ -397,11 +394,7 @@ class Product(models.Model):
 
     def action_open_quants(self):
         self.ensure_one()
-        self.env['stock.quant']._quant_tasks()
-        action = self.env.ref('stock.product_open_quants').read()[0]
-        location_domain = self._get_domain_locations()[0]
-        action['domain'] = expression.AND([[('product_id', '=', self.id)], location_domain])
-        return action
+        return self.product_tmpl_id.action_open_quants(self)
 
     @api.model
     def get_theoretical_quantity(self, product_id, location_id, lot_id=None, package_id=None, owner_id=None, to_uom=None):
@@ -597,37 +590,38 @@ class ProductTemplate(models.Model):
                 raise UserError(_("You can not change the type of a product that is currently reserved on a stock move. If you need to change the type, you should first unreserve the stock move."))
         return super(ProductTemplate, self).write(vals)
 
-    def action_update_quantity_on_hand(self):
-        default_product_id = self.env.context.get('default_product_id', self.product_variant_id.id)
-        if self.env.user.user_has_groups('stock.group_stock_multi_locations') or (self.env.user.user_has_groups('stock.group_production_lot') and self.tracking != 'none'):
-            product_ref_name = self.name + ' - ' + datetime.today().strftime('%m/%d/%y')
-            ctx = {'default_filter': 'product', 'default_product_id': default_product_id, 'default_name': product_ref_name}
+    def action_open_quants(self, products=None):
+        self.env['stock.quant']._quant_tasks()
+        if not products:
+            products = self.mapped('product_variant_ids')
+        location_domain = products._get_domain_locations()[0]
+        domain = expression.AND([[('product_id', 'in', products.ids)], location_domain])
+        context = {'hide_location': not self.user_has_groups('stock.group_stock_multi_locations')}
+
+        # If user have rights to write on quant, we display the editable quant view.
+        if self.user_has_groups('stock.group_stock_manager'):
+            if len(products) == 1:
+                context.update({
+                    'default_product_id': products[0].id,
+                    'single_product': True
+                })
+            context.update({'inventory_mode': True})
             return {
+                'name': _('Stock On Hand'),
+                'view_type': 'tree',
+                'view_mode': 'tree',
+                'res_model': 'stock.quant',
+                'view_id': self.env.ref('stock.view_stock_quant_tree_editable').id,
                 'type': 'ir.actions.act_window',
-                'view_type': 'form',
-                'view_mode': 'form',
-                'res_model': 'stock.inventory',
-                'context': ctx,
+                'context': context,
+                'domain': domain,
             }
         else:
-            wiz = self.env['stock.change.product.qty'].create({'product_id': default_product_id})
-            return {
-                    'name': _('Update quantity on hand'),
-                    'type': 'ir.actions.act_window',
-                    'view_mode': 'form',
-                    'res_model': 'stock.change.product.qty',
-                    'target': 'new',
-                    'res_id': wiz.id,
-                    'context': {'default_product_id': self.env.context.get('default_product_id')}
-                }
-
-    def action_open_quants(self):
-        self.env['stock.quant']._quant_tasks()
-        products = self.mapped('product_variant_ids')
-        action = self.env.ref('stock.product_open_quants').read()[0]
-        location_domain = products._get_domain_locations()[0]
-        action['domain'] = expression.AND([[('product_id', 'in', products.ids)], location_domain])
-        return action
+            # Otherwise, we display the classic readonly quant view.
+            action = self.env.ref('stock.product_open_quants').read()[0]
+            action['context'] = context
+            action['domain'] = domain
+            return action
 
     def action_view_related_putaway_rules(self):
         self.ensure_one()
