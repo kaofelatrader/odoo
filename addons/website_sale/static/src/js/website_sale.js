@@ -166,6 +166,33 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
     /**
      * @override
      */
+    willStart: function () {
+        var self = this;
+        return this._super().then(function (el) {
+            var hash = window.location.hash.substring(1);
+            if (hash) {
+                hash = decodeURIComponent(hash).split(',');
+                var inputs = self.$el.find('input.js_variant_change, select.js_variant_change option');
+                _.each(hash, function (elem) {
+                    var toSelect = inputs.filter('[data-value_id="' + elem + '"]');
+                    if (toSelect.is('input[type="radio"]')) {
+                        if (toSelect.is('[data-attribute_name="Color"]')) {
+                            toSelect.trigger('click');
+                        } else {
+                            toSelect.attr('checked', true);
+                        }
+                    } else if (toSelect.is('option')) {
+                        toSelect.attr('selected', true);
+                    }
+                });
+            } else {
+                self._setUrlHash(self.$el);
+            }
+        });
+    },
+    /**
+     * @override
+     */
     start: function () {
         var def = this._super.apply(this, arguments);
 
@@ -209,6 +236,17 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
     // Private
     //--------------------------------------------------------------------------
 
+    /**
+     * Set the url hash from the checked inputs and
+     * the selected options in the parent provided
+     * @private
+     */
+    _setUrlHash: function ($parent) {
+        var combinations = $parent.find('input.js_variant_change:checked, select.js_variant_change option:selected').map(function (idx, elem) {
+            return $(elem).data('value_id');
+        }).toArray();
+        history.replaceState(undefined, undefined, '#' + combinations);
+    },
     /**
      * @private
      */
@@ -682,6 +720,8 @@ publicWidget.registry.WebsiteSale = publicWidget.Widget.extend(VariantMixin, {
             var $el = $(this);
             $el.attr('selected', $el.is(':selected'));
         });
+
+        this._setUrlHash($component);
 
         return VariantMixin.onChangeVariant.apply(this, arguments);
     },
