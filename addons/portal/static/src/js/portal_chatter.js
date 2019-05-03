@@ -107,17 +107,28 @@ var PortalComposer = publicWidget.Widget.extend({
     _onAttachmentDelete: function (ev) {
         ev.stopPropagation();
         var attachmentID = $(ev.currentTarget).data("id");
+        var attachments = this.get('attachmentIDs');
+        var self = this;
 
         if (attachmentID) {
-            var attachments = this.get('attachmentIDs');
-            this._rpc({
-                model: 'ir.attachment',
-                method: 'unlink',
-                args: [attachmentID],
+            var test = this._rpc({
+                route: '/portal/binary/unlink_attachment',
+                params: {
+                    attachment_id: attachmentID,
+                    document_token: this.options['token'],
+                    res_model: this.options['res_model'],
+                    res_id: this.options['res_id'],
+                    attachment_token: _.find(attachments, {'id': attachmentID})['access_token'],
+                },
+            }).then(function (status) {
+                if (status && status.get("error")) {
+                    self.display_alert(status["error"]);
+                }
+                else {
+                    attachments = _.reject(attachments, {'id': attachmentID});
+                    self.set('attachmentIDs', attachments);
+                }
             });
-            attachments = _.reject(attachments, {'id': attachmentID});
-            this.set('attachmentIDs', attachments);
-            document.getElementById('attachment_ids').setAttribute("value", _.pluck(attachments, 'id'));
             this.$('.o_portal_chatter_warning').remove();
             this.$('input.o_input_file').val('');
         }

@@ -194,6 +194,41 @@ class PortalChatter(http.Controller):
         args = request.env['ir.http']._process_uploaded_files(files, model, res_id)
         return out % (json.dumps(callback), json.dumps(args))
 
+    @http.route('/portal/binary/unlink_attachment', type='json', auth="public")
+    def unlink_attachment(self, attachment_id, attachment_token, res_model, res_id, document_token=None):
+        error_status = {'error': _("Do not have access to the document.")}
+
+        if request.env.user.has_group('base.group_public') and not document_token:
+            return error_status
+            # access_token of the record
+        if document_token:
+            try:
+                document = request.env[res_model].browse([int(res_id)])
+                document_sudo = document.sudo().exists()
+                document.check_access_rights('read')
+                document.check_access_rule('read')
+            except (AccessError, MissingError):
+                raise Forbidden()
+
+            if not consteq(document_sudo.access_token, document_token):
+                return error_status
+        attachment_sudo = request.env['ir.attachment'].sudo()
+        attachment = attachment_sudo.browse(attachment_id)
+
+        # access_token of the attachment to delete
+        if attachment.access_token != attachment_token:
+            return error_status
+
+        # verify that attachment is indeed attached to the record
+        if attachment.res_id != res_id or attachment.res_model != res_model:
+            return error_status
+
+        # verify that attachment is not linked to a message yet
+        if request.env['mail.message'].sudo().search([('attachment_ids', '=', attachment_id)]):
+            return error_status
+
+        attachment_sudo.unlink()
+
 
 class MailController(MailController):
 
