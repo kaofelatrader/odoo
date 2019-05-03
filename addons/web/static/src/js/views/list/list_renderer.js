@@ -77,12 +77,6 @@ var ListRenderer = BasicRenderer.extend({
             callback: function (columns) { advancedColumnsEnabled = columns;}
         });
         this.advancedColumnsEnabled = advancedColumnsEnabled || [];
-        // if advance column enabled are not found from localstorage then
-        // compute it based view architcture attribute advanced=hide/show
-        if (!this.advancedColumnsEnabled.length) {
-            this._computeAdvancedEnabled();
-
-        }
         this._processColumns(this.columnInvisibleFields || {});
         return this._super.apply(this, arguments);
     },
@@ -311,6 +305,11 @@ var ListRenderer = BasicRenderer.extend({
             }
             return reject;
         });
+        // if advance column enabled are not found from localstorage then
+        // compute it based view architcture attribute advanced=hide/show
+        if (!this.advancedColumnsEnabled.length) {
+            this._computeAdvancedEnabled();
+        }
         this.columns = this._computeColumns();
         this.advancedColumns = this._computeAdvancedColumns();
     },
@@ -355,13 +354,14 @@ var ListRenderer = BasicRenderer.extend({
             }).append($checkBox.add($label)));
         });
         $dropdown.appendTo($th);
-        // temporary set overflow-x of table-responsive to inherit to show whole dropdown
-        // otherwise dropdown will be hidden behind table
+        // FIXME: increase height of scrollable table same as dropdown to show whole dropdown
+        // otherwise dropdown will be hidden behind scrollable table(need to check better solution)
         this.$el.on('shown.bs.dropdown', function (e) {
-            $(this).css("overflow-x", "inherit");
+            var dropdown = $(e.target).find('.dropdown-menu');
+            $(this).css('height', (dropdown.height()+40));
         });
         this.$el.on('hide.bs.dropdown', function (e) {
-            $(this).css("overflow-x", "auto");
+            $(this).css('height', '');
         });
         return $th;
     },
