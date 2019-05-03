@@ -14,6 +14,7 @@ var _storeDraggableProperties = function(el) {
     el.dataset.draggableOriginalPosition = el.style.position;
     el.dataset.draggableOriginalTop = el.style.top;
     el.dataset.draggableOriginalWidth = el.style.width;
+    el.dataset.draggableOriginalTransition = el.style.transition;
     el.dataset.draggableOriginalZIndex = el.style.zIndex;
 };
 
@@ -23,18 +24,15 @@ var _storeDraggableProperties = function(el) {
  * @param {DOMElement} el
  * @param {integer} [delay] in ms for the reset animation
 */
-var _resetDraggableProperties = function (el, delay) {
-    if (delay && false) {
-        // TODO: revert option animation
-    } else {
-        el.style.height = el.dataset.draggableOriginalHeight;
-        el.style.left = el.dataset.draggableOriginalLeft;
-        el.style.position = el.dataset.draggableOriginalPosition;
-        el.style.top = el.dataset.draggableOriginalTop;
-        el.style.width = el.dataset.draggableOriginalWidth;
-        el.style.zIndex = el.dataset.draggableOriginalZIndex;
-    }
-}
+var _resetDraggableProperties = function (el) {
+    el.style.height = el.dataset.draggableOriginalHeight;
+    el.style.left = el.dataset.draggableOriginalLeft;
+    el.style.position = el.dataset.draggableOriginalPosition;
+    el.style.top = el.dataset.draggableOriginalTop;
+    el.style.transition = el.dataset.draggableOriginalTransition;
+    el.style.width = el.dataset.draggableOriginalWidth;
+    el.style.zIndex = el.dataset.draggableOriginalZIndex;
+};
 
 /**
  * Make an element draggable.
@@ -152,7 +150,7 @@ var _setPlaceholder = function (sortable, item, anchor, axis, connectWith) {
             placeholder.classList.add(placeholderClass);
             placeholder.style.margin = computedStyle.margin;
 
-            // Placeholder must have content to have a size in some CSS situations
+            // Placeholder need content to have a size in some CSS situations
             var placeholderContent = document.createElement('div');
             if (axis === 'x') {
                 placeholderContent.style.width = computedStyle.width;
@@ -223,6 +221,7 @@ var _sortable = function (el, options) {
     var connectWith = options.connectWith;
     var containment = options.containment;
     var itemsSelector = options.items;
+    var revert = options.revert;
     var tolerance = options.tolerance;
 
     /**
@@ -372,29 +371,38 @@ var _sortable = function (el, options) {
         }
     };
 
-    // When a dragged item is dropped in this sortable, we use the placeholder
-    // as an anchor for correctly placing the item then delete the placeholder.
-    var ondrop = function (ev) {
-        var placeholder = _getPlaceholder(ev.target);
-        placeholder.parentNode.insertBefore(ev.relatedTarget, placeholder);
-        _cleanPlaceholder(el);
-
-        if (options.ondrop) {
-            options.ondrop(ev);
-        }
-    };
-
-    // When dragging stops, if there is still a placeholder at this point, this
-    // means that we dropped the record outside of any droppable zone, otherwise
-    // the placeholder would have been removed by ondrop. In this case, we
-    // mimmick jQuery-ui behavior and drop it at the last known valid spot.
+    // When dragging stops, the droppable which last had the placeholder wins.
     var ondropdeactivate = function (ev) {
-        if (_getPlaceholder(el)) {
-            ondrop(ev);
-        }
-
+        var sortable = ev.target;
+        var draggable = ev.relatedTarget;
         if (options.ondropdeactivate) {
             options.ondropdeactivate(ev);
+        }
+
+        var placeholder = _getPlaceholder(ev.target);
+        if (placeholder) {
+            var move = function () {
+                placeholder.parentNode.insertBefore(draggable, placeholder);
+                _cleanPlaceholder(sortable);
+
+                // The position in the DOM has been updated, we can undo the CSS
+                // trick that made them draggable like absolute positioning etc.
+                _resetDraggableProperties(draggable, revert);
+            }
+
+            if (revert) {
+                draggable.style.transitionProperty = 'left, top';
+                draggable.style.transitionDuration = revert + 'ms';
+                draggable.style.left = placeholder.offsetLeft + 'px';
+                draggable.style.top = placeholder.offsetTop + 'px';
+                setTimeout(move, revert);
+            } else {
+                move();
+            }
+
+            if (options.ondrop) {
+                options.ondrop(ev);
+            }
         }
     };
 
@@ -405,7 +413,6 @@ var _sortable = function (el, options) {
         overlap: tolerance || 'center',
         ondropactivate: ondropactivate,
         ondragenter: ondragenter,
-        ondrop: ondrop,
         ondragleave: options.ondragleave,
         ondropdeactivate: ondropdeactivate
     });
@@ -422,14 +429,7 @@ var _sortable = function (el, options) {
             item = ev.target.closest(itemsSelector);
         }
         if (item && !item.classList.contains('o_sortable_handle')) {
-            var itemsDraggableOptions = {
-                onend: function(ev) {
-                    // Sortable items reset their CSS style if they are dropped.
-                    // Their position in the DOM will be updated by the handlers
-                    // of the droppable so we can undo absolute positioning etc.
-                    _resetDraggableProperties(ev.target, options.revert);
-                }
-            };
+            var itemsDraggableOptions = {};
             if (handle) {
                 itemsDraggableOptions.allowFrom = handle;
             }
