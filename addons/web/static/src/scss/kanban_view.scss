@@ -9,7 +9,6 @@
     overflow: auto;
     max-width: 70%;
     min-width: 40%;
-
     > #resizable {
         position: absolute;
         padding: 8px;
@@ -40,7 +39,7 @@
 }
 
 // for overlay view
-.o_kanban_overlay_form_view {
+.o_kanban_overlay {
     width: 40%;
     min-width: 30%;
     max-width: 60%;

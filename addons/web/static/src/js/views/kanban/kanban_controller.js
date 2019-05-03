@@ -512,27 +512,18 @@ var KanbanController = BasicController.extend({
             this._onClickDiscard(ev);
         }
 
-        var data = ev.data;
-        if (data && !data.context) {
-            var columnState = this.model.get(this.handle, {raw: true}),
-                context = columnState.getContext(),
-                groupedBy = columnState.groupedBy[0],
-                values = ev.data;
-
-            context['default_' + groupedBy] = viewUtils.getGroupValue(columnState, groupedBy);
-        } else {
-            context = data.context;
-        }
+        var data = ev.data,
+            context = data.context || this.state.context;
 
         var $kanbanView = $('.o_action_manager .o_content .o_kanban_view');
         this.formOverlayWidget = new RecordFormOverlay(this, {
             context: context,
             formViewID: this.overlayFormViewID,
             model: this.modelName,
-            res_id: values && values.res_id,
-            db_id:  values && values.db_id,
+            res_id: data && data.res_id,
+            db_id:  data && data.db_id,
         });
-        $kanbanView.addClass('o_kanban_overlay_form_view');
+        $kanbanView.addClass('o_kanban_overlay');
         context['form_overlay_heigh'] = $kanbanView.height();
         return this.formOverlayWidget.insertAfter($kanbanView);
     },

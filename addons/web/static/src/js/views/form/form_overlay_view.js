@@ -122,7 +122,19 @@ var FormOverlayView = Widget.extend({
         } else {
             if (this.controller.isDirty()) {
                 // TODO: IF DIRTY VALUE INSIDE THE VIEW FIRST SAVE THEN EXPAND THE VIEW
-                console.log('ddd');
+                this.controller.commitChanges().then(function () {
+                    var canBeSaved = self.controller.canBeSaved();
+                    if (canBeSaved) {
+                        return self.controller.saveRecord().then(function () {
+                            self.trigger_up('switch_view', {
+                                view_type: 'form',
+                                res_id: self.controller.renderer.state.res_id,
+                            });
+                            self.trigger_up('reload');
+                            self._onCancelClicked();
+                        });
+                    }
+                });
             } else {
                 // TODO: JUST EXPAND THE VIEW THERE IS NO DIRTY VALUE IN FORM VIEW
                 this.trigger_up('switch_view', {
@@ -136,7 +148,7 @@ var FormOverlayView = Widget.extend({
     _onCancelClicked: function () {
         this.controller.trigger_up('discard_form_overlay_view');
         // TODO: for kanban and list
-        $('.o_kanban_view').removeClass('o_kanban_overlay_form_view');
+        $('.o_kanban_view').removeClass('o_kanban_overlay');
     },
     _onMouseMoveOverlay: function (ev) {
         // handle resizable form overlay view
