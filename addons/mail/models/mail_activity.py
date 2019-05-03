@@ -328,8 +328,8 @@ class MailActivity(models.Model):
             self.env['bus.bus'].sendone(
                 (self._cr.dbname, 'res.partner', activity.user_id.partner_id.id),
                 {'type': 'activity_updated', 'activity_created': True})
-        if activity.res_model and activity.res_id:
-            self.env[activity.res_model].browse(activity.res_id).set_exception_activity_type()
+        if activity.res_model and activity.res_id and activity.activity_type_id.decoration_type in ['warning', 'danger']:
+            self.env[activity.res_model].browse(activity.res_id)._set_exception_activity_type()
         return activity
 
     @api.multi
@@ -359,7 +359,7 @@ class MailActivity(models.Model):
                             {'type': 'activity_updated', 'activity_deleted': True})
         if values.get('activity_type_id'):
             for activity in self.filtered(lambda x: x.res_id and x.res_model):
-                self.env[activity.res_model].browse(activity.res_id).set_exception_activity_type()
+                self.env[activity.res_model].browse(activity.res_id)._set_exception_activity_type()
         return res
 
     @api.multi
@@ -374,7 +374,7 @@ class MailActivity(models.Model):
                 record_values.append((activity.res_model, activity.res_id))
         rec = super(MailActivity, self).unlink()
         for record in record_values:
-            self.env[record[0]].browse(record[1]).set_exception_activity_type()
+            self.env[record[0]].browse(record[1])._set_exception_activity_type()
         return rec
 
     # ------------------------------------------------------
@@ -640,12 +640,19 @@ class MailActivityMixin(models.AbstractModel):
         return [('activity_ids.activity_type_id', operator, operand)]
 
     @api.multi
-    def set_exception_activity_type(self):
+    def _set_exception_activity_type(self):
         self.ensure_one()
-        self.exception_activity_type = False
-        for record in self.activity_ids.filtered(lambda x: x.activity_type_id.decoration_type in ['warning', 'danger']):
-            self.exception_activity_type = "pull-right text-%s fa %s" % (record.activity_type_id.decoration_type, record.activity_type_id.icon)
-
+        decoration_type = None
+        icon = None
+        for activity in self.activity_ids.filtered(lambda x: x.activity_type_id.decoration_type in ['warning', 'danger']):
+            if not decoration_type and activity.activity_type_id.decoration_type == 'warning':
+                decoration_type = 'warning'
+                icon = activity.activity_type_id.icon
+            elif activity.activity_type_id.decoration_type == 'danger':
+                decoration_type = 'danger'
+                icon = activity.activity_type_id.icon
+                break
+        self.exception_activity_type = "pull-right text-%s fa %s" % (decoration_type, icon)
     @api.model
     def _search_activity_summary(self, operator, operand):
         return [('activity_ids.summary', operator, operand)]
