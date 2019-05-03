@@ -1,3 +1,12 @@
+// ======= VARIABLES =======
+
+$o-wblog-read-width: 630px;
+$o-wblog-read-container-sidebar-width :900px;
+
+
+
+
+
 // ======== MIXINS =========
 
 // Create easing-linear-gradients. Compared to the standards liner-gradients
@@ -37,20 +46,33 @@
     }
 
     .o_wblog_read_width {
-        max-width: 700px;
+        max-width: $o-wblog-read-width;
     }
 
-    .blog_content {
+    .o_wblog_read_container_sidebar_active {
+        max-width: $o-wblog-read-container-sidebar-width;
+    }
+
+    #o_wblog_post_content {
         min-height: 350px !important;
-        // Set a slight more readible font-size, eventually replaced by snippets
-        // or by the editor.
-        font-size: 1rem;
+
+        &.o_wblog_read_width .o_wblog_post_content_field {
+            // Set a slight more readible font-size, eventually replaced by snippets
+            // or by the editor.
+            font-size: 1rem;
+        }
 
         a.oe_mail_expand:after {
             content: " →";
         }
         a.oe_mail_expand {
             font-weight: bold;
+        }
+    }
+
+    #o_wblog_post_comments {
+        .o_portal_chatter > hr {
+            display: none;
         }
     }
 
@@ -247,10 +269,17 @@
     //     }
     // }
 
-
-    section.blog_tags ul.nav-pills li a {
-        padding: 2px 15px;
+    .o_wblog_regular_cover_container {
+        .o_blog_cover_container {
+            padding-top: 20%;
+            min-height: 250px;
+        }
     }
+
+
+    // section.blog_tags ul.nav-pills li a {
+    //     padding: 2px 15px;
+    // }
 }
 
 //------------------------------------------------------------------------------

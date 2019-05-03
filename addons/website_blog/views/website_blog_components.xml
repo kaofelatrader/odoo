@@ -71,8 +71,8 @@
 
         <div class="row mx-n2">
             <!-- Define post's classes according to the enabled options -->
-            <t t-if="has_sidebar and not opt_blog_list_view" t-set="post_size" t-value="'col-md-6 col-xl-4'"/>
-            <t t-elif="not has_sidebar and not opt_blog_list_view" t-set="post_size" t-value="'col-sm-6 col-lg-4 col-xl-3'"/>
+            <t t-if="opt_blog_sidebar_show and not opt_blog_list_view" t-set="post_size" t-value="'col-md-6 col-xl-4'"/>
+            <t t-elif="not opt_blog_sidebar_show and not opt_blog_list_view" t-set="post_size" t-value="'col-sm-6 col-lg-4 col-xl-3'"/>
 
             <!-- Loop through posts: exlude first post if already shown as top
                  banner, adapt grid if sidebar is active -->
@@ -177,48 +177,24 @@
 </template>
 
 
-<!-- ====== Template: Sidebar Blogs Index (All Blogs page)  ====================
+<!-- ======   Template: Sidebar Blog  ===================================
 ============================================================================ -->
-<template id="website_blog.sidebar_blog_index" name="Sidebar - All Blogs">
+<template id="website_blog.sidebar_blog_single" name="Sidebar - Blog page">
     <div id="o_wblog_sidebar">
         <div class="oe_structure"/>
-        <h6 class="text-uppercase font-weight-bold mt-0">Archives</h6>
+        <div class="o_wblog_sidebar_block o_wblog_sidebar_block_about mb-4">
+            <h6 class="text-uppercase font-weight-bold mt-0">About us</h6>
+            <div>
+                <p>Write a small text here to describe your blog or company.</p>
+                <p>Using the <b>Customize</b> top menu, you may also add dynamic content like the tag list or the posts' archive.</p>
+            </div>
+        </div>
+        <div class="oe_structure"/>
     </div>
 </template>
 
-<!--   ◉  Option: Sidebar Blog Index: Show About Us ^^^^^^^^  -->
-<template id="opt_sidebar_blog_index_about" name="About us" priority="1" inherit_id="website_blog.sidebar_blog_index" active="True" customize_show="True">
-    <xpath expr="//div[@id='o_wblog_sidebar']" position="inside">
-        <t t-call="website_blog.about_us"/>
-        <div class="oe_structure"/>
-    </xpath>
-</template>
-
-<!--   ◉  Option: Sidebar Blog Index: Follow Us ^^^^^^^^  -->
-<template id="opt_sidebar_blog_index_follow_us" name="Follow us" priority="2" inherit_id="website_blog.sidebar_blog_index" active="True" customize_show="True">
-    <xpath expr="//div[@id='o_wblog_sidebar']" position="inside">
-        <t t-call="website_blog.follow_us"/>
-        <div class="oe_structure"/>
-    </xpath>
-</template>
-
-
-
-<!-- ======   Template: Sidebar Blog Single  ===================================
-============================================================================ -->
-<template id="website_blog.sidebar_blog_single" name="Sidebar - Blog page">
-    <div id="o_wblog_sidebar"/>
-</template>
-
-<!--   ◉  Option: Sidebar Blog Single: Show About Us ^^^^^^^^  -->
-<template id="opt_sidebar_blog_single_about" name="About Us" priority="1" inherit_id="website_blog.sidebar_blog_single" active="True" customize_show="True">
-    <xpath expr="//div[@id='o_wblog_sidebar']" position="inside">
-        <t t-call="website_blog.about_us"/>
-    </xpath>
-</template>
-
 <!--   ◉  Option: Sidebar Blog Single: Archives ^^^^^^^^  -->
-<template id="opt_sidebar_blog_single_archives" name="Archives" priority="2" inherit_id="website_blog.sidebar_blog_single" active="True" customize_show="True">
+<template id="opt_sidebar_blog_single_archives" name="Archives" priority="2" inherit_id="website_blog.sidebar_blog_single" active="False" customize_show="True">
 
     <xpath expr="//div[@id='o_wblog_sidebar']" position="inside">
         <div class="o_wblog_sidebar_block o_wblog_sidebar_block_archives mb-4">
@@ -236,11 +212,12 @@
                 </optgroup>
             </select>
         </div>
+        <div class="oe_structure"/>
     </xpath>
 </template>
 
 <!--   ◉  Option: Sidebar Blog Single: Show tags ^^^^^^^^  -->
-<template id="opt_sidebar_blog_single_tags" name="Tags list" priority="3" inherit_id="website_blog.sidebar_blog_single" active="True" customize_show="True">
+<template id="opt_sidebar_blog_single_tags" name="Tags list" priority="3" inherit_id="website_blog.sidebar_blog_single" active="False" customize_show="True">
     <xpath expr="//div[@id='o_wblog_sidebar']" position="inside">
 
         <!-- TO FIX: This template works if a single blog is provided only -->
@@ -264,13 +241,15 @@
             <h6 class="text-uppercase font-weight-bold mt-0">Tags</h6>
             <em class="text-muted">No tags defined yet.</em>
         </div>
+        <div class="oe_structure"/>
     </xpath>
 </template>
 
 <!--   ◉  Option: Sidebar Blog Single: Follow Us ^^^^^^^^  -->
-<template id="opt_sidebar_blog_single_follow_us" name="Follow Us" priority="12" inherit_id="website_blog.sidebar_blog_single" active="True" customize_show="True">
+<template id="opt_sidebar_blog_single_follow_us" name="Follow Us" priority="12" inherit_id="website_blog.sidebar_blog_single" active="False" customize_show="True">
     <xpath expr="//div[@id='o_wblog_sidebar']" position="inside">
         <t t-call="website_blog.follow_us"/>
+        <div class="oe_structure"/>
     </xpath>
 </template>
 
@@ -361,6 +340,18 @@
             <small t-if="not hide_date" t-field="blog_post.post_date" t-options='{"format": "d MMMM, yyyy"}'/>
         </div>
     </div>
+</template>
+
+<!-- ======   Template: Post Breadcrumbs   =====================================
+============================================================================ -->
+<template id="website_blog.post_breadcrumbs">
+    <nav aria-label="breadcrumb" t-attf-class="breadcrumb py-0 px-0 #{additionnal_classes or ''}">
+        <li t-if="blogs" class="breadcrumb-item"><a href="/blog">All Blogs</a></li>
+        <li class="breadcrumb-item"><a t-attf-href="#{blog_url(tag=None, date_begin=None, date_end=None)}"><span t-field="blog.name"/></a></li>
+        <li t-if="tag" class="breadcrumb-item"><a t-attf-href="#{blog_url(date_begin=None, date_end=None)}"><span t-field="tag.name"/></a></li>
+        <li t-if="date" class="breadcrumb-item"><a t-attf-href="#{blog_url(tag=None)}" t-esc="date"/></li>
+        <li class="breadcrumb-item active"><span t-field="blog_post.name"/></li>
+    </nav>
 </template>
 
 

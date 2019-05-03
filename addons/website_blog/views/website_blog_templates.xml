@@ -36,123 +36,7 @@
     </t>
 </template>
 
-
-<!-- ======   All Blogs - Index page   =========================================
-◉  Option: Hide Blogs Nav
-◉  Option: Show Sidebar
-    ⌙ Show About Us
-    ⌙ Show Follow Us
-◉  Option: Top banner - Use last post
-    ⌙ Show author
-◉  Option: Use card design
-============================================================================ -->
-<template id="all_blogs" name="All Blogs - Index page">
-    <t t-call="website_blog.index">
-        <div class="oe_structure" id="oe_structure_website_blog_all_blogs_1"/>
-        <section id="o_wblog_all_blogs_alert" class="container-fluid bg-200">
-            <div class="alert alert-info alert-dismissable mt16 w-lg-75 mx-auto" groups="website.group_website_publisher" role="status">
-               <button type="button" class="close" data-dismiss="alert" aria-label="Close">&amp;times;</button>
-               <h4 class="alert-heading">This page is great to improve your <strong>Search Engine Optimization</strong></h4>
-               <p>
-                   You can review titles, keywords and descriptions of all blogs at once.<br/>
-                   You should <strong>add a banner on the top</strong> as it is a frequent landing page for new visitors.
-               </p>
-               <div class="font-italic font-weight-bold">- This box will not be visible to your visitors -</div>
-            </div>
-        </section>
-        <div class="oe_structure" id="oe_structure_website_blog_all_blogs_2"/>
-
-        <t t-call="website_blog.blogs_nav"/>
-
-        <section id="o_wblog_index_content" t-attf-class="#{'o_wblog_page_cards_bg' if opt_blog_cards_design else ''}">
-            <div class="container">
-                <div class="row">
-                    <div id="o_wblog_blogs_latest_posts" class="col py-4">
-                        <t t-call="website_blog.posts_list">
-                            <t t-set="posts_list_show_parent_blog" t-value="True"/>
-                            <t t-set="has_sidebar" t-value="opt_all_blogs_sidebar_show"/>
-                        </t>
-                        <t t-call="website.pager" >
-                            <t t-set="classname">justify-content-center</t>
-                        </t>
-                    </div>
-                    <div t-if="opt_all_blogs_sidebar_show" class="col-12 col-sm-12 col-md-3 py-4">
-                        <t t-call="website_blog.sidebar_blog_single"/>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <div class="oe_structure" id="oe_structure_website_blog_all_blogs_3"/>
-    </t>
-</template>
-
-<!--   ◉  Option: All Blogs: Sidebar : Show -->
-<template id="opt_all_blogs_sidebar_show" name="Show Sidebar" inherit_id="website_blog.all_blogs" active="False" customize_show="True">
-    <xpath expr="//section[@id='o_wblog_index_content']" position="before">
-        <t t-set="opt_all_blogs_sidebar_show" t-value="true"/>
-    </xpath>
-</template>
-
-<!--   ◉  Option: All Blogs: Posts List: Cards design -->
-<template id="opt_all_blogs_cards_design" name="Use 'cards' design" inherit_id="website_blog.all_blogs" active="False" customize_show="True">
-    <xpath expr="//section[@id='o_wblog_index_content']" position="before">
-        <t t-set="opt_blog_cards_design" t-value="true"/>
-    </xpath>
-</template>
-
-<!--   ◉  Option: All Blogs: Show latest-post as top banner  -->
-<template id="opt_all_blogs_cover_post" name="Top banner - Use Last post" inherit_id="website_blog.all_blogs" active="True" customize_show="True">
-    <xpath expr="//section[@id='o_wblog_all_blogs_alert']" position="replace">
-
-        <!-- In the general post list, exclude the first post since it will be shown here -->
-        <t t-set="posts_list_exclude_first" t-value="True"/>
-
-        <t t-foreach="blog_posts" t-as="blog_post" t-if="blog_post_index == 0">
-            <t t-set="cover_properties" t-value="blog_posts_cover_properties[blog_post_index]"/>
-
-            <t t-call="website_blog.blog_cover">
-                <t t-set="cover_properties" t-value="blog_posts_cover_properties[blog_post_index]"/>
-                <t t-set="additionnal_classes" t-value="'cover py-4'"/>
-
-                <div class="container h-100 d-flex align-items-center">
-                    <div class="w-100">
-                        <div class="col-12 col-sm-8 col-md-6 col-lg-4 p-0">
-                            <div class="bg-white rounded-sm p-3 overflow-hidden">
-                                <h4 t-field="blog_post.name" id="blog_post_name" t-att-data-blog-id="blog_post.id" placeholder="Blog Post Title"/>
-                                <div t-field="blog_post.subtitle" placeholder="Subtitle"/>
-                                <small class="text-nowrap text-truncate font-weight-bold">
-                                    <span class="text-muted">in</span> <i class="fa fa-folder-open text-muted"/>
-                                    <a t-attf-href="#{blog_url(blog=blog_post.blog_id)}" t-field="blog_post.blog_id"/>
-                                </small>
-                                <hr/>
-                                <a t-attf-href="/blog/#{slug(blog_post.blog_id)}/post/#{slug(blog_post)}" class="btn btn-primary">Read more</a>
-                                <span class="bg-warning small py-1 px-2 position-absolute" style="top:0; right:0"><b>Latest Post</b></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </t>
-        </t>
-    </xpath>
-</template>
-
-<!--   ◉  Option: All Blogs: Top Banner: Show author -->
-<template id="opt_all_blogs_cover_post_show_author" name="Show author" inherit_id="website_blog.opt_all_blogs_cover_post" active="False" customize_show="True">
-    <xpath expr="//*[@id='blog_post_name']" position="before">
-        <t t-call="website_blog.post_author">
-            <t t-set="additionnal_classes" t-value="'mb-3'"/>
-        </t>
-    </xpath>
-</template>
-
-<!--   ◉  Option: All Blogs: Hide blogs nav ^^^^^^^^   -->
-<template id="opt_all_blogs_blogs_nav_hide" name="Hide Blogs Navigation" inherit_id="website_blog.all_blogs" active="False" customize_show="True">
-    <xpath expr="//t[@t-call='website_blog.blogs_nav']" position="replace"/>
-</template>
-
-
-
-<!-- ======  Blog Single : Displaying a list of Blog Posts =====================
+<!-- ======  Blog Index : Displaying a list of Blog Posts =====================
 ◉  Option: Hide Blogs Nav
 ◉  Option: Show Sidebar
     ⌙ Show About Us
@@ -169,7 +53,6 @@
         <t t-set="opt_blog_cards_design" t-value="False"/>
         <t t-set="opt_blog_list_view" t-value="False"/>
         <t t-set="opt_blog_sidebar_show" t-value="False"/>
-
 
         <t t-set="head" t-if="blog">
             <link t-att-href="'/blog/%s/feed' % (blog.id)" type="application/atom+xml" rel="alternate" title="Atom Feed"/>
@@ -205,7 +88,6 @@
 
                         <t t-call="website_blog.posts_list">
                             <t t-if="not blog" t-set="posts_list_show_parent_blog" t-value="True"/>
-                            <t t-set="has_sidebar" t-value="opt_blog_sidebar_show"/>
                         </t>
 
                         <t t-call="website.pager" >
@@ -321,10 +203,17 @@
 
 <!-- ====== Blog Post Complete =================================================
 ============================================================================ -->
-<template id="blog_post_complete" name="Blog Post">
+<template id="website_blog.blog_post_complete" name="Blog Post">
     <t t-call="website_blog.index">
-        <div id="o_wblog_post_top">
-            <div class="oe_structure"/>
+
+        <t t-set="opt_blog_post_sidebar" t-value="False"/>
+
+
+        <section id="o_wblog_post_top">
+            <div class="container">
+                <div class="oe_structure"/>
+            </div>
+
             <div id="title" class="blog_header" t-ignore="True">
                 <t t-call="website_blog.blog_cover">
                     <t t-set="cover_properties" t-value="blog_post_cover_properties"/>
@@ -339,111 +228,191 @@
                             <p class="post-meta text-muted text-center" name="blog_post_data"/>
                         </div>
                         <div t-if="'cover_full' in blog_post_cover_properties.get('resize_class', '')" class="d-flex justify-content-center align-items-center rounded-circle d-flex mx-auto" id="blog_angle_down">
-                            <a href="#blog_content" class="fa fa-angle-down fa-3x text-white" aria-label="To blog content" title="To blog content"/>
+                            <a href="#o_wblog_post_content" class="fa fa-angle-down fa-3x text-white" aria-label="To blog content" title="To blog content"/>
                         </div>
                     </div>
                 </t>
             </div>
-        </div>
 
-        <div id="o_wblog_post_main">
-            <div class="container pt-4">
-                <div class="d-flex flex-column flex-md-row justify-content-center">
-                    <div id="o_wblog_sidebar_post_col" class="d-none pr-md-5">
-                        <div id="o_wblog_sidebar_post">
-                            <div class="oe_structure"/>
-                        </div>
+            <div class="container">
+                <div class="oe_structure"/>
+            </div>
+        </section>
+
+        <t t-set="readableSize" t-if="opt_blog_post_readable and opt_blog_post_sidebar" t-value="' o_wblog_read_container_sidebar_active'"/>
+        <t t-set="readableSize" t-elif="opt_blog_post_readable" t-value="' o_wblog_read_width'"/>
+        <t t-set="readableSize" t-else="" t-value="' container'"/>
+
+        <section id="o_wblog_post_main" class="container pt-4 pb-5">
+            <div t-att-class="'mx-auto' + readableSize">
+                <div t-attf-class="d-flex flex-column flex-lg-row #{'justify-content-between' if opt_blog_post_readable and opt_blog_post_sidebar else ''}">
+                    <div t-if="opt_blog_post_sidebar" id="o_wblog_post_sidebar_col" class="flex-grow-1 order-lg-2 pl-lg-5">
+                        <t t-call="website_blog.blog_post_sidebar"/>
                     </div>
-                    <div id="blog_content" t-field="blog_post.content" class="blog_content w-100"/>
+
+                    <div id="o_wblog_post_content" t-attf-class="order-lg-1 #{'o_wblog_read_width w-100 flex-shrink-0' if opt_blog_post_readable else ''}">
+                        <t t-if="opt_blog_post_breadcrumb and not opt_blog_post_regular_cover" t-call="website_blog.post_breadcrumbs">
+                            <t t-set="additionnal_classes" t-value="'mb-3 bg-transparent'"></t>
+                        </t>
+                        <div t-field="blog_post.content" class="o_wblog_post_content_field"/>
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <div class="o_blog_post_complete o_sharing_links d-none">
-            <a class="fa fa-twitter-square o_twitter_complete" id="o_twitter_complete" aria-label="Twitter" title="Twitter"></a>
-            <a class="fa fa-facebook-square o_facebook_complete" id="o_facebook_complete" aria-label="Facebook" title="Facebook"></a>
-            <a class="fa fa-linkedin-square o_linkedin_complete" id="o_linkedin_complete" aria-label="LinkedIn" title="LinkedIn"></a>
-            <a class="fa fa-google-plus-square o_google_complete" id="o_google_complete" aria-label="Google Plus" title="Google Plus"></a>
-        </div>
+        <section id="o_wblog_post_footer"/>
     </t>
 </template>
 
-<!--   ◉  Option: Post: Breadcrumb -->
-<template id="blog_breadcrumb" name="Breadcrumb" inherit_id="website_blog.blog_post_complete" active="False" customize_show="True">
-    <xpath expr="//div[@id='o_wblog_post_top']" position="inside">
-        <nav class="navbar navbar-light bg-light navbar-expand border-bottom">
-            <div class="container">
-                <nav aria-label="breadcrumb" class="breadcrumb mb-0 py-0 pr-0 bg-transparent">
-                    <li t-if="blogs" class="breadcrumb-item"><a href="/blog">All Blogs</a></li>
-                    <li class="breadcrumb-item"><a t-attf-href="#{blog_url(tag=None, date_begin=None, date_end=None)}"><span t-field="blog.name"/></a></li>
-                    <li t-if="tag" class="breadcrumb-item"><a t-attf-href="#{blog_url(date_begin=None, date_end=None)}"><span t-field="tag.name"/></a></li>
-                    <li t-if="date" class="breadcrumb-item"><a t-attf-href="#{blog_url(tag=None)}" t-esc="date"/></li>
-                    <li class="breadcrumb-item active"><span t-field="blog_post.name"/></li>
-                </nav>
-            </div>
-        </nav>
+<!--   ◉  Option: Post: Increase readability -->
+<template id="opt_blog_post_readable" name="Increase readability" inherit_id="website_blog.blog_post_complete" active="True" customize_show="True">
+    <xpath expr="//section[@id='o_wblog_post_top']" position="before">
+        <t t-set="opt_blog_post_readable" t-value="True"/>
     </xpath>
 </template>
 
-<!--   ◉  Option: Post: Share Links Display -->
-<template id="opt_blog_post_share_links_display" name="Show Share Links" inherit_id="website_blog.blog_post_complete" active="True" customize_show="True">
-    <xpath expr="//div[@id='o_wblog_sidebar_post_col']" position="attributes">
-        <attribute name="class" remove="d-none" add="d-flex" separator=" "/>
+<!--   ◉  Option: Post: Show Sidebar -->
+<template id="opt_blog_post_sidebar" name="Show Sidebar" inherit_id="website_blog.blog_post_complete" active="False" customize_show="True">
+    <xpath expr="//section[@id='o_wblog_post_top']" position="before">
+        <t t-set="opt_blog_post_sidebar" t-value="True"/>
     </xpath>
-    <xpath expr="//div[@id='o_wblog_sidebar_post']" position="inside">
-        <div class="o_blog_post_complete o_sharing_links">
-            <a class="fa fa-twitter-square o_twitter_complete text-twitter" id="o_twitter_complete" aria-label="Twitter" title="Twitter"></a>
-            <a class="fa fa-facebook-square o_facebook_complete " id="o_facebook_complete" aria-label="Facebook" title="Facebook"></a>
-            <a class="fa fa-linkedin-square o_linkedin_complete" id="o_linkedin_complete" aria-label="LinkedIn" title="LinkedIn"></a>
-            <a class="fa fa-google-plus-square o_google_complete" id="o_google_complete" aria-label="Google Plus" title="Google Plus"></a>
+</template>
+
+<!--   ◉  Option: Post: Regular Cover -->
+<template id="opt_blog_post_regular_cover" name="'Regular' Cover" inherit_id="website_blog.blog_post_complete" active="False" customize_show="True">
+    <xpath expr="//section[@id='o_wblog_post_top']" position="before">
+        <t t-set="opt_blog_post_regular_cover" t-value="True"/>
+    </xpath>
+
+    <xpath expr="//div[@id='title']" position="replace">
+        <t t-set="readableSize" t-if="opt_blog_post_readable and opt_blog_post_sidebar" t-value="'o_wblog_read_container_sidebar_active mx-auto'"/>
+        <t t-set="readableSize" t-elif="opt_blog_post_readable" t-value="'o_wblog_read_width mx-auto'"/>
+        <t t-set="readableSize" t-else="" t-value="'container'"/>
+
+        <div id="title" t-attf-class="blog_header o_wblog_regular_cover_container #{readableSize}">
+
+            <t t-if="opt_blog_post_breadcrumb" t-call="website_blog.post_breadcrumbs">
+                <t t-set="additionnal_classes" t-value="'mt-4 mb-3 bg-transparent'"></t>
+            </t>
+
+            <div t-attf-class="blog_title #{'pt-4' if not opt_blog_post_breadcrumb else ''}">
+                <h1 t-field="blog_post.name" id="blog_post_name" t-att-data-blog-id="blog_post.id" placeholder="Blog Post Title"/>
+                <h4 t-field="blog_post.subtitle" placeholder="Subtitle"/>
+                <p class="text-muted">
+                    <i class="fa fa-clock-o fa-fw"/>
+                    <span t-field="blog_post.post_date" class="text-muted" t-options='{"format": "d MMMM, yyyy"}'/>
+                    <span t-if="len(blog_post.message_ids) > 0" class="text-nowrap pl-2">|
+                        <i class="fa fa-comment text-muted mr-1"/><t t-esc="len(blog_post.message_ids)"/>
+                        <t t-if="len(blog_post.message_ids)>1">Comments</t>
+                        <t t-else="">Comment</t>
+                    </span>
+                    <span t-elif="opt_blog_post_comment">| No comments yet</span>
+                </p>
+                <p class="post-meta text-muted text-center" name="blog_post_data"/>
+            </div>
+
+            <t t-call="website_blog.blog_cover">
+                <t t-set="cover_properties" t-value="blog_post_cover_properties"/>
+                <t t-set="additionnal_classes" t-value="''"/>
+            </t>
         </div>
+    </xpath>
+</template>
+
+
+
+<!--   ◉  Option: Post: Breadcrumb -->
+<template id="opt_blog_post_breadcrumb" name="Show Breadcrumbs" inherit_id="website_blog.blog_post_complete" active="False" customize_show="True">
+    <xpath expr="//section[@id='o_wblog_post_top']" position="before">
+        <t t-set="opt_blog_post_breadcrumb" t-value="True"/>
+    </xpath>
+</template>
+
+
+<!-- ====== Blog Post Sidebar =================================================
+============================================================================ -->
+<template id="website_blog.blog_post_sidebar" name="Sidebar - Blog Post">
+    <div id="o_wblog_post_sidebar">
+        <div class="oe_structure"/>
+        <div groups="website.group_website_designer" class="mb-3 bg-100 py-2 px-3 border">
+            <h5>This sidebar is empty :)</h5>
+            <p>Use the <b>"Customize Menu"</b> to add dynamic content like the post's author or the tags list.</p>
+            <p>You may also drag&amp;drop snippets here, the will be visible in any other bglo post too</p>
+            <small class="text-right">This box will not be visible to your visitors</small>
+        </div>
+        <div class="oe_structure"/>
+    </div>
+</template>
+
+
+<!--   ◉  Option: Post: Share Links Display -->
+<template id="opt_blog_post_share_links_display" name="Share Links" inherit_id="website_blog.blog_post_sidebar" active="True" customize_show="True" priority="2">
+    <xpath expr="//div[@groups='website.group_website_designer']" position="attributes">
+        <attribute name="class" add="d-none" separator=" "/>
+    </xpath>
+
+    <xpath expr="//div[@id='o_wblog_post_sidebar']" position="inside">
+        <t t-call="website_blog.social_links_list">
+            <t t-set="additionnal_classes" t-value="'mb-3 h4 d-flex justify-content-between'"/>
+        </t>
         <div class="oe_structure"/>
     </xpath>
 </template>
 
 <!--   ◉  Option: Post: Author avatar -->
-<template id="opt_blog_post_author_avatar_display" name="Author" inherit_id="website_blog.blog_post_complete" active="False" customize_show="True">
-    <xpath expr="//div[@id='o_wblog_sidebar_post_col']" position="attributes">
-        <attribute name="class" remove="d-none" add="d-flex" separator=" "/>
+<template id="opt_blog_post_author_avatar_display" name="Author" inherit_id="website_blog.blog_post_sidebar" active="True" customize_show="True" priority="1">
+    <xpath expr="//div[@groups='website.group_website_designer']" position="attributes">
+        <attribute name="class" add="d-none" separator=" "/>
     </xpath>
-    <xpath expr="//div[@id='o_wblog_sidebar_post']" position="inside">
+    <xpath expr="//div[@id='o_wblog_post_sidebar']" position="inside">
         <t t-call="website_blog.post_author">
-            <t t-set="additionnal_classes" t-value="'mb-3'"/>
+            <t t-set="additionnal_classes" t-value="'h5 mb-4'"/>
         </t>
         <div class="oe_structure"/>
     </xpath>
 </template>
 
 <!--   ◉  Option: Post: display tags -->
-<template id="opt_blog_post_tags_display" name="Show Tags" inherit_id="website_blog.blog_post_complete" active="False" customize_show="True">
-    <xpath expr="//div[@id='o_wblog_sidebar_post_col']" position="attributes">
-        <attribute name="class" remove="d-none" add="d-flex" separator=" "/>
+<template id="opt_blog_post_tags_display" name="Tags" inherit_id="website_blog.blog_post_sidebar" active="True" customize_show="True" priority="3">
+    <xpath expr="//div[@groups='website.group_website_designer']" position="attributes">
+        <attribute name="class" add="d-none" separator=" "/>
     </xpath>
-    <xpath expr="//div[@id='o_wblog_sidebar_post']" position="inside">
-        <div class="mb-3">
+    <xpath expr="//div[@id='o_wblog_post_sidebar']" position="inside">
+        <div t-if="blog_post.tag_ids" class="mb-3">
             <t t-foreach="blog_post.tag_ids" t-as="one_tag">
                 <a class="badge badge-primary" t-attf-href="#{blog_url(tag=one_tag.id)}" t-esc="one_tag.name"/>
             </t>
+        </div>
+        <div t-else="" groups="website.group_website_designer" class="mb-3 bg-100 py-2 px-3 border">
+            <h6 class="text-muted"><em>No tags definied</em></h6>
+            <a role="menuitem" t-attf-href="/web#return_label=Website&amp;view_type=form&amp;model=#{main_object._name}&amp;id=#{main_object.id}&amp;action=#{action}&amp;menu_id=#{menu or main_object.env.ref('website.menu_website_configuration').id}"
+                    title='Edit in backend' id="edit-in-backend">Add some</a>
         </div>
         <div class="oe_structure"/>
     </xpath>
 </template>
 
-<!-- Options: Blog Post: user can reply -->
-<template id="opt_blog_post_complete_comment" name="Allow blog post comment" inherit_id="website_blog.blog_post_complete" active="False" customize_show="True">
-    <xpath expr="//div[hasclass('o_blog_post_complete','o_sharing_links')]" position="after">
-        <section id="comments" class="read_width">
+<!--   ◉  Options: Blog Post: user can reply -->
+<template id="opt_blog_post_comment" name="Allow comments" inherit_id="website_blog.blog_post_complete" active="False" customize_show="True">
+    <xpath expr="//section[@id='o_wblog_post_top']" position="before">
+        <t t-set="opt_blog_post_comment" t-value="True"/>
+    </xpath>
+    <xpath expr="//div[@id='o_wblog_post_content']" position="inside">
+        <section id="o_wblog_post_comments" class="mx-auto pt-4">
+            <div groups="base.group_public" class="small mb-4">
+                <a href="/web/login" class="btn btn-sm btn-primary"><b>Sign in</b></a> to leave a comment
+            </div>
             <t t-call="portal.message_thread">
-              <t t-set="object" t-value="blog_post"/>
+                <t t-set="object" t-value="blog_post"/>
             </t>
         </section>
     </xpath>
 </template>
 
 <!-- Options: Blog Post : Read Next Article  -->
-<template id="opt_blog_post_complete_read_next" name="Read next article"
-        inherit_id="website_blog.blog_post_complete" active="True" customize_show="True">
-    <xpath expr="//div[@id='comments']|//div[hasclass('o_blog_post_complete','o_sharing_links')]" position="after">
+<!-- <template id="opt_blog_post_read_next" name="Read next article"
+        inherit_id="website_blog.blog_post" active="True" customize_show="True">
+    <xpath expr="//section[@id='o_wblog_post_footer']" position="inside">
         <t t-if="next_post">
             <t t-call="website_blog.blog_cover">
                 <t t-set="cover_properties" t-value="next_post_cover_properties"/>
@@ -467,11 +436,11 @@
             </t>
         </t>
     </xpath>
-</template>
+</template> -->
 
-<template id="opt_blog_post_select_to_tweet" name="Select to Tweet"
-        inherit_id="website_blog.blog_post_complete" active="False" customize_show="True">
-    <xpath expr="//div[@id='blog_content']" position="attributes">
+<!-- <template id="opt_blog_post_select_to_tweet" name="Select to Tweet"
+        inherit_id="website_blog.blog_post" active="False" customize_show="True">
+    <xpath expr="//div[@id='o_wblog_post_content']" position="attributes">
         <attribute name="class" add="js_tweet" separator=" "/>
     </xpath>
     <xpath expr="//div[@id='title']//div[hasclass('blog_title')]" position="attributes">
@@ -480,14 +449,14 @@
 </template>
 
 <template id="opt_blog_post_select_to_comment" name="Select to comment"
-        inherit_id="website_blog.opt_blog_post_complete_comment" customize_show="False">
-    <xpath expr="//div[@id='blog_content']" position="attributes">
+        inherit_id="website_blog.opt_blog_post_comment" customize_show="False">
+    <xpath expr="//div[@id='o_wblog_post_content']" position="attributes">
         <attribute name="class" add="js_comment" separator=" "/>
     </xpath>
     <xpath expr="//div[@id='title']//div[hasclass('blog_title')]" position="attributes">
         <attribute name="class" add="js_comment" separator=" "/>
     </xpath>
-</template>
+</template> -->
 
 
 <template id="blog_edit_options" inherit_id="website.user_navbar" name="Edit Blog Options">

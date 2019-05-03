@@ -33,7 +33,7 @@
                 return popover_content;
             },
             commentEdition : function(){
-                var positionComment = ($('#comments').position()).top-50;
+                var positionComment = ($('#o_wblog_post_comments').position()).top-50;
                 $(".o_portal_chatter_composer_form textarea").val('"' + selected_text + '" ').focus();
                 $('html, body').stop().animate({
                     'scrollTop': positionComment
@@ -86,7 +86,7 @@
         });
         $.fn.share.init(this);
     };
-    
+
     $.fn.share.defaults = {
         shareLink : "http://twitter.com/intent/tweet?text=",
         minLength  : 5,

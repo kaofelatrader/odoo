@@ -7,7 +7,7 @@ publicWidget.registry.websiteBlog = publicWidget.Widget.extend({
     selector: '.website_blog',
     events: {
         'click .cover_footer': '_onNextBlogClick',
-        'click a[href^="#blog_content"]': '_onContentAnchorClick',
+        'click a[href^="#o_wblog_post_content"]': '_onContentAnchorClick',
         'click .o_twitter, .o_facebook, .o_linkedin, .o_google, .o_twitter_complete, .o_facebook_complete, .o_linkedin_complete, .o_google_complete': '_onShareArticle',
         'click .blog_post_year_collapse': '_onYearCollapseClick',
         'mouseenter div.o_blog_post_complete a': '_onBlogPostMouseEnter',
