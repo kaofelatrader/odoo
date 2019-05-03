@@ -572,7 +572,7 @@ class PosOrder(models.Model):
     picking_type_id = fields.Many2one('stock.picking.type', related='session_id.config_id.picking_type_id', string="Operation Type", readonly=False)
     location_id = fields.Many2one(
         comodel_name='stock.location',
-        related='session_id.config_id.stock_location_id',
+        related='session_id.config_id.picking_type_id.default_location_src_id',
         string="Location", store=True,
         readonly=True,
     )

@@ -80,8 +80,12 @@ class PosConfig(models.Model):
         domain="[('code', '=', 'outgoing'), ('warehouse_id.company_id', '=', company_id)]")
     use_existing_lots = fields.Boolean(related='picking_type_id.use_existing_lots', readonly=False)
     stock_location_id = fields.Many2one(
-        'stock.location', string='Stock Location',
-        domain=[('usage', '=', 'internal')], required=True, default=_get_default_location)
+        'stock.location',
+        related='picking_type_id.default_location_src_id',
+        string='Stock Location',
+        readonly=True,
+        default=_get_default_location,
+        domain=[('usage', '=', 'internal')])
     journal_id = fields.Many2one(
         'account.journal', string='Sales Journal',
         domain=[('type', '=', 'sale')],
@@ -226,11 +230,6 @@ class PosConfig(models.Model):
                 pos_config.pos_session_username = False
                 pos_config.pos_session_state = False
                 pos_config.pos_session_duration = 0
-
-    @api.constrains('company_id', 'stock_location_id')
-    def _check_company_location(self):
-        if self.stock_location_id.company_id and self.stock_location_id.company_id.id != self.company_id.id:
-            raise ValidationError(_("The stock location and the point of sale must belong to the same company."))
 
     @api.constrains('company_id', 'journal_id')
     def _check_company_journal(self):
@@ -448,7 +447,6 @@ class PosConfig(models.Model):
         """
         self.ensure_one()
         if not self.current_session_id:
-            self._check_company_location()
             self._check_company_journal()
             self._check_company_invoice_journal()
             self._check_company_payment()
