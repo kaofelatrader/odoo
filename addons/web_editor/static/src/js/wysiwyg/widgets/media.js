@@ -13,18 +13,18 @@ var _t = core._t;
 
 var MediaWidget = Widget.extend({
     xmlDependencies: ['/web_editor/static/src/xml/wysiwyg.xml'],
-    events: {
-        'input input.o_we_search': '_onSearchInput',
-    },
 
     /**
      * @constructor
+     * @param {Element} media: the target Element for which we select a media
+     * @param {Object} options: useful parameters such as res_id, res_model,
+     *  context, user_id, ...
      */
     init: function (parent, media, options) {
+        options = options || {};
         this._super.apply(this, arguments);
         this.media = media;
         this.$media = $(media);
-        this._onSearchInput = _.debounce(this._onSearchInput, 500);
     },
 
     //--------------------------------------------------------------------------
@@ -41,12 +41,6 @@ var MediaWidget = Widget.extend({
         this._clear();
     },
     /**
-     * @abstract
-     * @param {string} needle
-     * @returns {Deferred}
-     */
-    search: function (needle) {},
-    /**
      * Saves the currently configured media on the target media.
      *
      * @abstract
@@ -62,6 +56,33 @@ var MediaWidget = Widget.extend({
      * @abstract
      */
     _clear: function () {},
+});
+
+var SearchWidget = MediaWidget.extend({
+    events: _.extend({}, MediaWidget.prototype.events || {}, {
+        'input input.o_we_search': '_onSearchInput',
+    }),
+
+    /**
+     * @constructor
+     */
+    init: function () {
+        this._super.apply(this, arguments);
+        this._onSearchInput = _.debounce(this._onSearchInput, 500);
+    },
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    /**
+     * Finds and displays existing attachments related to the target media.
+     *
+     * @abstract
+     * @param {string} needle: only return attachments matching this parameter
+     * @returns {Deferred}
+     */
+    search: function (needle) {},
 
     //--------------------------------------------------------------------------
     // Handlers
@@ -72,16 +93,15 @@ var MediaWidget = Widget.extend({
      */
     _onSearchInput: function (ev) {
         this.search($(ev.currentTarget).val() || '');
-        this.hasSearched = true;
     },
 });
 
 /**
  * Let users choose an image, including uploading a new image in odoo.
  */
-var ImageWidget = MediaWidget.extend({
+var ImageWidget = SearchWidget.extend({
     template: 'wysiwyg.widgets.image',
-    events: _.extend({}, MediaWidget.prototype.events || {}, {
+    events: _.extend({}, SearchWidget.prototype.events || {}, {
         'click .o_upload_media_button': '_onUploadButtonClick',
         'click .o_upload_media_button_no_optimization': '_onUploadButtonNoOptimizationClick',
         'change input[type=file]': '_onImageSelection',
@@ -655,9 +675,9 @@ var ImageWidget = MediaWidget.extend({
  * Let users choose a font awesome icon, support all font awesome loaded in the
  * css files.
  */
-var IconWidget = MediaWidget.extend({
+var IconWidget = SearchWidget.extend({
     template: 'wysiwyg.widgets.font-icons',
-    events: _.extend({}, MediaWidget.prototype.events || {}, {
+    events: _.extend({}, SearchWidget.prototype.events || {}, {
         'click .font-icons-icon': '_onIconClick',
         'dblclick .font-icons-icon': '_onIconDblClick',
     }),
@@ -1097,6 +1117,7 @@ var VideoWidget = MediaWidget.extend({
 
 return {
     MediaWidget: MediaWidget,
+    SearchWidget: SearchWidget,
     ImageWidget: ImageWidget,
     IconWidget: IconWidget,
     VideoWidget: VideoWidget,
