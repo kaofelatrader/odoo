@@ -150,6 +150,7 @@ var _setPlaceholder = function (sortable, item, anchor, axis, connectWith) {
             var computedStyle = window.getComputedStyle(item);
             placeholder = document.createElement(item.tagName);
             placeholder.classList.add(placeholderClass);
+            placeholder.style.margin = computedStyle.margin;
 
             // Placeholder must have content to have a size in some CSS situations
             var placeholderContent = document.createElement('div');
