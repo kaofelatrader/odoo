@@ -139,15 +139,15 @@ class StockMove(models.Model):
     remaining_value = fields.Float(copy=False)
     account_move_ids = fields.One2many('account.move', 'stock_move_id')
 
-    @api.multi
-    def action_get_account_moves(self):
-        self.ensure_one()
-        action_ref = self.env.ref('account.action_move_journal_line')
-        if not action_ref:
-            return False
-        action_data = action_ref.read()[0]
-        action_data['domain'] = [('id', 'in', self.account_move_ids.ids)]
-        return action_data
+#    @api.multi
+#    def action_get_account_moves(self):
+#        self.ensure_one()
+#        action_ref = self.env.ref('account.action_move_journal_line')
+#        if not action_ref:
+#            return False
+#        action_data = action_ref.read()[0]
+#        action_data['domain'] = [('id', 'in', self.account_move_ids.ids)]
+#        return action_data
 
     def _get_price_unit(self):
         """ Returns the unit price to store on the quant """

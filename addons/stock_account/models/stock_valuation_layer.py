@@ -27,6 +27,15 @@ class StockValuationLayer(models.Model):
     description = fields.Text('Description')
     stock_move_id = fields.Many2one('stock.move', 'Linked Stock Move')
 
+    def action_get_account_moves(self):
+        self.ensure_one()
+        action_ref = self.env.ref('account.action_move_journal_line')
+        if not action_ref:
+            return False
+        action_data = action_ref.read()[0]
+        action_data['domain'] = [('id', 'in', self.account_move_ids.ids)]
+        return action_data
+
 
 class StockMove(models.Model):
     """Stock Move"""
