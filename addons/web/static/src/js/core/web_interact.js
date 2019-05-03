@@ -32,6 +32,12 @@ var _resetDraggableProperties = function (el) {
     el.style.transition = el.dataset.draggableOriginalTransition;
     el.style.width = el.dataset.draggableOriginalWidth;
     el.style.zIndex = el.dataset.draggableOriginalZIndex;
+
+    // Interactjs draggable displays a 'move' cursor when hovering an element
+    // that has previously been set to draggable. As long as we do not set
+    // draggable on all sortable items indescriminately, we need to counteract
+    // this as some items will have a 'move' cursor and some wont.
+    interact(el).draggable(false);
 };
 
 /**
@@ -436,20 +442,26 @@ var _sortable = function (el, options) {
         if (!handle || ev.target.closest(handle)) {
             item = ev.target.closest(itemsSelector);
         }
-        if (item && !item.classList.contains('o_sortable_handle')) {
-            var itemsDraggableOptions = {};
-            if (handle) {
-                itemsDraggableOptions.allowFrom = handle;
+        if (item) {
+            if (item.classList.contains('o_sortable_handle')) {
+                // Dragging has already been setup but was disabled to prevent
+                // interactjs from displaying a move cursor.
+                interact(item).draggable(true);
+            } else {
+                var itemsDraggableOptions = {};
+                if (handle) {
+                    itemsDraggableOptions.allowFrom = handle;
+                }
+                if (containment) {
+                    // Restrict the items to stay in the designated area
+                    itemsDraggableOptions.restrict = {
+                        restriction: containment,
+                        elementRect: { left: 0, right: 1, top: 0, bottom: 1 }
+                    };
+                }
+                _draggable(item, itemsDraggableOptions);
+                item.classList.add('o_sortable_handle');
             }
-            if (containment) {
-                // Restrict the items to stay in the designated area
-                itemsDraggableOptions.restrict = {
-                    restriction: containment,
-                    elementRect: { left: 0, right: 1, top: 0, bottom: 1 }
-                };
-            }
-            _draggable(item, itemsDraggableOptions);
-            item.classList.add('o_sortable_handle');
         }
     });
 

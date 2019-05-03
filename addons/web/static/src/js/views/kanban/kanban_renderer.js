@@ -343,7 +343,6 @@ var KanbanRenderer = BasicRenderer.extend({
                 items: '.o_kanban_group',
                 handle: '.o_kanban_header_title',
                 containment: 'parent',
-                cursor: 'move',
                 revert: 150,
                 tolerance: 'pointer',
                 ondrop: function () {
@@ -400,7 +399,6 @@ var KanbanRenderer = BasicRenderer.extend({
             web_interact.sortable(this.el, {
                 items: '.o_kanban_record:not(.o_kanban_ghost)',
                 axis: 'both',
-                cursor: 'move',
                 revert: 0,
                 tolerance: 'pointer',
                 ondrop: function (ev) {
