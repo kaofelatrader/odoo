@@ -6,6 +6,7 @@ var Dialog = require('web.Dialog');
 var fonts = require('wysiwyg.fonts');
 var Widget = require('web.Widget');
 var concurrency = require('web.concurrency');
+var session = require('web.session');
 
 var QWeb = core.qweb;
 
@@ -275,6 +276,9 @@ var ImageWidget = MediaWidget.extend({
             domain = domain.concat(['|'], attachedDocumentDomain, relatedDomain);
         } else {
             domain = domain.concat(attachedDocumentDomain);
+        }
+        if (this.options.document) {
+            domain.push('&', ['name', 'not like', 'assets_']);
         }
         domain = ['|', ['public', '=', true]].concat(domain);
 
