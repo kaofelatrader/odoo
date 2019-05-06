@@ -29,10 +29,12 @@ odoo.define('hr_holidays.dashboard.view_custo', function(require) {
          */
 
         renderButtons: function ($node) {
-            this.$buttons = $(QWeb.render('hr_holidays.dashboard.calendar.button', {
+            this._super.apply(this, arguments);
+
+            $(QWeb.render('hr_holidays.dashboard.calendar.button', {
                 time_off: _t('New Time Off Request'),
                 request: _t('New Allocation Request'),
-            }));
+            })).appendTo(this.$buttons);
 
             if ($node) {
                 this.$buttons.appendTo($node);
