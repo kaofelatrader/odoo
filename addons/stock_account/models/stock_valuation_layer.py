@@ -159,7 +159,12 @@ class StockMove(models.Model):
             valued_quantity = 0
             for valued_move_line in valued_move_lines:
                 valued_quantity += valued_move_line.product_uom_id._compute_quantity(valued_move_line.qty_done, move.product_id.uom_id)
-            svl_vals = move.product_id._svl_in_prepare_vals(forced_quantity or valued_quantity, move._get_price_unit())
+
+            unit_cost = move._get_price_unit()
+            if move.product_id.cost_method in ('standard', 'average'):
+                unit_cost = move.product_id.standard_price
+
+            svl_vals = move.product_id._svl_in_prepare_vals(forced_quantity or valued_quantity, unit_cost)
             svl_vals.update(move._prepare_common_svl_vals())
             svl_vals_list.append(svl_vals)
         self.env['stock.valuation.layer'].create(svl_vals_list)
