@@ -201,6 +201,12 @@ class WebsiteSale(http.Controller):
         '''/shop/category/<model("product.public.category", "[('website_id', 'in', (False, current_website_id))]"):category>/page/<int:page>'''
     ], type='http', auth="public", website=True)
     def shop(self, page=0, category=None, search='', ppg=False, **post):
+        values = self._prepare_bins(page, category, search, ppg, **post)
+        if category:
+            values['main_object'] = category
+        return request.render("website_sale.products", values)
+
+    def _prepare_bins(self, page=0, category=None, search='', ppg=False, **post):
         add_qty = int(post.get('add_qty', 1))
         if category:
             category = request.env['product.public.category'].search([('id', '=', int(category))], limit=1)
@@ -269,7 +275,7 @@ class WebsiteSale(http.Controller):
 
         compute_currency = self._get_compute_currency(pricelist, products[:1])
 
-        values = {
+        return {
             'search': search,
             'category': category,
             'attrib_values': attrib_values,
@@ -288,9 +294,6 @@ class WebsiteSale(http.Controller):
             'parent_category_ids': parent_category_ids,
             'search_categories_ids': search_categories and search_categories.ids,
         }
-        if category:
-            values['main_object'] = category
-        return request.render("website_sale.products", values)
 
     @http.route(['/shop/product/<model("product.template"):product>'], type='http', auth="public", website=True)
     def product(self, product, category='', search='', **kwargs):
@@ -1053,22 +1056,19 @@ class WebsiteSale(http.Controller):
 
         return not active
 
-    @http.route(['/shop/change_sequence'], type='json', auth="public")
+    @http.route(['/shop/change_sequence'], type='json', auth="public", website=True)
     def change_sequence(self, id, sequence):
         product_tmpl = request.env['product.template'].browse(id)
-        if sequence == "top":
-            product_tmpl.set_sequence_top()
-        elif sequence == "bottom":
-            product_tmpl.set_sequence_bottom()
-        elif sequence == "up":
-            product_tmpl.set_sequence_up()
-        elif sequence == "down":
-            product_tmpl.set_sequence_down()
+        if hasattr(product_tmpl, 'set_sequence_' + sequence):
+            getattr(product_tmpl, 'set_sequence_' + sequence)()
+            values = self._prepare_bins()
+            return {'template': request.env['ir.ui.view'].render_template("website_sale.product_table", values)}
 
-    @http.route(['/shop/change_size'], type='json', auth="public")
+    @http.route(['/shop/change_size'], type='json', auth="public", website=True)
     def change_size(self, id, x, y):
         product = request.env['product.template'].browse(id)
-        return product.write({'website_size_x': x, 'website_size_y': y})
+        product.write({'website_size_x': x, 'website_size_y': y})
+        return {'template': request.env['ir.ui.view'].render_template("website_sale.product_table", self._prepare_bins())}
 
     def order_lines_2_google_api(self, order_lines):
         """ Transforms a list of order lines into a dict for google analytics """

@@ -147,14 +147,11 @@ options.registry.website_sale = options.Class.extend({
             var $td = $(event.currentTarget);
             var x = $td.index()+1;
             var y = $td.parent().index()+1;
-            self._rpc({
-                route: '/shop/change_size',
-                params: {
-                    id: self.product_tmpl_id,
-                    x: x,
-                    y: y,
-                },
-            }).then(self.reload);
+            self._onConfirmDialog('/shop/change_size', {
+                id: self.product_tmpl_id,
+                x: x,
+                y: y,
+            });
         });
     },
     style: function (previewMode, value, $li) {
@@ -167,14 +164,45 @@ options.registry.website_sale = options.Class.extend({
         });
     },
     go_to: function (previewMode, value) {
-        this._rpc({
-            route: '/shop/change_sequence',
-            params: {
-                id: this.product_tmpl_id,
-                sequence: value,
-            },
-        }).then(this.reload);
-    }
+        this._onConfirmDialog('/shop/change_sequence', {
+            id: this.product_tmpl_id,
+            sequence: value,
+        });
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * Displays confirmation dialog  if the user tries to change product grid size and sequence.
+     * @private
+     *
+     * @param {string} route
+     * @param {Object} params
+     *
+     */
+    _onConfirmDialog: function (route, params) {
+        var self = this;
+        return new Dialog(this, {
+            title: _t('Confirmation'),
+            size: 'medium',
+            buttons: [{text: _t('Confirm'), classes: 'btn-primary', close: true, click: function () {
+                self._rpc({
+                    route: route,
+                    params: params,
+                }).then(function (result) {
+                    if (result.template) {
+                        self.$target.closest("#products_grid > #product_table").replaceWith(result.template);
+                        $('.oe_overlay').detach();
+                    }
+                });
+            }}, {text: _t('Cancel'), close: true}],
+            $content: $('<div>', {
+                text: _t("Are you sure that you want to change the product size or sequence? After confirming you can not discard the changes.")
+            }),
+        }).open();
+    },
 });
 
 /**
