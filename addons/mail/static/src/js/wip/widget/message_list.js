@@ -37,13 +37,14 @@ class MessageList extends Component {
          t-key="'loading'">
         <i class="o_icon fa fa-spinner fa-spin"/>Loading...
     </div>
-    <div t-elif="!threadCache.allHistoryLoaded"
+    <a t-elif="!threadCache.allHistoryLoaded"
+         href="#"
          class="o_load_more"
          t-key="'load_more'"
          t-on-click="_onClickLoadMore"
          t-ref="'loadMore'">
         Load more
-    </div>
+    </a>
     <t t-set="current_day" t-value="0"/>
     <t t-set="prev_message" t-value="0"/>
     <t t-if="thread._model === 'mail.channel' and thread.message_unread_counter > 0 and !thread.seen_message_id">
@@ -63,7 +64,7 @@ class MessageList extends Component {
         </t>
         <t t-set="$message" t-value="message.localID"/>
         <t t-widget="Message"
-           t-props="{ $message, $thread, squashed }"
+           t-props="{ $message, $thread, options: messageOptions(squashed) }"
            t-key="$message"
            t-ref="$message"
            t-on-redirect="_onRedirect"/>
@@ -163,13 +164,6 @@ class MessageList extends Component {
     }
 
     /**
-     * @return {Array}
-     */
-    get domain() {
-        return this.props.domain;
-    }
-
-    /**
      * @return {mail.wip.widget.Message}
      */
     get lastMessageRef() {
@@ -223,6 +217,13 @@ class MessageList extends Component {
      */
     get messages() {
         return this.props.messages;
+    }
+
+    /**
+     * @return {Object}
+     */
+    get options() {
+        return this.props.options || {};
     }
 
     /**
@@ -293,6 +294,17 @@ class MessageList extends Component {
     }
 
     /**
+     * @param {boolean} squashed
+     * @return {Object}
+     */
+    messageOptions(squashed) {
+        return {
+            ...this.options,
+            squashed,
+        };
+    }
+
+    /**
      * @return {Promise}
      */
     scrollToLastMessage() {
@@ -311,6 +323,9 @@ class MessageList extends Component {
      * @return {boolean}
      */
     shouldSquash(prevMessage, message) {
+        if (!this.options.squashCloseMessages) {
+            return false;
+        }
         const prevDate = moment(prevMessage._date);
         const date = moment(message._date);
         if (Math.abs(date.diff(prevDate)) > 60000) {
@@ -345,14 +360,20 @@ class MessageList extends Component {
     // Private
     //--------------------------------------------------------------------------
 
+    /**
+     * @private
+     */
     _loadMore() {
         this.loadingMore = true;
         this.env.store.dispatch('thread/load_more', {
             $thread: this.$thread,
-            searchDomain: this.domain,
+            searchDomain: this.options.domain,
         });
     }
 
+    /**
+     * @private
+     */
     _markAsSeen() {
         this.env.store.dispatch('thread/mark_as_seen', { $thread: this.$thread });
     }
@@ -361,14 +382,28 @@ class MessageList extends Component {
     // Handlers
     //--------------------------------------------------------------------------
 
-    _onClickLoadMore() {
+    /**
+     * @private
+     * @param {MouseEvent} ev
+     */
+    _onClickLoadMore(ev) {
+        ev.preventDefault();
         this._loadMore();
     }
 
+    /**
+     * @private
+     * @param {Object} param0
+     * @param {integer} param0.id
+     * @param {string} param0.model
+     */
     _onRedirect({ id, model }) {
         this.trigger('redirect', { id, model });
     }
 
+    /**
+     * @private
+     */
     _onScroll() {
         if (!this.el) {
             // could be unmounted in the meantime (due to throttled behavior)
@@ -381,7 +416,8 @@ class MessageList extends Component {
             this._loadMore();
         }
         if (
-            this.props.stringifiedDomain === "[]" &&
+            this.options.domain &&
+            !this.options.domain.length &&
             this.lastMessageRef.partiallyVisible
         ) {
             this._markAsSeen();

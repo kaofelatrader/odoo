@@ -33,7 +33,7 @@ class Root extends Component {
     <div class="o_content">
         <t t-if="$thread">
             <t t-widget="Thread"
-               t-props="{ domain, scrollTop, stringifiedDomain, $thread }"
+               t-props="{ $thread, options: threadOptions }"
                t-ref="'thread'"
                t-on-redirect="_onRedirect"/>
             <t t-if="showComposer"
@@ -80,24 +80,6 @@ class Root extends Component {
     }
 
     /**
-     * @return {Array}
-     */
-    get domain() {
-        return this.props.discuss.domain;
-    }
-
-    /**
-     * @return {integer|undefined}
-     */
-    get scrollTop() {
-        const threadCacheInfo = this.state.threadCachesInfo[this.$threadCache];
-        if (!threadCacheInfo) {
-            return undefined;
-        }
-        return threadCacheInfo.scrollTop;
-    }
-
-    /**
      * @return {boolean}
      */
     get showComposer() {
@@ -116,6 +98,32 @@ class Root extends Component {
      */
     get threads() {
         return this.props.threads;
+    }
+
+    /**
+     * @return {mail.wip.model.Thread}
+     */
+    get thread() {
+        return this.threads[this.$thread];
+    }
+
+    /**
+     * @return {Object}
+     */
+    get threadOptions() {
+        let scrollTop;
+        const threadCacheInfo = this.state.threadCachesInfo[this.$threadCache];
+        if (threadCacheInfo) {
+            scrollTop = threadCacheInfo.scrollTop;
+        } else {
+            scrollTop = undefined;
+        }
+        return {
+            domain: this.props.discuss.domain,
+            redirectAuthor: this.thread.channel_type !== 'chat',
+            scrollTop,
+            squashCloseMessages: this.thread._model !== 'mail.box',
+        };
     }
 
     //--------------------------------------------------------------------------
@@ -149,6 +157,18 @@ class Root extends Component {
                 });
             } else {
                 this.env.store.commit('discuss/update', { $thread: channel.localID });
+            }
+        } else if (model === 'res.partner') {
+            const dm = Object.values(this.threads).find(thread =>
+                thread.$directPartner === `res.partner_${id}`);
+            if (!dm) {
+                this.env.store.dispatch('channel/create', {
+                    autoselect: true,
+                    partnerID: id,
+                    type: 'chat',
+                });
+            } else {
+                this.env.store.commit('discuss/update', { $thread: dm.localID });
             }
         }
     }

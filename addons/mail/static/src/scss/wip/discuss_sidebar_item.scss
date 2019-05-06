@@ -87,7 +87,7 @@
 .o_mail_wip_discuss_root > .o_sidebar .o_item {
     cursor: pointer;
 
-    &[data-thread-local-id="mail.box_starred"] {
+    &.o_starred_box {
         > .o_counter {
             border: none;
             background-color: gray('600');

@@ -8,7 +8,9 @@ const { Component, connect } = owl;
 
 function mapStateToProps(state) {
     return {
-        threads: state.threads
+        $pinnedThreads: state.$pinnedThreads,
+        partners: state.partners,
+        threads: state.threads,
     };
 }
 
@@ -18,7 +20,7 @@ class Sidebar extends Component {
         super(...args);
         this.inlineTemplate = `
 <div class="o_sidebar">
-    <div class="o_mailbox o_group">
+    <div class="o_mailbox o_group" t-key="'mailbox'">
         <t t-foreach="mailboxes" t-as="mailbox">
             <t t-widget="SidebarItem"
                t-props="{ $thread: mailbox.localID, isActive: $thread === mailbox.localID }"
@@ -26,8 +28,13 @@ class Sidebar extends Component {
                t-key="mailbox.localID"/>
         </t>
     </div>
-    <hr class="o_separator"/>
-    <div class="o_channel o_group">
+    <hr class="o_separator" t-key="'separator'"/>
+    <input t-if="channels.concat(dms).length >= 30"
+           class="o_quick_search"
+           placeholder="Quick search..."
+           t-key="'quickSearch'"
+           t-on-keydown="_onKeydownQuickSearch"/>
+    <div class="o_channel o_group" t-key="'channel'">
         <div class="o_header">
             <div class="o_title o_clickable"
                  t-on-click="_onClickChannelTitle">
@@ -47,7 +54,7 @@ class Sidebar extends Component {
                    t-on-select="_onChannelAutocompleteSelect"
                    t-on-hide="_onHideAddChannel"/>
             </div>
-            <t t-foreach="channels" t-as="channel">
+            <t t-foreach="quickSearchChannels" t-as="channel">
                 <t t-widget="SidebarItem"
                    t-props="{ $thread: channel.localID, isActive: $thread === channel.localID }"
                    t-on-click="_onClickItem"
@@ -55,7 +62,7 @@ class Sidebar extends Component {
             </t>
         </div>
     </div>
-    <div class="o_dm o_group">
+    <div class="o_dm o_group" t-key="'dm'">
         <div class="o_header">
             <div class="o_title">
                 Direct Messages
@@ -74,7 +81,7 @@ class Sidebar extends Component {
                    t-on-hide="_onHideAddDm"
                    t-on-select="_onDmAutocompleteSelect"/>
             </div>
-            <t t-foreach="dms" t-as="dm">
+            <t t-foreach="quickSearchDms" t-as="dm">
                 <t t-widget="SidebarItem"
                    t-props="{ $thread: dm.localID, isActive: $thread === dm.localID }"
                    t-on-click="_onClickItem"
@@ -85,7 +92,7 @@ class Sidebar extends Component {
 </div>`;
         this.state = {
             isAddingChannel: false,
-            isAddingDm: false
+            isAddingDm: false,
         };
         this.widgets = {
             AutocompleteInput,
@@ -100,25 +107,50 @@ class Sidebar extends Component {
     // Getters / Setters
     //--------------------------------------------------------------------------
 
+    /**
+     * @return {string[]}
+     */
+    get $pinnedThreads() {
+        return this.props.$pinnedThreads;
+    }
+
+    /**
+     * @return {string}
+     */
     get $thread() {
         return this.props.$thread;
     }
 
+    /**
+     * @return {mail.wip.model.Thread[]}
+     */
     get channels() {
         return Object.values(this.threads)
-            .filter(thread => thread.channel_type === 'channel')
+            .filter(thread =>
+                thread.channel_type === 'channel' &&
+                this.$pinnedThreads.includes(thread.localID))
             .sort((c1, c2) => (c1.name < c2.name ? -1 : 1));
     }
 
+    /**
+     * @return {mail.wip.model.Thread[]}
+     */
     get dms() {
         return Object.values(this.threads)
-            .filter(thread => thread.channel_type === 'chat')
+            .filter(thread =>
+                thread.channel_type === 'chat' &&
+                this.$pinnedThreads.includes(thread.localID))
             .sort((dm1, dm2) => (dm1.name < dm2.name ? -1 : 1));
     }
 
+    /**
+     * @return {mail.wip.model.Thread[]}
+     */
     get mailboxes() {
         return Object.values(this.threads)
-            .filter(thread => thread._model === 'mail.box')
+            .filter(thread =>
+                thread._model === 'mail.box' &&
+                this.$pinnedThreads.includes(thread.localID))
             .sort((m1, m2) => {
                 // 1st item: 'Inbox'
                 // 2nd item: 'Starred'
@@ -132,6 +164,40 @@ class Sidebar extends Component {
             });
     }
 
+    /**
+     * @return {mail.wip.model.Thread[]}
+     */
+    get quickSearchChannels() {
+        if (!this.state.quickSearchValue) {
+            return this.channels;
+        }
+        return this.channels.filter(channel =>
+            channel.name.toLowerCase().indexOf(
+                this.state.quickSearchValue.toLowerCase()));
+    }
+
+    /**
+     * @return {mail.wip.model.Thread[]}
+     */
+    get quickSearchDms() {
+        if (!this.state.quickSearchValue) {
+            return this.dms;
+        }
+        const quickSearchVal = this.state.quickSearchValue.toLowerCase();
+        return this.dms.filter(dm => {
+            let name;
+            if (dm.custom_channel_name) {
+                name = dm.custom_channel_name;
+            } else {
+                name = this.partners[dm.$directPartner].name;
+            }
+            return name.toLowerCase().indexOf(quickSearchVal);
+        });
+    }
+
+    /**
+     * @return {mail.wip.model.Thread[]}
+     */
     get threads() {
         return this.props.threads;
     }
@@ -140,6 +206,12 @@ class Sidebar extends Component {
     // Handlers
     //--------------------------------------------------------------------------
 
+    /**
+     * @private
+     * @param {Object} item
+     * @param {intege} item.id
+     * @param {string} [item.special]
+     */
     _onChannelAutocompleteSelect(item) {
         if (!this._channelAutocompleteLastSearchVal) {
             return;
@@ -156,6 +228,12 @@ class Sidebar extends Component {
         this.state.isAddingChannel = false;
     }
 
+    /**
+     * @private
+     * @param {Object} req
+     * @param {string} req.term
+     * @param {function} res
+     */
     _onChannelAutocompleteSource(req, res) {
         this._channelAutocompleteLastSearchVal = _.escape(req.term);
         return this.env
@@ -198,10 +276,16 @@ class Sidebar extends Component {
             });
     }
 
+    /**
+     * @private
+     */
     _onClickChannelAdd() {
         this.state.isAddingChannel = true;
     }
 
+    /**
+     * @private
+     */
     _onClickChannelTitle() {
         return this.env.do_action({
             name: this.env._t("Public Channels"),
@@ -212,14 +296,27 @@ class Sidebar extends Component {
         });
     }
 
+    /**
+     * @private
+     */
     _onClickDmAdd() {
         return (this.state.isAddingDm = true);
     }
 
+    /**
+     * @private
+     * @param {Object} param0
+     * @param {string} $thread
+     */
     _onClickItem({ $thread }) {
         return this.trigger('select-thread', { $thread });
     }
 
+    /**
+     * @private
+     * @param {Object} item
+     * @param {integer} item.id
+     */
     _onDmAutocompleteSelect(item) {
         const partnerID = item.id;
         const dm = this.dms.find(d => d.directPartner === `res.partner_${partnerID}`);
@@ -234,6 +331,12 @@ class Sidebar extends Component {
         return (this.state.isAddingDm = false);
     }
 
+    /**
+     * @private
+     * @param {Object} req
+     * @param {string} req.term
+     * @param {function} res
+     */
     _onDmAutocompleteSource(req, res) {
         return this.env.store.dispatch('partner/search', {
             callback: res,
@@ -242,12 +345,25 @@ class Sidebar extends Component {
         });
     }
 
+    /**
+     * @private
+     */
     _onHideAddChannel() {
         return (this.state.isAddingChannel = false);
     }
 
+    /**
+     * @private
+     */
     _onHideAddDm() {
         return (this.state.isAddingDm = false);
+    }
+
+    /**
+     * @private
+     */
+    _onKeydownQuickSearch() {
+        this.state.quickSearchVal = this.refs.quickSearch.value;
     }
 }
 

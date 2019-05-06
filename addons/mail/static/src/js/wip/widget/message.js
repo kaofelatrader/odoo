@@ -24,10 +24,10 @@ class Message extends Component {
         super(...args);
         this.inlineTemplate = `
 <div class="o_message"
-     t-attf-class="{{ toggledClick ? 'o_toggled_click' : '' }} {{ isStarred ? 'o_starred' : '' }}"
+     t-attf-class="{{ toggledClick ? 'o_toggled_click' : '' }} {{ isStarred ? 'o_starred' : '' }} {{ options.squashed ? 'o_squashed' : '' }}"
      t-on-click="_onClick"
      t-att-data-message-local-id="$message">
-    <t t-if="squashed">
+    <t t-if="options.squashed">
         <div class="o_sidebar o_squashed">
             <div class="o_date">
                 <t t-esc="shortTime"/>
@@ -46,15 +46,21 @@ class Message extends Component {
     </t>
     <t t-else="">
         <div class="o_sidebar">
-            <img alt="" class="rounded-circle" t-att-src="avatar"/>
+            <img alt=""
+                 class="rounded-circle"
+                 t-attf-class="{{ redirectAuthor ? 'o_redirect' : '' }}"
+                 t-att-src="avatar"
+                 t-on-click="_onClickAuthor"/>
         </div>
         <div class="o_core">
             <div class="o_header">
-                <div class="o_author_name">
+                <div class="o_author_name"
+                     t-attf-class="{{ redirectAuthor ? 'o_redirect' : '' }}"
+                     t-on-click="_onClickAuthor">
                     <t t-esc="displayedAuthorName"/>
                 </div>
                 <div class="o_date" t-att-title="datetime">
-                    <t t-esc="timeElapsed"/>
+                    - <t t-esc="timeElapsed"/>
                 </div>
                 <div t-if="hasDifferentOrigin" class="o_origin">
                     <t t-if="origin._model === 'mail.channel'">
@@ -181,10 +187,23 @@ class Message extends Component {
         return this.props.message;
     }
 
+    /**
+     * @return {mail.wip.model.Partner}
+     */
     get odoobot() {
         return this.props.odoobot;
     }
 
+    /**
+     * @return {Object}
+     */
+    get options() {
+        return this.props.options || {};
+    }
+
+    /**
+     * @return {string|undefined}
+     */
     get origin() {
         return this.props.origin;
     }
@@ -206,17 +225,26 @@ class Message extends Component {
     }
 
     /**
+     * @return {boolean}
+     */
+    get redirectAuthor() {
+        if (!this.options.redirectAuthor) {
+            return false;
+        }
+        if (!this.author) {
+            return false;
+        }
+        if (this.author.id === this.env.session.partner_id) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * @return {string}
      */
     get shortTime() {
         return this.message._date.format('hh:mm');
-    }
-
-    /**
-     * @return {boolean}
-     */
-    get squashed() {
-        return this.props.squashed;
     }
 
     /**
@@ -249,6 +277,8 @@ class Message extends Component {
     //--------------------------------------------------------------------------
 
     /**
+     * @param {Object} [param0={}]
+     * @param {string} [param0.behavior='auto']
      * @return {Promise}
      */
     scrollToVisibleBottom({ behavior='auto' }={}) {
@@ -268,10 +298,35 @@ class Message extends Component {
     // Handlers
     //--------------------------------------------------------------------------
 
+    /**
+     * @private
+     */
     _onClick() {
         this.state.toggledClick = !this.toggledClick;
     }
 
+    /**
+     * @private
+     * @param {MouseEvent} ev
+     */
+    _onClickAuthor(ev) {
+        ev.preventDefault();
+        if (!this.options.redirectAuthor) {
+            return;
+        }
+        if (!this.author) {
+            return;
+        }
+        this.trigger('redirect', {
+            id: this.author.id,
+            model: 'res.partner', // === this.author._model
+        });
+    }
+
+    /**
+     * @private
+     * @param {MouseEvent} ev
+     */
     _onClickOrigin(ev) {
         ev.preventDefault();
         this.trigger('redirect', {
@@ -280,6 +335,10 @@ class Message extends Component {
         });
     }
 
+    /**
+     * @private
+     * @param {MouseEvent} ev
+     */
     _onClickStar(ev) {
         ev.stopPropagation();
         return this.env.store.dispatch('message/toggle_star', { $message: this.$message });

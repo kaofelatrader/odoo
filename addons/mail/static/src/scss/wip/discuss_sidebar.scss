@@ -36,6 +36,12 @@
         }
     }
 
+    > .o_quick_search {
+        border-radius: 10px;
+        margin: 0 $o-mail-discuss-sidebar-scrollbar-width 10px;
+        padding: 3px 10px;
+    }
+
     > .o_separator {
         width: 100%;
     }
@@ -76,6 +82,11 @@
                 }
             }
         }
+    }
+
+    > .o_quick_search {
+        border: none;
+        outline: none;
     }
 
     > .o_separator {

@@ -71,14 +71,15 @@ const actions = {
      * @param {function} param0.commit
      * @param {Object} param0.env
      * @param {Object} param1
+     * @param {boolean} [param1.autoselect=false]
      * @param {string} param1.name
      * @param {integer|undefined} [param1.partnerID=undefined]
      * @param {string|undefined} [param1.public=undefined]
      * @param {string} param1.type
      */
     async 'channel/create'(
-        { commit, env },
-        { name, partnerID, public: publicStatus, type }
+        { commit, env, state },
+        { autoselect=false, name, partnerID, public: publicStatus, type }
     ) {
         const data = await env.rpc({
             model: 'mail.channel',
@@ -91,7 +92,10 @@ const actions = {
                 }
             }
         });
-        commit('thread/create', { ...data });
+        const thread = commit('thread/create', { ...data });
+        if (autoselect && state.discuss.open) {
+            commit('discuss/update', { $thread: thread.localID });
+        }
     },
     /**
      * @param {Object} param0

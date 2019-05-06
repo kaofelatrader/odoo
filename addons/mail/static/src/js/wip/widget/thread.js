@@ -6,7 +6,8 @@ const MessageList = require('mail.wip.widget.MessageList');
 const { Component, connect } = owl;
 
 function mapStateToProps(state, ownProps) {
-    const $threadCache = `${ownProps.$thread}_${ownProps.stringifiedDomain || '[]'}`;
+    const options = ownProps.options || {};
+    const $threadCache = `${ownProps.$thread}_${JSON.stringify(options.domain || [])}`;
     const threadCache = state.threadCaches[$threadCache];
     return {
         $threadCache,
@@ -19,7 +20,7 @@ class Thread extends Component {
     constructor(...args) {
         super(...args);
         this.inlineTemplate = `
-<div class="o_thread">
+<div class="o_thread" t-key="$thread">
     <div t-if="loading" class="o_thread_loading">
         <span><i aria-label="Loading..." class="o_icon fa fa-spinner fa-spin" role="img" title="Loading..."/>Loading messages...</span>
     </div>
@@ -28,7 +29,7 @@ class Thread extends Component {
     </div>
     <t t-else=""
        t-widget="MessageList"
-       t-props="{ $thread, $threadCache, domain, stringifiedDomain }"
+       t-props="{ $thread, $threadCache, options }"
        t-ref="'messageList'"
        t-on-redirect="_onRedirect"/>
 </div>`;
@@ -56,8 +57,8 @@ class Thread extends Component {
             return;
         }
         if (this.loaded && this.hasMessages) {
-            if (this.scrollTop !== undefined) {
-                this.refs.messageList.scrollTop = this.scrollTop;
+            if (this.options.scrollTop !== undefined) {
+                this.refs.messageList.scrollTop = this.options.scrollTop;
             } else if (this._$renderedThreadCache !== this.$threadCache) {
                 this.refs.messageList.scrollToLastMessage();
             }
@@ -84,13 +85,6 @@ class Thread extends Component {
     }
 
     /**
-     * @return {Array}
-     */
-    get domain() {
-        return this.props.domain;
-    }
-
-    /**
      * @return {boolean}
      */
     get hasMessages() {
@@ -114,17 +108,17 @@ class Thread extends Component {
     }
 
     /**
-     * @return {integer}
+     * @return {Object}
      */
-    get scrollTop() {
-        return this.props.scrollTop;
+    get options() {
+        return this.props.options || {};
     }
 
     /**
-     * @return {string}
+     * @return {boolean}
      */
-    get stringifiedDomain() {
-        return this.props.stringifiedDomain;
+    get redirectAuthor() {
+        return this.options.redirectAuthor || false;
     }
 
     /**
@@ -160,7 +154,7 @@ class Thread extends Component {
         this.loading = true;
         this.env.store.dispatch('thread/load', {
             $thread: this.$thread,
-            searchDomain: this.domain,
+            searchDomain: this.options.domain,
         });
     }
 

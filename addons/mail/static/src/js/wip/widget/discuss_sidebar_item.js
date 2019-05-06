@@ -35,6 +35,7 @@ class DiscussSidebarItem extends Component {
         this.inlineTemplate = `
         <div class="o_item"
              t-att-data-thread-local-id="$thread"
+             t-attf-class="{{ $thread === 'mail.box_starred' ? 'o_starred_box' : '' }}"
              t-on-click="_onClick">
             <div class="o_active_indicator" t-att-class="isActive ? 'o_active' : ''"/>
             <div class="o_icon">

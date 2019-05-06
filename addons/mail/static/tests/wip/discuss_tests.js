@@ -639,6 +639,128 @@ QUnit.test('basic rendering of message', async function (assert) {
     assert.strictEqual(message.querySelector(':scope > .o_core > .o_content').innerHTML.trim(), "<p>body</p>", "should have body of message in content part of message");
 });
 
+QUnit.test('basic rendering of squashed message', async function (assert) {
+    // messages are squashed when "close", e.g. less than 1 minute has elapsed
+    // from messages of same author and same thread. Note that this should
+    // be working in non-mailboxes
+    assert.expect(12);
+
+    let step = 0;
+
+    Object.assign(this.data.initMessaging, {
+        channel_slots: {
+            channel_channel: [{
+                channel_type: "channel",
+                id: 20,
+                name: "General",
+            }],
+        },
+    });
+
+    await this.createDiscuss({
+        mockRPC(route, args) {
+            if (args.method === 'message_fetch') {
+                step++;
+                if (step === 1) {
+                    // fetching messages from inbox
+                    return Promise.resolve([]);
+                }
+                if (step === 2) {
+                    // fetching messages from channel
+                    return Promise.resolve([{
+                        author_id: [11, "Demo"],
+                        body: "<p>body1</p>",
+                        channel_ids: [20],
+                        date: "2019-04-20 10:00:00",
+                        id: 100,
+                        message_type: 'comment',
+                        model: 'mail.channel',
+                        record_name: 'General',
+                        res_id: 20,
+                    }, {
+                        author_id: [11, "Demo"],
+                        body: "<p>body2</p>",
+                        channel_ids: [20],
+                        date: "2019-04-20 10:00:30",
+                        id: 101,
+                        message_type: 'comment',
+                        model: 'mail.channel',
+                        record_name: 'General',
+                        res_id: 20,
+                    }]);
+                }
+            }
+            return this._super.apply(this, arguments);
+        },
+    });
+
+    await testUtils.dom.click(document.querySelector('.o_mail_wip_discuss_root > .o_sidebar > .o_group.o_channel > .o_list > .o_item'));
+
+    assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message').length, 2, "should have 2 messages");
+
+    const message1 = document.querySelector('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_100"]');
+    const message2 = document.querySelector('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"]');
+
+    assert.notOk(message1.classList.contains('o_squashed'), "message 1 should not be squashed");
+    assert.notOk(message1.querySelector(':scope > .o_sidebar').classList.contains('o_squashed'), "message 1 should not have squashed sidebar");
+    assert.ok(message2.classList.contains('o_squashed'), "message 2 should be squashed");
+    assert.ok(message2.querySelector(':scope > .o_sidebar').classList.contains('o_squashed'), "message 2 should not have squashed sidebar");
+    assert.strictEqual(message2.querySelectorAll(':scope > .o_sidebar > .o_date').length, 1, "message 2 should have date in sidebar");
+    assert.strictEqual(message2.querySelectorAll(':scope > .o_sidebar > .o_commands').length, 1, "message 2 should have some commands in sidebar");
+    assert.strictEqual(message2.querySelectorAll(':scope > .o_sidebar > .o_commands > .o_command').length, 1, "message 2 should have star command in sidebar");
+    assert.strictEqual(message2.querySelectorAll(':scope > .o_core').length, 1, "message 2 should have core part");
+    assert.strictEqual(message2.querySelectorAll(':scope > .o_core > .o_header').length, 0, "message 2 should have a header in core part");
+    assert.strictEqual(message2.querySelectorAll(':scope > .o_core > .o_content').length, 1, "message 2 should have some content in core part");
+    assert.strictEqual(message2.querySelector(':scope > .o_core > .o_content').innerHTML.trim(), "<p>body2</p>", "message 2 should have body in content part");
+});
+
+QUnit.test('inbox messages are never squashed', async function (assert) {
+    assert.expect(3);
+
+    await this.createDiscuss({
+        mockRPC(route, args) {
+            if (args.method === 'message_fetch') {
+                // fetching messages from inbox
+                return Promise.resolve([{
+                    author_id: [11, "Demo"],
+                    body: "<p>body1</p>",
+                    channel_ids: [20],
+                    date: "2019-04-20 10:00:00",
+                    id: 100,
+                    message_type: 'comment',
+                    model: 'mail.channel',
+                    needaction: true,
+                    needaction_partner_ids: [3],
+                    record_name: 'General',
+                    res_id: 20,
+                }, {
+                    author_id: [11, "Demo"],
+                    body: "<p>body2</p>",
+                    channel_ids: [20],
+                    date: "2019-04-20 10:00:30",
+                    id: 101,
+                    message_type: 'comment',
+                    model: 'mail.channel',
+                    needaction: true,
+                    needaction_partner_ids: [3],
+                    record_name: 'General',
+                    res_id: 20,
+                }]);
+            }
+            return this._super.apply(this, arguments);
+        },
+        session: { partner_id: 3 },
+    });
+
+    assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message').length, 2, "should have 2 messages");
+
+    const message1 = document.querySelector('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_100"]');
+    const message2 = document.querySelector('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"]');
+
+    assert.notOk(message1.classList.contains('o_squashed'), "message 1 should not be squashed");
+    assert.notOk(message2.classList.contains('o_squashed'), "message 2 should not be squashed");
+});
+
 QUnit.test('load all messages from channel initially, less than fetch limit (29 < 30)', async function (assert) {
     assert.expect(5);
 
@@ -776,7 +898,7 @@ QUnit.test('load more messages from channel', async function (assert) {
     assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message').length, 30, "should have 30 messages");
     assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_load_more').length, 1, "should have load more link");
 
-    await testUtils.dom.click(document.querySelector('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_load_more'));
+    document.querySelector('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_load_more').click();
     await testUtils.nextTick(); // re-render
 
     assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message').length, 40, "should have 40 messages");
@@ -1196,7 +1318,7 @@ QUnit.test('message origin redirect to channel', async function (assert) {
     assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"]').length, 1, "should have message2 (ID 101)");
     assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_100"] > .o_core > .o_header > .o_origin').length, 0, "message1 should not have origin part in channel1 (same origin as channel)");
     assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"] > .o_core > .o_header > .o_origin').length, 1, "message2 should have origin part (origin is channel2 !== channel1)");
-    assert.strictEqual(document.querySelector('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"] > .o_core > .o_header > .o_origin').textContent.trim(), "from #channel2", "message2 should display name of origin channel");
+    assert.strictEqual(document.querySelector('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"] > .o_core > .o_header > .o_origin').textContent.trim(), "(from #channel2)", "message2 should display name of origin channel");
     assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"] > .o_core > .o_header > .o_origin > a').length, 1, "message2 should have link to redirect to origin");
 
     // click on origin link of message2 (= channel2)
@@ -1209,12 +1331,12 @@ QUnit.test('message origin redirect to channel', async function (assert) {
     assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"]').length, 1, "should have message2 (ID 101)");
     assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_100"] > .o_core > .o_header > .o_origin').length, 1, "message1 should have origin part (origin is channel1 !== channel2)");
     assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"] > .o_core > .o_header > .o_origin').length, 0, "message2 should not have origin part in channel2 (same origin as current channel)");
-    assert.strictEqual(document.querySelector('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_100"] > .o_core > .o_header > .o_origin').textContent.trim(), "from #channel1", "message1 should display name of origin channel");
+    assert.strictEqual(document.querySelector('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_100"] > .o_core > .o_header > .o_origin').textContent.trim(), "(from #channel1)", "message1 should display name of origin channel");
     assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_100"] > .o_core > .o_header > .o_origin > a').length, 1, "message1 should have link to redirect to origin");
 });
 
-QUnit.skip('message origin join and redirect to channel', async function (assert) {
-    assert.expect(15);
+QUnit.test('redirect to author (open DM)', async function (assert) {
+    assert.expect(9);
 
     let step = 0;
 
@@ -1223,38 +1345,18 @@ QUnit.skip('message origin join and redirect to channel', async function (assert
             channel_channel: [{
                 channel_type: "channel",
                 id: 1,
-                name: "channel1",
+                name: "General",
+            }],
+            channel_direct_message: [{
+                channel_type: "chat",
+                direct_partner: [{
+                    id: 7,
+                    name: "Demo",
+                }],
+                id: 10,
             }],
         },
     });
-
-    // {
-    //     channel_type: "channel",
-    //     id: 2,
-    //     name: "channel2",
-    // }
-
-    let messagesData = [{
-        author_id: [10, "User1"],
-        body: `<p>message1</p>`,
-        channel_ids: [1, 2],
-        date: "2019-04-20 10:00:00",
-        id: 100,
-        message_type: 'comment',
-        model: 'mail.channel',
-        record_name: "channel1",
-        res_id: 1,
-    }, {
-        author_id: [11, "User2"],
-        body: `<p>message2</p>`,
-        channel_ids: [1, 2],
-        date: "2019-04-20 10:00:00",
-        id: 101,
-        message_type: 'comment',
-        model: 'mail.channel',
-        record_name: "channel2",
-        res_id: 2,
-    }];
 
     await this.createDiscuss({
         mockRPC(route, args) {
@@ -1265,42 +1367,87 @@ QUnit.skip('message origin join and redirect to channel', async function (assert
                     return Promise.resolve([]);
                 }
                 if (step === 2) {
-                    // fetching messages from channel1 (initial load)
-                    return Promise.resolve(messagesData);
+                    // fetching messages from General (initial load)
+                    return Promise.resolve([{
+                        author_id: [7, "Demo"],
+                        body: `<p>message1</p>`,
+                        channel_ids: [1],
+                        date: "2019-04-20 10:00:00",
+                        id: 100,
+                        message_type: 'comment',
+                        model: 'mail.channel',
+                        record_name: "General",
+                        res_id: 1,
+                    }, {
+                        author_id: [3, "Me"],
+                        body: `<p>message2</p>`,
+                        channel_ids: [1],
+                        date: "2019-04-20 10:00:00",
+                        id: 101,
+                        message_type: 'comment',
+                        model: 'mail.channel',
+                        record_name: "General",
+                        res_id: 1,
+                    }]);
                 }
                 if (step === 3) {
-                    // fetching messages from channel2 (initial load)
-                    return Promise.resolve(messagesData);
+                    // fetching messages from DM (initial load)
+                    return Promise.resolve([]);
                 }
             }
             return this._super.apply(this, arguments);
         },
-        debug: true,
+        session: { partner_id: 3 },
     });
 
-    // select channel1
+    // select General
     await testUtils.dom.click(document.querySelector('.o_mail_wip_discuss_root > .o_sidebar > .o_group.o_channel > .o_list > .o_item[data-thread-local-id="mail.channel_1"]'));
-
+    assert.ok(document.querySelector('.o_mail_wip_discuss_root > .o_sidebar > .o_group.o_channel > .o_list > .o_item[data-thread-local-id="mail.channel_1"] > .o_active_indicator').classList.contains('o_active'), "channel 'General' should be active");
+    assert.notOk(document.querySelector('.o_mail_wip_discuss_root > .o_sidebar > .o_group.o_dm > .o_list > .o_item[data-thread-local-id="mail.channel_10"] > .o_active_indicator').classList.contains('o_active'), "DM 'Demo' should not be active");
     assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message').length, 2, "should have 2 messages");
-    assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_100"]').length, 1, "should have message1 (ID 100)");
-    assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"]').length, 1, "should have message2 (ID 101)");
-    assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_100"] > .o_core > .o_header > .o_origin').length, 0, "message1 should not have origin part in channel1 (same origin as channel)");
-    assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"] > .o_core > .o_header > .o_origin').length, 1, "message2 should have origin part (origin is channel2 !== channel1)");
-    assert.strictEqual(document.querySelector('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"] > .o_core > .o_header > .o_origin').textContent.trim(), "from #channel2", "message2 should display name of origin channel");
-    assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"] > .o_core > .o_header > .o_origin > a').length, 1, "message2 should have link to redirect to origin");
 
-    // click on origin link of message2 (= channel2)
-    document.querySelector('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"] > .o_core > .o_header > .o_origin > a').click();
+    const msg1 = document.querySelector('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_100"]');
+    const msg2 = document.querySelector('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"]');
+
+    assert.strictEqual(msg1.querySelectorAll(':scope > .o_sidebar > img').length, 1, "message1 should have author image");
+    assert.ok(msg1.querySelector(':scope > .o_sidebar > img').classList.contains('o_redirect'), "message1 should have redirect to author");
+    assert.strictEqual(msg2.querySelectorAll(':scope > .o_sidebar > img').length, 1, "message2 should have author image");
+    assert.notOk(msg2.querySelector(':scope > .o_sidebar > img').classList.contains('o_redirect'), "message2 should not have redirect to author (self-author)");
+
+    await testUtils.dom.click(msg1.querySelector(':scope > .o_sidebar > img'));
     await testUtils.nextTick(); // re-render
 
-    // assert.strictEqual(document.querySelector('.o_mail_wip_discuss_root > .o_sidebar > .o_group.o_channel > .o_list > .o_item[data-thread-local-id="mail.channel_2"] > .o_active_indicator').classList.contains('o_active'), true, "channel2 should be active channel on redirect from discuss app");
-    // assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message').length, 2, "should have 2 messages");
-    // assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_100"]').length, 1, "should have message1 (ID 100)");
-    // assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"]').length, 1, "should have message2 (ID 101)");
-    // assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_100"] > .o_core > .o_header > .o_origin').length, 1, "message1 should have origin part (origin is channel1 !== channel2)");
-    // assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_101"] > .o_core > .o_header > .o_origin').length, 0, "message2 should not have origin part in channel2 (same origin as current channel)");
-    // assert.strictEqual(document.querySelector('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_100"] > .o_core > .o_header > .o_origin').textContent.trim(), "from #channel1", "message1 should display name of origin channel");
-    // assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_content > .o_thread > .o_message_list > .o_message[data-message-local-id="mail.message_100"] > .o_core > .o_header > .o_origin > a').length, 1, "message1 should have link to redirect to origin");
+    assert.notOk(document.querySelector('.o_mail_wip_discuss_root > .o_sidebar > .o_group.o_channel > .o_list > .o_item[data-thread-local-id="mail.channel_1"] > .o_active_indicator').classList.contains('o_active'), "channel 'General' should become inactive after author redirection");
+    assert.ok(document.querySelector('.o_mail_wip_discuss_root > .o_sidebar > .o_group.o_dm > .o_list > .o_item[data-thread-local-id="mail.channel_10"] > .o_active_indicator').classList.contains('o_active'), "DM 'Demo' should become active after author redirection");
+});
+
+QUnit.only('sidebar quick search', async function (assert) {
+    // feature enables at 30 or more channels
+    assert.expect(2);
+
+    let channelsData = [];
+    for (let id = 1; id <= 30; id++) {
+        channelsData.push({
+            channel_type: "channel",
+            id,
+            name: `channel${id}`,
+        });
+    }
+
+    Object.assign(this.data.initMessaging, {
+        channel_slots: {
+            channel_channel: channelsData,
+        },
+    });
+
+    await this.createDiscuss({ debug: true });
+
+    assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_sidebar > .o_group.o_channel > .o_list > .o_item').length, 30, "should have 30 channel items");
+    assert.strictEqual(document.querySelectorAll('.o_mail_wip_discuss_root > .o_sidebar > .o_quick_search').length, 1, "should have quick search in sidebar");
+
+    await pause();
+
+    // todo: type something in quick search
 });
 
 });
