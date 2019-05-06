@@ -689,9 +689,9 @@ QUnit.module('fields', {}, function () {
             assert.strictEqual(nbConfirmChange, 0, "should not have confirmed any change yet");
 
             // Drag and drop the second line in first position
-            await testUtils.dom.dragAndDrop(
-                form.$('.ui-sortable-handle').eq(1),
-                form.$('tbody tr').first(),
+            await testUtils.dom.pointerDragAndDrop(
+                form.$('.ui-sortable-handle')[1],
+                form.$('tbody tr')[0],
                 { position: 'top' }
             );
 
@@ -891,9 +891,9 @@ QUnit.module('fields', {}, function () {
             await testUtils.form.clickEdit(form);
 
             // Drag and drop the second line in first position
-            await testUtils.dom.dragAndDrop(
-                form.$('.ui-sortable-handle').eq(1),
-                form.$('tbody tr').first(),
+            await testUtils.dom.pointerDragAndDrop(
+                form.$('.ui-sortable-handle')[1],
+                form.$('tbody tr')[0],
                 { position: 'top' }
             );
 
@@ -952,9 +952,9 @@ QUnit.module('fields', {}, function () {
                 "should have the 3 rows in the correct order");
 
             // Drag and drop the second line in first position
-            await testUtils.dom.dragAndDrop(
-                form.$('.ui-sortable-handle').eq(1),
-                form.$('tbody tr').first(),
+            await testUtils.dom.pointerDragAndDrop(
+                form.$('.ui-sortable-handle')[1],
+                form.$('tbody tr')[0],
                 { position: 'top' }
             );
 
@@ -1015,9 +1015,9 @@ QUnit.module('fields', {}, function () {
             await testUtils.fields.editInput(form.$('.o_field_one2many .o_list_view tbody tr:first input:first'), 'blurp');
 
             // Drag and drop the third line in second position
-            await testUtils.dom.dragAndDrop(
-                form.$('.ui-sortable-handle').eq(2),
-                form.$('.o_field_one2many tbody tr').eq(1),
+            await testUtils.dom.pointerDragAndDrop(
+                form.$('.ui-sortable-handle')[2],
+                form.$('.o_field_one2many tbody tr')[1],
                 { position: 'top' }
             );
 
@@ -1113,9 +1113,9 @@ QUnit.module('fields', {}, function () {
             await testUtils.form.clickEdit(form);
 
             // Drag and drop the third line in second position
-            await testUtils.dom.dragAndDrop(
-                form.$('.ui-sortable-handle').eq(2),
-                form.$('.o_field_one2many tbody tr').eq(1),
+            await testUtils.dom.pointerDragAndDrop(
+                form.$('.ui-sortable-handle')[2],
+                form.$('.o_field_one2many tbody tr')[1],
                 { position: 'top' }
             );
 
@@ -1123,9 +1123,9 @@ QUnit.module('fields', {}, function () {
                 "should display the records in order after resequence (display record with turtle_int=0)");
 
             // Drag and drop the third line in second position
-            await testUtils.dom.dragAndDrop(
-                form.$('.ui-sortable-handle').eq(2),
-                form.$('.o_field_one2many tbody tr').eq(1),
+            await testUtils.dom.pointerDragAndDrop(
+                form.$('.ui-sortable-handle')[2],
+                form.$('.o_field_one2many tbody tr')[1],
                 { position: 'top' }
             );
 
@@ -1606,9 +1606,9 @@ QUnit.module('fields', {}, function () {
             async function dragAndDrop() {
                 var pos = positions.shift();
 
-                await testUtils.dom.dragAndDrop(
-                    form.$('.ui-sortable-handle').eq(pos[0]),
-                    form.$('tbody tr').eq(pos[1]),
+                await testUtils.dom.pointerDragAndDrop(
+                    form.$('.ui-sortable-handle')[pos[0]],
+                    form.$('tbody tr')[pos[1]],
                     { position: pos[2] }
                 );
 
@@ -1676,9 +1676,9 @@ QUnit.module('fields', {}, function () {
                 "should still have the 3 rows in the correct order");
 
             // Drag and drop the second line in first position
-            await testUtils.dom.dragAndDrop(
-                form.$('.ui-sortable-handle').eq(1),
-                form.$('tbody tr').first(),
+            await testUtils.dom.pointerDragAndDrop(
+                form.$('.ui-sortable-handle')[1],
+                form.$('tbody tr')[0],
                 { position: 'top' }
             );
 
@@ -7217,8 +7217,8 @@ QUnit.module('fields', {}, function () {
 
             assert.equal($handles.length, 3, 'There should be 3 sequence handlers');
 
-            await testUtils.dom.dragAndDrop($handles.eq(1),
-                form.$('tbody tr').first(),
+            await testUtils.dom.pointerDragAndDrop($handles[1],
+                form.$('tbody tr')[0],
                 { position: 'top' }
             );
 
@@ -7403,7 +7403,7 @@ QUnit.module('fields', {}, function () {
             });
 
             // swap 2 lines in the one2many
-            await testUtils.dom.dragAndDrop(form.$('.ui-sortable-handle:eq(1)'), form.$('tbody tr').first(),
+            await testUtils.dom.pointerDragAndDrop(form.$('.ui-sortable-handle:eq(1)')[0], form.$('tbody tr')[0],
                 { position: 'top' });
             assert.verifySteps(['load_views', 'read', 'read', 'onchange', 'onchange']);
             form.destroy();

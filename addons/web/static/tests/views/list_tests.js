@@ -3647,9 +3647,9 @@ QUnit.module('Views', {
             "default fourth record should have amount 0");
 
         // Drag and drop the fourth line in second position
-        await testUtils.dom.dragAndDrop(
-            list.$('.ui-sortable-handle').eq(3),
-            list.$('tbody tr').first(),
+        await testUtils.dom.pointerDragAndDrop(
+            list.$('.ui-sortable-handle')[3],
+            list.$('tbody tr')[0],
             {position: 'bottom'}
         );
 
@@ -3728,33 +3728,33 @@ QUnit.module('Views', {
         });
         assert.strictEqual(list.$('tbody tr td.o_list_number').text(), '1234',
             "default should be sorted by id");
-        await testUtils.dom.dragAndDrop(
-            list.$('.ui-sortable-handle').eq(3),
-            list.$('tbody tr').eq(2),
+        await testUtils.dom.pointerDragAndDrop(
+            list.$('.ui-sortable-handle')[3],
+            list.$('tbody tr')[2],
             {position: 'top'}
         );
         assert.strictEqual(list.$('tbody tr td.o_list_number').text(), '1243',
             "the int_field (sequence) should have been correctly updated");
 
-        await testUtils.dom.dragAndDrop(
-            list.$('.ui-sortable-handle').eq(2),
-            list.$('tbody tr').eq(1),
+        await testUtils.dom.pointerDragAndDrop(
+            list.$('.ui-sortable-handle')[2],
+            list.$('tbody tr')[1],
             {position: 'top'}
         );
         assert.deepEqual(list.$('tbody tr td.o_list_number').text(), '1423',
             "the int_field (sequence) should have been correctly updated");
 
-        await testUtils.dom.dragAndDrop(
-            list.$('.ui-sortable-handle').eq(1),
-            list.$('tbody tr').eq(3),
+        await testUtils.dom.pointerDragAndDrop(
+            list.$('.ui-sortable-handle')[1],
+            list.$('tbody tr')[3],
             {position: 'top'}
         );
         assert.deepEqual(list.$('tbody tr td.o_list_number').text(), '1243',
             "the int_field (sequence) should have been correctly updated");
 
-        await testUtils.dom.dragAndDrop(
-            list.$('.ui-sortable-handle').eq(2),
-            list.$('tbody tr').eq(1),
+        await testUtils.dom.pointerDragAndDrop(
+            list.$('.ui-sortable-handle')[2],
+            list.$('tbody tr')[1],
             {position: 'top'}
         );
         assert.deepEqual(list.$('tbody tr td.o_list_number').text(), '1423',
@@ -3802,9 +3802,9 @@ QUnit.module('Views', {
             "default fourth record should have amount 0");
 
         // Drag and drop the fourth line in second position
-        await testUtils.dom.dragAndDrop(
-            list.$('.ui-sortable-handle').eq(3),
-            list.$('tbody tr').first(),
+        await testUtils.dom.pointerDragAndDrop(
+            list.$('.ui-sortable-handle')[3],
+            list.$('tbody tr')[0],
             {position: 'bottom'}
         );
 
@@ -3850,9 +3850,9 @@ QUnit.module('Views', {
             "default should be sorted by int_field");
 
         // Drag and drop the fourth line in second position
-        await testUtils.dom.dragAndDrop(
-            list.$('.ui-sortable-handle').eq(3),
-            list.$('tbody tr').first(),
+        await testUtils.dom.pointerDragAndDrop(
+            list.$('.ui-sortable-handle')[3],
+            list.$('tbody tr')[0],
             {position: 'bottom'}
         );
 
@@ -3867,9 +3867,9 @@ QUnit.module('Views', {
             "should have been sorted by amount");
 
         // Drag and drop the fourth line in second position (not)
-        await testUtils.dom.dragAndDrop(
-            list.$('.ui-sortable-handle').eq(3),
-            list.$('tbody tr').first(),
+        await testUtils.dom.pointerDragAndDrop(
+            list.$('.ui-sortable-handle')[3],
+            list.$('tbody tr')[0],
             {position: 'bottom'}
         );
 
@@ -3883,9 +3883,9 @@ QUnit.module('Views', {
             "records should be ordered as per the previous resequence");
 
         // Drag and drop the fourth line in second position
-        await testUtils.dom.dragAndDrop(
-            list.$('.ui-sortable-handle').eq(3),
-            list.$('tbody tr').first(),
+        await testUtils.dom.pointerDragAndDrop(
+            list.$('.ui-sortable-handle')[3],
+            list.$('tbody tr')[0],
             {position: 'bottom'}
         );
 
@@ -3940,9 +3940,9 @@ QUnit.module('Views', {
             "default fourth record should have amount 0");
 
         // drag and drop the fourth line in second position
-        await testUtils.dom.dragAndDrop(
-            list.$('.ui-sortable-handle').eq(3),
-            list.$('tbody tr').first(),
+        await testUtils.dom.pointerDragAndDrop(
+            list.$('.ui-sortable-handle')[3],
+            list.$('tbody tr')[0],
             {position: 'bottom'}
         );
 

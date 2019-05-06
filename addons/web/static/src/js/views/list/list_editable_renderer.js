@@ -15,6 +15,7 @@ var core = require('web.core');
 var dom = require('web.dom');
 var ListRenderer = require('web.ListRenderer');
 var utils = require('web.utils');
+var web_interact = require('web.interact');
 
 var _t = core._t;
 
@@ -106,6 +107,18 @@ ListRenderer.include({
             core.bus.on('click', this, this._onWindowClicked.bind(this));
         }
         return this._super();
+    },
+    /**
+     * @override
+     */
+    destroy: function () {
+        if (this.$el) {
+            var tbody = this.$el.find('table tbody');
+            if (web_interact.isSet(tbody)) {
+                web_interact.unset(tbody);
+            }
+        }
+        return this._super.apply(this, arguments);
     },
 
     //--------------------------------------------------------------------------
@@ -239,6 +252,9 @@ ListRenderer.include({
                 $newRow.nextAll().each(function (i, nextRow) {
                     $tbody.append($(nextRow));
                 });
+                if (web_interact.isSet($newBody[0])) {
+                    web_interact.unset($newBody[0]);
+                }
 
                 if (self.currentRow !== null) {
                     var newRowIndex = $editedRow.prop('rowIndex') - 1;
@@ -778,14 +794,15 @@ ListRenderer.include({
         var self = this;
         var $body = this._super.apply(this, arguments);
         if (this.hasHandle) {
-            $body.sortable({
+            web_interact.sortable($body[0], {
                 axis: 'y',
-                items: '> tr.o_data_row',
-                helper: 'clone',
+                items: 'tr.o_data_row',
                 handle: '.o_row_handle',
-                stop: function (event, ui) {
+                tolerance: 'pointer',
+                ondrop: function (ev) {
                     self.unselectRow().then(function () {
-                        self._moveRecord(ui.item.data('id'), ui.item.index());
+                        var item = $(ev.relatedTarget);
+                        self._moveRecord(item.data('id'), item.index());
                     });
                 },
             });
@@ -889,6 +906,10 @@ ListRenderer.include({
         var self = this;
         this.currentRow = null;
         this.allRecordsIds = null;
+        var tbody = this.$('table tbody')[0];
+        if (web_interact.isSet(tbody)) {
+            web_interact.unset(tbody);
+        }
         return this._super.apply(this, arguments).then(function () {
             if (self.editable) {
                 self.$('table').addClass('o_editable_list');
