@@ -159,26 +159,26 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_01_dubai')],
+                'tag_ids': [ref('tag_ae_01_dubai')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_dubai')],
+                'tag_ids': [ref('tag_ae_02_dubai')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_01_dubai')],
+                'tag_ids': [ref('tag_ae_01_dubai')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_dubai')],
+                'tag_ids': [ref('tag_ae_02_dubai')],
             }),
         ]"/>
     </record>
@@ -194,26 +194,26 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_01_abu_dhabi')],
+                'tag_ids': [ref('tag_ae_01_abu_dhabi')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_abu_dhabi')],
+                'tag_ids': [ref('tag_ae_02_abu_dhabi')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_01_abu_dhabi')],
+                'tag_ids': [ref('tag_ae_01_abu_dhabi')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_abu_dhabi')],
+                'tag_ids': [ref('tag_ae_02_abu_dhabi')],
             }),
         ]"/>
     </record>
@@ -229,26 +229,26 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_01_sharjah')],
+                'tag_ids': [ref('tag_ae_01_sharjah')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_sharjah')],
+                'tag_ids': [ref('tag_ae_02_sharjah')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_01_sharjah')],
+                'tag_ids': [ref('tag_ae_01_sharjah')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_sharjah')],
+                'tag_ids': [ref('tag_ae_02_sharjah')],
             }),
         ]"/>
     </record>
@@ -264,26 +264,26 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_01_ajman')],
+                'tag_ids': [ref('tag_ae_01_ajman')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_ajman')],
+                'tag_ids': [ref('tag_ae_02_ajman')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_01_ajman')],
+                'tag_ids': [ref('tag_ae_01_ajman')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_ajman')],
+                'tag_ids': [ref('tag_ae_02_ajman')],
             }),
         ]"/>
     </record>
@@ -299,26 +299,26 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_01_umm_al_quwain')],
+                'tag_ids': [ref('tag_ae_01_umm_al_quwain')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_umm_al_quwain')],
+                'tag_ids': [ref('tag_ae_02_umm_al_quwain')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_01_umm_al_quwain')],
+                'tag_ids': [ref('tag_ae_01_umm_al_quwain')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_umm_al_quwain')],
+                'tag_ids': [ref('tag_ae_02_umm_al_quwain')],
             }),
         ]"/>
     </record>
@@ -334,26 +334,26 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_01_ras_al_khaima')],
+                'tag_ids': [ref('tag_ae_01_ras_al_khaima')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_ras_al_khaima')],
+                'tag_ids': [ref('tag_ae_02_ras_al_khaima')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_01_ras_al_khaima')],
+                'tag_ids': [ref('tag_ae_01_ras_al_khaima')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_ras_al_khaima')],
+                'tag_ids': [ref('tag_ae_02_ras_al_khaima')],
             }),
         ]"/>
     </record>
@@ -369,26 +369,26 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_01_fujairah')],
+                'tag_ids': [ref('tag_ae_01_fujairah')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_fujairah')],
+                'tag_ids': [ref('tag_ae_02_fujairah')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_01_fujairah')],
+                'tag_ids': [ref('tag_ae_01_fujairah')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_fujairah')],
+                'tag_ids': [ref('tag_ae_02_fujairah')],
             }),
         ]"/>
     </record>
@@ -404,7 +404,7 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_03')],
+                'tag_ids': [ref('tag_ae_03')],
             }),
             (0,0, {
                 'factor_percent': 100,
@@ -416,7 +416,7 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_03')],
+                'tag_ids': [ref('tag_ae_03')],
             }),
             (0,0, {
                 'factor_percent': 100,
@@ -437,7 +437,7 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_05')],
+                'tag_ids': [ref('tag_ae_05')],
             }),
             (0,0, {
                 'factor_percent': 100,
@@ -449,7 +449,7 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_05')],
+                'tag_ids': [ref('tag_ae_05')],
             }),
             (0,0, {
                 'factor_percent': 100,
@@ -497,38 +497,38 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_dubai')],
+                'tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_dubai')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_09')],
+                'tag_ids': [ref('tag_ae_tax_09')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_dubai')],
+                'tag_ids': [ref('tag_ae_02_dubai')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_dubai')],
+                'tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_dubai')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_09')],
+                'tag_ids': [ref('tag_ae_tax_09')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_dubai')],
+                'tag_ids': [ref('tag_ae_02_dubai')],
             }),
         ]"/>
     </record>
@@ -543,38 +543,38 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_abu_dhabi')],
+                'tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_abu_dhabi')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_09')],
+                'tag_ids': [ref('tag_ae_tax_09')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_abu_dhabi')],
+                'tag_ids': [ref('tag_ae_02_abu_dhabi')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_abu_dhabi')],
+                'tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_abu_dhabi')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_09')],
+                'tag_ids': [ref('tag_ae_tax_09')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_abu_dhabi')],
+                'tag_ids': [ref('tag_ae_02_abu_dhabi')],
             }),
         ]"/>
     </record>
@@ -589,38 +589,38 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_sharjah')],
+                'tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_sharjah')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_09')],
+                'tag_ids': [ref('tag_ae_tax_09')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_sharjah')],
+                'tag_ids': [ref('tag_ae_02_sharjah')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_sharjah')],
+                'tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_sharjah')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_09')],
+                'tag_ids': [ref('tag_ae_tax_09')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_sharjah')],
+                'tag_ids': [ref('tag_ae_02_sharjah')],
             }),
         ]"/>
     </record>
@@ -635,38 +635,38 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_ajman')],
+                'tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_ajman')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_09')],
+                'tag_ids': [ref('tag_ae_tax_09')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_ajman')],
+                'tag_ids': [ref('tag_ae_02_ajman')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_ajman')],
+                'tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_ajman')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_09')],
+                'tag_ids': [ref('tag_ae_tax_09')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_ajman')],
+                'tag_ids': [ref('tag_ae_02_ajman')],
             }),
         ]"/>
     </record>
@@ -681,38 +681,38 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_umm_al_quwain')],
+                'tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_umm_al_quwain')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_09')],
+                'tag_ids': [ref('tag_ae_tax_09')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_umm_al_quwain')],
+                'tag_ids': [ref('tag_ae_02_umm_al_quwain')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_umm_al_quwain')],
+                'tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_umm_al_quwain')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_09')],
+                'tag_ids': [ref('tag_ae_tax_09')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_umm_al_quwain')],
+                'tag_ids': [ref('tag_ae_02_umm_al_quwain')],
             }),
         ]"/>
     </record>
@@ -727,38 +727,38 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_ras_al_khaima')],
+                'tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_ras_al_khaima')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_09')],
+                'tag_ids': [ref('tag_ae_tax_09')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_ras_al_khaima')],
+                'tag_ids': [ref('tag_ae_02_ras_al_khaima')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_ras_al_khaima')],
+                'tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_ras_al_khaima')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_09')],
+                'tag_ids': [ref('tag_ae_tax_09')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_ras_al_khaima')],
+                'tag_ids': [ref('tag_ae_02_ras_al_khaima')],
             }),
         ]"/>
     </record>
@@ -773,38 +773,38 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_fujairah')],
+                'tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_fujairah')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_09')],
+                'tag_ids': [ref('tag_ae_tax_09')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_fujairah')],
+                'tag_ids': [ref('tag_ae_02_fujairah')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_fujairah')],
+                'tag_ids': [ref('tag_ae_09'), ref('tag_ae_01_fujairah')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_09')],
+                'tag_ids': [ref('tag_ae_tax_09')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3785'),
-                'financial_tag_ids': [ref('tag_ae_02_fujairah')],
+                'tag_ids': [ref('tag_ae_02_fujairah')],
             }),
         ]"/>
     </record>
@@ -819,26 +819,26 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_11')],
+                'tag_ids': [ref('tag_ae_11')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_11')],
+                'tag_ids': [ref('tag_ae_tax_11')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_11')],
+                'tag_ids': [ref('tag_ae_11')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_11')],
+                'tag_ids': [ref('tag_ae_tax_11')],
             }),
         ]"/>
     </record>
@@ -860,7 +860,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_04')],
+                'tag_ids': [ref('tag_ae_04')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
@@ -872,7 +872,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_04')],
+                'tag_ids': [ref('tag_ae_04')],
             }),
         ]"/>
     </record>
@@ -893,7 +893,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_06')],
+                'tag_ids': [ref('tag_ae_06')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
@@ -905,7 +905,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_06')],
+                'tag_ids': [ref('tag_ae_06')],
             }),
         ]"/>
     </record>
@@ -921,26 +921,26 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_02')],
+                'tag_ids': [ref('tag_ae_02')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_02')],
+                'tag_ids': [ref('tag_ae_tax_02')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_02')],
+                'tag_ids': [ref('tag_ae_02')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_02')],
+                'tag_ids': [ref('tag_ae_tax_02')],
             }),
         ]"/>
     </record>
@@ -955,24 +955,24 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_07')],
+                'tag_ids': [ref('tag_ae_07')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
-                'financial_tag_ids': [ref('tag_ae_tax_07')],
+                'tag_ids': [ref('tag_ae_tax_07')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_07')],
+                'tag_ids': [ref('tag_ae_07')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
-                'financial_tag_ids': [ref('tag_ae_tax_07')],
+                'tag_ids': [ref('tag_ae_tax_07')],
             }),
         ]"/>
     </record>
@@ -987,38 +987,38 @@
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_10'), ref('tag_ae_02')],
+                'tag_ids': [ref('tag_ae_10'), ref('tag_ae_02')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_10')],
+                'tag_ids': [ref('tag_ae_tax_10')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_02')],
+                'tag_ids': [ref('tag_ae_tax_02')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'base',
-                'financial_tag_ids': [ref('tag_ae_10'), ref('tag_ae_02')],
+                'tag_ids': [ref('tag_ae_10'), ref('tag_ae_02')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_10')],
+                'tag_ids': [ref('tag_ae_tax_10')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('uae_account_3726'),
-                'financial_tag_ids': [ref('tag_ae_tax_02')],
+                'tag_ids': [ref('tag_ae_tax_02')],
             }),
         ]"/>
     </record>
