@@ -24,7 +24,7 @@ var DropBlock = AbstractPlugin.extend({
         'mouseup': '_onMouseUp',
     },
     pluginEvents: {
-        // 'drag-allowed': '_onDropZoneCheck', // trigger with dragAndDrop & callback = hasDropZone
+        'dropzone': '_onDragAndDropNeedDropZone',
         'drag': '_onDragAndDropStart',
         'dragAndDrop': '_onDragAndDropMove',
         'drop': '_onDragAndDropEnd',
@@ -51,8 +51,6 @@ var DropBlock = AbstractPlugin.extend({
         this._blockContainer = document.createElement('dropblock');
         if (this.options.dropblocks) {
             this._createBlocks(this.options.dropblocks);
-        } else {
-            console.error("'DropBlock' plugin should use 'dropblocks' options");
         }
         params.insertBeforeEditable(this._blockContainer);
         params.insertBeforeEditable(this._blockHandle);
@@ -63,7 +61,7 @@ var DropBlock = AbstractPlugin.extend({
         var self = this;
         var promise = this._super();
         if (!this.options.dropblocks) {
-            promise = promise.then(this._loadTemplateBlocks.bind(this, this.options.dropBlockTemplate));
+            promise = promise.then(this._loadTemplateBlocks.bind(this, this.options.dropBlockTemplate || 'wysiwyg.dropblock.defaultblocks'));
         }
         return promise.then(this._bindEvents.bind(this));
     },
@@ -170,19 +168,20 @@ var DropBlock = AbstractPlugin.extend({
      * @params {string} dropBlockTemplate
      **/
     _loadTemplateBlocks: function (dropBlockTemplate) {
-        this._blockContainer.innerHTML = this.options.renderTemplate('DropBlock', dropBlockTemplate || 'wysiwyg.dropblock.defaultblocks');
+        this._blockContainer.innerHTML = this.options.renderTemplate('DropBlock', dropBlockTemplate);
         this._blockNodes = this._blockContainer.querySelectorAll('block');
     },
     _dragAndDropStartCloneSidebarElements: function (block) {
         var thumbnail = block.querySelector('dropblock-thumbnail');
         var box = thumbnail.getBoundingClientRect();
+
         this._dragAndDrop = {
             left: box.left,
             top: box.top,
             width: box.width,
             height: box.height,
             thumbnail: this.utils.clone(thumbnail),
-            contents: [].slice.call(this.utils.clone(block.querySelector('content')).childNodes),
+            contents: [].slice.call(this.utils.clone(block.querySelector('content')).children),
         };
     },
     _dragAndDropStartCloneEditableElements: function (block) {
@@ -222,7 +221,10 @@ var DropBlock = AbstractPlugin.extend({
         this._dragAndDrop.dy = parseInt(this._dragAndDrop.top - ev.clientY - handlePosition.top);
         this._dragAndDropMove(ev);
         this._enabledDropZones = [];
-        this.trigger('drag', this._dragAndDrop.contents.slice());
+        this._createDropZoneOriginPosition();
+        var dropZones = [];
+        this.trigger('dropzone', this._dragAndDrop.contents.slice(), dropZones);
+        this.trigger('drag', this._dragAndDrop.contents.slice(), dropZones);
     },
     _dragAndDropMove: function (ev) {
         if (!this._dragAndDrop) {
@@ -280,59 +282,12 @@ var DropBlock = AbstractPlugin.extend({
             });
         }
 
+        this._removeDropZoneOriginPosition();
         this.trigger('drop', this._dragAndDrop.contents.slice(), this._selectedDragAndDrop);
         this._dragAndDrop = null;
         this._selectedDragAndDrop = null;
     },
-    /**
-     *
-     * @params {enum<before|after|append|prepend>} position
-     * @params {Node} node
-     * @params {boolean} [vertical]
-     * @returns {Node}
-     **/
-    _createDropZone: function (position, node, vertical) {
-        var dropzone = document.createElement('dropblock-dropzone');
-        if (vertical) {
-            dropzone.setAttribute('orientation', 'vertical');
-            dropzone.style.float = 'node';
-            dropzone.style.display = 'inline-block';
-        }
-        switch (position) {
-            case 'before':
-                node.parentNode.insertBefore(dropzone, node);
-                break;
-            case 'after':
-                if (node.nextSibling) {
-                    node.parentNode.insertBefore(dropzone, node.nextSibling);
-                }
-                node.parentNode.appendChild(dropzone);
-                break;
-            case 'append':
-                node.appendChild(dropzone);
-                break;
-            case 'prepend':
-                if (node.firstChild) {
-                    node.insertBefore(dropzone, node.firstChild);
-                } else {
-                    node.appendChild(dropzone);
-                }
-                break;
-        }
-
-        var box = dropzone.getBoundingClientRect();
-        this._enabledDropZones.push({
-            node: dropzone,
-            box: {
-                top: box.top + (vertical ? 0 : 20) - this._originBox.top,
-                left: box.left - this._originBox.left,
-                width: box.width,
-                height: box.height,
-            },
-        });
-    },
     _removeDropZones: function (dropzone) {
-        this._origin.parentNode.removeChild(this._origin);
         this._enabledDropZones.forEach(function (zone) {
             if (zone.node !== dropzone) {
                 zone.node.parentNode.removeChild(zone.node);
@@ -381,11 +336,99 @@ var DropBlock = AbstractPlugin.extend({
         return dropzones;
     },
     */
+    _removeDropZoneOriginPosition: function () {
+        this._origin.parentNode.removeChild(this._origin);
+    },
+    /**
+     *
+     * @params {enum<before|after|append|prepend>} position
+     * @params {Node} node
+     * @params {boolean} [vertical]
+     * @returns {Node}
+     **/
+    _createDropZone: function (position, node, vertical) {
+        if (node.tagName === 'DROPBLOCK-DROPZONE-ORIGIN') {
+            return;
+        }
 
-    _addDropZone: function () {
+        var dropzone = document.createElement('dropblock-dropzone');
+        if (vertical) {
+            dropzone.setAttribute('orientation', 'vertical');
+            dropzone.style.float = 'node';
+            dropzone.style.display = 'inline-block';
+        }
+        switch (position) {
+            case 'before':
+                if (node.previousSibling && node.previousSibling.tagName === 'DROPBLOCK-DROPZONE') {
+                    return;
+                }
+                node.parentNode.insertBefore(dropzone, node);
+                break;
+            case 'after':
+                if (node.nextSibling && node.nextSibling.tagName === 'DROPBLOCK-DROPZONE') {
+                    return;
+                }
+                if (node.nextSibling) {
+                    node.parentNode.insertBefore(dropzone, node.nextSibling);
+                } else {
+                    node.parentNode.appendChild(dropzone);
+                }
+                break;
+            case 'append':
+                if (node.lastChild && node.lastChild.tagName === 'DROPBLOCK-DROPZONE') {
+                    return;
+                }
+                node.appendChild(dropzone);
+                break;
+            case 'prepend':
+                if (node.firstChild && node.firstChild.tagName === 'DROPBLOCK-DROPZONE') {
+                    return;
+                }
+                var firstChild = node.firstChild;
+                if (firstChild.tagName === 'DROPBLOCK-DROPZONE-ORIGIN') {
+                    firstChild = firstChild.nextSibling;
+                }
+                if (firstChild) {
+                    node.insertBefore(dropzone, firstChild);
+                } else {
+                    node.appendChild(dropzone);
+                }
+                break;
+        }
+
+        var box = dropzone.getBoundingClientRect();
+        this._enabledDropZones.push({
+            node: dropzone,
+            box: {
+                top: box.top + (vertical ? 0 : 20) - this._originBox.top,
+                left: box.left - this._originBox.left,
+                width: box.width,
+                height: box.height,
+            },
+        });
+
+        // _insertDropZoneChild => dropzone size
+    },
+    _createDropZones: function (dropZones) {
         var self = this;
-        var children = [].slice.call(this.editable.children);
-
+        dropZones.forEach(function (dropZone) {
+            if (dropZone.dropIn) {
+                dropZone.dropIn.forEach(function (dropIn) {
+                    [].slice.call(dropIn.children).map(function (child) {
+                        self._createDropZone('before', child);
+                    });
+                    self._createDropZone('append', dropIn);
+                });
+            }
+            if (dropZone.dropNear) {
+                dropZone.dropNear.forEach(function (dropNear) {
+                    self._createDropZone('before', dropNear);
+                    self._createDropZone('after', dropNear);
+                });
+            }
+        });
+    },
+    _createDropZoneOriginPosition: function () {
         this._origin = document.createElement('dropblock-dropzone-origin');
         if (this.editable.firstChild) {
             this.editable.insertBefore(this._origin, this.editable.firstChild);
@@ -393,11 +436,6 @@ var DropBlock = AbstractPlugin.extend({
             this.editable.appendChild(this._origin);
         }
         this._originBox = this._origin.getBoundingClientRect();
-
-        var dropzones = children.map(function (child) {
-            return self._createDropZone('before', child);
-        });
-        this._createDropZone('append', this.editable);
     },
 
     //--------------------------------------------------------------------------
@@ -437,9 +475,14 @@ var DropBlock = AbstractPlugin.extend({
             });
         }
     },
-    _onDragAndDropStart: function (dragAndDropContents) {
-        console.log(dragAndDropContents);
-        this._addDropZone();
+    _onDragAndDropNeedDropZone: function (dragAndDropContents, dropZones) {
+        dropZones.push({
+            dropIn: [this.editable],
+            // dropNear: this.editable.children,
+        });
+    },
+    _onDragAndDropStart: function (dragAndDropContents, dropZones) {
+        this._createDropZones(dropZones);
     },
     _onMouseDownBlock: function (ev) {
         this._dragAndDropEnd();

@@ -3,7 +3,7 @@ odoo.define('web_editor.wysiwyg.plugin.Selector', function (require) {
 
 var AbstractPlugin = require('web_editor.wysiwyg.plugin.abstract');
 var Manager = require('web_editor.wysiwyg.plugin.manager');
-
+var ArchNode = require('wysiwyg.plugin.arch.node');
 
 var booleans = "checked|selected|disabled|readonly|required",
     // http://www.w3.org/TR/css3-selectors/#whitespace
@@ -45,6 +45,7 @@ var booleans = "checked|selected|disabled|readonly|required",
                 // Supplemental Plane codepoint (surrogate pair)
                 String.fromCharCode( high >> 10 | 0xD800, high & 0x3FF | 0xDC00 );
     },
+    rpseudo = new RegExp( pseudos ),
     nthchild = /^\s*(([+-])?([0-9]+)?n\s*)?([+-])?\s*([0-9]+)$/,
     reqExp = {
         "ID": new RegExp( "^#(" + identifier + ")" ),
@@ -57,16 +58,7 @@ var booleans = "checked|selected|disabled|readonly|required",
 var Selector = AbstractPlugin.extend({
     dependencies: ['Arch'],
 
-    _cacheToken: {},
-    _cacheSearch: {},
-
-    /**
-     * @override
-     **/
-    init: function (parent, params) {
-        this._super.apply(this, arguments);
-        this._cacheSearchToken = {};
-    },
+    _cacheSearchToken: {},
 
     start: function () {
         var string = 'p, section#eee, .parallax, :not(.o_gallery > .container) > .carousel:first-child span.toto[truc="33"]';
@@ -83,30 +75,24 @@ var Selector = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     /**
-     * @param {Object} [root]
+     * @param {ArchNode} [archNode]
      * @param {string} string
      * @param {boolean} [noCache]
      **/
-    search: function (root, string) {
+    search: function (archNode, string) {
         var self = this;
-        if (typeof root === 'string') {
-            string = root;
-            root = this.dependencies.Arch._arch;
-        } else if (!root) {
-            root = this.dependencies.Arch._arch;
+        if (typeof archNode === 'string') {
+            string = archNode;
+            archNode = this.dependencies.Arch._arch;
+        } else if (!archNode) {
+            archNode = this.dependencies.Arch._arch;
         }
 
         string = string.trim();
         var ids = [];
-        this._tokenize(string).forEach(function (token) {
-            if (token[0].type !== 'BROWSE') {
-                token = [{
-                    type: 'BROWSE',
-                    identifier: ' ',
-                }].concat(token);
-            }
-
-            self._searchFromToken([root], token).forEach(function (archNode) {
+        this._tokenize(string).token.forEach(function (token) {
+            token = self._tokenizeForSearch(token);
+            self._searchFromToken([archNode], token).forEach(function (archNode) {
                 if (ids.indexOf(archNode.id) === -1) {
                     ids.push(archNode.id);
                 }
@@ -114,12 +100,52 @@ var Selector = AbstractPlugin.extend({
         });
         return ids;
     },
+    /**
+     * @param {ArchNode|Element} [archNode]
+     * @param {string} string
+     * @param {boolean} [noCache]
+     **/
+    is: function (archNode, string) {
+        var self = this;
+        if (!(archNode instanceof ArchNode)) {
+            archNode = this.dependencies.Arch._parseElement(archNode);
+        }
+        var is = false;
+        this._tokenize(string.trim()).token.forEach(function (token) {
+            if (is) {
+                return;
+            }
+            var hasChild = false;
+            token.forEach(function (t) {
+                if (t.type === 'BROWSE') {
+                    hasChild = true;
+                }
+            })
+            if (hasChild) {
+                token = self._tokenizeForSearch(token);
+                var archNodes = self._searchFromToken([self.dependencies.Arch._arch], token);
+                is = archNodes.indexOf(archNode) !== -1;
+            } else {
+                is = !!self._searchFromToken([archNode], token).length;
+            }
+        });
+        return is;
+    },
 
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
 
-    _tokenize: function ( selector) {
+    _tokenizeForSearch: function (token) {
+        if (token[0].type !== 'BROWSE' && (token[0].type !== 'TAG' || token[0].identifier !== 'EDITABLE')) {
+            token = [{
+                type: 'BROWSE',
+                identifier: ' ',
+            }].concat(token);
+        }
+        return token;
+    },
+    _tokenize: function (selector) {
         var matched, match, tokens, type, soFar, groups;
 
         if (this._cacheSearchToken[selector]) {
@@ -146,9 +172,10 @@ var Selector = AbstractPlugin.extend({
             for (var type in this) {
                 if (!type.indexOf('_tokenizeExpr_') && (match = this[ type ]( soFar ))) {
                     matched = true;
+                    type = type.slice(14);
                     tokens.push({
-                        type: type.slice(14),
-                        identifier: match[1],
+                        type: type,
+                        identifier: type === 'TAG' && match[1] !== 'EDITABLE' ? match[1].toLowerCase() : match[1],
                         value: match[2],
                     });
                     soFar = soFar.slice( match[0].length );
@@ -164,11 +191,13 @@ var Selector = AbstractPlugin.extend({
             console.error( selector );
         }
 
-        this._cacheSearchToken[selector] = groups;
+        this._cacheSearchToken[selector] = {
+            token: groups,
+            rest: soFar,
+        };
 
-        return groups;
+        return this._cacheSearchToken[selector];
     },
-
 
     _tokenizeExpr_ID: function (string) {
         return reqExp.ID.exec(string);
@@ -212,7 +241,7 @@ var Selector = AbstractPlugin.extend({
         // Strip excess characters from unquoted arguments
         } else if ( unquoted && rpseudo.test( unquoted ) &&
             // Get excess from tokenize (recursively)
-            (excess = tokenize( unquoted, true )) &&
+            (excess = this._tokenize( unquoted ).rest.length) &&
             // advance to the next closing parenthesis
             (excess = unquoted.indexOf( ")", unquoted.length - excess ) - unquoted.length) ) {
 
@@ -274,7 +303,7 @@ var Selector = AbstractPlugin.extend({
     _searchFromToken_ATTR: function (archNodes, identifier, value) {
         return this._searchFromTokenLoop(archNodes, function (archNode) {
             var val = archNode.attributes && archNode.attributes[identifier];
-            if (!attributes) {
+            if (!val) {
                 return false;
             }
             val = val.toSting();
@@ -440,7 +469,7 @@ var Selector = AbstractPlugin.extend({
     _searchFromToken_PSEUDO_is: function (archNodes, value) {
         var self = this;
         return this._searchFromTokenLoop(archNodes, function (archNode) {
-            return !self.search(archNode, value).length;
+            return self.is(archNode, value);
         });
     },
     _searchFromToken_PSEUDO_not: function (archNodes, value) {

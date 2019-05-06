@@ -122,7 +122,7 @@ var Wysiwyg = Widget.extend({
             styleTags: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre'],
             colors: this._groupColors,
             dropblocks: this._dropblocks,
-            dropblockSelector: this.dropblockSelector,
+            dropblockSelector: this._dropblockSelector,
             plugins: this.options.plugins,
             renderTemplate: this._renderTemplate.bind(this),
             loadTemplates: this._loadTemplates.bind(this),
@@ -247,9 +247,8 @@ var Wysiwyg = Widget.extend({
 
 
                 var menu = [];
-                console.log('----');
+                console.log($(this).children().get());
                 $(this).children().each(function () {
-                    console.log(this);
                     var $child = $(this);
                     if ($child.hasClass('dropdown-submenu')) {
                         var submenu = [];

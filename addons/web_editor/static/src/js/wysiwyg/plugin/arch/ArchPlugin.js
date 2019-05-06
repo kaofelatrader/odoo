@@ -395,20 +395,23 @@ var ArchPlugin = AbstractPlugin.extend({
     render: function (id, options) {
         return this._manager.render(id, options);
     },
+    getElement: function (id) {
+        return this._renderer.getElement(id);
+    },
 
     //--------------------------------------------------------------------------
     // Range methods
     //--------------------------------------------------------------------------
 
     getFocusedNode: function () {
-        return this._renderer.getElement(this.parentIfText(this._range.scID));
+        return this.getElement(this.parentIfText(this._range.scID));
     },
     /**
      * @returns {WrappedRange}
      */
     getRange: function () {
-        var sc = this._renderer.getElement(this._range.scID);
-        var ec = this._range.scID === this._range.ecID ? sc : this._renderer.getElement(this._range.ecID);
+        var sc = this.getElement(this._range.scID);
+        var ec = this._range.scID === this._range.ecID ? sc : this.getElement(this._range.ecID);
         return new WrappedRange({
             sc: sc,
             so: this._range.so,
@@ -509,7 +512,7 @@ var ArchPlugin = AbstractPlugin.extend({
             if (typeof pointsWithIDs.so === 'number') {
                 eo = so;
             } else {
-                var sc = this._renderer.getElement(scID);
+                var sc = this.getElement(scID);
                 eo = this.utils.nodeLength(sc);
             }
         }
@@ -678,8 +681,8 @@ var ArchPlugin = AbstractPlugin.extend({
     _willRangeChange: function (points) {
         var willOffsetChange = points.so !== this._range.so || points.eo !== this._range.eo;
         var willIDsChange = points.scID !== this._range.scID || points.ecID !== this._range.ecID;
-        var willNodesChange = this._renderer.getElement(points.scID) !== this._renderer.getElement(this._range.scID) ||
-            this._renderer.getElement(points.ecID) !== this._renderer.getElement(this._range.ecID);
+        var willNodesChange = this.getElement(points.scID) !== this.getElement(this._range.scID) ||
+            this.getElement(points.ecID) !== this.getElement(this._range.ecID);
         return willOffsetChange || willIDsChange || willNodesChange;
     },
 
@@ -943,7 +946,7 @@ var ArchPlugin = AbstractPlugin.extend({
             this._range = range; // fail if use _setRangeWithIDs ????
         } else {
             range = result.range;
-            if (this._renderer.getElement(range.id)) {
+            if (this.getElement(range.id)) {
                 this._setRangeWithIDs({
                     scID: range.id,
                     so: range.offset,
