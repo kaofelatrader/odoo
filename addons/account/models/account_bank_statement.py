@@ -492,9 +492,10 @@ class AccountBankStatementLine(models.Model):
         payment_list = []
         move_list = []
         account_type_receivable = self.env.ref('account.data_account_type_receivable')
+        statement_ids = [a['statement_line_id'][0] for a in self.env['account.move.line'].read_group([('statement_line_id', 'in', self.ids)], ['statement_line_id'], ['statement_line_id'])]
         for st_line in self:
             # Technical functionality to automatically reconcile by creating a new move line
-            if st_line.account_id and not st_line.journal_entry_ids.ids:
+            if st_line.account_id and not st_line.id in statement_ids:
                 # Create payment vals
                 total = st_line.amount
                 payment_methods = (total > 0) and st_line.journal_id.inbound_payment_method_ids or st_line.journal_id.outbound_payment_method_ids
