@@ -46,7 +46,7 @@
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button string="Stock Valuation Layers" type="object"
                     name="action_view_stock_valuation_layers"
-                    class="oe_stat_button" icon="fa-dollar-sign" groups="base.group_no_one"
+                    class="oe_stat_button" icon="fa-dollar-sign" groups="stock.group_stock_manager"
                     attrs="{'invisible': [('state', 'not in', ['done'])]}" />
             </xpath>
         </field>
