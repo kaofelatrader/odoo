@@ -335,13 +335,9 @@ class SaleOrder(models.Model):
         for order in self:
             order._portal_ensure_token()
         composer_form_view_id = self.env.ref('mail.email_compose_message_wizard_form').id
-        try:
-            default_template = self.env.ref('website_sale.mail_template_sale_cart_recovery', raise_if_not_found=False)
-            default_template_id = default_template.id if default_template else False
-            template_id = (self.filtered('website_id') == self and
-                           self.mapped('website_id')[-1:1].cart_recovery_mail_template_id.id) or default_template_id
-        except:
-            template_id = False
+
+        template_id = self._get_recovery_template().id
+
         return {
             'type': 'ir.actions.act_window',
             'view_type': 'form',
@@ -359,6 +355,24 @@ class SaleOrder(models.Model):
                 'active_ids': self.ids,
             },
         }
+
+    @api.multi
+    def _get_recovery_template(self):
+        try:
+            default_template = self.env.ref('website_sale.mail_template_sale_cart_recovery', raise_if_not_found=False)
+            template = (self.filtered('website_id') == self and
+                        self.mapped('website_id')[-1:1].cart_recovery_mail_template_id.id) or default_template
+        except:
+            template = False
+        return template
+
+    @api.multi
+    def recovery_email_send(self):
+        for order in self:
+            order._portal_ensure_token()
+            template = order._get_recovery_template()
+            if template:
+                template.with_context(website_sale_send_recovery_email=True).send_mail(order.id, force_send=False, raise_exception=False)
 
     @api.multi
     def get_base_url(self):
