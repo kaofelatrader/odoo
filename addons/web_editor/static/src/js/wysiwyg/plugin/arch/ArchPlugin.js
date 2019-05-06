@@ -59,6 +59,8 @@ var formatTags = [
     'u',
     'var',
 ];
+var reEscaped = /(&[a-z0-9]+;)/gi;
+var technicalSpan = document.createElement('span');
 var voidTags = [
     'br',
     'img',
@@ -1056,7 +1058,8 @@ var ArchPlugin = AbstractPlugin.extend({
                 archNode.append(self._parseElement(child));
             });
         } else {
-            archNode = this._createArchNode('TEXT', element.nodeValue);
+            var value = this._unescapeText(element.nodeValue);
+            archNode = this._createArchNode('TEXT', value);
         }
         return archNode;
     },
@@ -1157,6 +1160,12 @@ var ArchPlugin = AbstractPlugin.extend({
         };
 
         this._changes = [];
+    },
+    _unescapeText: function (text) {
+        return text.replace(reEscaped, function (a, r) {
+            technicalSpan.innerHTML = r;
+            return technicalSpan.textContent;
+        });
     },
     _addToArch: function (archNode) {
         var self = this;
