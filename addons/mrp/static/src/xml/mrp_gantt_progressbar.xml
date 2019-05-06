@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+
+    <t t-extend="GanttView.Row">
+        <t t-jquery="p.text-truncate" t-operation="replace">
+            <span class="text-truncate" t-esc="pill.display_name"/>
+            <div class="progress o_gant_mrp_progressbar">
+                <div class="progress-bar progress-bar-success" role="progressbar" t-attf-style="width: #{pill.duration_percent}%;">
+                  <t t-esc="pill.duration_percent"/>%
+                </div>
+            </div>
+        </t>
+    </t>
+
+    <t t-extend="gantt-popover">
+        <t t-jquery="ul li:last-child" t-operation="after">
+            <li><strong>Complete Percentage:</strong> <t t-esc="duration_percent"/>%</li>
+        </t>
+    </t>
+
+</templates>

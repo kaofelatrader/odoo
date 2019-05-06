@@ -330,7 +330,9 @@
         <field name="name">mrp.production.work.order.gantt.production</field>
         <field name="model">mrp.workorder</field>
         <field name="arch" type="xml">
-            <gantt date_stop="date_planned_finished" date_start="date_planned_start" string="Operations" default_group_by="production_id" create="0">
+            <gantt date_stop="date_planned_finished" color="color" progress="progress" date_start="date_planned_start" string="Operations" default_group_by="production_id" create="0">
+                <field name="color" invisible="1"/>
+                <field name="duration_percent"/>
             </gantt>
         </field>
     </record>
@@ -339,7 +341,9 @@
         <field name="name">mrp.workorder.view.gantt</field>
         <field name="model">mrp.workorder</field>
         <field name="arch" type="xml">
-            <gantt date_stop="date_planned_finished" date_start="date_planned_start" string="Operations" default_group_by="workcenter_id" create="0">
+            <gantt date_stop="date_planned_finished" color="color" progress="progress" date_start="date_planned_start" string="Operations" default_group_by="workcenter_id" create="0">
+                <field name="color" invisible="1"/>
+                <field name="duration_percent"/>
             </gantt>
         </field>
     </record>
