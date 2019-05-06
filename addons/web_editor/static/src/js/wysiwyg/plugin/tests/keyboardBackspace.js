@@ -341,7 +341,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
             start: "li:contents()[0]->0",
             key: 'BACKSPACE',
         }],
-        test: "<p>toto</p><p>◆&nbsp;<img data-src=\"/web_editor/static/src/img/transparent.png\"/></p>",
+        test: "<p>toto</p><p>◆&nbsp;<img src=\"/web_editor/static/src/img/transparent.png\"/></p>",
     },
     {
         name: "in empty-indented-li (other li - no other indented-li): BACKSPACE",
@@ -359,7 +359,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
             start: "ul ul li:contents()[0]->0",
             key: 'BACKSPACE',
         }],
-        test: "<ul><li><p>toto</p></li><li><br/>◆</li><ul><li><br/></li></ul><li><p>tutu</p></li></ul>",
+        test: "<ul><li><p>toto</p></li><li><br/>◆</li><li><ul><li><br/></li></ul></li><li><p>tutu</p></li></ul>",
     },
     {
         name: "in empty-indented-li (no other li, no other indented-li): BACKSPACE",
@@ -372,12 +372,12 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
     },
     {
         name: "in indented-li (other li, other indented-li): BACKSPACE at start",
-        content: "<ul><li><p>toto</p></li><ul><li><p>xxx</p></li><li><p>yyy</p></li></ul><li><p>tutu</p></li></ul>",
+        content: "<ul><li><p>toto</p></li><li><ul><li><p>xxx</p></li><li><p>yyy</p></li></ul></li><li><p>tutu</p></li></ul>",
         steps: [{
             start: "ul ul li:contents()[0]->0",
             key: 'BACKSPACE',
         }],
-        test: "<ul><li><p>toto</p></li><li><p>◆xxx</p></li><ul><li><p>yyy</p></li></ul><li><p>tutu</p></li></ul>",
+        test: "<ul><li><p>toto</p></li><li><p>◆xxx</p></li><li><ul><li><p>yyy</p></li></ul></li><li><p>tutu</p></li></ul>",
     },
     {
         name: "in li > second-p: BACKSPACE at start",

@@ -117,7 +117,7 @@ var ArchPlugin = AbstractPlugin.extend({
         // b > i
         [
             styleTags.concat(formatTags).concat(['a', 'li']),
-            formatTags.concat(['TEXT']),
+            formatTags.concat(['TEXT', 'img']),
         ],
         [
             styleTags.concat(formatTags).concat(['div', 'td', 'th', 'li']),
@@ -803,7 +803,13 @@ var ArchPlugin = AbstractPlugin.extend({
                 }
                 liAncestor.insert(this._createArchNode());
             }
-            listAncestor.after(liAncestor.childNodes);
+            var next = this._createArchNode('TEMP');
+            next.append(liAncestor.childNodes);
+            listAncestor[liAncestor.index() ? 'after' : 'before'](next);
+            var isNextInList = !!next.ancestor(function (nextNode) {
+                return nextNode.isList();
+            });
+            next.nodeName = isNextInList ? 'li' : 'p';
             var toRemove = !liAncestor.previousSibling() && !liAncestor.nextSibling() ? listAncestor : liAncestor;
             toRemove.remove();
         }

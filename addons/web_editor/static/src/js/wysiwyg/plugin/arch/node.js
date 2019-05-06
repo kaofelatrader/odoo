@@ -250,7 +250,7 @@ return Class.extend({
      */
     after: function (archNode) {
         if (Array.isArray(archNode)) {
-            return archNode.reverse().forEach(this.after.bind(this));
+            return archNode.slice().forEach(this.after.bind(this));
         }
         return this.parent.insertAfter(archNode, this);
     },
@@ -261,7 +261,7 @@ return Class.extend({
      */
     before: function (archNode) {
         if (Array.isArray(archNode)) {
-            return archNode.reverse().forEach(this.before.bind(this));
+            return archNode.slice().forEach(this.before.bind(this));
         }
         return this.parent.insertBefore(archNode, this);
     },
@@ -272,7 +272,7 @@ return Class.extend({
      */
     append: function (archNode) {
         if (Array.isArray(archNode)) {
-            return archNode.reverse().forEach(this.append.bind(this));
+            return archNode.slice().forEach(this.append.bind(this));
         }
         return this._changeParent(archNode, this.childNodes.length);
     },
@@ -333,7 +333,7 @@ return Class.extend({
      */
     prepend: function (archNode) {
         if (Array.isArray(archNode)) {
-            return archNode.reverse().forEach(this.prepend.bind(this));
+            return archNode.slice().forEach(this.prepend.bind(this));
         }
         return this._changeParent(archNode, 0);
     },
