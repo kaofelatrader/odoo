@@ -5,8 +5,9 @@
         <field name="arch" type="xml">
             <tree>
                 <field name="product_id" />
-                <field name="value" />
                 <field name="quantity" />
+                <field name="uom_id" groups="uom.group_uom" />
+                <field name="value" />
             </tree>
         </field>
     </record>
