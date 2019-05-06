@@ -342,7 +342,6 @@ var KanbanRenderer = BasicRenderer.extend({
                 axis: 'x',
                 items: '.o_kanban_group',
                 handle: '.o_kanban_header_title',
-                containment: 'parent',
                 revert: 150,
                 tolerance: 'pointer',
                 ondrop: function () {

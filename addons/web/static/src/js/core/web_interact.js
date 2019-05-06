@@ -149,11 +149,10 @@ var _getPlaceholder = function (sortable) {
  * @param {DOMElement} sortable
  * @param {DOMElement} item
  * @param {DOMElement} anchor
- * @param {string} axis
  * @param {string} connectWith
  * @returns {DOMElement|null}
  */
-var _setPlaceholder = function (sortable, item, anchor, axis, connectWith) {
+var _setPlaceholder = function (sortable, item, anchor, connectWith) {
     // Only update the placeholder if it would move it somewhere else
     if (!anchor || !anchor.classList.contains(placeholderClass)) {
         var placeholder = _getPlaceholder(item);
@@ -166,15 +165,8 @@ var _setPlaceholder = function (sortable, item, anchor, axis, connectWith) {
 
             // Placeholder need content to have a size in some CSS situations
             var placeholderContent = document.createElement('div');
-            if (axis === 'x') {
-                placeholderContent.style.width = computedStyle.width;
-            } else if (axis === 'y') {
-                placeholderContent.style.height = computedStyle.height;
-            } else if (axis === 'both') {
-                placeholderContent.style.width = computedStyle.width;
-                placeholderContent.style.height = computedStyle.height;
-                placeholderContent.style.backgroundColor = 'lightgray';
-            }
+            placeholderContent.style.width = computedStyle.width;
+            placeholderContent.style.height = computedStyle.height;
             placeholder.appendChild(placeholderContent);
         }
 
@@ -219,7 +211,7 @@ var _cleanPlaceholder = function (sortable) {
  * @param {Function} [options.ondrop] called on drop of valid item
  * @param {Function} [options.ondragleave] called on drag leave of valid item
  * @param {Function} [options.ondropdectivate] called on drag stop of valid item
- * @param {string} [options.axis] sortable axis (default: 'y')
+ * @param {string} [options.axis] constrained axis
  * @param {string} [options.connectWith] selector for other connected sortables
  * @param {string} [options.containment] selector for restricted items drag area
  * @param {string} [options.handle] restrict dragging to this selector
@@ -231,7 +223,7 @@ var _cleanPlaceholder = function (sortable) {
  */
 var _sortable = function (el, options) {
     var options = options || {};
-    var axis = options.axis || 'y';
+    var axis = options.axis;
     var connectWith = options.connectWith;
     var containment = options.containment;
     var handle = options.handle;
@@ -269,7 +261,7 @@ var _sortable = function (el, options) {
         var draggable = ev.relatedTarget;
         var anchor = draggable.nextSibling;
         if (sortable.contains(draggable)) {
-            _setPlaceholder(sortable, draggable, anchor, axis, connectWith);
+            _setPlaceholder(sortable, draggable, anchor, connectWith);
         }
 
         // Set droppable on all items in this sortable
@@ -295,53 +287,49 @@ var _sortable = function (el, options) {
                 overlap: tolerance || 'center',
                 ondropactivate: options.onitemdropactivate,
                 ondropmove: function (ev) {
-                    var dropEl = ev.target;
-                    var dragEl = ev.relatedTarget;
+                    var drop = ev.target;
+                    var drag = ev.relatedTarget;
+                    var dy = ev.dragEvent.dy;
+                    var dx = ev.dragEvent.dx;
 
                     var shouldMakeWay = true;
-                    // We trust interactjs for overlap pointer and center, but
-                    // for the case of items, we want to make way only if the
-                    // center of the dragged element has crossed the center of
-                    // of the dropzone element, while interactjs center only
-                    // tests if the center of the dragged element is currently
-                    // inside the dropzone area, which is not enough for this.
-                    if (axis === 'y' && tolerance !== 'pointer') {
-                        var dropY = dropEl.offsetTop + dropEl.offsetHeight / 2;
-                        var dragY = dragEl.offsetTop + dragEl.offsetHeight / 2;
-                        shouldMakeWay = ev.dragEvent.dy > 0 === dragY > dropY;
-                    } else if (axis === 'x' && tolerance !== 'pointer') {
-                        var dropX = dropEl.offsetLeft + dropEl.offsetWidth / 2;
-                        var dragX = dragEl.offsetLeft + dragEl.offsetWidth / 2;
-                        shouldMakeWay = ev.dragEvent.dx > 0 === dragX > dropX;
+                    // We trust interactjs for overlap pointer, but
+                    // overlap center only tests if the center of the
+                    // dragged element is currently inside the dropzone
+                    // element, which is not enough for us. We want to
+                    // only make way if the center of the dragged
+                    // element has crossed the center of the dropzone.
+                    if (tolerance !== 'pointer') {
+                        var crossedY;
+                        var crossedX;
+                        var dropRect = drop.getBoundingClientRect();
+                        var dragRect = drag.getBoundingClientRect();
+                        if (!axis || axis === 'y') {
+                            var dropY = dropRect.top + dropRect.height / 2;
+                            var dragY = dragRect.top + dragRect.height / 2;
+                            crossedY = dy > 0 === dragY > dropY;
+                        }
+                        if (!axis || axis === 'x') {
+                            var dropX = dropRect.left + dropRect.width / 2;
+                            var dragX = dragRect.left + dragRect.width / 2;
+                            crossedX = dx > 0 === dragX > dropX;
+                        }
+                        if (!axis) {
+                            var moreVertical = Math.abs(dy) > Math.abs(dx);
+                            crossedY = crossedY && moreVertical;
+                            crossedX = crossedX && !moreVertical;
+                        }
+                        shouldMakeWay = crossedY || crossedX;
                     }
 
                     if (shouldMakeWay) {
                         var anchor = ev.target;
-                        if (axis === 'y' && ev.dragEvent.dy > 0) {
-                            // If dragging downward in y axis mode, then anchor
-                            // after this item, so before the next item.
+                        // If the pointer comes from above or directly left,
+                        // the placeholder must come after the item.
+                        if (dy > 0 || (dy === 0 && dx > 0)) {
                             anchor = anchor.nextSibling;
-                        } else if (axis === 'x' && ev.dragEvent.dx > 0) {
-                            // If dragging rightward in x axis mode, then anchor
-                            // after this item, so before the next item.
-                            anchor = anchor.nextSibling;
-                        } else if (axis === 'both') {
-                            // If dragging downard, then anchor after this item.
-                            // However, if dragging upward, then look at the X
-                            // delta. Only anchor after this item if the move
-                            // is more vertical than it is horizontal. This is
-                            // to reflect the fact that the browser fills the
-                            // space on the screen horizontally first then, when
-                            // there is no more room, fills it vertically.
-                            var dy = ev.dragEvent.dy;
-                            var dx = ev.dragEvent.dx;
-                            var moreVertical = Math.abs(dy) > Math.abs(dx)
-                            if (dy > 0 || (dx > 0 && moreVertical)) {
-                                anchor = anchor.nextSibling;
-                            }
                         }
-
-                        _setPlaceholder(el, dragEl, anchor, axis, connectWith);
+                        _setPlaceholder(el, drag, anchor, connectWith);
 
                         if (options.onsort) {
                             options.onsort(ev);
@@ -377,7 +365,7 @@ var _sortable = function (el, options) {
             // We need to check for existing placeholders as hovering the
             // placeholder itselfs is considered as hovering the sortable since
             // the placeholder is not considered as an item on its own.
-            _setPlaceholder(el, ev.relatedTarget, null, axis, connectWith);
+            _setPlaceholder(el, ev.relatedTarget, null, connectWith);
         }
 
         if (options.ondragenter) {
@@ -459,12 +447,34 @@ var _sortable = function (el, options) {
                 if (handle) {
                     itemsDraggableOptions.allowFrom = handle;
                 }
-                if (containment) {
+                if (containment || axis) {
                     // Restrict the items to stay in the designated area
+                    // Axis implies containment to the parent. Free movement is
+                    // possible only in the given axis while the other axis is
+                    // confined within the parent.
                     itemsDraggableOptions.restrict = {
-                        restriction: containment,
-                        elementRect: { left: 0, right: 1, top: 0, bottom: 1 }
+                        restriction: containment || 'parent',
                     };
+
+                    // The elementRect option of interactjs is quite obnoxious.
+                    // It defines which area of the draggable item should be
+                    // considered when computing collision for the restriction.
+                    // For the left and right properties, 0 means the left edge
+                    // of the element and 1 means the right edge. For top and
+                    // bottom, 0 means the top edge of the element and 1 means
+                    // the bottom.
+                    // ex: { top: 0.25, left: 0.25, bottom: 0.75, right: 0.75 }
+                    // would result in a quarter of the element being allowed to
+                    // hang over the restriction edges.
+                    var elementRect;
+                    if (containment) {
+                        elementRect = { top: 0, left: 0, bottom: 1, right: 1};
+                    } else if (axis === 'y') {
+                        elementRect = { top: 1, left: 0, bottom: 0, right: 1};
+                    } else if (axis === 'x') {
+                        elementRect = { top: 0, left: 1, bottom: 1, right: 0 };
+                    }
+                    itemsDraggableOptions.restrict.elementRect = elementRect;
                 }
                 _draggable(item, itemsDraggableOptions);
                 itemHandle.classList.add('o_sortable_handle');
