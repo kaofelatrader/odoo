@@ -234,6 +234,12 @@ var KeyboardPlugin = AbstractPlugin.extend({
 
             // Outdent if on left edge of an indented block
             var liAncestor = this.utils.ancestor(range.sc, this.utils.isLi);
+            while (range.so > 0 && range.sc.textContent[range.so - 1] === '\uFEFF') {
+                range.so = range.eo = range.so - 1;
+            }
+            while (range.sc.previousSibling && this.utils.isText(range.sc.previousSibling) && range.sc.previousSibling.textContent === '\uFEFF') {
+                range.sc = range.ec = range.sc.previousSibling;
+            }
             var isOnLeftEdgeOfLi = liAncestor && range.getStartPoint().isLeftEdgeOf(liAncestor);
             if (isOnLeftEdgeOfLi) {
                 this.dependencies.Arch.outdent();

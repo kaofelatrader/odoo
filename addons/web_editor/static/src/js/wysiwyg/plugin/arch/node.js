@@ -286,13 +286,13 @@ return Class.extend({
             }
             node = node.parent;
         }
-        edges.reverse().forEach(function (node) {
+        edges.reverse().slice().forEach(function (node) {
             var next = node[isLeft ? 'previousSibling' : 'nextSibling']();
             if (!next) {
                 return;
             }
             if (node._isMergeableWith(next)) {
-                node.childNodes.forEach(function (node) {
+                node.childNodes.slice().forEach(function (node) {
                     next[isLeft ? 'append' : 'prepend'](node);
                 });
                 node.remove();

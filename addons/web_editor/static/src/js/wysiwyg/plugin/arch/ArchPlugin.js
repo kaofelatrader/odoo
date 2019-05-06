@@ -803,16 +803,26 @@ var ArchPlugin = AbstractPlugin.extend({
                 }
                 liAncestor.insert(this._createArchNode());
             }
-            var next = this._createArchNode('TEMP');
-            next.append(liAncestor.childNodes);
+            var next;
+            var hasOneChild = liAncestor.childNodes.length > 1;
+            if (hasOneChild) {
+                next = this._createArchNode('TEMP');
+                next.append(liAncestor.childNodes);
+            } else {
+                next = liAncestor.firstChild();
+            }
             listAncestor[liAncestor.index() ? 'after' : 'before'](next);
             var isNextInList = !!next.ancestor(function (nextNode) {
                 return nextNode.isList();
             });
-            next.nodeName = isNextInList ? 'li' : 'p';
+            next.nodeName = hasOneChild ? (isNextInList ? 'li' : 'p') : next.nodeName;
             var toRemove = !liAncestor.previousSibling() && !liAncestor.nextSibling() ? listAncestor : liAncestor;
             toRemove.remove();
+            if (!next.isEmpty() && next.nodeName !== 'li') {
+                next.deleteEdge(true);
+            }
         }
+        return archNode;
     },
     _indentText: function (outdent) {},
     _removeSide: function (isLeft) {

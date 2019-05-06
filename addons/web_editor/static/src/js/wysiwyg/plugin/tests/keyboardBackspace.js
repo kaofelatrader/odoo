@@ -341,7 +341,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
             start: "li:contents()[0]->0",
             key: 'BACKSPACE',
         }],
-        test: "<p>toto</p><p>◆&nbsp;<img src=\"/web_editor/static/src/img/transparent.png\"/></p>",
+        test: "<p>toto◆&nbsp;<img src=\"/web_editor/static/src/img/transparent.png\"/></p>",
     },
     {
         name: "in empty-indented-li (other li - no other indented-li): BACKSPACE",
@@ -390,9 +390,9 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
     },
     {
         name: "in li (li after): BACKSPACE at start, with spaces",
-        content: "<p>dom to edit&nbsp;    </p><ul><li><p>    &nbsp; dom to edit</p></li><li><p>dom not to edit</p></li></ul>",
+        content: "<p>dom to edit&nbsp;</p><ul><li><p>&nbsp; dom to edit</p></li><li><p>dom not to edit</p></li></ul>",
         steps: [{
-            start: "p:eq(1):contents()[0]->6",
+            start: "p:eq(1):contents()[0]->2",
             key: 'BACKSPACE',
         }, {
             key: 'BACKSPACE',
@@ -401,7 +401,7 @@ var TestKeyboardBackspace = AbstractPlugin.extend({
         }, {
             key: 'BACKSPACE',
         }],
-        test: "<p>dom to edit&nbsp; ◆dom to edit</p><ul><li><p>dom not to edit</p></li></ul>",
+        test: "<p>dom to edit◆dom to edit</p><ul><li><p>dom not to edit</p></li></ul>",
     },
     {
         name: "in li > p: BACKSPACE after single character",
