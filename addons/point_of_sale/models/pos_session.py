@@ -258,6 +258,7 @@ class PosSession(models.Model):
             session.write({'state': 'closing_control', 'stop_at': fields.Datetime.now()})
             if not session.config_id.cash_control:
                 session.action_pos_session_close()
+        return True
 
     @api.multi
     def _check_pos_session_balance(self):
