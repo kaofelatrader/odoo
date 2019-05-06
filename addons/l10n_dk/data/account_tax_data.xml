@@ -20,7 +20,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8720'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_salgsmoms')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_salgsmoms')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
@@ -32,7 +32,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8720'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_salgsmoms')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_salgsmoms')],
             }),
         ]"/>
     </record>
@@ -54,7 +54,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8720'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_salgsmoms')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_salgsmoms')],
             }),
 
         ]"/>
@@ -67,7 +67,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8720'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_salgsmoms')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_salgsmoms')],
             }),
         ]"/>
     </record>
@@ -89,7 +89,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8758'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_rubrik_c_ydelser')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_rubrik_c_ydelser')],
             }),
             (0,0, {
                 'factor_percent': -100,
@@ -106,7 +106,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8758'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_rubrik_c_ydelser')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_rubrik_c_ydelser')],
             }),
             (0,0, {
                 'factor_percent': -100,
@@ -134,7 +134,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8754'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_rubrik_b_vare_til_EUmoms')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_rubrik_b_vare_til_EUmoms')],
             }),
             (0,0, {
                 'factor_percent': -100,
@@ -151,7 +151,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8754'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_rubrik_b_vare_til_EUmoms')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_rubrik_b_vare_til_EUmoms')],
             }),
             (0,0, {
                 'factor_percent': -100,
@@ -178,7 +178,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8755'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_rubrik_b_ydelser')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_rubrik_b_ydelser')],
             }),
             (0,0, {
                 'factor_percent': -100,
@@ -200,7 +200,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8755'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_rubrik_b_ydelser')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_rubrik_b_ydelser')],
             }),
         ]"/>
     </record>
@@ -223,7 +223,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8758'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_rubrik_c_ydelser')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_rubrik_c_ydelser')],
             }),
             (0,0, {
                 'factor_percent': -100,
@@ -240,7 +240,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8758'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_rubrik_c_ydelser')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_rubrik_c_ydelser')],
             }),
             (0,0, {
                 'factor_percent': -100,
@@ -269,13 +269,13 @@
                 'factor_percent': 25,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
             (0,0, {
                 'factor_percent': -25,
                 'repartition_type': 'tax',
                 'account_id': ref('a8730'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_moms_af_varekob_i_udlandet')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_moms_af_varekob_i_udlandet')],
             }),
             (0,0, {
                 'factor_percent': -100,
@@ -286,7 +286,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8750'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_rubrik_a_varer')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_rubrik_a_varer')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
@@ -298,13 +298,13 @@
                 'factor_percent': 25,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
             (0,0, {
                 'factor_percent': -25,
                 'repartition_type': 'tax',
                 'account_id': ref('a8730'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_moms_af_varekob_i_udlandet')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_moms_af_varekob_i_udlandet')],
             }),
             (0,0, {
                 'factor_percent': -100,
@@ -315,7 +315,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8750'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_rubrik_a_varer')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_rubrik_a_varer')],
             }),
         ]"/>
     </record>
@@ -337,19 +337,19 @@
                 'factor_percent': 25,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
             (0,0, {
                 'factor_percent': -25,
                 'repartition_type': 'tax',
                 'account_id': ref('a8731'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_moms_af_ydelseskob_i_udlandet')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_moms_af_ydelseskob_i_udlandet')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8751'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_rubrik_a_ydelser')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_rubrik_a_ydelser')],
             }),
             (0,0, {
                 'factor_percent': -100,
@@ -366,19 +366,19 @@
                 'factor_percent': -25,
                 'repartition_type': 'tax',
                 'account_id': ref('a8731'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_moms_af_ydelseskob_i_udlandet')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_moms_af_ydelseskob_i_udlandet')],
             }),
             (0,0, {
                 'factor_percent': 25,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
             (0,0, {
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8751'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_rubrik_a_ydelser')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_rubrik_a_ydelser')],
             }),
             (0,0, {
                 'factor_percent': -100,
@@ -406,13 +406,13 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8730'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_moms_af_varekob_i_udlandet')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_moms_af_varekob_i_udlandet')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
@@ -424,13 +424,13 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8730'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_moms_af_varekob_i_udlandet')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_moms_af_varekob_i_udlandet')],
             }),
         ]"/>
     </record>
@@ -452,13 +452,13 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8731'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_moms_af_ydelseskob_i_udlandet')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_moms_af_ydelseskob_i_udlandet')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
@@ -470,13 +470,13 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8731'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_moms_af_ydelseskob_i_udlandet')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_moms_af_ydelseskob_i_udlandet')],
             }),
         ]"/>
     </record>
@@ -499,13 +499,13 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8725'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_salgsmoms')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_salgsmoms')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
@@ -517,13 +517,13 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
             (0,0, {
                 'factor_percent': -100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8725'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_salgsmoms')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_salgsmoms')],
             }),
         ]"/>
     </record>
@@ -545,7 +545,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
@@ -557,7 +557,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
         ]"/>
     </record>
@@ -579,7 +579,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
@@ -591,7 +591,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
         ]"/>
     </record>
@@ -613,7 +613,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
@@ -625,7 +625,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
         ]"/>
     </record>
@@ -646,7 +646,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
@@ -658,7 +658,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
         ]"/>
     </record>
@@ -679,7 +679,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'plus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'plus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
         ]"/>
         <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
@@ -691,7 +691,7 @@
                 'factor_percent': 100,
                 'repartition_type': 'tax',
                 'account_id': ref('a8740'),
-                'minus_tag_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
+                'minus_report_line_ids': [ref('account_financial_report_l10n_dk_kobsmoms')],
             }),
         ]"/>
     </record>
