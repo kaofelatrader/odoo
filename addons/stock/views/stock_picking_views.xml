@@ -414,7 +414,7 @@ action = action_values
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_type">form</field>
-            <field name="view_mode">tree,kanban,form,calendar</field>
+            <field name="view_mode">tree,kanban,form,calendar,map</field>
             <field name="domain"></field>
             <field name="context">{
                     'contact_display': 'partner_address',
@@ -435,7 +435,7 @@ action = action_values
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_type">form</field>
-            <field name="view_mode">tree,kanban,form,calendar</field>
+            <field name="view_mode">tree,kanban,form,calendar,map</field>
             <field name="domain"></field>
             <field name="context">{
                     'search_default_picking_type_id': [active_id],
@@ -478,7 +478,7 @@ action = action_values
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_type">form</field>
-            <field name="view_mode">tree,kanban,form,calendar</field>
+            <field name="view_mode">tree,kanban,form,calendar,map</field>
             <field name="domain"></field>
             <field name="context">{
                     'search_default_picking_type_id': [active_id],
@@ -523,7 +523,7 @@ action = action_values
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_type">form</field>
-            <field name="view_mode">tree,kanban,form,calendar</field>
+            <field name="view_mode">tree,kanban,form,calendar,map</field>
             <field name="domain"></field>
             <field name="context">{
                     'search_default_picking_type_id': [active_id],
@@ -545,7 +545,7 @@ action = action_values
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_type">form</field>
-            <field name="view_mode">tree,kanban,form,calendar</field>
+            <field name="view_mode">tree,kanban,form,calendar,map</field>
             <field name="domain"></field>
             <field name="context">{
                     'search_default_picking_type_id': [active_id],
