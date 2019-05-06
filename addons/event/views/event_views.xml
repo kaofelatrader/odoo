@@ -242,7 +242,7 @@
                                 <label for="date_begin" string="Date"/>
                                 <div>
                                     <field name="date_begin" widget="daterange" nolabel="1" class="oe_inline" options="{'related_end_date': 'date_end'}"/>
-                                    <i class="fa fa-long-arrow-right mx-2"/>
+                                    <i class="fa fa-long-arrow-right mx-2" aria-label="Arrow icon"/>
                                     <field name="date_end" widget="daterange" nolabel="1" class="oe_inline" options="{'related_start_date': 'date_begin'}"/>
                                 </div>
                                 <field name="date_tz"/>
