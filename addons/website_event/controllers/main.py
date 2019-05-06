@@ -148,7 +148,6 @@ class WebsiteEventController(http.Controller):
 
         values = {
             'event': event,
-            'main_object': event
         }
 
         if '.' not in page:
@@ -161,6 +160,8 @@ class WebsiteEventController(http.Controller):
             values['path'] = re.sub(r"^website_event\.", '', page)
             values['from_template'] = 'website_event.default_page'  # .strip('website_event.')
             page = 'website.%s' % (request.website.is_publisher() and 'page_404' or '404')
+
+        values['main_object'] = request.website.viewref(page)
 
         return request.render(page, values)
 
