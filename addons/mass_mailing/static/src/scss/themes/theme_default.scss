@@ -107,6 +107,7 @@ td:not([align]) {
         &:hover, &:focus, &:active {
             text-decoration: none !important;
         }
+        border: none;
     }
 
     img {
