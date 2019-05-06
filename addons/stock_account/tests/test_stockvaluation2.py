@@ -178,6 +178,7 @@ class TestStockValuationStandard(TestStockValuationCommon):
 
         self.assertEqual(self.product1.value_svl, 75)
         self.assertEqual(self.product1.quantity_svl, 5)
+        self.assertEqual(self.product1.stock_valuation_layer_ids[-1].description, 'Product value manually modified (from 10.0 to 15.0)')
 
 
 class TestStockValuationAVCO(TestStockValuationCommon):

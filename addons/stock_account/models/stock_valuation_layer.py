@@ -3,7 +3,7 @@
 
 from collections import defaultdict
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from odoo.tools.float_utils import float_compare, float_is_zero
 
 
@@ -447,7 +447,7 @@ class ProductProduct(models.Model):
             vals = {
                 'company_id': company_id.id,
                 'product_id': product.id,
-                'description': 'change of std price',
+                'description': _('Product value manually modified (from %s to %s)') % (product.standard_price, new_price),
                 'value': value,
                 'quantity': 0,
             }
