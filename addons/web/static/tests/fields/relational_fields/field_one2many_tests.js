@@ -200,14 +200,14 @@ QUnit.module('fields', {}, function () {
             // change the int_field through drag and drop
             // that way, we'll trigger the sorting and the name_get
             // of the lines of "p"
-            await testUtils.dom.dragAndDrop(
-                form.$('.ui-sortable-handle').eq(1),
-                form.$('tbody tr').first(),
+            await testUtils.dom.pointerDragAndDrop(
+                form.$('.o_sortable_handle')[1],
+                form.$('tbody tr')[0],
                 { position: 'top' }
             );
 
             // Only those two should have been called
-            // name_get on trululu would trigger an traceback
+            // name_get on trululu would trigger a traceback
             assert.verifySteps(['default_get partner', 'onchange partner']);
 
             form.destroy();
@@ -690,7 +690,7 @@ QUnit.module('fields', {}, function () {
 
             // Drag and drop the second line in first position
             await testUtils.dom.pointerDragAndDrop(
-                form.$('.ui-sortable-handle')[1],
+                form.$('.o_sortable_handle')[1],
                 form.$('tbody tr')[0],
                 { position: 'top' }
             );
@@ -892,7 +892,7 @@ QUnit.module('fields', {}, function () {
 
             // Drag and drop the second line in first position
             await testUtils.dom.pointerDragAndDrop(
-                form.$('.ui-sortable-handle')[1],
+                form.$('.o_sortable_handle')[1],
                 form.$('tbody tr')[0],
                 { position: 'top' }
             );
@@ -953,7 +953,7 @@ QUnit.module('fields', {}, function () {
 
             // Drag and drop the second line in first position
             await testUtils.dom.pointerDragAndDrop(
-                form.$('.ui-sortable-handle')[1],
+                form.$('.o_sortable_handle')[1],
                 form.$('tbody tr')[0],
                 { position: 'top' }
             );
@@ -1016,7 +1016,7 @@ QUnit.module('fields', {}, function () {
 
             // Drag and drop the third line in second position
             await testUtils.dom.pointerDragAndDrop(
-                form.$('.ui-sortable-handle')[2],
+                form.$('.o_sortable_handle')[2],
                 form.$('.o_field_one2many tbody tr')[1],
                 { position: 'top' }
             );
@@ -1114,7 +1114,7 @@ QUnit.module('fields', {}, function () {
 
             // Drag and drop the third line in second position
             await testUtils.dom.pointerDragAndDrop(
-                form.$('.ui-sortable-handle')[2],
+                form.$('.o_sortable_handle')[2],
                 form.$('.o_field_one2many tbody tr')[1],
                 { position: 'top' }
             );
@@ -1124,7 +1124,7 @@ QUnit.module('fields', {}, function () {
 
             // Drag and drop the third line in second position
             await testUtils.dom.pointerDragAndDrop(
-                form.$('.ui-sortable-handle')[2],
+                form.$('.o_sortable_handle')[2],
                 form.$('.o_field_one2many tbody tr')[1],
                 { position: 'top' }
             );
@@ -1607,7 +1607,7 @@ QUnit.module('fields', {}, function () {
                 var pos = positions.shift();
 
                 await testUtils.dom.pointerDragAndDrop(
-                    form.$('.ui-sortable-handle')[pos[0]],
+                    form.$('.o_sortable_handle')[pos[0]],
                     form.$('tbody tr')[pos[1]],
                     { position: pos[2] }
                 );
@@ -1677,7 +1677,7 @@ QUnit.module('fields', {}, function () {
 
             // Drag and drop the second line in first position
             await testUtils.dom.pointerDragAndDrop(
-                form.$('.ui-sortable-handle')[1],
+                form.$('.o_sortable_handle')[1],
                 form.$('tbody tr')[0],
                 { position: 'top' }
             );
@@ -7213,7 +7213,7 @@ QUnit.module('fields', {}, function () {
 
             assert.strictEqual($('.o_data_cell:nth-child(2)').text(), inputText1 + inputText2);
 
-            var $handles = form.$('.ui-sortable-handle');
+            var $handles = form.$('.o_sortable_handle');
 
             assert.equal($handles.length, 3, 'There should be 3 sequence handlers');
 
@@ -7403,7 +7403,7 @@ QUnit.module('fields', {}, function () {
             });
 
             // swap 2 lines in the one2many
-            await testUtils.dom.pointerDragAndDrop(form.$('.ui-sortable-handle:eq(1)')[0], form.$('tbody tr')[0],
+            await testUtils.dom.pointerDragAndDrop(form.$('.o_sortable_handle')[1], form.$('tbody tr')[0],
                 { position: 'top' });
             assert.verifySteps(['load_views', 'read', 'read', 'onchange', 'onchange']);
             form.destroy();

@@ -1847,7 +1847,7 @@ QUnit.module('fields', {}, function () {
             assert.equal($modal.length, 1,
                 'There should be 1 modal opened');
 
-            var $handles = $modal.find('.ui-sortable-handle');
+            var $handles = $modal.find('.o_sortable_handle');
             assert.equal($handles.length, 2,
                 'There should be 2 sequence handlers');
 

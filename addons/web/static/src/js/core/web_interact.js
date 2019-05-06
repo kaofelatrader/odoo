@@ -443,14 +443,12 @@ var _sortable = function (el, options) {
     // Set draggable on items on first pointerdown as some items might not be in
     // the dom yet so we can't just simply draggable on them now.
     el.addEventListener('pointerdown', function (ev) {
-        var item;
         // Only allow to drag from the handle if it is defined
         // Any part of any item is valid for dragging otherwise
-        if (!handle || ev.target.closest(handle)) {
-            item = ev.target.closest(itemsSelector);
-        }
-        if (item) {
-            if (item.classList.contains('o_sortable_handle')) {
+        var item = ev.target.closest(itemsSelector);
+        var itemHandle = handle ? ev.target.closest(handle): item;
+        if (item && itemHandle) {
+            if (interact.isSet(item) && !interact(item).options.drag.enabled) {
                 // Dragging has already been setup but was disabled to prevent
                 // interactjs from displaying a move cursor.
                 interact(item).draggable(true);
@@ -467,7 +465,7 @@ var _sortable = function (el, options) {
                     };
                 }
                 _draggable(item, itemsDraggableOptions);
-                item.classList.add('o_sortable_handle');
+                itemHandle.classList.add('o_sortable_handle');
             }
         }
     });
