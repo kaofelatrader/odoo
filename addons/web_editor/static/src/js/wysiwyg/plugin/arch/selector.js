@@ -273,7 +273,7 @@ var Selector = AbstractPlugin.extend({
                     nodes.push(archNode);
                 }
                 if (loop) {
-                    nodes.concat(self._getChildren(archNode, loop));
+                    nodes = nodes.concat(self._getChildren(archNode, loop));
                 }
             });
         }

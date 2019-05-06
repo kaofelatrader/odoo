@@ -532,7 +532,7 @@ ArchNode.include({
      * @returns {Boolean}
      */
     isVoid: function () {
-        return this.params.voidTags.concat('button').indexOf(this.nodeName) !== -1;
+        return this.params.voidTags.indexOf(this.nodeName) !== -1;
     },
     isVoidBlock: function () {
         return (!this.isBR() && this.isVoid()) || this.params.isVoidBlock(this);

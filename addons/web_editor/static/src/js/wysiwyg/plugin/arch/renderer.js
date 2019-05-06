@@ -17,6 +17,7 @@ Renderer.prototype = {
         }
         this._clean();
         this.redraw();
+        this._cleanElements();
     },
     redraw: function (options) {
         var self = this;
@@ -148,6 +149,20 @@ Renderer.prototype = {
             }
         });
     },
+    _cleanElements: function () {
+        var els = [];
+        (function _getAll(el) {
+            els.push(el);
+            el.childNodes.forEach(_getAll);
+        })(this.editable);
+
+        var inArch = Object.values(this.elements);
+        els.forEach(function (el) {
+            if (inArch.indexOf(el) === -1) {
+                el.parentNode.removeChild(el);
+            }
+        });
+    },
     _getElement: function (id, target) {
         var json = this.jsonById[id];
         var el = this.elements[json.id];
@@ -234,18 +249,6 @@ Renderer.prototype = {
                     } else {
                         node.insertBefore(childNode, node.childNodes[index]);
                     }
-                }
-            });
-            // remove unknown and removed nodes
-            [].slice.call(node.childNodes).forEach(function (childNode) {
-                for (var id in self.elements) {
-                    id = +id;
-                    if (self.elements[id] === childNode) {
-                        break;
-                    }
-                }
-                if (changes.childNodes.indexOf(id) === -1 || self.elements[id] !== childNode) {
-                    childNode.parentNode.removeChild(childNode);
                 }
             });
         }
