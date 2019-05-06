@@ -2520,7 +2520,7 @@ QUnit.module('basic_fields', {
             res_id: 1,
             session: {
                 getTZOffset: function () {
-                    return -new Date().getTimezoneOffset();
+                    return 330;
                 },
             },
         });
