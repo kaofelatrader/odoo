@@ -5,8 +5,8 @@
         <t t-jquery="p.text-truncate" t-operation="replace">
             <span class="text-truncate" t-esc="pill.display_name"/>
             <div class="progress o_gant_mrp_progressbar">
-                <div class="progress-bar progress-bar-success" role="progressbar" t-attf-style="width: #{pill.duration_percent}%;">
-                  <t t-esc="pill.duration_percent"/>%
+                <div class="progress-bar progress-bar-success" role="progressbar" t-attf-style="width: #{pill.duration}%;">
+                  <t t-esc="pill.duration"/>%
                 </div>
             </div>
         </t>
@@ -14,7 +14,7 @@
 
     <t t-extend="gantt-popover">
         <t t-jquery="ul li:last-child" t-operation="after">
-            <li><strong>Complete Percentage:</strong> <t t-esc="duration_percent"/>%</li>
+            <li><strong>Complete Percentage:</strong> <t t-esc="duration"/>%</li>
         </t>
     </t>
 
