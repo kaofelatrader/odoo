@@ -301,9 +301,6 @@ var Session = core.Class.extend(mixins.EventDispatcherMixin, {
         var self = this;
         options = _.clone(options || {});
         options.headers = _.extend({}, options.headers);
-        if (odoo.debug) {
-            options.headers["X-Debug-Mode"] = $.deparam($.param.querystring()).debug;
-        }
 
         // TODO: remove
         if (! _.isString(url)) {

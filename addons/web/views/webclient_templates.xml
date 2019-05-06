@@ -377,6 +377,7 @@
                 <script type="text/javascript">
                     var odoo = {
                         csrf_token: "<t t-esc="request.csrf_token(None)"/>",
+                        debug: "<t t-esc="request.session.debug"/>",
                     };
                 </script>
 

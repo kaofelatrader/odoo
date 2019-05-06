@@ -42,8 +42,6 @@
     var commentRegExp = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/mg;
     var cjsRequireRegExp = /[^.]\s*require\s*\(\s*["']([^'"\s]+)["']\s*\)/g;
 
-    var debug = ($.deparam($.param.querystring()).debug !== undefined);
-
     var odoo = window.odoo = window.odoo || {};
     var didLogInfoResolve;
     var didLogInfoPromise = new Promise(function (resolve) {
@@ -52,7 +50,6 @@
 
     _.extend(odoo, {
         testing: typeof QUnit === "object",
-        debug: debug,
         remaining_jobs: jobs,
 
         __DEBUG__: {

@@ -142,7 +142,7 @@ return core.Class.extend(mixins.EventDispatcherMixin, ServicesMixin, {
                 this.update();
             }).bind(this));
 
-            var url = session.debug ? $.param.querystring(tour.url, {debug: session.debug}) : tour.url;
+            var url = tour.url;
             window.location.href = window.location.origin + url;
         } else {
             this.update();

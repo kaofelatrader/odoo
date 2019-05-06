@@ -294,7 +294,7 @@ var Gui = core.Class.extend({
 
         this.pos.push_order().then(function(){
             var url = "/web#action=point_of_sale.action_client_pos_menu";
-            window.location = session.debug ? $.param.querystring(url, {debug: session.debug}) : url;
+            window.location = url;
         });
     },
 
