@@ -20,7 +20,7 @@ var session = require('web.session');
 var utils = require('web.utils');
 var view_dialogs = require('web.view_dialogs');
 var field_utils = require('web.field_utils');
-//var ColorpickerDialog = require('wysiwyg.widgets.ColorpickerDialog');
+var ColorpickerDialog = require('wysiwyg.widgets.ColorpickerDialog');
 
 var qweb = core.qweb;
 var _t = core._t;
@@ -3012,6 +3012,7 @@ var AceEditor = DebouncedField.extend({
  */
 var FieldColor = AbstractField.extend({
     template: 'FieldColor',
+    //xmlDependencies: ['/web_editor/static/src/xml/editor.xml'],
     supportedFieldTypes: ['char'],
     events: {
         'click .o_field_color': '_onColorClick',
@@ -3041,7 +3042,7 @@ var FieldColor = AbstractField.extend({
     */
     _onColorClick: function (ev) {
         ev.stopPropagation();
-        //this.colorpicker = new ColorpickerDialog(this, {defaultColor: this.value}).open();
+        this.colorpicker = new ColorpickerDialog(this, {defaultColor: this.value}).open();
     },
     /**
     * @private

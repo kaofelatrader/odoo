@@ -33,27 +33,35 @@ class CompanyDocumentLayout(models.TransientModel):
     primary_color = fields.Char(related='company_id.primary_color', readonly=False)
     secondary_color = fields.Char(related='company_id.secondary_color', readonly=False)
 
-    preview = fields.Html(compute='_compute_preview')
-    reset_hook = fields.Boolean(string="Reset to default")
-    use_default_colors = fields.Boolean(default=False)
-
-    # use_default_colors = lambda self: not(self.primary_color or self.secondary_color)
-
-    @api.onchange('reset_hook')
-    def reset_colors(self):
-        """ set the colors to the current layout's default colors """
+    @api.multi
+    def _get_use_default_colors(self):
+        #TODO test
         for wizard in self:
+            # prefer user selected colors if they are set
+            return not(wizard.primary_color and wizard.secondary_color)
+
+    preview = fields.Html(compute='_compute_preview')
+    reset_link = fields.Boolean(string="Reset to default")
+    use_default_colors = fields.Boolean(default=_get_use_default_colors)
+
+    @api.onchange('reset_link')
+    def reset_colors(self):
+        """ set the colors to the current layout default colors """
+        for wizard in self:
+            #TODO optimisation, we only need to call this once
             report = wizard.env["report.layout"].search([ ('view_id.key', '=', wizard.external_report_layout_id.key) ])
             wizard.primary_color = report.primary_color
             wizard.secondary_color = report.secondary_color
-            wizard.use_default_colors = True
 
     @api.onchange('primary_color', 'secondary_color')
     def onchange_colors(self):
         for wizard in self:
-            # stop using default colors if the user manually selected a color
-            if wizard.env.context.get('user_selected'):
+            if wizard.env.context.get('user_selected', False):  # color change caused by user
                 wizard.use_default_colors = False
+                _logger.info('color picked by user')
+            else:                                               # color change caused by reset_colors()
+                wizard.use_default_colors = True
+                _logger.info('color changed by wizard')
             wizard._compute_preview()
 
     @api.onchange('external_report_layout_id')
@@ -61,6 +69,9 @@ class CompanyDocumentLayout(models.TransientModel):
         for wizard in self:
             if wizard.use_default_colors:
                 wizard.reset_colors()
+                _logger.info('layout change : default colors')
+            else:
+                _logger.info('layout change : user colors')
             wizard._compute_preview()
 
     @api.depends('logo', 'font')
@@ -68,7 +79,14 @@ class CompanyDocumentLayout(models.TransientModel):
         """ compute a qweb based preview to display on the wizard """
         for wizard in self:
             ir_qweb = wizard.env['ir.qweb']
-            #FIXME cause some occasionnal "missing variable" warnings, need more testing
+            # if isinstance(wizard.logo, str):
+            #     logo = wizard.company_id._get_logo()
+            # elif isinstance(wizard.logo, bytes):
+            #     logo = wizard.logo
+            # else:
+            #     logo = None
+            #FIXME randomly causes "missing variable" warnings, need more testing
+            #FIXME wizard.logo value
             wizard.preview = ir_qweb.render('web.layout_preview', {
                 'company'       : wizard,
             })
