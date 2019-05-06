@@ -190,10 +190,13 @@ class TestStockValuationAVCO(TestStockValuationCommon):
 
         move1 = self._make_in_move(self.product1, 10, unit_cost=10)
         self.assertEqual(self.product1.standard_price, 10)
+        self.assertEqual(move1.stock_valuation_layer_ids.value, 100)
         move2 = self._make_in_move(self.product1, 10, unit_cost=20)
         self.assertEqual(self.product1.standard_price, 15)
+        self.assertEqual(move2.stock_valuation_layer_ids.value, 200)
         move3 = self._make_out_move(self.product1, 15)
         self.assertEqual(self.product1.standard_price, 15)
+        self.assertEqual(move3.stock_valuation_layer_ids.value, -225)
 
         self.assertEqual(self.product1.value_svl, 75)
         self.assertEqual(self.product1.quantity_svl, 5)

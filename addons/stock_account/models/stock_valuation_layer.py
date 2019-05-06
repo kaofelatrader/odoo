@@ -161,7 +161,7 @@ class StockMove(models.Model):
                 valued_quantity += valued_move_line.product_uom_id._compute_quantity(valued_move_line.qty_done, move.product_id.uom_id)
 
             unit_cost = move._get_price_unit()
-            if move.product_id.cost_method in ('standard', 'average'):
+            if move.product_id.cost_method == 'standard':
                 unit_cost = move.product_id.standard_price
 
             svl_vals = move.product_id._svl_in_prepare_vals(forced_quantity or valued_quantity, unit_cost)
