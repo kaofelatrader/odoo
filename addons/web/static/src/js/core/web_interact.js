@@ -45,6 +45,7 @@ var _resetDraggableProperties = function (el) {
     // draggable on all sortable items indescriminately, we need to counteract
     // this as some items will have a 'move' cursor and some wont.
     interact(el).draggable(false);
+    el.dataset.sortableItemCursorReset = true;
 };
 
 /**
@@ -448,10 +449,11 @@ var _sortable = function (el, options) {
         var item = ev.target.closest(itemsSelector);
         var itemHandle = handle ? ev.target.closest(handle): item;
         if (item && itemHandle) {
-            if (interact.isSet(item) && !interact(item).options.drag.enabled) {
+            if (item.dataset.sortableItemCursorReset) {
                 // Dragging has already been setup but was disabled to prevent
                 // interactjs from displaying a move cursor.
                 interact(item).draggable(true);
+                delete item.dataset.sortableItemCursorReset;
             } else {
                 var itemsDraggableOptions = {};
                 if (handle) {
