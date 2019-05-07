@@ -39,13 +39,6 @@ var _resetDraggableProperties = function (el) {
     delete el.dataset.draggableOriginalWidth;
     el.style.zIndex = el.dataset.draggableOriginalZIndex;
     delete el.dataset.draggableOriginalZIndex;
-
-    // Interactjs draggable displays a 'move' cursor when hovering an element
-    // that has previously been set to draggable. As long as we do not set
-    // draggable on all sortable items indescriminately, we need to counteract
-    // this as some items will have a 'move' cursor and some wont.
-    interact(el).draggable(false);
-    el.dataset.sortableItemCursorReset = true;
 };
 
 /**
@@ -397,6 +390,13 @@ var _sortable = function (el, options) {
                 // The position in the DOM has been updated, we can undo the CSS
                 // trick that made them draggable like absolute positioning etc.
                 _resetDraggableProperties(draggable, revert);
+                // Interactjs draggable displays a 'move' cursor when hovering
+                // an element that has previously been set to draggable. As long
+                // as we do not set draggable on all sortable items directly, we
+                // need to counteract this behavior as some items will have a
+                // 'move' cursor (the already enabled ones) and some won't.
+                interact(draggable).draggable(false);
+                draggable.dataset.sortableItemCursorReset = true;
             }
 
             if (revert) {
