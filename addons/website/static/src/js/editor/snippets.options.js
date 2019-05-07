@@ -1001,6 +1001,7 @@ options.registry.gallery = options.Class.extend({
     addImages: function (previewMode) {
         var self = this;
         var $container = this.$('.container:first');
+        // TODO SEB here decide which mediaWidth to use
         var dialog = new weWidgets.MediaDialog(this, {multiImages: true, onlyImages: true}, null);
         var lastImage = _.last(this._getImages());
         var index = lastImage ? this._getIndex(lastImage) : -1;

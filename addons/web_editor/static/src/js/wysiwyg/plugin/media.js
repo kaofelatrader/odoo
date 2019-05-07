@@ -59,7 +59,12 @@ var MediaPlugin = AbstractPlugin.extend({
             media = $mediaParent[0];
             $mediaParent = $mediaParent.parent();
         }
+
+        // if the image is for a field, the model should handle the resize
+        var mediaWidth = $(media).parent().data('oeField') ? 1920 : $(media).width();
+
         var mediaDialog = new weWidgets.MediaDialog(this.options.parent, {
+            mediaWidth: mediaWidth,
             onlyImages: $mediaParent.data('oeField') === 'image' || $mediaParent.data('oeType') === 'image',
         },
             $(media).clone()[0]

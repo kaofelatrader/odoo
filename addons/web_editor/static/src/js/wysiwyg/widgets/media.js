@@ -1,16 +1,18 @@
 odoo.define('wysiwyg.widgets.media', function (require) {
 'use strict';
 
+var concurrency = require('web.concurrency');
 var core = require('web.core');
 var Dialog = require('web.Dialog');
 var fonts = require('wysiwyg.fonts');
 var session = require('web.session');
+var utils = require('web.utils');
 var Widget = require('web.Widget');
-var concurrency = require('web.concurrency');
 
 var QWeb = core.qweb;
-
 var _t = core._t;
+
+var ImagePreviewDialog = require('wysiwyg.widgets.image_preview_dialog').ImagePreviewDialog;
 
 var MediaWidget = Widget.extend({
     xmlDependencies: ['/web_editor/static/src/xml/wysiwyg.xml'],
@@ -102,30 +104,40 @@ var SearchWidget = MediaWidget.extend({
  */
 var FileWidget = SearchWidget.extend({
     events: _.extend({}, SearchWidget.prototype.events || {}, {
-        'click .o_upload_media_button': '_onUploadButtonClick',
-        'click .o_upload_media_button_no_optimization': '_onUploadButtonNoOptimizationClick',
-        'change input[type=file]': '_onImageSelection',
-        'click .o_upload_media_url_button': '_onUploadURLButtonClick',
-        'input input[name="url"]': '_onURLInputChange',
-        'click .existing-attachments [data-src]': '_onImageClick',
-        'dblclick .existing-attachments [data-src]': '_onImageDblClick',
+        'change .o_file_input': '_onChangeFileInput',
+        'click .o_existing_attachment_cell': '_onImageClick',
         'click .o_existing_attachment_remove': '_onRemoveClick',
         'click .o_load_more': '_onLoadMoreClick',
+        'click .o_upload_media_button': '_onUploadButtonClick',
+        'click .o_upload_media_url_button': '_onUploadURLButtonClick',
+        'click .o_we_advanced_upload': '_onClickAdvancedUpload',
+        'dblclick .o_existing_attachment_cell': '_onImageDblClick',
+        'input .o_we_url_input': '_onInputUrl',
     }),
 
     IMAGES_PER_ROW: 6,
     IMAGES_ROWS: 5,
+    // This factor is used to take into account that an image displayed in a BS
+    // column might get bigger when displayed on a smaller breakpoint if that
+    // breakpoint leads to have less columns.
+    // Eg. col-lg-6 -> 480px per column -> col-md-12 -> 720px per column -> 1.5
+    // However this will not be enough if going from 3 or more columns to 1, but
+    // in that case, we consider it a snippet issue.
+    OPTIMIZE_WIDTH_FACTOR: 1.5,
+
+    // TODO SEB test the resulting page with google page rank / page optimize
 
     /**
      * @constructor
      */
     init: function (parent, media, options) {
+
         this._super.apply(this, arguments);
         this._mutex = new concurrency.Mutex();
 
         this.imagesRows = this.IMAGES_ROWS;
-        this.IMAGES_DISPLAYED_TOTAL = this.IMAGES_PER_ROW * this.imagesRows;
 
+        options = options || {};
         this.options = options;
         this.context = options.context;
         this.accept = options.accept;
@@ -135,9 +147,12 @@ var FileWidget = SearchWidget.extend({
         this.firstFilters = options.firstFilters || [];
         this.lastFilters = options.lastFilters || [];
 
-        this.images = [];
+        this.records = [];
+        this.selectedImages = [];
     },
     /**
+     * Loads all the existing images related to the target media.
+     *
      * @override
      */
     willStart: function () {
@@ -152,9 +167,23 @@ var FileWidget = SearchWidget.extend({
     start: function () {
         var def = this._super.apply(this, arguments);
         var self = this;
+        this.$urlInput = this.$('.o_we_url_input');
+        this.$form = this.$('form');
+        this.$fileInput = this.$('.o_file_input');
+        this.$uploadButton = this.$('.o_upload_media_button');
+        this.$addUrlButton = this.$('.o_upload_media_url_button');
+        this.$urlSuccess = this.$('.o_we_url_warning');
+        this.$urlWarning = this.$('.o_we_url_success');
+        this.$urlError = this.$('.o_we_url_error');
+        this.$formText = this.$('.form-text');
 
         this._renderImages(true);
 
+        // If there is already an image on the target, select by default that
+        // image if it is among the loaded images.
+        // TODO SEB improve this to also work for product image for example,
+        // or any image where the url is not the attachment url but a field
+        // for example based on res_id, checksum, etc.
         var o = {
             url: null,
             alt: null,
@@ -166,7 +195,10 @@ var FileWidget = SearchWidget.extend({
             o.id = +o.url.match(/\/web\/content\/(\d+)/, '')[1];
         }
         if (o.url) {
-            self._toggleImage(_.find(self.records, function (record) { return record.url === o.url;}) || o, true);
+            self._toggleImage(_.find(self.records, function (record) {
+                return record.url === o.url;
+            }) || o);
+            this.search('');
         }
 
         return def;
@@ -177,6 +209,9 @@ var FileWidget = SearchWidget.extend({
     //--------------------------------------------------------------------------
 
     /**
+     * Saves the currently selected image on the target media. If new files are
+     * currently being added, delays the save until all files have been added.
+     *
      * @override
      */
     save: function () {
@@ -184,12 +219,10 @@ var FileWidget = SearchWidget.extend({
     },
     /**
      * @override
+     * @param {boolean} noRender: if true, do not render the found attachments
      */
     search: function (needle, noRender) {
         var self = this;
-        if (!noRender) {
-            this.$('input.o_we_url_input').val('').trigger('input').trigger('change');
-        }
         return this._rpc({
             model: 'ir.attachment',
             method: 'search_read',
@@ -203,12 +236,15 @@ var FileWidget = SearchWidget.extend({
         }).then(function (records) {
             self.records = _.chain(records)
                 .filter(function (r) {
+                    // TODO SEB do this in the domain
                     return (r.type === "binary" || r.url && r.url.length > 0);
                 })
                 .uniq(function (r) {
+                    // TODO SEB try to do this in the domain
                     return (r.url || r.id);
                 })
                 .sortBy(function (r) {
+                    // TODO SEB maybe we should make a route that takes care of this
                     if (_.any(self.firstFilters, function (filter) {
                         var regex = new RegExp(filter, 'i');
                         return r.name.match(regex) || r.datas_fname && r.datas_fname.match(regex);
@@ -226,12 +262,11 @@ var FileWidget = SearchWidget.extend({
                 .value();
 
             _.each(self.records, function (record) {
-                record.src = record.url || _.str.sprintf('/web/image/%s/%s', record.id, encodeURI(record.name));  // Name is added for SEO purposes
+                record.src = record.url || _.str.sprintf('/web/image/%s/%s', record.id, encodeURI(record.name)); // Name is added for SEO purposes
                 record.isDocument = !(/gif|jpe|jpg|png/.test(record.mimetype));
             });
             if (!noRender) {
                 self._renderImages();
-                self._adaptLoadMore();
             }
         });
     },
@@ -240,14 +275,6 @@ var FileWidget = SearchWidget.extend({
     // Private
     //--------------------------------------------------------------------------
 
-    /**
-     * @private
-     */
-    _adaptLoadMore: function () {
-        var noMoreImgToLoad = this.IMAGES_DISPLAYED_TOTAL >= this.records.length;
-        this.$('.o_load_more').toggleClass('d-none', noMoreImgToLoad);
-        this.$('.o_load_done_msg').toggleClass('d-none', !noMoreImgToLoad);
-    },
     /**
      * @override
      */
@@ -310,29 +337,32 @@ var FileWidget = SearchWidget.extend({
         return domain;
     },
     /**
+     * Returns the total number of images that should be displayed, depending
+     * on the number of images per row and the current number of rows.
+     *
+     * @private
+     * @returns {integer} the number of images to display
+     */
+    _getNumberOfImagesToDisplay: function () {
+        return this.IMAGES_PER_ROW * this.imagesRows;
+    },
+    /**
      * @private
      */
     _highlightSelectedImages: function () {
         var self = this;
         this.$('.o_existing_attachment_cell.o_selected').removeClass("o_selected");
-        var $select = this.$('.o_existing_attachment_cell [data-src]').filter(function () {
-            var $img = $(this);
-            return !!_.find(self.images, function (v) {
-                return (v.url === $img.data("src") || ($img.data("url") && v.url === $img.data("url")) || v.id === $img.data("id"));
-            });
+        _.each(this.selectedImages, function (image) {
+            self.$('.o_existing_attachment_cell[data-id=' + image.id + ']').addClass("o_selected");
         });
-        $select.closest('.o_existing_attachment_cell').addClass("o_selected");
-        return $select;
     },
     /**
      * @private
      */
     _loadMoreImages: function (forceSearch) {
         this.imagesRows += 2;
-        this.IMAGES_DISPLAYED_TOTAL = this.imagesRows * this.IMAGES_PER_ROW;
         if (!forceSearch) {
             this._renderImages();
-            this._adaptLoadMore();
         } else {
             this.search(this.$('.o_we_search').val() || '');
         }
@@ -341,7 +371,7 @@ var FileWidget = SearchWidget.extend({
      * Renders the existing attachments and returns the result as a string.
      *
      * @abstract
-     * @param {Array} rows
+     * @param {Array} attachments
      * @param {boolean} withEffect
      * @returns {string}
      */
@@ -350,43 +380,22 @@ var FileWidget = SearchWidget.extend({
      * @private
      */
     _renderImages: function (withEffect) {
-        var self = this;
-        var rows = _(this.records).chain()
-            .slice(0, this.IMAGES_DISPLAYED_TOTAL)
-            .groupBy(function (a, index) { return Math.floor(index / self.IMAGES_PER_ROW); })
-            .values()
-            .value();
+        // TODO SEB filter out mimetype in the image widget: /gif|jpe|jpg|png/.test($div.data('mimetype'))
+        var attachments = _(this.records).slice(0, this._getNumberOfImagesToDisplay());
 
         this.$('.form-text').empty();
 
-       // Render menu & content
+        // Render menu & content
         this.$('.existing-attachments').replaceWith(
-            this._renderExisting(rows, withEffect)
+            this._renderExisting(attachments, withEffect)
         );
 
-        var $divs = this.$('.o_image');
-        var imageDefs = _.map($divs, function (el) {
-            var $div = $(el);
-            if (/gif|jpe|jpg|png/.test($div.data('mimetype'))) {
-                var $img = $('<img/>', {
-                    class: 'img-fluid',
-                    src: $div.data('url') || $div.data('src'),
-                });
-                var prom = new Promise(function (resolve, reject) {
-                    $img[0].onload = resolve();
-                    $div.addClass('o_webimage').append($img);
-                });
-                return prom;
-            }
-        });
-        if (withEffect) {
-            Promise.all(imageDefs).then(function () {
-                _.delay(function () {
-                    $divs.removeClass('o_image_loading');
-                }, 400);
-            });
-        }
         this._highlightSelectedImages();
+
+        // adapt load more
+        var noMoreImgToLoad = this._getNumberOfImagesToDisplay() >= this.records.length;
+        this.$('.o_load_more').toggleClass('d-none', noMoreImgToLoad);
+        this.$('.o_load_done_msg').toggleClass('d-none', !noMoreImgToLoad);
     },
     /**
      * @private
@@ -394,10 +403,13 @@ var FileWidget = SearchWidget.extend({
     _save: function () {
         var self = this;
         if (this.multiImages) {
-            return this.images;
+            return this.selectedImages;
         }
 
-        var img = this.images[0];
+        // TODO SEB move this check above multi images and don't allow to save
+        // if it's empty, should display error instead.
+        // User should click discard if he doesn't want a change.
+        var img = this.selectedImages[0];
         if (!img) {
             return this.media;
         }
@@ -448,11 +460,6 @@ var FileWidget = SearchWidget.extend({
                 self.$media.css(style);
             }
 
-            if (self.options.onUpload) {
-                // We consider that when selecting an image it is as if we upload it in the html content.
-                self.options.onUpload([img]);
-            }
-
             // Remove crop related attributes
             if (self.$media.attr('data-aspect-ratio')) {
                 var attrs = ['aspect-ratio', 'x', 'y', 'width', 'height', 'rotate', 'scale-x', 'scale-y'];
@@ -465,26 +472,26 @@ var FileWidget = SearchWidget.extend({
         });
     },
     /**
-     * @private
+     * @privatee
      */
-    _toggleImage: function (attachment, clearSearch, forceSelect) {
+    _toggleImage: function (attachment, forceSelect) {
         if (this.multiImages) {
-            var img = _.select(this.images, function (v) { return v.id === attachment.id; });
-            if (img.length) {
+            // if the clicked image is already selected, then unselect it
+            // unless it was a double click
+            var index = this.selectedImages.indexOf(attachment);
+            if (index !== -1) {
                 if (!forceSelect) {
-                    this.images.splice(this.images.indexOf(img[0]),1);
+                    this.selectedImages.splice(index, 1);
                 }
             } else {
-                this.images.push(attachment);
+                // if the clicked image is not selected, then select it
+                this.selectedImages.push(attachment);
             }
         } else {
-            this.images = [attachment];
+            // select the clicked image
+            this.selectedImages = [attachment];
         }
         this._highlightSelectedImages();
-
-        if (clearSearch) {
-            this.search('');
-        }
     },
     /**
      * Updates the add by URL UI.
@@ -495,84 +502,120 @@ var FileWidget = SearchWidget.extend({
      * @param {boolean} isImage
      */
     _updateAddUrlUi(emptyValue, isURL, isImage) {
-        var $button = this.$('.o_upload_media_url_button');
-        var $success = this.$('.o_we_url_success');
-        var $error = this.$('.o_we_url_error');
-
-        $button.toggleClass('btn-secondary', emptyValue)
+        this.$addUrlButton.toggleClass('btn-secondary', emptyValue)
             .toggleClass('btn-primary', !emptyValue)
             .prop('disabled', !isURL);
-
-        $success.toggleClass('d-none', !isURL);
-        $error.toggleClass('d-none', emptyValue || isURL);
+        this.$urlSuccess.toggleClass('d-none', !isURL);
+        this.$urlError.toggleClass('d-none', emptyValue || isURL);
     },
     /**
+     * Create an attachment for each new file, and then open the Preview dialog
+     * for one image at a time.
+     *
      * @private
      */
-    _uploadFile: function () {
-        return this._mutex.exec(this._uploadImageIframe.bind(this));
+    _uploadImageFiles: function () {
+        var self = this;
+        var uploadMutex = new concurrency.Mutex();
+        var previewMutex = new concurrency.Mutex();
+        var promises = [];
+        // upload the smallest file first to block the user the least possible
+        var files = _.sortBy(this.$fileInput[0].files, 'size');
+        for (var file of files) {
+            // upload one file at a time
+            var promiseUpload = uploadMutex.exec(function () {
+                // TODO SEB create a placeholder while it is uploading
+                // TODO SEB remove the placeholder if the upload fails
+                var $placeholder = $(QWeb.render('wysiwyg.widgets.image.existing.attachment', {
+                    attachment: {
+                        src: '',
+                        url: '',
+                        res_model: self.options.res_model,
+                        name: 'Placeholder',
+                    }
+                }));
+                $placeholder.prependTo(self.$('.existing-attachments'));
+                // TODO SEB the last image of a multi is uploaded in place of all the others sometimes
+                return self._uploadImageFile(file).then(function (attachment) {
+                    if (self.advancedUpload) {
+                        // TODO SEB maybe hide the big modal while we show the previews
+                        // show only one preview at a time
+                        previewMutex.exec(function () {
+                            return self._previewAttachment(attachment).then(function (updatedAttachment) {
+                                self._handleNewAttachment(updatedAttachment || attachment);
+                            });
+                        });
+                    } else {
+                        self._handleNewAttachment(attachment);
+                    }
+                });
+            });
+            promises.push(promiseUpload);
+        }
+
+        self.$fileInput.val('');
+
+        var promiseUploads = Promise.all(promises).guardedCatch(function () {
+            // at least one upload failed
+            // TODO SEB show the text with error style
+            self.$el.find('.form-text').text(
+                // TODO SEB improve this message: list the failed files
+                // Add the reason if possible per file, or a generic reason: wrong file type or file too large
+                _("At least one of the files you selected could not be saved.")
+            );
+        });
+
+        return $.when(promiseUploads, previewMutex.getUnlockedDef()).then(function () {
+            self.advancedUpload = false;
+        });
+
+        // TODO SEB when all done:
+        // if (!self.multiImages) {
+        //     self.trigger_up('save_request');
+        // }
+        // also : this.selectedImages = attachments;
     },
     /**
-     * @returns {Promise}
+     * Open the image preview dialog for the given attachment.
+     *
+     * @private
      */
-    _uploadImageIframe: function () {
+    _previewAttachment: function (attachment) {
+        var def = $.Deferred();
+        new ImagePreviewDialog(this, {}, attachment, def, this._computeOptimizedWidth()).open();
+        return def;
+    },
+    /**
+     * Creates an attachment for the given file.
+     *
+     * @private
+     * @param {Blob|File} file
+     * @returns {Deferred} resolved with the attachment
+     */
+    _uploadImageFile: function (file) {
         var self = this;
-        return new Promise(function (resolve) {
 
-            /**
-             * @todo file upload cannot be handled with _rpc smoothly. This uses the
-             * form posting in iframe trick to handle the upload.
-             */
-            var $iframe = self.$('iframe');
-            $iframe.on('load', function () {
-                var iWindow = $iframe[0].contentWindow;
-
-                var attachments = iWindow.attachments || [];
-                var error = iWindow.error;
-
-                self.$('.well > span').remove();
-                self.$('.well > div').show();
-                _.each(attachments, function (record) {
-                    record.src = record.url || _.str.sprintf('/web/image/%s/%s', record.id, encodeURI(record.name)); // Name is added for SEO purposes
-                    record.isDocument = !(/gif|jpe|jpg|png/.test(record.mimetype));
-                });
-                if (error || !attachments.length) {
-                    _processFile(null, error || !attachments.length);
-                }
-                self.images = attachments;
-                for (var i = 0 ; i < attachments.length ; i++) {
-                    _processFile(attachments[i], error);
-                }
-
-                if (self.options.onUpload) {
-                    self.options.onUpload(attachments);
-                }
-
-                resolve();
-
-                function _processFile(attachment, error) {
-                    var $button = self.$('.o_upload_image_button');
-                    if (!error) {
-                        $button.addClass('btn-success');
-                        self._toggleImage(attachment, true);
-                    } else {
-                        $button.addClass('btn-danger');
-                        self.$el.addClass('o_has_error').find('.form-control, .custom-select').addClass('is-invalid');
-                        self.$el.find('.form-text').text(error);
-                    }
-
-                    if (!self.multiImages) {
-                        self.trigger_up('save_request');
-                    }
-                }
+        return utils.getDataURLFromFile(file).then(function (dataURL) {
+            return self._rpc({
+                route: '/web_editor/attachment/add_image_base64',
+                params: {
+                    'res_id': self.options.res_id,
+                    'image_base64': dataURL.split(',')[1],
+                    'filename': file.name,
+                    'res_model': self.options.res_model,
+                    'filters': self.firstFilters.join('_'),
+                    'width': self.advancedUpload ? 0 : self._computeOptimizedWidth(),
+                },
             });
-            self.$el.submit();
-
-            self.$('.o_file_input').val('');
         });
     },
-
-
+    _computeOptimizedWidth: function () {
+        return Math.min(1920, parseInt(this.mediaWidth * this.OPTIMIZE_WIDTH_FACTOR));
+    },
+    _handleNewAttachment: function (attachment) {
+        this._toggleImage(attachment);
+        this.search('');
+    },
     //--------------------------------------------------------------------------
     // Handlers
     //--------------------------------------------------------------------------
@@ -581,11 +624,9 @@ var FileWidget = SearchWidget.extend({
      * @private
      */
     _onImageClick: function (ev, force_select) {
-        var $img = $(ev.currentTarget);
-        var attachment = _.find(this.records, function (record) {
-            return record.id === $img.data('id');
-        });
-        this._toggleImage(attachment, false, force_select);
+        var $target = $(ev.currentTarget);
+        var attachment = _.find(this.records, {id: $target.data('id')});
+        this._toggleImage(attachment, force_select);
     },
     /**
      * @private
@@ -595,24 +636,33 @@ var FileWidget = SearchWidget.extend({
         this.trigger_up('save_request');
     },
     /**
+     * Handles change of the file input: create attachments with the new files
+     * and open the Preview dialog for each of them. Locks the save button until
+     * all new files have been processed.
+     *
      * @private
      */
-    _onImageSelection: function () {
-        var $form = this.$('form');
-        this.$el.addClass('nosave');
-        $form.removeClass('o_has_error').find('.form-control, .custom-select').removeClass('is-invalid');
-        $form.find('.form-text').empty();
-        this.$('.o_upload_media_button').removeClass('btn-danger btn-success');
-        this._uploadFile();
+    _onChangeFileInput: function () {
+        this.$form.removeClass('o_has_error').find('.form-control, .custom-select').removeClass('is-invalid');
+        this.$formText.empty();
+        return this._mutex.exec(this._uploadImageFiles.bind(this));
+    },
+    /**
+     * @private
+     */
+    _onClickAdvancedUpload: function () {
+        this.advancedUpload = true;
+        this.$uploadButton.trigger('click');
     },
     /**
      * @private
      */
     _onRemoveClick: function (ev) {
         var self = this;
+        ev.stopPropagation();
         Dialog.confirm(this, _t("Are you sure you want to delete this file ?"), {
             confirm_callback: function () {
-                var $helpBlock = self.$('.form-text').empty();
+                self.$formText.empty();
                 var $a = $(ev.currentTarget);
                 var id = parseInt($a.data('id'), 10);
                 var attachment = _.findWhere(self.records, {id: id});
@@ -627,7 +677,7 @@ var FileWidget = SearchWidget.extend({
                         self._renderImages();
                         return;
                     }
-                    $helpBlock.replaceWith(QWeb.render('wysiwyg.widgets.image.existing.error', {
+                    self.$formText.replaceWith(QWeb.render('wysiwyg.widgets.image.existing.error', {
                         views: prevented[id],
                     }));
                 });
@@ -637,14 +687,12 @@ var FileWidget = SearchWidget.extend({
     /**
      * @private
      */
-    _onURLInputChange: function (ev) {
-        var $input = $(ev.currentTarget);
-
-        var inputValue = $input.val();
+    _onInputUrl: function () {
+        var inputValue = this.$urlInput.val();
         var emptyValue = (inputValue === '');
 
         var isURL = /^.+\..+$/.test(inputValue); // TODO improve
-        var isImage = _.any(['.gif', '.jpe', '.jpg', '.png'], function (format) {
+        var isImage = _.any(['.gif', '.jpeg', '.jpe', '.jpg', '.png'], function (format) {
             return inputValue.endsWith(format);
         });
 
@@ -659,15 +707,21 @@ var FileWidget = SearchWidget.extend({
     /**
      * @private
      */
-    _onUploadButtonNoOptimizationClick: function () {
-        this.$('input[name="disable_optimization"]').val('1');
-        this.$('.o_upload_media_button').click();
-    },
-    /**
-     * @private
-     */
     _onUploadURLButtonClick: function () {
-        this._uploadFile();
+        var self = this;
+        return this._rpc({
+            route: '/web_editor/attachment/add_url',
+            params: {
+                'res_id': this.options.res_id,
+                'url': this.$urlInput.val(),
+                'res_model': this.options.res_model,
+                'filters': this.firstFilters.join('_'),
+            },
+        }).then(function (attachment) {
+            self.$urlInput.val('');
+            self._handleNewAttachment(attachment);
+        });
+        // TODO SEB handle error
     },
     /**
      * @private
@@ -680,7 +734,6 @@ var FileWidget = SearchWidget.extend({
      */
     _onSearchInput: function () {
         this.imagesRows = this.IMAGES_ROWS;
-        this.IMAGES_DISPLAYED_TOTAL = this.IMAGES_PER_ROW * this.imagesRows;
         this._super.apply(this, arguments);
     },
 });
@@ -702,6 +755,7 @@ var ImageWidget = FileWidget.extend({
                 ['image/gif', 'image/jpe', 'image/jpeg', 'image/jpg', 'image/gif', 'image/png']
             ],
         })]);
+        this.mediaWidth = options.mediaWidth;
     },
 
     //--------------------------------------------------------------------------
@@ -711,9 +765,9 @@ var ImageWidget = FileWidget.extend({
     /**
      * @override
      */
-    _renderExisting: function (rows, withEffect) {
+    _renderExisting: function (attachments, withEffect) {
         return QWeb.render('wysiwyg.widgets.image.existing.attachments', {
-            rows: rows,
+            attachments: attachments,
             withEffect: withEffect,
         });
     },
@@ -722,12 +776,8 @@ var ImageWidget = FileWidget.extend({
      */
     _updateAddUrlUi: function (emptyValue, isURL, isImage) {
         this._super.apply(this, arguments);
-
-        var $button = this.$('.o_upload_media_url_button');
-        var $warning = this.$('.o_we_url_warning');
-
-        $button.text((isURL && !isImage) ? _t("Add as document") : _t("Add image"));
-        $warning.toggleClass('d-none', !isURL || isImage);
+        this.$addUrlButton.text((isURL && !isImage) ? _t("Add as document") : _t("Add image"));
+        this.$urlWarning.toggleClass('d-none', !isURL || isImage);
     },
 });
 
@@ -758,9 +808,9 @@ var DocumentWidget = FileWidget.extend({
     /**
      * @override
      */
-    _renderExisting: function (rows, withEffect) {
+    _renderExisting: function (attachments, withEffect) {
         return QWeb.render('wysiwyg.widgets.document.existing.attachments', {
-            rows: rows,
+            attachments: attachments,
             withEffect: withEffect,
         });
     },
@@ -769,12 +819,8 @@ var DocumentWidget = FileWidget.extend({
      */
     _updateAddUrlUi: function (emptyValue, isURL, isImage) {
         this._super.apply(this, arguments);
-
-        var $button = this.$('.o_upload_media_url_button');
-        var $warning = this.$('.o_we_url_warning');
-
-        $button.text((isURL && isImage) ? _t("Add as image") : _t("Add document"));
-        $warning.toggleClass('d-none', !isURL || !isImage);
+        this.$addUrlButton.text((isURL && isImage) ? _t("Add as image") : _t("Add document"));
+        this.$urlWarning.toggleClass('d-none', !isURL || !isImage);
     },
 });
 
