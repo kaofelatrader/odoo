@@ -413,6 +413,10 @@ var _sortable = function (el, options) {
                 // need to counteract this behavior as some items will have a
                 // 'move' cursor (the already enabled ones) and some won't.
                 interact(draggable).draggable(false);
+
+                if (options.ondrop) {
+                    options.ondrop(ev);
+                }
             }
 
             if (revert) {
@@ -423,10 +427,6 @@ var _sortable = function (el, options) {
                 setTimeout(move, revert);
             } else {
                 move();
-            }
-
-            if (options.ondrop) {
-                options.ondrop(ev);
             }
         }
     };
