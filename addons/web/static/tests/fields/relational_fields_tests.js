@@ -14728,6 +14728,7 @@ QUnit.module('relational_fields', {
                             '<tree editable="bottom">' +
                                 '<field name="turtle_foo"/>' +
                                 '<field name="turtle_trululu"/>' +
+                                '<button name="object" icon="fa-files-o" type="object"/>' +
                             '</tree>' +
                         '</field>' +
                     '</sheet>' +

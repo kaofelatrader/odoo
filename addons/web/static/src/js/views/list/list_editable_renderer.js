@@ -489,7 +489,8 @@ ListRenderer.include({
      */
     _moveToPreviousLine: function () {
         if (this.currentRow > 0) {
-            this._selectCell(this.currentRow - 1, this.columns.length - 1, {inc: -1});
+            var columns = _.filter(this.columns, function (col) { return col.tag == "field"})
+            this._selectCell(this.currentRow - 1, columns.length - 1, {inc: -1});
         } else {
             this.unselectRow().then(this.trigger_up.bind(this, 'add_record'));
         }
