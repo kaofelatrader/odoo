@@ -268,6 +268,7 @@ function applyOverDescendants(node, func) {
  * @param {jQuery} $editable
  */
 function classToStyle($editable) {
+    var previousOutlookNodes = [];
     applyOverDescendants($editable[0], function (node) {
         var $target = $(node);
         var css = getMatchedCSSRules(node);
@@ -288,7 +289,7 @@ function classToStyle($editable) {
         }
 
         // Outlook
-        if (node.nodeName === 'A' && $target.hasClass('btn') && !$target.hasClass('btn-link') && !$target.children().length) {
+        if (node.nodeName === 'A' && $target.hasClass('btn') && !$target.children().length) {
             var $hack = $('<table class="o_outlook_hack" style="display: inline-table;vertical-align:middle"><tr><td></td></tr></table>');
             $hack.find('td')
                 .attr('height', $target.outerHeight())
@@ -309,9 +310,21 @@ function classToStyle($editable) {
             if (node && node.nodeType === Node.TEXT_NODE && !node.textContent.match(/\S/)) {
                 $(node).remove();
             }
+            previousOutlookNodes.push($hack);
         }
         else if (node.nodeName === 'IMG' && $target.is('.mx-auto.d-block')) {
             $target.wrap('<p class="o_outlook_hack" style="text-align:center;margin:0"/>');
+        }
+        if (!$hack && previousOutlookNodes.length > 1) {
+            var $table = $('<table><tr></tr></table>');
+            var $row = $table.find('tr');
+            $table.insertBefore(previousOutlookNodes[0]);
+            _.each(previousOutlookNodes, function (n) {
+                $(n).wrap('<td>').parent().appendTo($row);
+            });
+            previousOutlookNodes = [];
+        } else if (!$hack && previousOutlookNodes.length > 0) {
+            previousOutlookNodes = [];
         }
     });
 }

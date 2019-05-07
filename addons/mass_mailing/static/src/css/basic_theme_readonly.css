@@ -5,3 +5,9 @@
 #wrapwrap .o_layout.o_basic_theme {
     font-family: -apple-system, "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
 }
+
+/* To maintain button size in the readonly mode because
+   the bootstrap 4 button padding is done using `rem` */
+:root {
+    font-size: 12px;
+}
