@@ -2169,7 +2169,7 @@ var FieldBooleanButton = AbstractField.extend({
 });
 
 var BooleanToggle = FieldBoolean.extend({
-    description: _lt("Toggle"),
+    description: _lt("Active"),
     className: FieldBoolean.prototype.className + ' o_boolean_toggle',
     events: {
         'click': '_onClick'
