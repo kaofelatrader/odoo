@@ -395,7 +395,6 @@ var _sortable = function (el, options) {
                 // need to counteract this behavior as some items will have a
                 // 'move' cursor (the already enabled ones) and some won't.
                 interact(draggable).draggable(false);
-                draggable.dataset.sortableItemCursorReset = true;
             }
 
             if (revert) {
@@ -436,12 +435,7 @@ var _sortable = function (el, options) {
         var item = ev.target.closest(itemsSelector);
         var itemHandle = handle ? ev.target.closest(handle): item;
         if (item && itemHandle) {
-            if (item.dataset.sortableItemCursorReset) {
-                // Dragging has already been setup but was disabled to prevent
-                // interactjs from displaying a move cursor.
-                interact(item).draggable(true);
-                delete item.dataset.sortableItemCursorReset;
-            } else {
+            if (!item.dataset.sortableItemDraggable) {
                 var itemsDraggableOptions = {};
                 if (handle) {
                     itemsDraggableOptions.allowFrom = handle;
@@ -476,7 +470,12 @@ var _sortable = function (el, options) {
                     itemsDraggableOptions.restrict.elementRect = elementRect;
                 }
                 _draggable(item, itemsDraggableOptions);
+                item.dataset.sortableItemDraggable = true;
                 itemHandle.classList.add('o_sortable_handle');
+            } else {
+                // Dragging has already been setup but was disabled to prevent
+                // interactjs from displaying a move cursor. Re-enable it.
+                interact(item).draggable(true);
             }
         }
     });
