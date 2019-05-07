@@ -743,19 +743,19 @@ class AccountMoveLine(models.Model):
         """
         # Get first all aml involved
         todo = self.env['account.partial.reconcile'].search_read(['|', ('debit_move_id', 'in', self.ids), ('credit_move_id', 'in', self.ids)], ['debit_move_id', 'credit_move_id'])
-        amls = self.ids
+        amls = set(self.ids)
         seen = self.env['account.partial.reconcile']
         while todo:
-            aml_ids = [apr['debit_move_id'][0] for apr in todo if apr['debit_move_id']] + [apr['credit_move_id'][0] for apr in todo if apr['credit_move_id']]
-            amls += aml_ids
-            seen |= self.env['account.partial.reconcile'].browse([apr['id'] for apr in todo])
+            aml_ids = [rec['debit_move_id'][0] for rec in todo if rec['debit_move_id']] + [rec['credit_move_id'][0] for rec in todo if rec['credit_move_id']]
+            amls |= set(aml_ids)
+            seen |= self.env['account.partial.reconcile'].browse([rec['id'] for rec in todo])
             todo = self.env['account.partial.reconcile'].search_read(['&', '|', ('credit_move_id', 'in', aml_ids), ('credit_move_id', 'in', aml_ids), '!', ('id', 'in', seen.ids)], ['debit_move_id', 'credit_move_id'])
 
         partial_rec_ids = list(set(seen.ids))
         if not amls:
             return
         else:
-            amls = self.browse(list(set(amls)))
+            amls = self.browse(list(amls))
 
         # If we have multiple currency, we can only base ourselve on debit-credit to see if it is fully reconciled
         currency = set([a.currency_id for a in amls if a.currency_id.id != False])
