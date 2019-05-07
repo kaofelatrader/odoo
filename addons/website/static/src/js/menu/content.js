@@ -650,34 +650,26 @@ var EditMenuDialog = weWidgets.Dialog.extend({
      */
     _onConvertMegaMenuButtonClick: function (ev) {
         var $menu = $(ev.currentTarget).closest('[data-menu-id]');
-        var menuID = $menu.data('menu-id') | 0;
-        if (menuID === 0) {
+        var menuID = $menu.data('menu-id');
+        if (_.str.startsWith(menuID, 'new-')) {
             menuID = $(ev.currentTarget).closest('li').data('menu-id');
             this.flat[menuID].is_mega_menu = !this.flat[menuID].is_mega_menu;
             renderMenu(this.flat[menuID]);
         } else {
+            var menuItem = this.flat[menuID];
             this._rpc({
                 model: 'website.menu',
                 method: 'toggle_mega_menu',
-                args: [this.flat[menuID].id, null],
-            }).then(function (response) {
-                renderMenu(response);
+                args: [menuItem.id],
+            }).then(function (isMegaMenu) {
+                menuItem['is_mega_menu'] = isMegaMenu;
+                renderMenu(menuItem);
             });
         }
 
         function renderMenu(data) {
-            var menuData = {
-                id: data.id,
-                name: data.name,
-                url: data.url,
-                new_window: data.new_window,
-                parent_id: false,
-                sequence: 0,
-                children: [],
-                is_mega_menu: data.is_mega_menu,
-            };
             $(ev.currentTarget).closest('.input-group')
-                .replaceWith(qweb.render('website.contentMenu.dialog.submenu', { submenu: menuData }));
+                .replaceWith(qweb.render('website.contentMenu.dialog.submenu', { submenu: data }));
         }
     },
 });

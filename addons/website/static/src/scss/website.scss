@@ -1161,6 +1161,8 @@ table.table_desc tr td {
     margin-right: auto;
 }
 
-.mega_menu_max_content {
-    width: max-content;
+.o_older_container {
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 1140px - $grid-gutter-width;
 }

@@ -5,6 +5,7 @@ var core = require('web.core');
 var Dialog = require('web.Dialog');
 var weWidgets = require('wysiwyg.widgets');
 var options = require('web_editor.snippets.options');
+var WysiwygMultizone = require('web_editor.wysiwyg.multizone');
 
 var _t = core._t;
 var qweb = core.qweb;
@@ -1543,12 +1544,9 @@ options.registry.anchorName = options.Class.extend({
 options.registry.megaMenu = options.Class.extend({
     xmlDependencies: ['/website/static/src/xml/website.editor.xml'],
 
-    /**
-     * @override
-     */
     start: function () {
-        this.megaMenuDropdownID = this.$target.closest('.dropdown_mega_menu').data('oe-id');
-        this.$navLink = this.$target.closest('.dropdown_mega_menu').siblings('a');
+        this.$overlay.find('.oe_snippet_remove').addClass('d-none');
+        this.$target.data('classes', this.$target.attr('data-megaMenuClasses'));
     },
 
     //--------------------------------------------------------------------------
@@ -1563,35 +1561,30 @@ options.registry.megaMenu = options.Class.extend({
         new Dialog(this, {
             title: _t("Mega Menu"),
             $content: $(qweb.render('website.dialog.megaMenu', {
-                currentAlignment: self.$target.attr('data-dropdown-alignment'),
-                currentWidth: self.$target.attr('data-dropdown-width'),
+                alignmentLeft: self.$target.hasClass('text-left'),
+                alignmentCenter: self.$target.hasClass('text-center'),
+                alignmentRight: self.$target.hasClass('text-right'),
+                fullwidth: !self.$target.hasClass('o_older_container'),
             })),
             buttons: [
                 {
                     text: _t("Save"),
                     classes: 'btn-primary',
                     click: function () {
-                        var $dropdownContentAlignment = $('[name="dropdown_content_alignment"]');
-                        var $dropdownWidth = $('[name="dropdown_width"]');
-                        var $dropdownMenu = self.$target.parent();
-                        var $megaMenuContent = self.$target.find('.s_mega_menu_content');
-                        var containerWidth = $dropdownWidth.val() === 'container';
-
-                        $dropdownMenu.toggleClass('position-static', !containerWidth);
-                        $megaMenuContent
-                            .removeClass('text-center').removeClass('text-left').removeClass('text-right')
-                            .addClass($dropdownContentAlignment.val())
-                            .toggleClass('container', !containerWidth)
-                            .toggleClass('container-fluid', containerWidth)
-                            .toggleClass('mega_menu_max_content', containerWidth);
+                        var willBeContainer = $('[name="dropdown_width"]').val() === 'container';
+                        var megaMenuClasses = self.$target.data('megamenuclasses');
+                        var isContainer = megaMenuClasses.indexOf('o_older_container') >= 0;
                         self.$target
-                            .toggleClass('dropdown-menu-right', containerWidth)
-                            .toggleClass('w-100', !containerWidth)
-                            .attr({
-                                'data-dropdown-alignment': $dropdownContentAlignment.val(),
-                                'data-dropdown-width': $dropdownWidth.val(),
-                            });
-                        $dropdownMenu.trigger('content_changed');
+                            .toggleClass('o_older_container', willBeContainer)
+                            .removeClass('text-center').removeClass('text-left').removeClass('text-right')
+                            .addClass($('[name="dropdown_content_alignment"').val());
+                        if (willBeContainer && !isContainer) {
+                            self.$target.data('megamenuclasses', megaMenuClasses + ' o_older_container');
+                        }
+                        if (!willBeContainer && isContainer) {
+                            self.$target.data('megamenuclasses', megaMenuClasses.replace('o_older_container', '').trim());
+                        }
+                        self.$target.trigger('content_changed');
                         this.close();
                     }
                 },

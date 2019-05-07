@@ -157,11 +157,11 @@
             </t>
         </ul>
     </li>
-    <li t-if="submenu.mega_menu_content" t-attf-class="nav-item dropdown position-static">
+    <li t-if="submenu.mega_menu_content" class="nav-item dropdown position-static">
         <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
             <span t-field="submenu.name"/>
         </a>
-        <div class="dropdown-menu w-100 dropdown_mega_menu" t-field="submenu.mega_menu_content"/>
+        <div t-attf-class="#{submenu.mega_menu_classes or 'dropdown-menu w-100 dropdown_mega_menu text-center'}" t-field="submenu.mega_menu_content" t-attf-data-megaMenuClasses="#{submenu.mega_menu_classes or 'dropdown-menu w-100 dropdown_mega_menu text-center'}"/>
     </li>
 </template>
 
@@ -305,11 +305,11 @@
 <!-- Default template Mega Menu -->
 <template id="default_mega_menu" name="Mega Menu">
     <div class="s_mega_menu m-2 p-2">
-        <div class="s_mega_menu_content container text-center">
+        <div class="s_mega_menu_content container">
             <div class="row s_mega_menu_columns">
-                <t t-call="website.default_mega_menu_col"/>
-                <t t-call="website.default_mega_menu_col"/>
-                <t t-call="website.default_mega_menu_col"/>
+                <t t-foreach="3" t-as="o">
+                    <t t-call="website.default_mega_menu_col"/>
+                </t>
             </div>
         </div>
     </div>

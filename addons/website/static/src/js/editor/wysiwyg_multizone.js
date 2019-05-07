@@ -6,6 +6,7 @@ var DropzonePlugin = require('web_editor.wysiwyg.plugin.dropzone');
 var HelperPlugin = require('web_editor.wysiwyg.plugin.helper');
 var TextPlugin = require('web_editor.wysiwyg.plugin.text');
 var HistoryPlugin = require('web_editor.wysiwyg.plugin.history');
+var LinkPlugin = require('web_editor.wysiwyg.plugin.link');
 var Wysiwyg = require('web_editor.wysiwyg.snippets');
 
 var _t = core._t;
@@ -68,6 +69,13 @@ DropzonePlugin.include({
     },
 });
 
+LinkPlugin.LinkPlugin.include({
+    _onDblclick: function (ev) {
+        if (!$(ev.target.closest('li')).find('.dropdown_mega_menu').length) {
+            this.show();
+        }
+    },
+});
 
 
 /**
@@ -98,14 +106,13 @@ var WysiwygMultizone = Wysiwyg.extend({
         'submit .note-editable form .btn': function (ev) {
             ev.preventDefault(); // Disable form submition in editable mode
         },
-        'show.bs.dropdown li.dropdown': '_onShowDropdown',
-        'hide.bs.dropdown .dropdown': '_onHideDropdown',
-        'click div.dropdown-menu, div.oe_overlay_options': '_onClickInDropdown',
+        'show.bs.dropdown li.position-static': '_onShowDropdown',
         'click': '_onClick',
     }),
     custom_events: _.extend({}, Wysiwyg.prototype.custom_events, {
-        activate_snippet:  '_onActivateSnippet',
+        activate_snippet: '_onActivateSnippet',
         drop_images: '_onDropImages',
+        toggle_mega_menu_snippets: '_toggleMegaMenuSnippets',
     }),
     /**
      * @override
@@ -196,11 +203,6 @@ var WysiwygMultizone = Wysiwyg.extend({
             self.$('[data-oe-readonly]').addClass('o_not_editable').attr('contenteditable', false);
             self.$('.oe_structure').attr('contenteditable', false).addClass('o_fake_not_editable');
             self.$('[data-oe-field][data-oe-type="image"]').attr('contenteditable', false).addClass('o_fake_not_editable');
-
-            // Showing Mega Menu snippets if one Mega Menu dropdown is already opened
-            if (self.$('.dropdown_mega_menu').hasClass('show')) {
-                self._toggleMegaMenuSnippetsAtStart();
-            }
         });
     },
     /**
@@ -467,7 +469,14 @@ var WysiwygMultizone = Wysiwyg.extend({
      * @param {Object} recordInfo
      * @returns {Promise}
      */
-    _saveElement: function (outerHTML, recordInfo) {
+    _saveElement: function (outerHTML, recordInfo, editable) {
+        if ($(editable).data('oe-field') === 'mega_menu_content') {
+            this._rpc({
+                model: 'website.menu',
+                method: 'write',
+                args: [[parseInt($(editable).data('oe-id'))], {mega_menu_classes: $(editable).data('megamenuclasses')}],
+            });
+        }
         return this._rpc({
             model: 'ir.ui.view',
             method: 'save',
@@ -482,13 +491,14 @@ var WysiwygMultizone = Wysiwyg.extend({
         });
     },
     /**
-     * Toggle visibility of Mega Menu snippets.
+     * Toggle visibility of Mega Menu snippets when a mega menu dropdown is shown/hidden
      *
      * @private
+     * @param {Boolean} visibility
      */
-    _toggleMegaMenuSnippetsAtStart: _.debounce(function () {
-        this.snippets.trigger('toggle_mega_menu_snippets', true);
-    }, 1500),
+    _toggleMegaMenuSnippets: function (show) {
+        $('#snippet_mega_menu').toggleClass('d-none', !show);
+    },
 
     //--------------------------------------------------------------------------
     // Handler
@@ -587,39 +597,18 @@ var WysiwygMultizone = Wysiwyg.extend({
      * @override
      */
     _onShowDropdown: function (ev) {
-        $(ev.currentTarget).find('.dropdown-menu').addClass('show');
         ev.preventDefault();
-        this.snippets.trigger('toggle_mega_menu_snippets', true);
-    },
-    /**
-     * Prevent dropdown closing when a contenteditable children is focused
-     *
-     * @override
-     */
-    _onHideDropdown: function (ev) {
-        if (ev.originalEvent &&
-                $(ev.target).has(ev.originalEvent.target).length &&
-                $(ev.originalEvent.target).is('[contenteditable]')) {
-            ev.preventDefault();
-        }
-        if (this.dropdownClickedElement) {
-            ev.preventDefault();
-        }
-        delete this.dropdownClickedElement;
-    },
-    /**
-     * @override
-     */
-    _onClickInDropdown: function (ev) {
-        this.dropdownClickedElement = ev.target;
+        $(ev.target).dropdown('show');
+        $(ev.target).dropdown('dispose');
+        this._toggleMegaMenuSnippets(true);
     },
     /**
      * @override
      */
     _onClick: function (ev) {
-        if ($(ev.target).parents('li.dropdown, .oe_overlay_options').length === 0) {
-            this.snippets.trigger('toggle_mega_menu_snippets', false);
-            $(ev.currentTarget).find('.dropdown-menu').removeClass('show');
+        if ($(ev.target).parents('li.dropdown, .oe_overlay').length === 0 && !$(ev.target).hasClass('o_wrap_editable_snippets')) {
+            $(ev.currentTarget).find('.dropdown-toggle').dropdown('hide');
+            this._toggleMegaMenuSnippets(false);
         }
     },
 });
