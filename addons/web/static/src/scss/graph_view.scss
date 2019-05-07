@@ -2,10 +2,12 @@
     .o_graph_container {
         height: 100%;
         overflow: auto;
+        display: flex;
         .o_graph_svg_container {
             direction: ltr#{"/*rtl:ignore*/"};
             height: 100%;
             overflow: auto;
+            flex: 1 1 auto;
             svg {
                 background-color: $o-view-background-color;
                 .nv-y {
