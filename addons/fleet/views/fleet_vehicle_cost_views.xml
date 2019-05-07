@@ -284,7 +284,7 @@
                 <field name="cost_generated"/>
                 <field name="cost_frequency"/>
                 <field name="state" />
-                <field name="exception_activity_type" widget="activity_exception"/>
+                <field name="activity_exception_type" widget="activity_exception"/>
             </tree>
         </field>
     </record>
@@ -356,7 +356,7 @@
                         domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                         ]"/>
                 <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_type', '!=', False)]"/>
+                        domain="[('activity_exception_type', '!=', False)]"/>
                 <group expand="0" string="Group By">
                     <filter string="Vehicle" name="vehicle" context="{'group_by':'vehicle_id'}"/>
                 </group>

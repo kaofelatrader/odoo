@@ -142,7 +142,7 @@
                 <field name="access_mode"/>
                 <field name="activity_ids" />
                 <field name="activity_state" />
-                <field name="exception_activity_type"/>
+                <field name="activity_exception_type"/>
                 <templates>
                     <div t-name="kanban-box" t-attf-class="oe_kanban_color_#{kanban_getcolor(record.color.raw_value)} oe_kanban_card oe_kanban_global_click o_kanban_card_survey">
                         <div class="o_dropdown_kanban dropdown" t-if="widget.editable">
@@ -210,7 +210,7 @@
                     domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                     ]"/>
                 <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_type', '!=', False)]"/>
+                        domain="[('activity_exception_type', '!=', False)]"/>
                 <group expand="0" string="Group By">
                     <filter string="Category" name="groupby_category" context="{'group_by': 'category'}"/>
                 </group>

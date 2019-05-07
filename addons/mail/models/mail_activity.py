@@ -329,7 +329,7 @@ class MailActivity(models.Model):
                 (self._cr.dbname, 'res.partner', activity.user_id.partner_id.id),
                 {'type': 'activity_updated', 'activity_created': True})
         if activity.res_model and activity.res_id and activity.activity_type_id.decoration_type in ['warning', 'danger']:
-            self.env[activity.res_model].browse(activity.res_id)._set_exception_activity_type()
+            self.env[activity.res_model].browse(activity.res_id)._set_activity_exception_type()
         return activity
 
     @api.multi
@@ -359,7 +359,7 @@ class MailActivity(models.Model):
                             {'type': 'activity_updated', 'activity_deleted': True})
         if values.get('activity_type_id'):
             for activity in self.filtered(lambda x: x.res_id and x.res_model):
-                self.env[activity.res_model].browse(activity.res_id)._set_exception_activity_type()
+                self.env[activity.res_model].browse(activity.res_id)._set_activity_exception_type()
         return res
 
     @api.multi
@@ -374,7 +374,7 @@ class MailActivity(models.Model):
                 record_values.append((activity.res_model, activity.res_id))
         rec = super(MailActivity, self).unlink()
         for record in record_values:
-            self.env[record[0]].browse(record[1])._set_exception_activity_type()
+            self.env[record[0]].browse(record[1])._set_activity_exception_type()
         return rec
 
     # ------------------------------------------------------
@@ -608,7 +608,7 @@ class MailActivityMixin(models.AbstractModel):
         related='activity_ids.summary', readonly=False,
         search='_search_activity_summary',
         groups="base.group_user",)
-    exception_activity_type = fields.Char(string=' ')
+    activity_exception_type = fields.Char(string=' ')
 
     @api.depends('activity_ids.state')
     def _compute_activity_state(self):
@@ -640,7 +640,7 @@ class MailActivityMixin(models.AbstractModel):
         return [('activity_ids.activity_type_id', operator, operand)]
 
     @api.multi
-    def _set_exception_activity_type(self):
+    def _set_activity_exception_type(self):
         self.ensure_one()
         decoration_type = None
         icon = None
@@ -652,7 +652,7 @@ class MailActivityMixin(models.AbstractModel):
                 decoration_type = 'danger'
                 icon = activity.activity_type_id.icon
                 break
-        self.exception_activity_type = "pull-right text-%s fa %s" % (decoration_type, icon)
+        self.activity_exception_type = "pull-right text-%s fa %s" % (decoration_type, icon)
     @api.model
     def _search_activity_summary(self, operator, operand):
         return [('activity_ids.summary', operator, operand)]

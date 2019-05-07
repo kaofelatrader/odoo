@@ -152,7 +152,7 @@
                     <field name="date"/>
                     <field name="activity_state"/>
                     <field name="activity_ids"/>
-                    <field name="exception_activity_type"/>
+                    <field name="activity_exception_type"/>
                     <progressbar field="activity_state" colors='{"planned": "success", "today": "warning", "overdue": "danger"}'/>
                     <templates>
                         <t t-name="kanban-box">
@@ -198,7 +198,7 @@
                     <field name="state"/>
                     <field name="priority" invisible="1"/>
                     <field name="picking_type_id" invisible="1"/>
-                    <field name="exception_activity_type" widget="activity_exception"/>
+                    <field name="activity_exception_type" widget="activity_exception"/>
                 </tree>
             </field>
         </record>
@@ -384,7 +384,7 @@
                         domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                         ]"/>
                     <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_type', '!=', False)]"/>
+                        domain="[('activity_exception_type', '!=', False)]"/>
                     <field name="partner_id" filter_domain="[('partner_id','child_of',self)]"/>
                     <field name="product_id"/>
                     <field name="picking_type_id"/>

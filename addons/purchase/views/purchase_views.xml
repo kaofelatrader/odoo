@@ -317,7 +317,7 @@
                         domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                         ]"/>
                     <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_type', '!=', False)]"/>
+                        domain="[('activity_exception_type', '!=', False)]"/>
                     <group expand="0" string="Group By">
                         <filter string="Vendor" name="vendor" domain="[]" context="{'group_by':'partner_id'}"/>
                         <filter string="Purchase Representative" name="representative" domain="[]" context="{'group_by':'user_id'}"/>
@@ -343,7 +343,7 @@
                     <field name="currency_id"/>
                     <field name="activity_state"/>
                     <field name="activity_ids"/>
-                    <field name="exception_activity_type"/>
+                    <field name="activity_exception_type"/>
                     <progressbar field="activity_state" colors='{"planned": "success", "today": "warning", "overdue": "danger"}'/>
                     <templates>
                         <t t-name="kanban-box">
@@ -388,7 +388,7 @@
                     <field name="currency_id" invisible="1"/>
                     <field name="state"/>
                     <field name="invoice_status" attrs="{'column_invisible': [('parent.state', 'not in', ('purchase', 'done'))]}"/>
-                    <field name="exception_activity_type" widget="activity_exception"/>
+                    <field name="activity_exception_type" widget="activity_exception"/>
                 </tree>
             </field>
         </record>

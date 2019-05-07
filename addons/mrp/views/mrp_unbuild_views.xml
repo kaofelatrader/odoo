@@ -35,7 +35,7 @@
                         domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                         ]"/>
                         <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_type', '!=', False)]"/>
+                        domain="[('activity_exception_type', '!=', False)]"/>
                     </group>
                     <group expand='0' string='Group by...'>
                         <filter string='Product' name="productgroup" context="{'group_by': 'product_id'}"/>
@@ -161,7 +161,7 @@
                     <field name="product_uom_id" groups="uom.group_uom"/>
                     <field name="state"/>
                     <field name="location_id" groups="stock.group_stock_multi_locations"/>
-                    <field name="exception_activity_type" widget="activity_exception"/>
+                    <field name="activity_exception_type" widget="activity_exception"/>
                 </tree>
             </field>
         </record>

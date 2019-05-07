@@ -205,7 +205,7 @@
                 <field name="date_end"/>
                 <field name="origin"/>
                 <field name="state"/>
-                <field name="exception_activity_type" widget="activity_exception"/>
+                <field name="activity_exception_type" widget="activity_exception"/>
             </tree>
       </field>
     </record>
@@ -268,7 +268,7 @@
                     <filter string="Future Activities" name="activities_upcoming_all"
                         domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))]"/>
                     <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_type', '!=', False)]"/>
+                        domain="[('activity_exception_type', '!=', False)]"/>
                     <field name="user_id" />
                     <group expand="0" string="Group By">
                         <filter string="Purchase Representative" name="representative" domain="[]" context="{'group_by':'user_id'}"/>

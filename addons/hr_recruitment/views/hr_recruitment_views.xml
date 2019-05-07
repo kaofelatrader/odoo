@@ -58,7 +58,7 @@
                 <field name="activity_type_id"/>
                 <field name="activity_summary"/>
                 <field name="stage_id"/>
-                <field name="exception_activity_type" widget="activity_exception"/>
+                <field name="activity_exception_type" widget="activity_exception"/>
             </tree>
         </field>
     </record>
@@ -231,7 +231,7 @@
                         domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                         ]"/>
                 <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_type', '!=', False)]"/>
+                        domain="[('activity_exception_type', '!=', False)]"/>
                 <field name="categ_ids"/>
                 <field name="attachment_ids" filter_domain="[('attachment_ids.index_content', 'ilike', self)]" string="Attachments"/>
                 <separator/>
@@ -296,7 +296,7 @@
                 <field name="active"/>
                 <field name="activity_ids" />
                 <field name="activity_state" />
-                <field name="exception_activity_type"/>
+                <field name="activity_exception_type"/>
                 <progressbar field="activity_state" colors='{"planned": "success", "overdue": "danger", "today": "warning"}'/>
                 <templates>
                     <t t-name="kanban-box">

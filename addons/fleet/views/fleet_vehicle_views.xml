@@ -156,7 +156,7 @@
                 <field name="contract_renewal_due_soon" invisible="1"/>
                 <field name="contract_renewal_overdue" invisible="1"/>
                 <field name="contract_renewal_total" invisible="1"/>
-                <field name="exception_activity_type" widget="activity_exception"/>
+                <field name="activity_exception_type" widget="activity_exception"/>
             </tree>
         </field>
     </record>
@@ -190,7 +190,7 @@
                         domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                         ]"/>
                 <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_type', '!=', False)]"/>
+                        domain="[('activity_exception_type', '!=', False)]"/>
                 <group expand="1" string="Group By">
                     <filter name="groupby_status" context="{'group_by' : 'state_id'}" string="Status"/>
                     <filter name="groupby_model" context="{'group_by' : 'model_id'}" string="Model"/>
@@ -222,7 +222,7 @@
                 <field name="contract_count" />
                 <field name="activity_ids"/>
                 <field name="activity_state"/>
-                <field name="exception_activity_type"/>
+                <field name="activity_exception_type"/>
                 <progressbar field="activity_state" colors='{"planned": "success", "today": "warning", "overdue": "danger"}'/>
 
                 <templates>

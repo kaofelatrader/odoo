@@ -14,7 +14,7 @@
                         <field name="website_url"/>
                         <field name="activity_ids"/>
                         <field name="activity_state"/>
-                        <field name="exception_activity_type"/>
+                        <field name="activity_exception_type"/>
                         <progressbar field="kanban_state" colors='{"done": "success", "blocked": "danger"}'/>
                         <t t-name="kanban-box">
                             <div t-attf-class="oe_kanban_color_#{kanban_getcolor(record.color.raw_value)} oe_kanban_card oe_kanban_global_click">
@@ -96,7 +96,7 @@
                         domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                         ]"/>
                     <filter string="Exception Activities" name="activities_exception"
-                        domain="[('exception_activity_type', '!=', False)]"/>
+                        domain="[('activity_exception_type', '!=', False)]"/>
                     <group expand="0" string="Group By">
                         <filter string="Responsible" name="responsible" context="{'group_by': 'user_id'}"/>
                         <filter string="Stage" name="stage" context="{'group_by':'stage_id'}"/>
@@ -173,7 +173,7 @@
                     <field name="name"/>
                     <field name="active" invisible="1"/>
                     <field name="event_id"/>
-                    <field name="exception_activity_type" widget="activity_exception"/>
+                    <field name="activity_exception_type" widget="activity_exception"/>
                 </tree>
             </field>
         </record>
