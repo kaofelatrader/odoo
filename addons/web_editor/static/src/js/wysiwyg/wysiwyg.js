@@ -228,7 +228,7 @@ var Wysiwyg = Widget.extend({
                     blocks.push({
                         title: (this.getAttribute('name') + '').trim(),
                         thumbnail: this.dataset.oeThumbnail,
-                        html: this.innerHTML.trim(),
+                        content: this.innerHTML.trim(),
                     });
                 });
                 dropblocks.push({

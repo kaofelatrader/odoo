@@ -211,11 +211,11 @@ return {
     //     blocks: [{
     //         title: 'Title block',
     //         thumbnail: '/web_editor/static/src/img/title.png',
-    //         html: '<section style="text-align: center;"><h1>Your Site Title</h1></section>',
+    //         content: '<section style="text-align: center;"><h1>Your Site Title</h1></section>',
     //     }, {
     //         title: 'Image block',
     //         thumbnail: '/web_editor/static/src/img/title.png',
-    //         html: '<section style="text-align: center;"><h1>Your Site Title</h1><img src="/web_editor/static/src/img/picture.png"/></section>',
+    //         content: '<section style="text-align: center;"><h1>Your Site Title</h1><img src="/web_editor/static/src/img/picture.png"/></section>',
     //     }],
     // }],
     dropblockSelector: [

@@ -8,40 +8,31 @@
     <t t-name="wysiwyg.dropblock.defaultblocks">
         <blocks>
             <wysiwyg-title><i class="fa fa-th-large"></i> Structure</wysiwyg-title>
-            <block>
+            <block data-content="&lt;section style=&quot;text-align: center;&quot;&gt;&lt;h1&gt;Your Site Title&lt;/h1&gt;&lt;/section&gt;">
                 <dropblock-thumbnail>
                     <preview style="background-image: url(/web_editor/static/src/img/title.png);"/>
                     <wysiwyg-title>Title</wysiwyg-title>
                 </dropblock-thumbnail>
-                <content>
-                    <section style="text-align: center;"><h1>Your Site Title</h1></section>
-                </content>
             </block>
-            <block>
+            <block data-content="&lt;section style=&quot;text-align: center;&quot;&gt;
+                        &lt;figure class=&quot;figure&quot;&gt;
+                            &lt;img src=&quot;/web_editor/static/src/img/picture.png&quot; class=&quot;figure-img img-fluid rounded img-thumbnail padding-large&quot;/&gt;
+                            &lt;figcaption style=&quot;text-align: center;&quot; class=&quot;figure-caption&quot;&gt;&lt;i class=&quot;fa fa-1x fa-picture-o&quot;&gt;&lt;/i&gt;Add a caption to enhance the meaning of this image.&lt;/figcaption&gt;
+                        &lt;/figure&gt;
+                    &lt;/section&gt;">
                 <dropblock-thumbnail>
                     <preview style="background-image: url(/web_editor/static/src/img/picture.png);"/>
                     <wysiwyg-title>Picture</wysiwyg-title>
                 </dropblock-thumbnail>
-                <content>
-                    <section style="text-align: center;">
-                        <figure class="figure">
-                            <img src="/web_editor/static/src/img/picture.png" class="figure-img img-fluid rounded img-thumbnail padding-large"/>
-                            <figcaption style="text-align: center;" class="figure-caption"><i class="fa fa-1x fa-picture-o"></i>Add a caption to enhance the meaning of this image.</figcaption>
-                        </figure>
-                    </section>
-                </content>
             </block>
         </blocks>
         <blocks>
             <wysiwyg-title><i class="fa fa-th-large"></i> Structure bis</wysiwyg-title>
-            <block>
+            <block data-content="&lt;section style=&quot;text-align: center;&quot;&gt;&lt;h1&gt;Your Site Title&lt;/h1&gt;&lt;/section&gt;">
                 <dropblock-thumbnail>
                     <preview style="background-image: url(/web_editor/static/src/img/title.png);"/>
                     <wysiwyg-title>Title</wysiwyg-title>
                 </dropblock-thumbnail>
-                <content>
-                    <section style="text-align: center;"><h1>Your Site Title</h1></section>
-                </content>
             </block>
         </blocks>
     </t>

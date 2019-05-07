@@ -60,16 +60,6 @@ var Selector = AbstractPlugin.extend({
 
     _cacheSearchToken: {},
 
-    start: function () {
-        var string = 'p, section#eee, .parallax, :not(.o_gallery > .container) > .carousel:first-child span.toto[truc="33"]';
-
-        var self = this;
-        setTimeout(function () {
-            console.log(string);
-            console.log(self.search(string));
-        }, 2000);
-    },
-
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
@@ -77,22 +67,21 @@ var Selector = AbstractPlugin.extend({
     /**
      * @param {ArchNode} [archNode]
      * @param {string} string
-     * @param {boolean} [noCache]
+     * @param {object} [options]
+     * @param {integer[]} [options.filterIds]
      **/
-    search: function (archNode, string) {
+    search: function (archNode, string, options) {
         var self = this;
         if (typeof archNode === 'string') {
+            options = string;
             string = archNode;
             archNode = this.dependencies.Arch._arch;
-        } else if (!archNode) {
-            archNode = this.dependencies.Arch._arch;
         }
-
         string = string.trim();
         var ids = [];
         this._tokenize(string).token.forEach(function (token) {
             token = self._tokenizeForSearch(token);
-            self._searchFromToken([archNode], token).forEach(function (archNode) {
+            self._searchFromToken([archNode], token, options).forEach(function (archNode) {
                 if (ids.indexOf(archNode.id) === -1) {
                     ids.push(archNode.id);
                 }
@@ -103,13 +92,15 @@ var Selector = AbstractPlugin.extend({
     /**
      * @param {ArchNode|Element} [archNode]
      * @param {string} string
-     * @param {boolean} [noCache]
+     * @param {object} [options]
+     * @param {integer[]} [options.filterIds]
      **/
-    is: function (archNode, string) {
+    is: function (archNode, string, options) {
         var self = this;
         if (!(archNode instanceof ArchNode)) {
-            archNode = this.dependencies.Arch._parseElement(archNode);
+            archNode = this.dependencies.Arch._getNode(archNode) || this.dependencies.Arch._parseElement(archNode);
         }
+
         var is = false;
         this._tokenize(string.trim()).token.forEach(function (token) {
             if (is) {
@@ -122,11 +113,23 @@ var Selector = AbstractPlugin.extend({
                 }
             })
             if (hasChild) {
+                var opt = options || {};
+                if (!opt.filterIds) {
+                    var filterIds = [1];
+                    var node = archNode;
+                    while (node) {
+                        var childIds = self._getChildren(node, false, {}).map(function (archNode) { return archNode.id; });
+                        filterIds.push.apply(filterIds, childIds);
+                        node = node.parent;
+                    }
+                    opt = Object.assign({filterIds: filterIds}, opt);
+                }
+
                 token = self._tokenizeForSearch(token);
-                var archNodes = self._searchFromToken([self.dependencies.Arch._arch], token);
+                var archNodes = self._searchFromToken([self.dependencies.Arch._arch], token, opt);
                 is = archNodes.indexOf(archNode) !== -1;
             } else {
-                is = !!self._searchFromToken([archNode], token).length;
+                is = !!self._searchFromToken([archNode], token, options).length;
             }
         });
         return is;
@@ -255,25 +258,28 @@ var Selector = AbstractPlugin.extend({
     },
 
 
-    _searchFromToken: function (archNodes, token) {
+    _searchFromToken: function (archNodes, token, options) {
         for (var k = 0; k < token.length; k++) {
             var t = token[k];
-            archNodes = this['_searchFromToken_' + t.type](archNodes, t.identifier, t.value);
+            archNodes = this['_searchFromToken_' + t.type](archNodes, t.identifier, t.value, options);
         }
         return archNodes;
     },
 
 
-    _getChildren: function (archNode, loop) {
+    _getChildren: function (archNode, loop, options) {
         var self = this;
         var nodes = [];
         if (archNode.childNodes) {
             archNode.childNodes.forEach(function (archNode) {
+                if (options && options.filterIds && options.filterIds.indexOf(archNode.id) !== -1) {
+                    return;
+                }
                 if (!archNode.isVirtual() || !archNode.isText()) {
                     nodes.push(archNode);
                 }
                 if (loop) {
-                    nodes = nodes.concat(self._getChildren(archNode, loop));
+                    nodes = nodes.concat(self._getChildren(archNode, loop, options));
                 }
             });
         }
@@ -318,20 +324,32 @@ var Selector = AbstractPlugin.extend({
             return archNode.nodeName === identifier;
         });
     },
-    _searchFromToken_BROWSE: function (archNodes, identifier) {
+    _searchFromToken_BROWSE: function (archNodes, identifier, value, options) {
         var self = this;
         var nodes = [];
         if (identifier === '>') {
             archNodes.forEach(function (archNode) {
-                nodes = nodes.concat(self._getChildren(archNode));
+                nodes = nodes.concat(self._getChildren(archNode, false, options));
             });
         } else if (identifier === '+') {
-            debugger;
+            archNodes.forEach(function (archNode) {
+                var siblings = self._getChildren(archNode.parent, false, options);
+                var next = siblings[siblings.indexOf(archNode) + 1];
+                if (next) {
+                    nodes.push(next);
+                }
+            });
         } else if (identifier === '-') {
-            debugger;
+            archNodes.forEach(function (archNode) {
+                var siblings = self._getChildren(archNode.parent, false, options);
+                var prev = siblings[siblings.indexOf(archNode) - 1];
+                if (prev) {
+                    nodes.push(prev);
+                }
+            });
         } else {
             archNodes.forEach(function (archNode) {
-                nodes = nodes.concat(self._getChildren(archNode, true));
+                nodes = nodes.concat(self._getChildren(archNode, true, options));
             });
         }
         return nodes;

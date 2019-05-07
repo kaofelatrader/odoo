@@ -42,7 +42,7 @@ var DropBlock = AbstractPlugin.extend({
      * @param {Object[]} params.dropblocks.blocks
      * @param {string} params.dropblocks.blocks.title
      * @param {string} params.dropblocks.blocks.thumbnail
-     * @param {string} params.dropblocks.blocks.html
+     * @param {string} params.dropblocks.blocks.content
      **/
     init: function (parent, params) {
         this._super.apply(this, arguments);
@@ -107,7 +107,7 @@ var DropBlock = AbstractPlugin.extend({
      * @params {object[]}   dropblocks[0].blocks
      * @params {string}     dropblocks[0].blocks.title
      * @params {string}     dropblocks[0].blocks.thumbnail
-     * @params {string}     dropblocks[0].blocks.html
+     * @params {string}     dropblocks[0].blocks.content
      **/
     _createBlocks: function (dropblocks) {
         var self = this;
@@ -123,12 +123,10 @@ var DropBlock = AbstractPlugin.extend({
             groupBlocks.blocks.forEach(function (block) {
                 var blockNode = document.createElement('block');
                 var thumbnail = self._createBlockThumbnail(block);
-                var content = document.createElement('content');
-                content.innerHTML = block.html;
                 blocks.push(blockNode);
                 nodeBlocks.appendChild(blockNode);
                 blockNode.appendChild(thumbnail);
-                blockNode.appendChild(content);
+                blockNode.setAttribute('data-content', block.content);
             });
 
             blockContainer.appendChild(nodeBlocks);
@@ -174,6 +172,10 @@ var DropBlock = AbstractPlugin.extend({
     _dragAndDropStartCloneSidebarElements: function (block) {
         var thumbnail = block.querySelector('dropblock-thumbnail');
         var box = thumbnail.getBoundingClientRect();
+        var content = block.getAttribute('data-content');
+        var el = document.createElement('content');
+        el.innerHTML = content;
+        var childNodes = el.childNodes;
 
         this._dragAndDrop = {
             left: box.left,
@@ -181,7 +183,8 @@ var DropBlock = AbstractPlugin.extend({
             width: box.width,
             height: box.height,
             thumbnail: this.utils.clone(thumbnail),
-            contents: [].slice.call(this.utils.clone(block.querySelector('content')).children),
+            elements: [].slice.call(childNodes),
+            content: content,
         };
     },
     _dragAndDropStartCloneEditableElements: function (block) {
@@ -191,11 +194,16 @@ var DropBlock = AbstractPlugin.extend({
         });
 
         var box = this._blockContainer.querySelector('dropblock-thumbnail').getBoundingClientRect();
+        var content = document.createElement('content');
+        content.innerHTML = block.outerHTML;
+        var childNodes = content.childNodes;
+
         this._dragAndDrop = {
             width: box.width,
             height: box.height,
             thumbnail: thumbnail,
-            contents: [block],
+            elements: [].slice.call(childNodes),
+            content: block.outerHTML,
         };
 
         var nextSibling = block.nextSibling;
@@ -223,8 +231,8 @@ var DropBlock = AbstractPlugin.extend({
         this._enabledDropZones = [];
         this._createDropZoneOriginPosition();
         var dropZones = [];
-        this.trigger('dropzone', this._dragAndDrop.contents.slice(), dropZones);
-        this.trigger('drag', this._dragAndDrop.contents.slice(), dropZones);
+        this.trigger('dropzone', this._dragAndDrop.content, this._dragAndDrop.elements, dropZones);
+        this.trigger('drag', this._dragAndDrop.content, this._dragAndDrop.elements, dropZones);
     },
     _dragAndDropMove: function (ev) {
         if (!this._dragAndDrop) {
@@ -258,11 +266,11 @@ var DropBlock = AbstractPlugin.extend({
 
         if (select) {
             if (this._selectedDragAndDrop !== select.node) {
-                this.trigger('dragAndDrop', this._dragAndDrop.contents.slice(), select.node, this._selectedDragAndDrop);
+                this.trigger('dragAndDrop', this._dragAndDrop.content, this._dragAndDrop.elements, select.node, this._selectedDragAndDrop);
                 this._selectedDragAndDrop = select.node;
             }
         } else if (this._selectedDragAndDrop) {
-            this.trigger('dragAndDrop', this._dragAndDrop.contents.slice(), null, this._selectedDragAndDrop);
+            this.trigger('dragAndDrop', this._dragAndDrop.content, this._dragAndDrop.elements, null, this._selectedDragAndDrop);
             this._selectedDragAndDrop = null;
         }
     },
@@ -277,13 +285,13 @@ var DropBlock = AbstractPlugin.extend({
         this._blockHandle.removeChild(this._dragAndDrop.thumbnail);
 
         if (this._selectedDragAndDrop) {
-            this._dragAndDrop.contents.forEach(function (node) {
+            this._dragAndDrop.elements.forEach(function (node) {
                 node.parentNode.removeChild(node);
             });
         }
 
         this._removeDropZoneOriginPosition();
-        this.trigger('drop', this._dragAndDrop.contents.slice(), this._selectedDragAndDrop);
+        this.trigger('drop', this._dragAndDrop.content, this._dragAndDrop.elements, this._selectedDragAndDrop);
         this._dragAndDrop = null;
         this._selectedDragAndDrop = null;
     },
@@ -445,46 +453,38 @@ var DropBlock = AbstractPlugin.extend({
     // Handle
     //--------------------------------------------------------------------------
 
-    _onDragAndDropEnd: function (dragAndDropContents, dropzone) {
+    _onDragAndDropEnd: function (dragAndDropContent, dragAndDropElements, dropzone) {
         if (!dropzone) {
             this._removeDropZones();
             return;
         }
-        var node = dragAndDropContents[0];
-        if (dragAndDropContents.length > 1) {
-            node = document.createDocumentFragment();
-            dragAndDropContents.forEach(function (node) {
-                node.appendChild(node);
-            });
-        }
-
         var parent = dropzone.parentNode;
         var index = this._removeDropZones(dropzone);
-        this.dependencies.Arch.insert(node, parent, index);
+        this.dependencies.Arch.insert(dragAndDropContent, parent, index);
     },
-    _onDragAndDropMove: function (dragAndDropContents, dropzone, previousDropzone) {
+    _onDragAndDropMove: function (dragAndDropContent, dragAndDropElements, dropzone, previousDropzone) {
         if (previousDropzone) {
             previousDropzone.style.display = '';
         }
 
         if (dropzone) {
-            dragAndDropContents.forEach(function (node) {
+            dragAndDropElements.forEach(function (node) {
                 dropzone.parentNode.insertBefore(node, dropzone);
             });
             dropzone.style.display = 'none';
         } else {
-            dragAndDropContents.forEach(function (node) {
+            dragAndDropElements.forEach(function (node) {
                 node.parentNode.removeChild(node);
             });
         }
     },
-    _onDragAndDropNeedDropZone: function (dragAndDropContents, dropZones) {
+    _onDragAndDropNeedDropZone: function (dragAndDropContent, dragAndDropElements, dropZones) {
         dropZones.push({
             dropIn: [this.editable],
             // dropNear: this.editable.children,
         });
     },
-    _onDragAndDropStart: function (dragAndDropContents, dropZones) {
+    _onDragAndDropStart: function (dragAndDropContent, dragAndDropElements, dropZones) {
         this._createDropZones(dropZones);
     },
     _onMouseDownBlock: function (ev) {

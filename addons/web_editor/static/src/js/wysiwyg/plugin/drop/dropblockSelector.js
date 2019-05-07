@@ -37,12 +37,12 @@ var dropblockSelector = AbstractPlugin.extend({
     // Handle
     //--------------------------------------------------------------------------
 
-    _onDragAndDropStart: function (dragAndDropContents, dropZones) {
+    _onDragAndDropStart: function (dragAndDropContent, dragAndDropElements, dropZones) {
         var self = this;
-        if (dragAndDropContents.length > 1) {
+        if (dragAndDropElements.length > 1) {
             throw new Error("The dropable block content should contains only one child.");
         }
-        var element = dragAndDropContents[0];
+        var element = dragAndDropElements[0];
         dropZones.splice(0);
         this.options.dropblockSelector.forEach(function (zone) {
             if ((zone.dropIn || zone.dropNear) && self.dependencies.Selector.is(element, zone.selector)) {
