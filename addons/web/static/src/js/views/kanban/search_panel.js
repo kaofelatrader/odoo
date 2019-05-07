@@ -201,6 +201,7 @@ var SearchPanel = Widget.extend({
                         values: {},
                         tooltip: value.group_tooltip,
                         sequence: value.group_sequence,
+                        color: value.group_color,
                         sortedValueIds: [],
                     };
                     // restore former checked and folded state
