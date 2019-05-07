@@ -97,7 +97,7 @@ var AbstractWebClient = Widget.extend(ServiceProviderMixin, KeyboardNavigationMi
         KeyboardNavigationMixin.init.call(this);
         this.origin = undefined;
         this._current_state = null;
-        this.menu_dm = new concurrency.DropMisordered();
+        this.menu_dp = new concurrency.DropPrevious();
         this.action_mutex = new concurrency.Mutex();
         this.set('title_part', {"zopenerp": "Odoo"});
     },
@@ -112,14 +112,14 @@ var AbstractWebClient = Widget.extend(ServiceProviderMixin, KeyboardNavigationMi
         this.on("change:title_part", this, this._title_changed);
         this._title_changed();
 
-        return session.is_bound
+        return this.menu_dp.add(session.is_bound)
             .then(function () {
                 self.$el.toggleClass('o_rtl', _t.database.parameters.direction === "rtl");
                 self.bind_events();
-                return Promise.all([
+                return self.menu_dp.add(Promise.all([
                     self.set_action_manager(),
                     self.set_loading()
-                ]);
+                ]));
             }).then(function () {
                 if (session.session_is_valid()) {
                     return self.show_application();
@@ -130,7 +130,6 @@ var AbstractWebClient = Widget.extend(ServiceProviderMixin, KeyboardNavigationMi
                 }
             }).then(function () {
                 // Listen to 'scroll' event and propagate it on main bus
-                self.action_manager.$el.on('scroll', core.bus.trigger.bind(core.bus, 'scroll'));
                 core.bus.trigger('web_client_ready');
                 odoo.isReady = true;
                 if (session.uid === 1) {

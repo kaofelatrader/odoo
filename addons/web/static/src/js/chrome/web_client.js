@@ -78,17 +78,17 @@ return AbstractWebClient.extend({
         var self = this;
         this.set_title();
 
-        return this.instanciate_menu_widgets().then(function () {
+        return self.menu_dp.add(this.instanciate_menu_widgets()).then(function () {
             $(window).bind('hashchange', self.on_hashchange);
 
             // If the url's state is empty, we execute the user's home action if there is one (we
             // show the first app if not)
             if (_.isEmpty($.bbq.getState(true))) {
-                return self._rpc({
+                return self.menu_dp.add(self._rpc({
                         model: 'res.users',
                         method: 'read',
                         args: [session.uid, ["action_id"]],
-                    })
+                    }))
                     .then(function (result) {
                         var data = result[0];
                         if (data.action_id) {
@@ -133,7 +133,7 @@ return AbstractWebClient.extend({
         }
 
         var self = this;
-        return this.clear_uncommitted_changes().then(function () {
+        return this.menu_dp.add(this.clear_uncommitted_changes()).then(function () {
             var stringstate = $.bbq.getState(false);
             if (!_.isEqual(self._current_state, stringstate)) {
                 var state = $.bbq.getState(true);
@@ -174,7 +174,7 @@ return AbstractWebClient.extend({
     // --------------------------------------------------------------
     on_app_clicked: function (ev) {
         var self = this;
-        return this.menu_dm.add(data_manager.load_action(ev.data.action_id))
+        return this.menu_dp.add(data_manager.load_action(ev.data.action_id))
             .then(function (result) {
                 return self.action_mutex.exec(function () {
                     var completed = new Promise(function (resolve, reject) {
@@ -195,7 +195,7 @@ return AbstractWebClient.extend({
                                 resolve();
                             }, 2000);
                     });
-                    return completed;
+                    return self.menu_dp.add(completed);
                 });
             });
     },
@@ -205,7 +205,7 @@ return AbstractWebClient.extend({
     },
     on_menu_clicked: function (ev) {
         var self = this;
-        return this.menu_dm.add(data_manager.load_action(ev.data.action_id))
+        return this.menu_dp.add(data_manager.load_action(ev.data.action_id))
             .then(function (result) {
                 self.$el.removeClass('o_mobile_menu_opened');
 
@@ -219,7 +219,7 @@ return AbstractWebClient.extend({
                             resolve();
                         }, 2000);
                     });
-                    return completed;
+                    return self.menu_dp.add(completed);
                 });
             }).guardedCatch(function () {
                 self.$el.removeClass('o_mobile_menu_opened');
