@@ -37,26 +37,19 @@ Renderer.prototype = {
     },
     reset: function (json) {
         this.changes = {};
-        this.jsonById = {
-            '1': {
-                id: 1,
-                childNodes: [],
-            },
-        };
-        this.elements = {
-            '1': this.editable,
-        };
+        this.jsonById = [null, {
+            id: 1,
+            childNodes: [],
+        }];
+        this.elements = [null, this.editable];
 
         if (json) {
             this.update(json);
         }
     },
     whoIsThisNode: function (element) {
-        for (var k in this.elements) {
-            if (this.elements[k] === element) {
-                return this.jsonById[k].id;
-            }
-        }
+        var index = this.elements.indexOf(element);
+        return index === -1 ? null : index;
     },
 
     //--------------------------------------------------------------------------
@@ -64,8 +57,7 @@ Renderer.prototype = {
     //--------------------------------------------------------------------------
 
     _update: function (newJSON) {
-        var oldJSON = this.jsonById[newJSON.id] || {id: newJSON.id};
-        this.jsonById[newJSON.id] = oldJSON;
+        var oldJSON = this.jsonById[newJSON.id] = (this.jsonById[newJSON.id] || {id: newJSON.id});
 
         if (newJSON.nodeName && !oldJSON.nodeName) {
             oldJSON.nodeName = newJSON.nodeName;
@@ -129,12 +121,13 @@ Renderer.prototype = {
             this.changes[newJSON.id] = changes;
         }
     },
-    _allIds: function (id) {
-        var ids = [id];
+    _allIds: function (id, ids) {
         var json = this.jsonById[id];
+        ids = ids || [];
+        ids[id] = id;
         if (json.childNodes) {
             for (var k = 0; k < json.childNodes.length; k++) {
-                ids.push.apply(ids, this._allIds(json.childNodes[k]));
+                this._allIds(json.childNodes[k], ids);
             }
         }
         return ids;
@@ -142,8 +135,8 @@ Renderer.prototype = {
     _clean: function () {
         var self = this;
         var ids = this._allIds(1);
-        Object.keys(this.jsonById).forEach(function (id) {
-            if (ids.indexOf(+id) === -1) {
+        this.jsonById.forEach(function (json, id) {
+            if (!ids[id] && self.jsonById[id]) {
                 delete self.jsonById[id];
                 delete self.elements[id];
             }
@@ -156,7 +149,7 @@ Renderer.prototype = {
             el.childNodes.forEach(_getAll);
         })(this.editable);
 
-        var inArch = Object.values(this.elements);
+        var inArch = this.elements;
         els.forEach(function (el) {
             if (inArch.indexOf(el) === -1) {
                 el.parentNode.removeChild(el);
@@ -165,7 +158,7 @@ Renderer.prototype = {
     },
     _getElement: function (id, target) {
         var json = this.jsonById[id];
-        var el = this.elements[json.id];
+        var el = this.elements[id];
         var freeElement = target && target !== el && !this.whoIsThisNode(target) ? target : null;
 
         if (el && freeElement) {
@@ -195,12 +188,12 @@ Renderer.prototype = {
                 el = document.createElement(json.nodeName);
             }
         }
-        this.elements[json.id] = el;
+        this.elements[id] = el;
         return el;
     },
     _markAllDirty: function () {
-        Object.keys(this.jsonById).forEach(function (id) {
-            var json = Object.assign({}, self.jsonById[id]);
+        this.jsonById.forEach(function (json, id) {
+            var json = Object.assign({}, json);
             self.changes[id] = json;
             if (json.childNodes) {
                 json.childNodes = json.childNodes.map(function (json) {

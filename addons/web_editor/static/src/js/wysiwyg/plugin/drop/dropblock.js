@@ -396,6 +396,11 @@ var DropBlock = AbstractPlugin.extend({
                 break;
         }
 
+        this._getDropZoneBoundingClientRect(dropzone, vertical);
+
+        // _insertDropZoneChild => dropzone size
+    },
+    _getDropZoneBoundingClientRect: function (dropzone, vertical) {
         var box = dropzone.getBoundingClientRect();
         this._enabledDropZones.push({
             node: dropzone,
@@ -406,8 +411,6 @@ var DropBlock = AbstractPlugin.extend({
                 height: box.height,
             },
         });
-
-        // _insertDropZoneChild => dropzone size
     },
     _createDropZones: function (dropZones) {
         var self = this;
