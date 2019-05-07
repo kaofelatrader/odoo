@@ -127,7 +127,7 @@ var KanbanColumn = Widget.extend({
             },
         })
 
-        this.$el.click(function (event) {
+        this.el.addEventListener('click', function (event) {
             if (self.folded) {
                 self._onToggleFold(event);
             }

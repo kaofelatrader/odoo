@@ -82,6 +82,24 @@ var _draggable = function (el, options) {
             target.dataset.draggableX = xPosition;
             target.dataset.draggableY = yPosition;
 
+            // We started dragging this element so we don't want to trigger its
+            // click handlers for the entirety of the dragging session, even
+            // though we will eventually trigger down and up events on the same
+            // element since we set it to follow the position of the pointer.
+            // We need to set capture true to interecept the event before the
+            // bubbling phase so that this handler is called first.
+            el.dataset.draggablePreventClick = true;
+            var preventClick = function (ev) {
+                if (el.dataset.draggablePreventClick) {
+                    delete el.dataset.draggablePreventClick;
+                    ev.stopImmediatePropagation();
+                }
+                ev.currentTarget.removeEventListener('click', preventClick, {
+                    capture: true,
+                });
+            }
+            el.addEventListener('click', preventClick, { capture: true });
+
             if (options.onstart) {
                 options.onstart(ev);
             }
