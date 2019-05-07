@@ -1,10 +1,46 @@
 <odoo>
+    <record id="stock_valuation_layer_form" model="ir.ui.view">
+        <field name="name">stock.valuation.layer.form</field>
+        <field name="model">stock.valuation.layer</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="create_date" string="Date" />
+                            <field name="product_id" />
+                            <field name="company_id" groups="base.group_multi_company" />
+                        </group>
+                        <group>
+                            <field name="quantity" />
+                            <field name="uom_id" groups="uom.group_uom" />
+                            <field name="currency_id" invisible="1"/>
+                            <field name="unit_cost" widget='monetary' options="{'currency_field': 'currency_id'}" />
+                            <field name="value" widget='monetary' options="{'currency_field': 'currency_id'}" />
+                            <field name="remaining_qty" />
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Informations">
+                            <field name="description" />
+                        </page>
+                        <page string="Documents">
+                            <label for="stock_move_id" string="Stock Move" />
+                            <field name="stock_move_id"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
     <record id="stock_valuation_layer_tree" model="ir.ui.view">
         <field name="name">stock.valuation.layer.tree</field>
         <field name="model">stock.valuation.layer</field>
         <field name="arch" type="xml">
             <tree>
                 <field name="currency_id" invisible="1"/>
+                <field name="create_date" />
                 <field name="product_id" />
                 <field name="quantity" />
                 <field name="uom_id" groups="uom.group_uom" />
