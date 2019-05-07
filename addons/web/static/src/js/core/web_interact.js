@@ -286,12 +286,11 @@ var _sortable = function (el, options) {
                     var dx = ev.dragEvent.dx;
 
                     var shouldMakeWay = true;
-                    // We trust interactjs for overlap pointer, but
-                    // overlap center only tests if the center of the
-                    // dragged element is currently inside the dropzone
-                    // element, which is not enough for us. We want to
-                    // only make way if the center of the dragged
-                    // element has crossed the center of the dropzone.
+                    // We trust interactjs for overlap pointer, but overlap
+                    // center only tests if the center of the draggable is
+                    // currently inside the dropzone element, which is not
+                    // enough for us. We want to only make way if the center of
+                    // the draggable has crossed the center of the dropzone.
                     if (tolerance !== 'pointer') {
                         var crossedY;
                         var crossedX;
