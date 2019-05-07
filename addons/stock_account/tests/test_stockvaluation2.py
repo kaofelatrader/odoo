@@ -166,6 +166,26 @@ class TestStockValuationStandard(TestStockValuationCommon):
         self.assertEqual(self.product1.value_svl, 100)
         self.assertEqual(self.product1.quantity_svl, 10)
 
+    def test_change_in_past_increase_out_1(self):
+        self.product1.product_tmpl_id.categ_id.property_valuation = 'manual_periodic'
+
+        move1 = self._make_in_move(self.product1, 10)
+        move2 = self._make_out_move(self.product1, 1)
+        move2.move_line_ids.qty_done = 5
+
+        self.assertEqual(self.product1.value_svl, 50)
+        self.assertEqual(self.product1.quantity_svl, 5)
+
+    def test_change_in_past_decrease_out_1(self):
+        self.product1.product_tmpl_id.categ_id.property_valuation = 'manual_periodic'
+
+        move1 = self._make_in_move(self.product1, 10)
+        move2 = self._make_out_move(self.product1, 5)
+        move2.move_line_ids.qty_done = 1
+
+        self.assertEqual(self.product1.value_svl, 90)
+        self.assertEqual(self.product1.quantity_svl, 9)
+
     def test_change_standard_price_1(self):
         self.product1.product_tmpl_id.categ_id.property_valuation = 'manual_periodic'
 
